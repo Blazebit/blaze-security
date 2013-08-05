@@ -1,0 +1,32 @@
+Blaze Security
+==========
+Blaze Security is a framework for arbitrary security models.
+
+What is it?
+===========
+
+Blaze Security is a framework for Java SE 6 and EE 6 environments,
+that can be used to enforce any security model. It supports fine
+grained security features like field access checks and object
+based permissions.
+
+
+How to use it?
+==============
+Include the jars you want in your project and get started!
+
+Contents of distribution
+========================
+
+api, impl
+ 
+Licensing
+=========
+
+This distribution, as a whole, is licensed under the terms of the Apache
+License, Version 2.0 (see LICENSE.txt).
+
+References
+==========
+
+Project Site:              http://blazebit.com/security (Coming soon)

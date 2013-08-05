@@ -1,0 +1,15 @@
+.project
+.settings/
+.classpath
+.factorypath
+target/
+api/.project
+api/.settings/
+api/.classpath
+api/.factorypath
+api/target/
+impl/.project
+impl/.settings/
+impl/.classpath
+impl/.factorypath
+impl/target/
