@@ -15,15 +15,17 @@
  */
 package com.blazebit.security;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  */
-public interface Subject<R extends Role<R, ?>, P extends Permission<?>> {
-    
-    public Collection<R> getRoles();
-    
-    public Collection<P> getPermissions();
+public interface Subject<R extends Role, P extends Permission<?>, Q extends Permission<?>> {
+
+    public Set<R> getRoles();
+
+    public Set<P> getPermissions();
+
+    public Set<Q> getDataPermissions();
 }

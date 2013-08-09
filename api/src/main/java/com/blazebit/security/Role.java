@@ -21,10 +21,11 @@ import java.util.Collection;
  *
  * @author Christian Beikov
  */
-public interface Role<R extends Role<R, P>, P extends Permission<?>> {
-    
+public interface Role<R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> {
+
     public R getParent();
-    
+
     public Collection<P> getPermissions();
-    
+
+    public Collection<Q> getDataPermissions();
 }
