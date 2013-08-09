@@ -15,28 +15,54 @@
  */
 package com.blazebit.security.impl.model;
 
+import com.blazebit.security.Permission;
 import com.blazebit.security.Subject;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
 /**
  * @author Christian Beikov
  */
 @Entity
-public class User implements Subject<UserGroup, UserPermission>, Serializable {
+@Table(name = "USER_")
+public class User implements Subject<UserGroup, UserPermission, UserDataPermission>, Serializable {
 
     private static final long serialVersionUID = 1L;
+    private Integer id;
     private String username;
     private String password;
     private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
     private Set<UserPermission> permissions = new HashSet<UserPermission>(0);
     private Set<UserDataPermission> dataPermissions = new HashSet<UserDataPermission>(0);
+
+    public User() {
+    }
+
+    @Id
+    @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public User(String username) {
+        this.username = username;
+    }
 
     @Basic
     public String getUsername() {
@@ -57,18 +83,23 @@ public class User implements Subject<UserGroup, UserPermission>, Serializable {
     }
 
     @Override
-    @ManyToMany
-    @JoinTable(name = "USER_IN_ROLES")
+    @Transient
     public Set<UserGroup> getRoles() {
         return this.userGroups;
     }
 
-    public void setRoles(Set<UserGroup> userGroups) {
+    @ManyToMany
+    @JoinTable(name = "USER_IN_ROLES")
+    public Set<UserGroup> getUserGroups() {
+        return userGroups;
+    }
+
+    public void setUserGroups(Set<UserGroup> userGroups) {
         this.userGroups = userGroups;
     }
 
+    @OneToMany(mappedBy = "id.subject")
     @Override
-    @OneToMany(mappedBy = "subject")
     public Set<UserPermission> getPermissions() {
         return this.permissions;
     }
@@ -78,12 +109,18 @@ public class User implements Subject<UserGroup, UserPermission>, Serializable {
     }
 
 //    @Override
-    @OneToMany(mappedBy = "subject")
+    @OneToMany(mappedBy = "id.subject")
+    @Override
     public Set<UserDataPermission> getDataPermissions() {
         return this.dataPermissions;
     }
 
     public void setDataPermissions(Set<UserDataPermission> dataPermissions) {
         this.dataPermissions = dataPermissions;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" + "username=" + username + '}';
     }
 }

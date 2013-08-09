@@ -17,45 +17,77 @@ package com.blazebit.security.impl.model;
 
 import com.blazebit.security.Action;
 import javax.persistence.Basic;
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Transient;
 
 /**
  *
  * @author Christian
  */
+@Entity
 public class EntityAction implements Action {
 
+    private Integer id;
     private PermissionId<?> permissionId;
     private String actionName;
 
-    public <P extends PermissionId<?>> EntityAction(P permissionId) {
+    public EntityAction() {
+    }
+
+    @Transient
+    public PermissionId<?> getPermissionId() {
+        return permissionId;
+    }
+
+    public void setPermissionId(PermissionId<?> permissionId) {
         this.permissionId = permissionId;
     }
-    
+
+    @Id
+    @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public <P extends PermissionId<?>> EntityAction(P id) {
+        this.permissionId = id;
+        this.actionName=permissionId.getActionName();
+    }
+
     <P extends PermissionId<?>> void attachToPermissionId(P permissionId) {
         this.permissionId = permissionId;
-        
-        if(actionName != null) {
+
+        if (actionName != null) {
             permissionId.setActionName(actionName);
             actionName = null;
         }
     }
-    
+
     @Override
     public boolean matches(Action action) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (this.actionName != null) {
+            return ((EntityAction) action).getActionName().equals(this.actionName);
+        } else {
+            return ((EntityAction) action).getActionName().equals(this.permissionId.getActionName());
+        }
     }
 
+    @Basic
     public String getActionName() {
-        return permissionId == null ? actionName : permissionId.getActionName();
+        return permissionId == null ? this.actionName : permissionId.getActionName();
     }
 
-    public void setActionName(String actionName) {
+   public void setActionName(String actionName) {
         if(permissionId == null) {
             this.actionName = actionName;
         } else {
             permissionId.setActionName(actionName);
         }
     }
-    
 }

@@ -22,5 +22,10 @@ package com.blazebit.security.impl.model;
 public enum EntityConstants {
     ALL,
     USER,
-    USER_GROUP;
+    USER_GROUP,
+    /** entity samples */
+    DOCUMENT,
+    INVITATION,
+    EMAIL,
+    WORKFLOW,
 }

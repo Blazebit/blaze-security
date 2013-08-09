@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -30,15 +32,33 @@ import javax.persistence.OneToMany;
  * @author Christian Beikov
  */
 @Entity
-public class UserGroup implements Role<UserGroup, UserGroupPermission>, Serializable {
+public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroupDataPermission>, Serializable {
 
     private static final long serialVersionUID = 1L;
+    private Integer id;
     private String name;
     private UserGroup parent;
     private Set<User> users = new HashSet<User>(0);
     private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
     private Set<UserGroupPermission> permissions = new HashSet<UserGroupPermission>(0);
     private Set<UserGroupDataPermission> dataPermissions = new HashSet<UserGroupDataPermission>(0);
+
+    public UserGroup(String name) {
+        this.name = name;
+    }
+
+    public UserGroup() {
+    }
+
+    @Id
+    @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     @Basic
     public String getName() {
@@ -60,7 +80,7 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission>, Serializ
         this.parent = parent;
     }
 
-    @ManyToMany(mappedBy = "roles")
+    @ManyToMany(mappedBy = "userGroups")
     public Set<User> getUsers() {
         return this.users;
     }
@@ -79,7 +99,7 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission>, Serializ
     }
 
     @Override
-    @OneToMany(mappedBy = "subject")
+    @OneToMany(mappedBy = "id.subject")
     public Set<UserGroupPermission> getPermissions() {
         return this.permissions;
     }
@@ -88,8 +108,8 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission>, Serializ
         this.permissions = permissions;
     }
 
-//    @Override
-    @OneToMany(mappedBy = "subject")
+    @Override
+    @OneToMany(mappedBy = "id.subject")
     public Set<UserGroupDataPermission> getDataPermissions() {
         return this.dataPermissions;
     }

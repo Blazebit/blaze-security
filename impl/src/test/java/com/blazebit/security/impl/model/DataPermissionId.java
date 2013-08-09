@@ -19,7 +19,7 @@ import javax.persistence.Basic;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public abstract class DataPermissionId<S> extends PermissionId<S> {
+public class DataPermissionId<S> extends PermissionId<S> {
     
     private static final long serialVersionUID = 1L;
     private String entityId;
@@ -32,4 +32,31 @@ public abstract class DataPermissionId<S> extends PermissionId<S> {
     public void setEntityId(String entityId) {
         this.entityId = entityId;
     }
+
+    @Override
+    public String getActionName() {
+        return super.getActionName(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public EntityConstants getEntity() {
+        return super.getEntity(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String getField() {
+        return super.getField(); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public S getSubject() {
+        return super.getSubject(); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+     
+    
+    
+    
+    
+   
 }

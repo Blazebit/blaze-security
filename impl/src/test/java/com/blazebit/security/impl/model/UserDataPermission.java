@@ -15,11 +15,22 @@
  */
 package com.blazebit.security.impl.model;
 
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 /**
  * @author Christian Beikov
  */
-public class UserDataPermission extends AbstractDataPermission<User> {
+@Entity
+public class UserDataPermission extends AbstractDataPermission<User, DataPermissionId<User>> {
 
-	private static final long serialVersionUID = 1L;
+    public UserDataPermission() {
+    }
 
+    @EmbeddedId
+    public DataPermissionId<User> getId() {
+        return id;
+    }
 }

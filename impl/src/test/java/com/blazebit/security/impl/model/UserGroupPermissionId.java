@@ -15,19 +15,11 @@
  */
 package com.blazebit.security.impl.model;
 
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
-@Entity
-public class UserPermission extends AbstractPermission<User, UserPermissionId> {
-
-    private static final long serialVersionUID = 1L;
-
-    public UserPermission() {
-    }
-
-    @EmbeddedId
-    public PermissionId<User> getId() {
-        return id;
-    }
+/**
+ *
+ * @author cuszk
+ */
+public class UserGroupPermissionId extends PermissionId<UserGroup> {
 }

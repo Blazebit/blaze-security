@@ -17,42 +17,37 @@ package com.blazebit.security.impl.model;
 
 import com.blazebit.security.Permission;
 import java.io.Serializable;
-import javax.persistence.EmbeddedId;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 @MappedSuperclass
-public abstract class AbstractDataPermission<S> implements Permission<EntityObjectField>, Serializable {
+public abstract class AbstractDataPermission<S, P extends DataPermissionId<S>> implements Permission<EntityObjectField>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private DataPermissionId<S> id;
+    protected P id;
     private EntityAction entityAction;
     private EntityObjectField entityObjectField;
     private S subject;
 
-    @EmbeddedId
-    public DataPermissionId<S> getId() {
-        return id;
-    }
-
-    public void setId(DataPermissionId<S> id) {
+    public void setId(P id) {
         this.id = id;
-        this.entityAction = new EntityAction(id);
-        this.entityObjectField = new EntityObjectField(id);
-        
-        if(id != null) {
-            if(subject != null) {
-                id.setSubject(subject);
-            }
-            if(entityAction != null) {
-                id.setActionName(entityAction.getActionName());
-            }
-            if(entityObjectField != null) {
-                id.setEntity(entityObjectField.getEntity());
-                id.setField(entityObjectField.getField());
-                id.setEntityId(entityObjectField.getEntityId());
-            }
-        }
+        //why does this create new entityaction and field?
+//        this.entityAction = new EntityAction(id);
+//        this.entityObjectField = new EntityObjectField(id);
+//
+//        if (id != null) {
+//            if (subject != null) {
+//                id.setSubject(subject);
+//            }
+//            if (entityAction != null) {
+//                id.setActionName(entityAction.getActionName());
+//            }
+//            if (entityObjectField != null) {
+//                id.setEntity(entityObjectField.getEntity());
+//                id.setField(entityObjectField.getField());
+//                id.setEntityId(entityObjectField.getEntityId());
+//            }
+//        }
     }
 
     @Override
@@ -61,13 +56,18 @@ public abstract class AbstractDataPermission<S> implements Permission<EntityObje
         return entityAction;
     }
 
-    public void setAction(EntityAction entityAction) {
+    public void setEntityAction(EntityAction entityAction) {
         entityAction.attachToPermissionId(id);
         this.entityAction = entityAction;
     }
-    
-    @Override
+
     @Transient
+    public EntityAction getEntityAction() {
+        return entityAction;
+    }
+
+    @Transient
+    @Override
     public EntityObjectField getResource() {
         return entityObjectField;
     }
@@ -84,11 +84,11 @@ public abstract class AbstractDataPermission<S> implements Permission<EntityObje
 
     @Transient
     public S getSubject() {
-        return id == null ? null : id.getSubject();
+        return id == null ? subject : id.getSubject();
     }
 
     public void setSubject(S subject) {
-        if(id == null) {
+        if (id == null) {
             this.subject = subject;
         } else {
             id.setSubject(subject);

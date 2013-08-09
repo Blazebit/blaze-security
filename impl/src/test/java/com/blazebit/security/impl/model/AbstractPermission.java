@@ -17,39 +17,35 @@ package com.blazebit.security.impl.model;
 
 import com.blazebit.security.Permission;
 import java.io.Serializable;
-import javax.persistence.EmbeddedId;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+@MappedSuperclass
 public abstract class AbstractPermission<S, P extends PermissionId<S>> implements Permission<EntityField>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private P id;
+    protected P id;
     private EntityAction entityAction;
     private EntityField entityField;
     private S subject;
 
-    @EmbeddedId
-    public P getId() {
-        return id;
-    }
-
     public void setId(P id) {
         this.id = id;
-        this.entityAction = new EntityAction(id);
-        this.entityField = new EntityField(id);
-        
-        if(id != null) {
-            if(subject != null) {
-                id.setSubject(subject);
-            }
-            if(entityAction != null) {
-                id.setActionName(entityAction.getActionName());
-            }
-            if(entityField != null) {
-                id.setEntity(entityField.getEntity());
-                id.setField(entityField.getField());
-            }
-        }
+//        this.entityAction = new EntityAction(id);
+//        this.entityField = new EntityField(id);
+//
+//        if (id != null) {
+//            if (subject != null) {
+//                id.setSubject(subject);
+//            }
+//            if (entityAction != null) {
+//                id.setActionName(entityAction.getActionName());
+//            }
+//            if (entityField != null) {
+//                id.setEntity(entityField.getEntity());
+//                id.setField(entityField.getField());
+//            }
+//        }
     }
 
     @Override
@@ -58,11 +54,16 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
         return entityAction;
     }
 
-    public void setAction(EntityAction entityAction) {
+    public void setEntityAction(EntityAction entityAction) {
         entityAction.attachToPermissionId(id);
         this.entityAction = entityAction;
     }
-    
+
+    @Transient
+    public EntityAction getEntityAction() {
+        return entityAction;
+    }
+
     @Override
     @Transient
     public EntityField getResource() {
@@ -77,15 +78,16 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
     public void setEntityField(EntityField entityField) {
         entityField.attachToPermissionId(id);
         this.entityField = entityField;
+
     }
 
     @Transient
     public S getSubject() {
-        return id == null ? null : id.getSubject();
+        return id == null ? this.subject : id.getSubject();
     }
 
     public void setSubject(S subject) {
-        if(id == null) {
+        if (id == null) {
             this.subject = subject;
         } else {
             id.setSubject(subject);

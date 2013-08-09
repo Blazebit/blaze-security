@@ -22,9 +22,10 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 @Embeddable
-public abstract class PermissionId<S> implements Serializable {
+public class PermissionId<S> implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private String actionName;
@@ -32,7 +33,7 @@ public abstract class PermissionId<S> implements Serializable {
     private String field;
     private S subject;
 
-    @Basic(optional = false)
+    @Basic
     public String getActionName() {
         return actionName;
     }
@@ -41,7 +42,7 @@ public abstract class PermissionId<S> implements Serializable {
         this.actionName = actionName;
     }
 
-    @Basic(optional = false)
+    @Basic
     @Enumerated(EnumType.STRING)
     public EntityConstants getEntity() {
         return entity;
@@ -51,7 +52,7 @@ public abstract class PermissionId<S> implements Serializable {
         this.entity = entity;
     }
 
-    @Basic(optional = true)
+    @Basic
     public String getField() {
         return field;
     }
