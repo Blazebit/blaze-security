@@ -15,41 +15,31 @@
  */
 package com.blazebit.security.impl;
 
-import java.util.Properties;
-import javax.ejb.embeddable.EJBContainer;
-import javax.naming.Context;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import junit.framework.TestCase;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author cuszk
  */
-public class RoleSecurityTest extends TestCase {
+public class RoleSecurityTest extends BaseTest {
 
-    @PersistenceContext(unitName = "TestPU")
+    @PersistenceContext
     private EntityManager entityManager;
     
-    RoleSecurityServiceImpl roleService;
-
-    @BeforeClass
-    public void setUp() throws Exception {
-        final Context context = EJBContainer.createEJBContainer().getContext();
-        roleService = (RoleSecurityServiceImpl) context.lookup("java:global/impl/RoleSecurityServiceImpl");
-
-    }
+    @Inject
+    private RoleSecurityServiceImpl roleService;
 
     @Test
     public void test_injected_service() {
-        roleService.testInjectedService();
+        assertNotNull(roleService);
     }
 
     @Test
     public void test_entityManager() {
-        entityManager.clear();
+        assertNotNull(entityManager);
     }
 }

@@ -21,6 +21,7 @@ import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import javax.ejb.Stateful;
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
@@ -29,15 +30,11 @@ import javax.persistence.PersistenceContextType;
  *
  * @author cuszk
  */
-@Stateful
+@Stateless
 public class RoleSecurityServiceImpl {
 
-    @PersistenceContext(unitName = "TestPU", type = PersistenceContextType.EXTENDED)
+    @PersistenceContext
     private EntityManager entityManager;
-
-    public void testInjectedService() {
-        System.out.println("Service Injected and method invoked!");
-    }
 
     public void testEntityManager() {
         entityManager.clear();
