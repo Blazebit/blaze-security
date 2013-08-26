@@ -17,20 +17,22 @@ package com.blazebit.security.impl.model;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Christian Beikov
  */
 @Entity
+@Table(name = "USER_DATA_PERMISSION", schema = "USERROLES")
 public class UserDataPermission extends AbstractDataPermission<User, DataPermissionId<User>> {
 
     public UserDataPermission() {
     }
 
+    
     @EmbeddedId
     public DataPermissionId<User> getId() {
         return id;
     }
+
 }

@@ -17,8 +17,10 @@ package com.blazebit.security.impl.model;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "USER_PERMISSION", schema = "USERROLES")
 public class UserPermission extends AbstractPermission<User, UserPermissionId> {
 
     private static final long serialVersionUID = 1L;

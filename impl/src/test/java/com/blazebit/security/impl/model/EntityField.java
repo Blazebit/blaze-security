@@ -22,6 +22,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 /**
@@ -29,6 +30,7 @@ import javax.persistence.Transient;
  * @author Christian
  */
 @Entity
+@Table(name = "Entity_Field", schema = "USERROLES")
 public class EntityField implements Resource {
 
     private Integer id;

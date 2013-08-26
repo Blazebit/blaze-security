@@ -27,11 +27,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * @author Christian Beikov
  */
 @Entity
+@Table(name = "USER_GROUP", schema = "USERROLES")
 public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroupDataPermission>, Serializable {
 
     private static final long serialVersionUID = 1L;

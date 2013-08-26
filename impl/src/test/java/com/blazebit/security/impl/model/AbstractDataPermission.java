@@ -28,7 +28,7 @@ public abstract class AbstractDataPermission<S, P extends DataPermissionId<S>> i
     private EntityAction entityAction;
     private EntityObjectField entityObjectField;
     private S subject;
-
+ 
     public void setId(P id) {
         this.id = id;
         //why does this create new entityaction and field?

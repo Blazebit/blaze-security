@@ -36,7 +36,7 @@ import javax.persistence.Transient;
  * @author Christian Beikov
  */
 @Entity
-@Table(name = "USER_")
+@Table(name = "USER_", schema = "USERROLES")
 public class User implements Subject<UserGroup, UserPermission, UserDataPermission>, Serializable {
 
     private static final long serialVersionUID = 1L;
