@@ -15,7 +15,6 @@
  */
 package com.blazebit.security;
 
-import com.blazebit.security.SecurityException;
 import java.util.Collection;
 
 /**
