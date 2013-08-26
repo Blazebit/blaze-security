@@ -31,20 +31,14 @@ import org.junit.Test;
  */
 public class RoleSecurityTest extends TestCase {
 
-    @PersistenceContext(unitName = "TestPU", type = PersistenceContextType.EXTENDED)
+    @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
+    
     RoleSecurityServiceImpl roleService;
 
     @BeforeClass
     public void setUp() throws Exception {
-        // create the container with our properties
-//        final Properties p = new Properties();
-//        p.put("securityDatabase", "new://Resource?type=DataSource");
-//        p.put("securityDatabase.JdbcDriver", "org.apache.derby.jdbc.ClientDriver");
-//        p.put("securityDatabase.JdbcUrl", "jdbc:derby://localhost:1527/sample");
-
         final Context context = EJBContainer.createEJBContainer().getContext();
-
         roleService = (RoleSecurityServiceImpl) context.lookup("java:global/impl/RoleSecurityServiceImpl");
 
     }
