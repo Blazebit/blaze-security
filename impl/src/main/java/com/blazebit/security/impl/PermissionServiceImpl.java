@@ -21,11 +21,7 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 /**
  *
