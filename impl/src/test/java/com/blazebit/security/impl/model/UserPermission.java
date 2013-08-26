@@ -20,8 +20,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "USER_PERMISSION", schema = "USERROLES")
-public class UserPermission extends AbstractPermission<User, UserPermissionId> {
+public class UserPermission extends AbstractPermission<User, DataPermissionId<User>> {
 
     private static final long serialVersionUID = 1L;
 

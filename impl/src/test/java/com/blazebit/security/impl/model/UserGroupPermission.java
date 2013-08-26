@@ -23,8 +23,7 @@ import javax.persistence.Table;
  * @author Christian Beikov
  */
 @Entity
-@Table(name = "USER_GROUP_PERMISSION", schema = "USERROLES")
-public class UserGroupPermission extends AbstractPermission<UserGroup, UserGroupPermissionId> {
+public class UserGroupPermission extends AbstractPermission<UserGroup, PermissionId<UserGroup>> {
 
     private static final long serialVersionUID = 1L;
 

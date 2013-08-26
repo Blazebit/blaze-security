@@ -23,16 +23,13 @@ import javax.persistence.Table;
  * @author Christian Beikov
  */
 @Entity
-@Table(name = "USER_DATA_PERMISSION", schema = "USERROLES")
 public class UserDataPermission extends AbstractDataPermission<User, DataPermissionId<User>> {
 
     public UserDataPermission() {
     }
 
-    
     @EmbeddedId
-    public DataPermissionId<User> getId() {
+    public PermissionId<User> getId() {
         return id;
     }
-
 }

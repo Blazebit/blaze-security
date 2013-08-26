@@ -24,8 +24,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
-@Embeddable
-public class PermissionId<S> implements Serializable {
+
+public abstract class PermissionId<S> implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private String actionName;
@@ -70,4 +70,45 @@ public class PermissionId<S> implements Serializable {
     public void setSubject(S subject) {
         this.subject = subject;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 67 * hash + (this.actionName != null ? this.actionName.hashCode() : 0);
+        hash = 67 * hash + (this.entity != null ? this.entity.hashCode() : 0);
+        hash = 67 * hash + (this.field != null ? this.field.hashCode() : 0);
+        hash = 67 * hash + (this.subject != null ? this.subject.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PermissionId<S> other = (PermissionId<S>) obj;
+        if ((this.actionName == null) ? (other.actionName != null) : !this.actionName.equals(other.actionName)) {
+            return false;
+        }
+        if (this.entity != other.entity) {
+            return false;
+        }
+        if ((this.field == null) ? (other.field != null) : !this.field.equals(other.field)) {
+            return false;
+        }
+        if (this.subject != other.subject && (this.subject == null || !this.subject.equals(other.subject))) {
+            return false;
+        }
+        return true;
+    }
+
+   
+
+  
+    
+    
+    
 }

@@ -17,6 +17,7 @@ package com.blazebit.security.impl.model;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 /**
  * @author Christian Beikov
@@ -24,14 +25,11 @@ import javax.persistence.Entity;
 @Entity
 public class UserGroupDataPermission extends AbstractDataPermission<UserGroup, DataPermissionId<UserGroup>> {
 
-    private static final long serialVersionUID = 1L;
-
     public UserGroupDataPermission() {
     }
-    
 
     @EmbeddedId
-    public DataPermissionId<UserGroup> getId() {
+    public PermissionId<UserGroup> getId() {
         return id;
     }
 }

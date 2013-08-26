@@ -31,7 +31,6 @@ import javax.persistence.Transient;
  * @author Christian
  */
 @Entity
-@Table(name = "Entity_Object_Field", schema = "USERROLES")
 public class EntityObjectField implements Resource {
 
     private Integer id;

@@ -30,7 +30,6 @@ import javax.persistence.Transient;
  * @author Christian
  */
 @Entity
-@Table(name = "Entity_Field", schema = "USERROLES")
 public class EntityField implements Resource {
 
     private Integer id;

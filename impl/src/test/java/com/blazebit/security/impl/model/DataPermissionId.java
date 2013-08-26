@@ -52,6 +52,28 @@ public class DataPermissionId<S> extends PermissionId<S> {
     public S getSubject() {
         return super.getSubject(); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 89 * hash + (this.entityId != null ? this.entityId.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DataPermissionId<S> other = (DataPermissionId<S>) obj;
+        if ((this.entityId == null) ? (other.entityId != null) : !this.entityId.equals(other.entityId)) {
+            return false;
+        }
+        return true;
+    }
     
      
     
