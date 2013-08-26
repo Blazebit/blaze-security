@@ -17,7 +17,7 @@
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.DerbyTenSevenDialect"/>
       <property name="hibernate.connection.driver_class" value="org.apache.derby.jdbc.ClientDriver"/>
-      <property name="hibernate.connection.url" value="jdbc:derby://localhost:1527/sample;INIT=CREATE SCHEMA IF NOT EXISTS ROLES;"/>
+      <property name="hibernate.connection.url" value="jdbc:derby://localhost:1527/sample;INIT=CREATE SCHEMA IF NOT EXISTS USERROLES;"/>
       <property name="hibernate.connection.username" value="app"/>
       <property name="hibernate.connection.password" value="app"/>
       <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
