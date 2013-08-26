@@ -12,7 +12,7 @@
     <class>com.blazebit.security.impl.model.EntityField</class>
     <class>com.blazebit.security.impl.model.EntityObjectField</class>
     <properties>
-      <property name="hibernate.log" value="error"/>
+      <property name="hibernate.log" value="debug"/>
       <property name="hibernate.debug" value="true"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.DerbyTenSevenDialect"/>
