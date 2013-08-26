@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-  <persistence-unit name="TestPU" transaction-type="RESOURCE_LOCAL">
+  <persistence-unit name="TestPU" transaction-type="JTA">
     <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <jta-data-source>jdbc/DefaultDataSource</jta-data-source>
+    
     <class>com.blazebit.security.impl.model.User</class>
     <class>com.blazebit.security.impl.model.UserGroup</class>
     <class>com.blazebit.security.impl.model.UserPermission</class>
@@ -11,18 +13,13 @@
     <class>com.blazebit.security.impl.model.EntityAction</class>
     <class>com.blazebit.security.impl.model.EntityField</class>
     <class>com.blazebit.security.impl.model.EntityObjectField</class>
+    
     <properties>
       <property name="hibernate.log" value="error"/>
       <property name="hibernate.debug" value="true"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.DerbyTenSevenDialect"/>
-      <property name="hibernate.connection.driver_class" value="org.apache.derby.jdbc.ClientDriver"/>
-      <property name="hibernate.connection.url" value="jdbc:derby://localhost:1527/sample;INIT=CREATE SCHEMA IF NOT EXISTS USERROLES;"/>
-      <property name="hibernate.connection.username" value="app"/>
-      <property name="hibernate.connection.password" value="app"/>
       <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
-      <property name="hibernate.default_schema" value="USERROLES"/>
-      <property name="openjpa.jdbc.Schema" value="USERROLES"/> 
     </properties>
   </persistence-unit>
 </persistence>
