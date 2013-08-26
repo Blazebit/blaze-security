@@ -42,22 +42,4 @@ public class RoleSecurityServiceImpl {
     public void testEntityManager() {
         entityManager.clear();
     }
-
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> void grant(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action, Resource resource) {
-        if (subject == null || authorizer == null || action == null) {
-            throw new IllegalArgumentException("Value cannot be null!");
-        }
-    }
-
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> void addUserToGroup(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Subject<R, P, Q> subjectGroup, boolean takeOverPermissions) {
-        if (subject == null || authorizer == null || subjectGroup == null) {
-            throw new IllegalArgumentException("Value cannot be null!");
-        }
-
-        if (takeOverPermissions) {
-            for (Permission p : subjectGroup.getPermissions()) {
-                // subject.getPermissions().add(p);
-            }
-        }
-    }
 }

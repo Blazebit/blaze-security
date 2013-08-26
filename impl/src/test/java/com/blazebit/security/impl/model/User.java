@@ -110,7 +110,6 @@ public class User implements Subject<UserGroup, UserPermission, UserDataPermissi
 
 //    @Override
     @OneToMany(mappedBy = "id.subject")
-    @Override
     public Set<UserDataPermission> getDataPermissions() {
         return this.dataPermissions;
     }

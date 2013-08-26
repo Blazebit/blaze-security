@@ -21,9 +21,9 @@ import java.util.Collection;
  *
  * @author Christian Beikov
  */
-public interface Subject<R extends Role<R, ?>, P extends Permission<?>> {
+public interface Subject<R extends Role<R, ?, ?>, Z extends Permission<?>, Y extends Permission<?>> {
     
     public Collection<R> getRoles();
     
-    public Collection<P> getPermissions();
+    public Collection<Z> getPermissions();
 }

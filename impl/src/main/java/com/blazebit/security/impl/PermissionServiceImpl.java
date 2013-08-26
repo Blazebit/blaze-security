@@ -31,169 +31,50 @@ import java.util.Map;
  *
  * @author Christian Beikov
  */
-public class PermissionServiceImpl implements PermissionService{
-    
-    private final Map<Subject, Collection<Action>> permissions = new HashMap<Subject, Collection<Action>>();
+public class PermissionServiceImpl implements PermissionService {
 
     @Override
-    public <R extends Role<R, ?>, P extends Permission<?>> boolean isGranted(Subject<R, P> subject, Action action) {
-        if(subject == null) {
-            throw new NullPointerException("subject");
-        }
-        if(action == null) {
-            throw new NullPointerException("action");
-        }
-        
-        Collection<Action> grantedActions = permissions.get(subject);
-        
-        if(grantedActions.contains(action)) {
-            return true;
-        }
-        
-        for (Permission permission : subject.getPermissions()) {
-            if(permission.getAction().equals(action)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    @Override
-    public <R extends Role<R, ?>, P extends Permission<?>> void grant(Subject<R, P> authorizer, Subject<R, P> subject, Action action) {
-        if(subject == null) {
-            throw new NullPointerException("subject");
-        }
-        if(action == null) {
-            throw new NullPointerException("action");
-        }
-        if(authorizer == null) {
-            throw new SecurityException("No valid authorizer given");
-        }
-        if (!isGranted(authorizer, getGrantAction())) {
-            throw new SecurityException("The authorizer '" + authorizer + "' is not granted to grant actions");
-        }
-        
-        Collection<Action> grantedActions = permissions.get(subject);
-        
-        if(grantedActions == null) {
-            grantedActions = new HashSet<Action>();
-            permissions.put(subject, grantedActions);
-        }
-        
-        grantedActions.add(action);
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> boolean isGranted(Subject<R, P, Q> subject, Action action) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public <R extends Role<R, ?>, P extends Permission<?>> void revoke(Subject<R, P> authorizer, Subject<R, P> subject, Action action) {
-        if(subject == null) {
-            throw new NullPointerException("subject");
-        }
-        if(action == null) {
-            throw new NullPointerException("action");
-        }
-        if(authorizer == null) {
-            throw new SecurityException("No valid authorizer given");
-        }
-        if (!isGranted(authorizer, getRevokeAction())) {
-            throw new SecurityException("The authorizer '" + authorizer + "' is not granted to revoke actions");
-        }
-        
-        Collection<Action> grantedActions = permissions.get(subject);
-        
-        if(grantedActions == null) {
-            grantedActions = new HashSet<Action>();
-            permissions.put(subject, grantedActions);
-        }
-        
-        grantedActions.remove(action);
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void grant(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public <R extends Role<R, ?>, P extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P> subject) {
-        if(subject == null) {
-            throw new NullPointerException("subject");
-        }
-        
-        Collection<Action> grantedActions = permissions.get(subject);
-        Collection<Action> allowedActions;
-        
-        if(grantedActions == null) {
-            allowedActions = new ArrayList<Action>(subject.getPermissions().size());
-        } else {
-            allowedActions = new ArrayList<Action>(subject.getPermissions().size() + grantedActions.size());
-            allowedActions.addAll(grantedActions);
-        }
-        
-        for(Permission permission : subject.getPermissions()) {
-            allowedActions.add(permission.getAction());
-        }
-        
-        return allowedActions;
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void revoke(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
+    @Override
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P, Q> subject) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     @Override
     public Action getGrantAction() {
-        return grantAction;
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public Action getRevokeAction() {
-        return revokeAction;
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public Action getAllAction() {
-        return allAction;
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public Action getNoneAction() {
-        return noneAction;
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public Resource getAllResource() {
-        return allResource;
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    private final Resource allResource = new Resource() {
-
-        @Override
-        public boolean matches(Resource resource) {
-            return this == resource;
-        }
-    };
-    
-    private final Action grantAction = new Action() {
-
-        @Override
-        public boolean matches(Action action) {
-            return this == action;
-        }
-    };
-    
-    private final Action revokeAction = new Action() {
-
-        @Override
-        public boolean matches(Action action) {
-            return this == action;
-        }
-    };
-    
-    private final Action allAction = new Action() {
-
-        @Override
-        public boolean matches(Action action) {
-            return this == action;
-        }
-    };
-    
-    private final Action noneAction = new Action() {
-
-        @Override
-        public boolean matches(Action action) {
-            return this == action;
-        }
-    };
 }

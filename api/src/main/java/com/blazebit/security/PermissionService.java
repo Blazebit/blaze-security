@@ -15,6 +15,7 @@
  */
 package com.blazebit.security;
 
+import com.blazebit.security.SecurityException;
 import java.util.Collection;
 
 /**
@@ -22,47 +23,47 @@ import java.util.Collection;
  * @author Christian Beikov
  */
 public interface PermissionService {
-    
+
     /**
-     * 
+     *
      * @param subject
      * @param action
-     * @return 
+     * @return
      */
-    public <R extends Role<R, ?>, P extends Permission<?>> boolean isGranted(Subject<R, P> subject, Action action); // Resource
-    
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> boolean isGranted(Subject<R, P, Q> subject, Action action); // Resource
+
     /**
-     * 
+     *
      * @param authorizer
      * @param subject
-     * @param action 
+     * @param action
      * @throws SecurityException
      */
-    public <R extends Role<R, ?>, P extends Permission<?>> void grant(Subject<R, P> authorizer, Subject<R, P> subject, Action action); // Resource
-    
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void grant(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action); // Resource
+
     /**
-     * 
+     *
      * @param authorizer
      * @param subject
-     * @param action 
+     * @param action
      * @throws SecurityException
      */
-    public <R extends Role<R, ?>, P extends Permission<?>> void revoke(Subject<R, P> authorizer, Subject<R, P> subject, Action action); // Resource
-    
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void revoke(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action); // Resource
+
     /**
-     * 
+     *
      * @param subject
-     * @return 
+     * @return
      */
-    public <R extends Role<R, ?>, P extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P> subject); // Resource
-    
+    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P, Q> subject); // Resource
+
     public Action getGrantAction();
-    
+
     public Action getRevokeAction();
-    
+
     public Action getAllAction();
-    
+
     public Action getNoneAction();
-    
+
     public Resource getAllResource();
 }

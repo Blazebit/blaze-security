@@ -110,7 +110,6 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroup
         this.permissions = permissions;
     }
 
-    @Override
     @OneToMany(mappedBy = "id.subject")
     public Set<UserGroupDataPermission> getDataPermissions() {
         return this.dataPermissions;
