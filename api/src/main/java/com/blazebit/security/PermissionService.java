@@ -29,15 +29,7 @@ public interface PermissionService {
      * @param action
      * @return 
      */
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> boolean isGranted(Subject<R, P, Q> subject, Action action); 
-    
-    /**
-     * 
-     * @param subject
-     * @param action
-     * @return 
-     */
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> boolean isGranted(Subject<R, P, Q> subject, Action action, Resource resource); 
+    public <R extends Role<R, ?>, P extends Permission<?>> boolean isGranted(Subject<R, P> subject, Action action); // Resource
     
     /**
      * 
@@ -46,7 +38,7 @@ public interface PermissionService {
      * @param action 
      * @throws SecurityException
      */
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> void grant(Subject<R, P,Q> authorizer, Subject<R, P,Q> subject, Action action, Resource resource); 
+    public <R extends Role<R, ?>, P extends Permission<?>> void grant(Subject<R, P> authorizer, Subject<R, P> subject, Action action); // Resource
     
     /**
      * 
@@ -55,14 +47,14 @@ public interface PermissionService {
      * @param action 
      * @throws SecurityException
      */
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> void revoke(Subject<R, P,Q> authorizer, Subject<R, P, Q> subject, Action action, Resource resource); // Resource
+    public <R extends Role<R, ?>, P extends Permission<?>> void revoke(Subject<R, P> authorizer, Subject<R, P> subject, Action action); // Resource
     
     /**
      * 
      * @param subject
      * @return 
      */
-    public <R extends Role<R, ?, ?>, P extends Permission<?>, Q extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P, Q> subject, Resource resource); // Resource
+    public <R extends Role<R, ?>, P extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P> subject); // Resource
     
     public Action getGrantAction();
     
