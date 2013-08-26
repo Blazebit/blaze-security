@@ -18,7 +18,7 @@
       <property name="hibernate.log" value="error"/>
       <property name="hibernate.debug" value="true"/>
       <property name="hibernate.show_sql" value="true"/>
-      <property name="hibernate.dialect" value="org.hibernate.dialect.DerbyTenSevenDialect"/>
+      <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
       <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
     </properties>
   </persistence-unit>
