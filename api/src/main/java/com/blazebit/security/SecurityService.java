@@ -21,7 +21,7 @@ import java.util.Collection;
  *
  * @author Christian Beikov
  */
-public interface PermissionService {
+public interface SecurityService {
 
     /**
      *
@@ -29,7 +29,7 @@ public interface PermissionService {
      * @param action
      * @return
      */
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> boolean isGranted(Subject<R, P, Q> subject, Action action); // Resource
+    public <R extends Role<R>> boolean isGranted(Subject<R> subject, Action action, Resource resource);
 
     /**
      *
@@ -38,8 +38,8 @@ public interface PermissionService {
      * @param action
      * @throws SecurityException
      */
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void grant(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action); // Resource
-
+    public <R extends Role<R>> void grant(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource);
+        
     /**
      *
      * @param authorizer
@@ -47,22 +47,20 @@ public interface PermissionService {
      * @param action
      * @throws SecurityException
      */
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void revoke(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action); // Resource
+    public <R extends Role<R>> void revoke(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource);
 
     /**
      *
      * @param subject
      * @return
      */
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P, Q> subject); // Resource
+    public <R extends Role<R>> Collection<Action> getAllowedActions(Subject<R> subject, Resource resource);
 
     public Action getGrantAction();
 
     public Action getRevokeAction();
 
-    public Action getAllAction();
+    public Collection<Resource> getAllResources();
 
-    public Action getNoneAction();
-
-    public Resource getAllResource();
+    public Collection<Resource> getAllResources(Module module);
 }

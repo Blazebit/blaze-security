@@ -21,7 +21,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 @MappedSuperclass
-public abstract class AbstractPermission<S, P extends PermissionId<S>> implements Permission<EntityField>, Serializable {
+public abstract class AbstractPermission<S, P extends PermissionId<S>> implements Permission, Serializable {
 
     private static final long serialVersionUID = 1L;
     protected P id;
@@ -31,27 +31,21 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
 
     public void setId(P id) {
         this.id = id;
-//        this.entityAction = new EntityAction(id);
-//        this.entityField = new EntityField(id);
-//
-//        if (id != null) {
-//            if (subject != null) {
-//                id.setSubject(subject);
-//            }
-//            if (entityAction != null) {
-//                id.setActionName(entityAction.getActionName());
-//            }
-//            if (entityField != null) {
-//                id.setEntity(entityField.getEntity());
-//                id.setField(entityField.getField());
-//            }
-//        }
-    }
+        this.entityAction = new EntityAction(id);
+        this.entityField = new EntityField(id);
 
-    @Override
-    @Transient
-    public EntityAction getAction() {
-        return entityAction;
+        if (id != null) {
+            if (subject != null) {
+                id.setSubject(subject);
+            }
+            if (entityAction != null) {
+                id.setActionName(entityAction.getActionName());
+            }
+            if (entityField != null) {
+                id.setEntity(entityField.getEntity());
+                id.setField(entityField.getField());
+            }
+        }
     }
 
     public void setEntityAction(EntityAction entityAction) {
@@ -60,18 +54,14 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
     }
 
     @Transient
-    public EntityAction getEntityAction() {
+    @Override
+    public EntityAction getAction() {
         return entityAction;
     }
 
+    @Transient
     @Override
-    @Transient
     public EntityField getResource() {
-        return entityField;
-    }
-
-    @Transient
-    public EntityField getEntityField() {
         return entityField;
     }
 
@@ -81,16 +71,46 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
 
     }
 
-    @Transient
-    public S getSubject() {
-        return id == null ? this.subject : id.getSubject();
-    }
-
     public void setSubject(S subject) {
         if (id == null) {
             this.subject = subject;
         } else {
             id.setSubject(subject);
+
         }
     }
+
+    @Transient
+    public S getSubject() {
+        return id == null ? null : id.getSubject();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 43 * hash + (this.id != null ? this.id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AbstractPermission<S, P> other = (AbstractPermission<S, P>) obj;
+        if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Permission{" + "id=" + id + ", entityAction=" + entityAction + ", entityField=" + entityField + ", subject=" + subject + '}';
+    }
+
+    
 }

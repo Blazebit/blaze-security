@@ -17,23 +17,11 @@ package com.blazebit.security.impl.model;
 
 /**
  *
- * @author Christian
+ * @author cuszk
  */
-public enum EntityConstants {
+public enum SubjectRoleConstants {
     
-    DOCUMENT,
-    EMAIL,
-    WORKFLOW,
+    USER,
+    USERGROUP
     
-    CARRIER,
-    HAULIER,
-    CARRIER_USER,
-    CARRIER_PARTY,
-    CARRIER_PARTY_CONTACT,
-    HAULIER_PARTY,
-    HAULIER_PARTY_CONTACT,
-    PICKUPADDRESS
-    
-    
-   
 }

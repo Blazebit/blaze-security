@@ -15,57 +15,45 @@
  */
 package com.blazebit.security.impl.model;
 
+import com.blazebit.security.EntityResource;
 import com.blazebit.security.Resource;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import org.apache.commons.lang.StringUtils;
 
 /**
+ * Class representing an Entity resource with an optional field attribute. If
+ * field attribute is empty the resource refers to all the entities defined by
+ * the entity name attribute.
  *
  * @author Christian
  */
-@Entity
-public class EntityField implements Resource {
+public class EntityField implements Resource, EntityResource {
 
-    private Integer id;
+    protected String entity;
+    protected String field;
     protected PermissionId<?> permissionId;
-    private EntityConstants entity;
-    private String field;
 
     public EntityField() {
     }
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
+    public EntityField(String entity, String field) {
+        this.entity = entity;
+        this.field = field;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public EntityField(String entity) {
+        this.entity = entity;
+        this.field = "";
     }
 
-    @Transient
     public PermissionId<?> getPermissionId() {
         return permissionId;
-    }
-
-    public void setPermissionId(PermissionId<?> permissionId) {
-        this.permissionId = permissionId;
-        this.entity=permissionId.getEntity();
-        this.field=permissionId.getField();
     }
 
     public <P extends PermissionId<?>> EntityField(P permissionId) {
         this.permissionId = permissionId;
     }
 
-    <P extends PermissionId<?>> void attachToPermissionId(P permissionId) {
+    public <P extends PermissionId<?>> void attachToPermissionId(P permissionId) {
         this.permissionId = permissionId;
 
         if (entity != null) {
@@ -80,38 +68,44 @@ public class EntityField implements Resource {
 
     @Override
     public boolean matches(Resource resource) {
-        EntityField _resource = (EntityField) resource;
-        if (permissionId == null) {
-            return this.getEntity().equals(_resource.getEntity()) && (this.getField() == null || (this.getField() != null && this.getField().equals(_resource.getField())));
+        if (resource instanceof EntityResource) {
+            EntityResource _resource = (EntityResource) resource;
+            if (permissionId == null) {
+                return this.getEntity().equals(_resource.getEntity()) && (StringUtils.isEmpty(this.getField()) || this.getField().equals(_resource.getField()));
+            } else {
+                return permissionId.getEntity().equals(_resource.getEntity()) && (StringUtils.isEmpty(permissionId.getField()) || permissionId.getField().equals(_resource.getField()));
+            }
         } else {
-            return permissionId.getEntity().equals(_resource.getEntity()) && permissionId.getField().equals(_resource.getField());
+            throw new IllegalArgumentException("Not supported resource type");
         }
     }
 
-    @Enumerated(EnumType.STRING)
-    public EntityConstants getEntity() {
+    @Override
+    public String getEntity() {
         return permissionId == null ? entity : permissionId.getEntity();
     }
 
-    public void setEntity(EntityConstants entity) {
+    public void setEntity(String entity) {
         this.entity = entity;
         if (permissionId != null) {
             permissionId.setEntity(entity);
         }
     }
 
-    @Basic
+    @Override
     public String getField() {
         return permissionId == null ? field : permissionId.getField();
     }
 
     public void setField(String field) {
-        if(permissionId == null) {
-            this.field = field;
-        } else {
+        this.field = field;
+        if (permissionId != null) {
             permissionId.setField(field);
         }
     }
 
-  
+    @Override
+    public String toString() {
+        return "EntityField{" + "entity=" + getEntity() + ", field=" + getField() + '}';
+    }
 }

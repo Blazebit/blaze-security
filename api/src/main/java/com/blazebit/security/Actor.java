@@ -13,33 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security.impl;
-
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import org.junit.Test;
-import static org.junit.Assert.*;
+package com.blazebit.security;
 
 /**
  *
  * @author cuszk
  */
-public class RoleSecurityTest extends BaseTest {
-
-    @PersistenceContext
-    private EntityManager entityManager;
+public interface Actor {
     
-    @Inject
-    private RoleSecurityServiceImpl roleService;
-
-    @Test
-    public void test_injected_service() {
-        assertNotNull(roleService);
-    }
-
-    @Test
-    public void test_entityManager() {
-        assertNotNull(entityManager);
-    }
 }

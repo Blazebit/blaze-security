@@ -15,8 +15,12 @@
  */
 package com.blazebit.security.impl.model;
 
+import com.blazebit.security.IdHolder;
+import com.blazebit.security.Permission;
 import com.blazebit.security.Role;
+import com.blazebit.security.Subject;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Basic;
@@ -27,13 +31,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.Transient;
 
 /**
  * @author Christian Beikov
  */
 @Entity
-public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroupDataPermission>, Serializable {
+public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
 
     private static final long serialVersionUID = 1L;
     private Integer id;
@@ -44,11 +48,11 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroup
     private Set<UserGroupPermission> permissions = new HashSet<UserGroupPermission>(0);
     private Set<UserGroupDataPermission> dataPermissions = new HashSet<UserGroupDataPermission>(0);
 
-    public UserGroup(String name) {
-        this.name = name;
+    public UserGroup() {
     }
 
-    public UserGroup() {
+    public UserGroup(String name) {
+        this.name = name;
     }
 
     @Id
@@ -61,7 +65,7 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroup
         this.id = id;
     }
 
-    @Basic
+    @Basic(optional = false)
     public String getName() {
         return this.name;
     }
@@ -77,6 +81,7 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroup
         return this.parent;
     }
 
+    @Override
     public void setParent(UserGroup parent) {
         this.parent = parent;
     }
@@ -99,7 +104,6 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroup
         this.userGroups = userGroups;
     }
 
-    @Override
     @OneToMany(mappedBy = "id.subject")
     public Set<UserGroupPermission> getPermissions() {
         return this.permissions;
@@ -116,5 +120,60 @@ public class UserGroup implements Role<UserGroup, UserGroupPermission, UserGroup
 
     public void setDataPermissions(Set<UserGroupDataPermission> dataPermissions) {
         this.dataPermissions = dataPermissions;
+    }
+
+    @Transient
+    @Override
+    public Set<Permission> getAllPermissions() {
+        Set<Permission> allPermissions = new HashSet<Permission>();
+        allPermissions.addAll(this.permissions);
+        allPermissions.addAll(this.dataPermissions);
+        return allPermissions;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 59 * hash + (this.id != null ? this.id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UserGroup other = (UserGroup) obj;
+        if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "UserGroup{" + "name=" + name + '}';
+    }
+
+    @Override
+    @Transient
+    public String getEntityId() {
+        //TODO add json format
+        return String.valueOf(id);
+    }
+
+    @Transient
+    @Override
+    public Set<User> getSubjects() {
+        return this.users;
+    }
+
+    @Transient
+    @Override
+    public Set<UserGroup> getRoles() {
+        return this.userGroups;
     }
 }

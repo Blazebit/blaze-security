@@ -13,27 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security.impl.model;
+package com.blazebit.security;
 
 /**
  *
- * @author Christian
+ * @author cuszk
  */
-public enum EntityConstants {
+public interface EntityObjectResource extends EntityResource {
     
-    DOCUMENT,
-    EMAIL,
-    WORKFLOW,
+    public String getEntityId();
     
-    CARRIER,
-    HAULIER,
-    CARRIER_USER,
-    CARRIER_PARTY,
-    CARRIER_PARTY_CONTACT,
-    HAULIER_PARTY,
-    HAULIER_PARTY_CONTACT,
-    PICKUPADDRESS
-    
-    
-   
 }

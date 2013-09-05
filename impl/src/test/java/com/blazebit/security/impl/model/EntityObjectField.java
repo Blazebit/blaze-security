@@ -15,44 +15,36 @@
  */
 package com.blazebit.security.impl.model;
 
+import com.blazebit.security.EntityObjectResource;
 import com.blazebit.security.Resource;
-import javax.persistence.Basic;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import org.apache.commons.lang.StringUtils;
 
 /**
+ * Class that represents an entity object with an id. Field attribute is
+ * inherited from EntityField and it is optional. If not specified it refers to
+ * all the entities with the given id.
  *
  * @author Christian
  */
-@Entity
-public class EntityObjectField implements Resource {
+public class EntityObjectField extends EntityField implements EntityObjectResource {
 
-    private Integer id;
-    protected DataPermissionId<?> permissionId;
-    private EntityConstants entity;
-    private String field;
+    private DataPermissionId<?> permissionId;
     private String entityId;
 
     public EntityObjectField() {
     }
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
+    public EntityObjectField(String entity, String field, String id) {
+        super(entity, field);
+        this.entityId = id;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public EntityObjectField(String entity, String id) {
+        super(entity);
+        this.entityId = id;
     }
 
-    @Transient
+    @Override
     public DataPermissionId<?> getPermissionId() {
         return permissionId;
     }
@@ -67,11 +59,15 @@ public class EntityObjectField implements Resource {
 
     @Override
     public boolean matches(Resource resource) {
-        EntityObjectField _resource = (EntityObjectField) resource;
-        if (permissionId == null) {
-            return this.getEntity().equals(_resource.getEntity()) && this.getEntity().equals(_resource.getEntity()) && (this.getField() == null || (this.getField() != null && this.getField().equals(_resource.getField())));
+        if (resource instanceof EntityObjectField) {
+            EntityObjectField _resource = (EntityObjectField) resource;
+            if (permissionId == null) {
+                return super.matches(resource) && this.getEntityId().equals(_resource.getEntityId());
+            } else {
+                return permissionId.getEntity().equals(_resource.getEntity()) && permissionId.getEntityId().equals(_resource.getEntityId()) && (StringUtils.isEmpty(permissionId.getField()) || permissionId.getField().equals(_resource.getField()));
+            }
         } else {
-            return permissionId.getEntity().equals(_resource.getEntity()) && permissionId.getField().equals(_resource.getField());
+            return false;
         }
     }
 
@@ -79,7 +75,7 @@ public class EntityObjectField implements Resource {
         this.permissionId = permissionId;
 
         if (entity != null) {
-            permissionId.setEntity(entity);
+            permissionId.setEntity(super.entity);
             entity = null;
         }
         if (field != null) {
@@ -92,13 +88,13 @@ public class EntityObjectField implements Resource {
         }
     }
 
-    @Basic
-    @Enumerated(EnumType.STRING)
-    public EntityConstants getEntity() {
+    @Override
+    public String getEntity() {
         return permissionId == null ? entity : permissionId.getEntity();
     }
 
-    public void setEntity(EntityConstants entity) {
+    @Override
+    public void setEntity(String entity) {
         if (permissionId == null) {
             this.entity = entity;
         } else {
@@ -106,11 +102,12 @@ public class EntityObjectField implements Resource {
         }
     }
 
-    @Basic
+    @Override
     public String getField() {
         return permissionId == null ? field : permissionId.getField();
     }
 
+    @Override
     public void setField(String field) {
         if (permissionId == null) {
             this.field = field;
@@ -119,12 +116,16 @@ public class EntityObjectField implements Resource {
         }
     }
 
-    @Basic
     public String getEntityId() {
-        return entityId;
+        return permissionId == null ? entityId : permissionId.getEntityId();
     }
 
     public void setEntityId(String entityId) {
         this.entityId = entityId;
+    }
+
+    @Override
+    public String toString() {
+        return "EntityObjectField{" + "entity=" + getEntity() + ", field=" + getField() + ", entityId=" + getEntityId() + '}';
     }
 }

@@ -13,27 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security.impl.model;
+package com.blazebit.security;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
  */
-public enum EntityConstants {
-    
-    DOCUMENT,
-    EMAIL,
-    WORKFLOW,
-    
-    CARRIER,
-    HAULIER,
-    CARRIER_USER,
-    CARRIER_PARTY,
-    CARRIER_PARTY_CONTACT,
-    HAULIER_PARTY,
-    HAULIER_PARTY_CONTACT,
-    PICKUPADDRESS
-    
-    
-   
+public class SecurityActionException extends RuntimeException {
+
+    public SecurityActionException() {
+    }
+
+    public SecurityActionException(String message) {
+        super(message);
+    }
+
+    public SecurityActionException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SecurityActionException(Throwable cause) {
+        super(cause);
+    }
 }

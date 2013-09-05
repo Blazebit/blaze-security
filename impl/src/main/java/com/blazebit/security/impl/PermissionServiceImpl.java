@@ -17,7 +17,7 @@ package com.blazebit.security.impl;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionService;
+import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
@@ -26,17 +26,21 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import javax.ejb.Stateless;
+import javax.inject.Inject;
 
 /**
  *
  * @author Christian Beikov
  */
-public class PermissionServiceImpl implements PermissionService {
+@Stateless
+public class PermissionServiceImpl  {
 
+        
     private final Map<Subject, Collection<Action>> permissions = new HashMap<Subject, Collection<Action>>();
 
-    @Override
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> boolean isGranted(Subject<R, P, Q> subject, Action action) {
+    //@Override
+    public <R extends Role<R>> boolean isGranted(Subject<R> subject, Action action, Resource resource) {
         if (subject == null) {
             throw new NullPointerException("subject");
         }
@@ -50,7 +54,7 @@ public class PermissionServiceImpl implements PermissionService {
             return true;
         }
 
-        for (Permission permission : subject.getPermissions()) {
+        for (Permission permission : subject.getAllPermissions()) {
             if (permission.getAction().equals(action)) {
                 return true;
             }
@@ -59,8 +63,8 @@ public class PermissionServiceImpl implements PermissionService {
         return false;
     }
 
-    @Override
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void grant(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action) {
+    //@Override
+    public <R extends Role<R>> void grant(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) {
         if (subject == null) {
             throw new NullPointerException("subject");
         }
@@ -70,7 +74,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (authorizer == null) {
             throw new SecurityException("No valid authorizer given");
         }
-        if (!isGranted(authorizer, getGrantAction())) {
+        if (!isGranted(authorizer, getGrantAction(), null)) {
             throw new SecurityException("The authorizer '" + authorizer + "' is not granted to grant actions");
         }
 
@@ -84,8 +88,8 @@ public class PermissionServiceImpl implements PermissionService {
         grantedActions.add(action);
     }
 
-    @Override
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> void revoke(Subject<R, P, Q> authorizer, Subject<R, P, Q> subject, Action action) {
+    //@Override
+    public <R extends Role<R>> void revoke(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) {
         if (subject == null) {
             throw new NullPointerException("subject");
         }
@@ -95,7 +99,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (authorizer == null) {
             throw new SecurityException("No valid authorizer given");
         }
-        if (!isGranted(authorizer, getRevokeAction())) {
+        if (!isGranted(authorizer, getRevokeAction(), null)) {
             throw new SecurityException("The authorizer '" + authorizer + "' is not granted to revoke actions");
         }
 
@@ -109,8 +113,8 @@ public class PermissionServiceImpl implements PermissionService {
         grantedActions.remove(action);
     }
 
-    @Override
-    public <R extends Role<R, P, Q>, P extends Permission<?>, Q extends Permission<?>> Collection<Action> getAllowedActions(Subject<R, P, Q> subject) {
+    //@Override
+    public <R extends Role<R>> Collection<Action> getAllowedActions(Subject<R> subject, Resource resource) {
         if (subject == null) {
             throw new NullPointerException("subject");
         }
@@ -119,40 +123,30 @@ public class PermissionServiceImpl implements PermissionService {
         Collection<Action> allowedActions;
 
         if (grantedActions == null) {
-            allowedActions = new ArrayList<Action>(subject.getPermissions().size());
+            allowedActions = new ArrayList<Action>(subject.getAllPermissions().size());
         } else {
-            allowedActions = new ArrayList<Action>(subject.getPermissions().size() + grantedActions.size());
+            allowedActions = new ArrayList<Action>(subject.getAllPermissions().size() + grantedActions.size());
             allowedActions.addAll(grantedActions);
         }
 
-        for (Permission permission : subject.getPermissions()) {
+        for (Permission permission : subject.getAllPermissions()) {
             allowedActions.add(permission.getAction());
         }
 
         return allowedActions;
     }
 
-    @Override
+   // @Override
     public Action getGrantAction() {
         return grantAction;
     }
 
-    @Override
+    //@Override
     public Action getRevokeAction() {
         return revokeAction;
     }
 
-    @Override
-    public Action getAllAction() {
-        return allAction;
-    }
-
-    @Override
-    public Action getNoneAction() {
-        return noneAction;
-    }
-
-    @Override
+    //@Override
     public Resource getAllResource() {
         return allResource;
     }
@@ -169,18 +163,6 @@ public class PermissionServiceImpl implements PermissionService {
         }
     };
     private final Action revokeAction = new Action() {
-        @Override
-        public boolean matches(Action action) {
-            return this == action;
-        }
-    };
-    private final Action allAction = new Action() {
-        @Override
-        public boolean matches(Action action) {
-            return this == action;
-        }
-    };
-    private final Action noneAction = new Action() {
         @Override
         public boolean matches(Action action) {
             return this == action;

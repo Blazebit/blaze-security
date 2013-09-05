@@ -24,8 +24,12 @@ import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.enterprise.context.RequestScoped;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -37,29 +41,30 @@ import org.junit.runners.model.Statement;
  * @author Christian
  */
 public class TestRunner extends BlockJUnit4ClassRunner {
-    
+
     private static final List<TestRunner> instances = new ArrayList<TestRunner>();
     private CdiContainer container;
     private ContextControl contextControl;
     private int executedTests = 0;
-    
+
     public TestRunner(Class<?> klass) throws InitializationError {
         super(klass);
         System.setProperty("openejb.deploymentId.format", "{moduleId}/{ejbName}");
         System.setProperty("openejb.embedded.initialcontext.close", "destroy");
-        
+        System.setProperty("openejb.validation.output.level", "verbose");
+
         try {
             System.setProperty("openejb.conf.file", TestRunner.class.getClassLoader().getResource("META-INF/openejb.xml").toURI().toString());
         } catch (URISyntaxException e) {
             throw new RuntimeException("could not load openejb.xml");
         }
-        
         container = CdiContainerLoader.getCdiContainer();
         container.boot();
         contextControl = container.getContextControl();
         contextControl.startContexts();
         instances.add(this);
     }
+
     @Override
     protected Object createTest() throws Exception {
         return BeanProvider.getContextualReference(getTestClass().getJavaClass(), new DefaultLiteral());
@@ -81,21 +86,32 @@ public class TestRunner extends BlockJUnit4ClassRunner {
     protected List<TestRule> getTestRules(Object target) {
         List<TestRule> rules = new ArrayList<TestRule>(super.getTestRules(target));
         rules.add(new TestRule() {
-
             @Override
             public Statement apply(final Statement base, Description description) {
 
                 return new Statement() {
-
                     @Override
                     public void evaluate() throws Throwable {
+                        EntityManagerFactory emf = null;
+                        Map<String, Object> properties = new HashMap<String, Object>();
+
+                        properties.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+                        properties.put("javax.persistence.jdbc.url", "jdbc:h2:mem:test;INIT=CREATE SCHEMA IF NOT EXISTS USERROLES;");
+                        properties.put("javax.persistence.jdbc.password", "test");
+                        properties.put("javax.persistence.jdbc.user", "test");
+
                         try {
                             contextControl.startContext(RequestScoped.class);
+                            //emf = Persistence.createEntityManagerFactory("TestPU", properties);
                             base.evaluate();
                         } catch (Throwable e) {
                             e = ExceptionUtils.unwrap(e, InvocationTargetException.class);
                             throw e;
                         } finally {
+                            if (emf != null) {
+                                emf.close();
+                            }
+
                             contextControl.stopContext(RequestScoped.class);
                             executedTests++;
 

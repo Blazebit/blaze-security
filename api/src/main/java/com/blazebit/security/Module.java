@@ -13,27 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security.impl.model;
+package com.blazebit.security;
+
+import java.util.List;
 
 /**
  *
- * @author Christian
+ * @author cuszk
  */
-public enum EntityConstants {
-    
-    DOCUMENT,
-    EMAIL,
-    WORKFLOW,
-    
-    CARRIER,
-    HAULIER,
-    CARRIER_USER,
-    CARRIER_PARTY,
-    CARRIER_PARTY_CONTACT,
-    HAULIER_PARTY,
-    HAULIER_PARTY_CONTACT,
-    PICKUPADDRESS
-    
-    
-   
+public interface Module {
+
+    public List<Enum<?>> getEntities();
 }

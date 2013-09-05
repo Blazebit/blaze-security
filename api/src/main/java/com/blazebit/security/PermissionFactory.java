@@ -13,27 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security.impl.model;
+package com.blazebit.security;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
  */
-public enum EntityConstants {
+public interface PermissionFactory {
+
+    public <R extends Role<R>, P extends Permission> P create(Subject<R> subject, Action action, Resource resource);
     
-    DOCUMENT,
-    EMAIL,
-    WORKFLOW,
-    
-    CARRIER,
-    HAULIER,
-    CARRIER_USER,
-    CARRIER_PARTY,
-    CARRIER_PARTY_CONTACT,
-    HAULIER_PARTY,
-    HAULIER_PARTY_CONTACT,
-    PICKUPADDRESS
-    
-    
-   
+    public <R extends Role<R>, P extends Permission> P create(Role<R> role, Action action, Resource resource);
+
 }

@@ -22,14 +22,16 @@ import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
-import com.blazebit.security.RoleSecurityService;
 import com.blazebit.security.SecurityActionException;
 import com.blazebit.security.SecurityService;
 import com.blazebit.security.Subject;
+import com.blazebit.security.impl.model.EntityConstants;
+import com.blazebit.security.Module;
+import com.blazebit.security.impl.model.SubjectRoleConstants;
 import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.impl.utils.EntityUtils;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Set;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -41,7 +43,7 @@ import javax.persistence.PersistenceContext;
  * @author cuszk
  */
 @Stateless
-public class RoleSecurityServiceImpl implements RoleSecurityService {
+public class SecurityServiceImpl implements SecurityService {
 
     @Inject
     private PermissionFactory permissionFactory;
@@ -49,14 +51,11 @@ public class RoleSecurityServiceImpl implements RoleSecurityService {
     private PermissionDataAccess permissionDataAccess;
     @PersistenceContext
     private EntityManager entityManager;
-    @Inject
-    private SecurityService securityService;
 
     @Override
-    public boolean isGranted(Role role, Action action, Resource resource) {
-        role = entityManager.find(role.getClass(), ((IdHolder) role).getId());
-        for (Object _permission : role.getAllPermissions()) {
-            Permission permission = (Permission) _permission;
+    public <R extends Role<R>> boolean isGranted(Subject<R> subject, Action action, Resource resource) {
+        subject = entityManager.find(subject.getClass(), ((IdHolder) subject).getId());
+        for (Permission permission : subject.getAllPermissions()) {
             if (permission.getAction().matches(action) && permission.getResource().matches(resource)) {
                 return true;
             }
@@ -65,43 +64,27 @@ public class RoleSecurityServiceImpl implements RoleSecurityService {
     }
 
     @Override
-    public <R extends Role<R>> void grant(Subject<R> authorizer, Role role, Action action, Resource resource) {
-        role = entityManager.find(role.getClass(), ((IdHolder) role).getId());
-        if (!securityService.isGranted(authorizer, getGrantAction(), EntityUtils.getEntityObjectFieldFor(role))) {
+    public <R extends Role<R>> void grant(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) {
+        subject = entityManager.find(subject.getClass(), ((IdHolder) subject).getId());
+        if (!isGranted(authorizer, getGrantAction(), EntityUtils.getEntityObjectFieldFor(subject))) {
             throw new SecurityException(authorizer + " is not allowed to " + action + " to " + resource);
         }
-        if (!permissionDataAccess.isGrantable(role, action, resource)) {
-            throw new SecurityActionException("Permission for " + role + ", " + action + "," + resource + " cannot be granted");
+        if (!permissionDataAccess.isGrantable(subject, action, resource)) {
+            throw new SecurityActionException("Permission for " + subject + ", " + action + "," + resource + " cannot be granted");
         }
-        Set<Permission> removablePermissions = permissionDataAccess.getRevokablePermissionsWhenGranting(role, action, resource);
+        Set<Permission> removablePermissions = permissionDataAccess.getRevokablePermissionsWhenGranting(subject, action, resource);
         for (Permission existingPermission : removablePermissions) {
             entityManager.remove(existingPermission);
         }
-        Permission permission = permissionFactory.create(role, action, resource);
+        Permission permission = permissionFactory.create(subject, action, resource);
         entityManager.persist(permission);
         entityManager.flush();
-        //propagate changes to users
-        propagateGrantToSubjects(authorizer, role, action, resource);
-    }
-
-    private void propagateGrantToSubjects(Subject authorizer, Role root, Action action, Resource resource) {
-        //grant permission to all users of this role
-        Collection<Subject> subjects = root.getSubjects();
-        for (Subject subject : subjects) {
-            securityService.grant(authorizer, subject, action, resource);
-        }
-        if (!root.getRoles().isEmpty()) {
-            Collection<Role> children = root.getRoles();
-            for (Role child : children) {
-                propagateGrantToSubjects(authorizer, child, action, resource);
-            }
-        }
     }
 
     @Override
-    public <R extends Role<R>> void revoke(Subject<R> authorizer, Role subject, Action action, Resource resource) {
+    public <R extends Role<R>> void revoke(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) {
         subject = entityManager.find(subject.getClass(), ((IdHolder) subject).getId());
-        if (!securityService.isGranted(authorizer, getRevokeAction(), EntityUtils.getEntityObjectFieldFor(subject))) {
+        if (!isGranted(authorizer, getRevokeAction(), EntityUtils.getEntityObjectFieldFor(subject))) {
             throw new SecurityException(authorizer + " is not allowed to " + action + " to " + resource);
         }
         if (!permissionDataAccess.isRevokable(subject, action, resource)) {
@@ -113,28 +96,57 @@ public class RoleSecurityServiceImpl implements RoleSecurityService {
             entityManager.remove(permission);
         }
         entityManager.flush();
-        propagateRevokeToSubjects(authorizer, subject, action, resource);  
     }
 
-    private void propagateRevokeToSubjects(Subject authorizer, Role root, Action action, Resource resource) {
-        //grant permission to all users of this role
-        Collection<Subject> subjects = root.getSubjects();
-        for (Subject subject : subjects) {
-            securityService.revoke(authorizer, subject, action, resource);
-        }
-        if (!root.getRoles().isEmpty()) {
-            Collection<Role> children = root.getRoles();
-            for (Role child : children) {
-                propagateRevokeToSubjects(authorizer, child, action, resource);
+    @Override
+    public <R extends Role<R>> Collection<Action> getAllowedActions(Subject<R> subject, Resource resource) {
+        Set<Action> actions = new HashSet<Action>();
+        subject = entityManager.find(subject.getClass(), ((IdHolder) subject).getId());
+        for (Permission permission : subject.getAllPermissions()) {
+            if (permission.getResource().matches(resource)) {
+                actions.add(permission.getAction());
             }
         }
+        return actions;
     }
 
+    @Override
     public Action getGrantAction() {
         return ActionUtils.getGrantAction();
     }
 
+    @Override
     public Action getRevokeAction() {
         return ActionUtils.getRevokeAction();
+    }
+
+    @Override
+    public Collection<Resource> getAllResources() {
+        Set<Resource> ret = new HashSet<Resource>();
+        for (EntityConstants entity : EntityConstants.values()) {
+            ret.add(EntityUtils.getEntityFieldFor(entity));
+        }
+        for (SubjectRoleConstants entity : SubjectRoleConstants.values()) {
+            ret.add(EntityUtils.getEntityFieldFor(entity));
+        }
+        return ret;
+    }
+
+    /**
+     *
+     * @param module
+     * @return
+     */
+    @Override
+    public Collection<Resource> getAllResources(Module module) {
+        Set<Resource> ret = new HashSet<Resource>();
+        for (Enum entity : module.getEntities()) {
+            ret.add(EntityUtils.getEntityFieldFor(entity));
+        }
+        for (SubjectRoleConstants entity : SubjectRoleConstants.values()) {
+            ret.add(EntityUtils.getEntityFieldFor(entity));
+        }
+        return ret;
+
     }
 }

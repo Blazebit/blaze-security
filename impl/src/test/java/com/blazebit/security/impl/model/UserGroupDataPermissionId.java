@@ -15,25 +15,23 @@
  */
 package com.blazebit.security.impl.model;
 
+import javax.persistence.Embeddable;
+
 /**
  *
- * @author Christian
+ * @author cuszk
  */
-public enum EntityConstants {
-    
-    DOCUMENT,
-    EMAIL,
-    WORKFLOW,
-    
-    CARRIER,
-    HAULIER,
-    CARRIER_USER,
-    CARRIER_PARTY,
-    CARRIER_PARTY_CONTACT,
-    HAULIER_PARTY,
-    HAULIER_PARTY_CONTACT,
-    PICKUPADDRESS
-    
-    
-   
+@Embeddable
+public class UserGroupDataPermissionId extends DataPermissionId<UserGroup> {
+
+    public UserGroupDataPermissionId() {
+    }
+
+    public UserGroupDataPermissionId(UserGroup subject, EntityObjectField resource, EntityAction action) {
+        super.setActionName(action.getActionName());
+        super.setEntity(resource.getEntity());
+        super.setField(resource.getField());
+        super.setEntityId(resource.getEntityId());
+        super.setSubject(subject);
+    }
 }

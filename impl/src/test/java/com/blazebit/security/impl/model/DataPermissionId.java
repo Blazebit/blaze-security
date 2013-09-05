@@ -16,47 +16,27 @@
 package com.blazebit.security.impl.model;
 
 import javax.persistence.Basic;
-import javax.persistence.Embeddable;
+import javax.persistence.MappedSuperclass;
 
-@Embeddable
-public class DataPermissionId<S> extends PermissionId<S> {
-    
+@MappedSuperclass
+public abstract class DataPermissionId<S> extends PermissionId<S> {
+
     private static final long serialVersionUID = 1L;
     private String entityId;
-    
-    @Basic(optional = true)
+
+    @Basic(optional = false)
     public String getEntityId() {
         return entityId;
     }
-    
+
     public void setEntityId(String entityId) {
         this.entityId = entityId;
     }
 
     @Override
-    public String getActionName() {
-        return super.getActionName(); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public EntityConstants getEntity() {
-        return super.getEntity(); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getField() {
-        return super.getField(); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public S getSubject() {
-        return super.getSubject(); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 89 * hash + (this.entityId != null ? this.entityId.hashCode() : 0);
+        int hash = 7;
+        hash = 41 * hash + (this.entityId != null ? this.entityId.hashCode() : 0);
         return hash;
     }
 
@@ -72,13 +52,24 @@ public class DataPermissionId<S> extends PermissionId<S> {
         if ((this.entityId == null) ? (other.entityId != null) : !this.entityId.equals(other.entityId)) {
             return false;
         }
+        if ((this.getActionName() == null) ? (other.getActionName() != null) : !this.getActionName().equals(other.getActionName())) {
+            return false;
+        }
+         if ((this.getEntity()== null) ? (other.getEntity() != null) : !this.getEntity().equals(other.getEntity())) {
+            return false;
+        }
+        if ((this.getField() == null) ? (other.getField() != null) : !this.getField().equals(other.getField())) {
+            return false;
+        }
+        if (this.getSubject() != other.getSubject() && (this.getSubject() == null || !this.getSubject().equals(other.getSubject()))) {
+            return false;
+        }
+
         return true;
     }
-    
-     
-    
-    
-    
-    
-   
+
+    @Override
+    public String toString() {
+        return super.toString() + ", entityId=" + entityId;
+    }
 }

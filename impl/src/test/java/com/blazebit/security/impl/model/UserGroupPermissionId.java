@@ -15,11 +15,22 @@
  */
 package com.blazebit.security.impl.model;
 
-import javax.persistence.Entity;
+import javax.persistence.Embeddable;
 
 /**
  *
  * @author cuszk
  */
+@Embeddable
 public class UserGroupPermissionId extends PermissionId<UserGroup> {
+
+    public UserGroupPermissionId() {
+    }
+
+    public UserGroupPermissionId(UserGroup subject, EntityField resource, EntityAction action) {
+        super.setSubject(subject);
+        super.setEntity(resource.getEntity());
+        super.setField(resource.getField());
+        super.setActionName(action.getActionName());
+    }
 }

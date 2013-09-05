@@ -16,27 +16,32 @@
 package com.blazebit.security.impl.model;
 
 import com.blazebit.security.Action;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import com.blazebit.security.Resource;
 
 /**
  *
  * @author Christian
  */
-@Entity
 public class EntityAction implements Action {
 
-    private Integer id;
-    private PermissionId<?> permissionId;
     private String actionName;
+    private PermissionId<?> permissionId;
 
     public EntityAction() {
     }
 
-    @Transient
+    public String getActionName() {
+        return permissionId == null ? this.actionName : permissionId.getActionName();
+    }
+
+    public void setActionName(String actionName) {
+        if (permissionId == null) {
+            this.actionName = actionName;
+        } else {
+            permissionId.setActionName(actionName);
+        }
+    }
+
     public PermissionId<?> getPermissionId() {
         return permissionId;
     }
@@ -45,19 +50,9 @@ public class EntityAction implements Action {
         this.permissionId = permissionId;
     }
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
     public <P extends PermissionId<?>> EntityAction(P id) {
         this.permissionId = id;
-        this.actionName=permissionId.getActionName();
+        this.actionName = permissionId.getActionName();
     }
 
     <P extends PermissionId<?>> void attachToPermissionId(P permissionId) {
@@ -78,16 +73,10 @@ public class EntityAction implements Action {
         }
     }
 
-    @Basic
-    public String getActionName() {
-        return permissionId == null ? this.actionName : permissionId.getActionName();
+    @Override
+    public String toString() {
+        return "EntityAction{" + "actionName=" + getActionName() + '}';
     }
-
-   public void setActionName(String actionName) {
-        if(permissionId == null) {
-            this.actionName = actionName;
-        } else {
-            permissionId.setActionName(actionName);
-        }
-    }
+    
+    
 }

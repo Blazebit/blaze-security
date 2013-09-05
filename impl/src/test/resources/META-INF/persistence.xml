@@ -10,12 +10,10 @@
     <class>com.blazebit.security.impl.model.UserDataPermission</class>
     <class>com.blazebit.security.impl.model.UserGroupPermission</class>
     <class>com.blazebit.security.impl.model.UserGroupDataPermission</class>
-    <class>com.blazebit.security.impl.model.EntityAction</class>
-    <class>com.blazebit.security.impl.model.EntityField</class>
-    <class>com.blazebit.security.impl.model.EntityObjectField</class>
+    
     
     <properties>
-      <property name="hibernate.log" value="error"/>
+      <property name="hibernate.log" value="trace"/>
       <property name="hibernate.debug" value="true"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>

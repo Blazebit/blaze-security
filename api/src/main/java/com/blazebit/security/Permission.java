@@ -19,10 +19,11 @@ package com.blazebit.security;
  *
  * @author Christian Beikov
  */
-public interface Permission<R extends Resource> {
+public interface Permission {
 
     public Action getAction();
 
-    public R getResource();
+    public Resource getResource();
+    
 
 }

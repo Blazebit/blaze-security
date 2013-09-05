@@ -17,23 +17,20 @@ package com.blazebit.security.impl.model;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
+import javax.persistence.MappedSuperclass;
 
-
+@MappedSuperclass
 public abstract class PermissionId<S> implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private String actionName;
-    private EntityConstants entity;
+    private String entity;
     private String field;
     private S subject;
 
-    @Basic
+    @Basic(optional = false)
     public String getActionName() {
         return actionName;
     }
@@ -42,13 +39,12 @@ public abstract class PermissionId<S> implements Serializable {
         this.actionName = actionName;
     }
 
-    @Basic
-    @Enumerated(EnumType.STRING)
-    public EntityConstants getEntity() {
+    @Basic(optional = false)
+    public String getEntity() {
         return entity;
     }
 
-    public void setEntity(EntityConstants entity) {
+    public void setEntity(String entity) {
         this.entity = entity;
     }
 
@@ -59,6 +55,9 @@ public abstract class PermissionId<S> implements Serializable {
 
     public void setField(String field) {
         this.field = field;
+        if (this.field == null) {
+            this.field = "";
+        }
     }
 
     @ManyToOne
@@ -73,11 +72,7 @@ public abstract class PermissionId<S> implements Serializable {
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 67 * hash + (this.actionName != null ? this.actionName.hashCode() : 0);
-        hash = 67 * hash + (this.entity != null ? this.entity.hashCode() : 0);
-        hash = 67 * hash + (this.field != null ? this.field.hashCode() : 0);
-        hash = 67 * hash + (this.subject != null ? this.subject.hashCode() : 0);
+        int hash = 3;
         return hash;
     }
 
@@ -93,7 +88,7 @@ public abstract class PermissionId<S> implements Serializable {
         if ((this.actionName == null) ? (other.actionName != null) : !this.actionName.equals(other.actionName)) {
             return false;
         }
-        if (this.entity != other.entity) {
+        if ((this.entity == null) ? (other.entity != null) : !this.entity.equals(other.entity)) {
             return false;
         }
         if ((this.field == null) ? (other.field != null) : !this.field.equals(other.field)) {
@@ -105,10 +100,12 @@ public abstract class PermissionId<S> implements Serializable {
         return true;
     }
 
-   
+    @Override
+    public String toString() {
+        return "PermissionId{" + "actionName=" + actionName + ", entity=" + entity + ", field=" + field + ", subject=" + subject + '}';
+    }
+    
+    
 
-  
-    
-    
-    
+ 
 }
