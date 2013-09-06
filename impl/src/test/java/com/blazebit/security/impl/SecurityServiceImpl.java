@@ -18,12 +18,12 @@ package com.blazebit.security.impl;
 import com.blazebit.security.Action;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionDataAccess;
+import com.blazebit.security.service.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.SecurityActionException;
-import com.blazebit.security.SecurityService;
+import com.blazebit.security.service.SecurityService;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityConstants;
 import com.blazebit.security.Module;
@@ -65,6 +65,9 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public <R extends Role<R>> void grant(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) {
+        if (authorizer.equals(subject)) {
+            throw new SecurityException("Authorizer and subject are the same");
+        }
         subject = entityManager.find(subject.getClass(), ((IdHolder) subject).getId());
         if (!isGranted(authorizer, getGrantAction(), EntityUtils.getEntityObjectFieldFor(subject))) {
             throw new SecurityException(authorizer + " is not allowed to " + action + " to " + resource);
@@ -83,6 +86,9 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public <R extends Role<R>> void revoke(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) {
+        if (authorizer.equals(subject)) {
+            throw new SecurityException("Authorizer and subject are the same");
+        }
         subject = entityManager.find(subject.getClass(), ((IdHolder) subject).getId());
         if (!isGranted(authorizer, getRevokeAction(), EntityUtils.getEntityObjectFieldFor(subject))) {
             throw new SecurityException(authorizer + " is not allowed to " + action + " to " + resource);

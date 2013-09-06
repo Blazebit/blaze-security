@@ -87,16 +87,7 @@ public class User implements Subject<UserGroup>, Serializable, IdHolder {
         return this.userGroups;
     }
 
-    @ManyToMany(targetEntity = UserGroup.class)
-    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-    @JoinTable(name = "User_Role", joinColumns = {
-        @JoinColumn(
-                name = "users_id",
-                nullable = false)},
-            inverseJoinColumns = {
-        @JoinColumn(
-                name = "usergroups_id",
-                nullable = false)})
+    @ManyToMany(mappedBy = "users")
     public Set<UserGroup> getUserGroups() {
         return userGroups;
     }

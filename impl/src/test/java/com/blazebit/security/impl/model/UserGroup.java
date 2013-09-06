@@ -86,7 +86,7 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
         this.parent = parent;
     }
 
-    @ManyToMany(mappedBy = "userGroups")
+    @ManyToMany
     public Set<User> getUsers() {
         return this.users;
     }

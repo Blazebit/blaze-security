@@ -22,7 +22,7 @@ import com.blazebit.security.EntityObjectResource;
 import com.blazebit.security.EntityResource;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionDataAccess;
+import com.blazebit.security.service.PermissionDataAccess;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.SecurityActionException;

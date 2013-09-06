@@ -17,23 +17,17 @@ package com.blazebit.security.impl;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionDataAccess;
+import com.blazebit.security.service.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.SecurityService;
+import com.blazebit.security.service.SecurityService;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityConstants;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserPermission;
 import com.blazebit.security.impl.utils.EntityUtils;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.UserTransaction;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -46,12 +40,6 @@ import static org.junit.Assert.*;
  */
 public class PermissionDataAccessTest extends BaseTest {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    @Resource
-    private UserTransaction utx;
-    @Inject
-    private PermissionFactory permissionFactory;
     @Inject
     private PermissionDataAccess permissionDataAccess;
     private EntityField emailEntityWithSubject;
@@ -67,16 +55,6 @@ public class PermissionDataAccessTest extends BaseTest {
         emailEntityWithSubject = EntityUtils.getEntityFieldFor(EntityConstants.EMAIL, "subject");
         document2EntityTitleField = EntityUtils.getEntityObjectFieldFor(EntityConstants.DOCUMENT, "title", "2");
         email1EntityTitleField = EntityUtils.getEntityObjectFieldFor(EntityConstants.EMAIL, "title", "1");
-
-        UserPermission grantPermission = permissionFactory.create(admin, grantAction, userEntity);
-        entityManager.persist(grantPermission);
-        admin.getPermissions().add(grantPermission);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission revokePermission = permissionFactory.create(admin, revokeAction, userEntity);
-        entityManager.persist(revokePermission);
-        admin.getPermissions().add(revokePermission);
-        admin = (User) entityManager.merge(admin);
 
         utx.commit();
     }

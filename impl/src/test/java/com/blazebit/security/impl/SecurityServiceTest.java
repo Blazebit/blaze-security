@@ -15,24 +15,18 @@
  */
 package com.blazebit.security.impl;
 
-import com.blazebit.security.Action;
-import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.RoleService;
+import com.blazebit.security.service.RoleService;
 import com.blazebit.security.SecurityActionException;
-import com.blazebit.security.SecurityService;
+import com.blazebit.security.service.SecurityService;
 import com.blazebit.security.impl.model.CarrierModule;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.utils.EntityUtils;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserPermission;
+import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.service.RoleSecurityService;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import javax.annotation.Resource;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.UserTransaction;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -43,65 +37,22 @@ import org.junit.Before;
  */
 public class SecurityServiceTest extends BaseTest {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    @Resource
-    private UserTransaction utx;
     @Inject
     private SecurityService securityService;
     @Inject
     private RoleService roleService;
     @Inject
-    private PermissionFactory permissionFactory;
+    private RoleSecurityService roleSecurityService;
 
     @Before
     public void init() throws Exception {
-        utx.begin();
         super.initData();
-        grantAdminActions();
-        entityManager.flush();
-        //entityManager.getTransaction().commit();
-        utx.commit();
-
-    }
-
-    private void grantAdminActions() {
-
-        UserPermission grantPermission = permissionFactory.create(admin, grantAction, userEntity);
-        entityManager.persist(grantPermission);
-        admin.getPermissions().add(grantPermission);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission revokePermission = permissionFactory.create(admin, revokeAction, userEntity);
-        entityManager.persist(revokePermission);
-        admin.getPermissions().add(revokePermission);
-        admin = (User) entityManager.merge(admin);
-
-
-        UserPermission grantPermissionGroup = permissionFactory.create(admin, grantAction, groupEntity);
-        entityManager.persist(grantPermissionGroup);
-        admin.getPermissions().add(grantPermissionGroup);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission revokePermissionGroup = permissionFactory.create(admin, revokeAction, groupEntity);
-        entityManager.persist(revokePermissionGroup);
-
-        admin.getPermissions().add(revokePermissionGroup);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission grantToGrant = permissionFactory.create(admin, grantAction, EntityUtils.getEntityFieldFor(grantAction));
-        entityManager.persist(grantToGrant);
-
-        admin.getPermissions().add(grantToGrant);
-        admin = (User) entityManager.merge(admin);
-
     }
 
     @Test
     public void test_initial_data() {
         //injections
         assertNotNull(roleService);
-        assertNotNull(permissionFactory);
         assertNotNull(securityService);
         //entityManager
         assertNotNull(entityManager);
@@ -114,8 +65,7 @@ public class SecurityServiceTest extends BaseTest {
     }
 
     @Test
-    public void test_admin_has_grant_and_revoke_action_for_users_and_groups_and_actions() throws Exception {
-        assertTrue(securityService.isGranted(admin, grantAction, EntityUtils.getEntityFieldFor(grantAction)));
+    public void test_admin_has_grant_and_revoke_action_for_users_and_groups() throws Exception {
         assertTrue(securityService.isGranted(admin, grantAction, userEntity));
         assertTrue(securityService.isGranted(admin, revokeAction, userEntity));
         assertTrue(securityService.isGranted(admin, grantAction, groupEntity));
@@ -441,6 +391,36 @@ public class SecurityServiceTest extends BaseTest {
         assertTrue(securityService.isGranted(user1, accessAction, document1EntityContentField));
     }
 
+    //admin cannot grant to users
+    @Test(expected = SecurityException.class)
+    public void test_admin_with_limited_permissions_grants_action_to_user() throws Exception {
+        createAdminWithRevokePermissions();
+        securityService.grant(admin, user1, accessAction, documentEntity);
+    }
+
+    //admin cannot revoke
+    @Test(expected = SecurityException.class)
+    public void test_admin_with_limited_permissions_grants_action_to_user2() throws Exception {
+        createAdminWithGrantPermissions();
+        securityService.grant(admin, user1, accessAction, documentEntity);
+        assertTrue(securityService.isGranted(user1, accessAction, documentEntity));
+        securityService.revoke(admin, user1, accessAction, documentEntity);
+    }
+
+    //admin has only grant and revoke permissions for users-> not allowed to grant to usergroups
+    @Test(expected = SecurityException.class)
+    public void test_admin_with_limited_permissions_grants_action_to_user4() throws Exception {
+        createAdminWithPermissionsForUsers();
+        roleSecurityService.grant(admin, userGroupA, readAction, emailEntity);
+    }
+
+    //admin has only grant and revoke permissions for user groups -> not allowed to grant to users
+    @Test(expected = SecurityException.class)
+    public void test_admin_with_limited_permissions_grants_action_to_user5() throws Exception {
+        createAdminWithPermissionsForUserGroups();
+        securityService.grant(admin, user1, readAction, emailEntity);
+    }
+
     //module permissions
     @Test
     public void test_grant_permission_to_CarrierModule() {
@@ -453,5 +433,49 @@ public class SecurityServiceTest extends BaseTest {
         while (it.hasNext()) {
             assertTrue(securityService.isGranted(user1, accessAction, (com.blazebit.security.Resource) it.next()));
         }
+    }
+
+    @Test
+    public void test_current_case() throws Exception {
+        utx.begin();
+        UserGroup webUser = new UserGroup("webuser");
+        entityManager.persist(webUser);
+        UserGroup superuserC = new UserGroup("Superuser(C)");
+        entityManager.persist(superuserC);
+        UserGroup superuserS = new UserGroup("Superuser(S)");
+        entityManager.persist(superuserS);
+        utx.commit();
+
+
+    }
+
+    @Test
+    public void test_current_FUR_1_groups() throws Exception {
+        utx.begin();
+        UserGroup g1 = new UserGroup("Nord-Kunden");
+        entityManager.persist(g1);
+        UserGroup g2 = new UserGroup("Süd-Kunden");
+        entityManager.persist(g2);
+        UserGroup g3 = new UserGroup("Ost-Kunden");
+        entityManager.persist(g3);
+
+
+        EntityField ostRegion = new EntityField("Ost-Region");
+        EntityField nordRegion = new EntityField("Nord-Region");
+        EntityField suedRegion = new EntityField("Sued-Region");
+
+        roleSecurityService.grant(admin, g1, readAction, nordRegion);
+        roleSecurityService.grant(admin, g2, readAction, suedRegion);
+        roleSecurityService.grant(admin, g3, readAction, ostRegion);
+
+        User superUser = new User("superuser");
+        entityManager.persist(superUser);
+
+        utx.commit();
+
+        roleService.addSubjectToRole(admin, superUser, g1, true);
+        assertTrue(securityService.isGranted(superUser, readAction, nordRegion));
+        assertFalse(securityService.isGranted(superUser, readAction, suedRegion));
+
     }
 }

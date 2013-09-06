@@ -15,16 +15,20 @@
  */
 package com.blazebit.security.impl;
 
+import com.blazebit.security.Permission;
+import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityConstants;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.model.UserPermission;
 import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.impl.utils.EntityUtils;
 import java.io.Serializable;
 import javax.annotation.Resource;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.UserTransaction;
@@ -42,6 +46,8 @@ public abstract class BaseTest implements Serializable {
     protected EntityManager entityManager;
     @Resource
     protected UserTransaction utx;
+    @Inject
+    protected PermissionFactory permissionFactory;
     //users
     protected User admin;
     protected User user1;
@@ -71,15 +77,11 @@ public abstract class BaseTest implements Serializable {
     protected EntityObjectField document1EntityContentField;
     protected EntityObjectField document2Entity;
 
-    protected void initData() {
-        //entityManager.joinTransaction();
-//            if (!entityManager.getTransaction().isActive()){
-//                entityManager.getTransaction().begin();
-//            }
+    protected void initData() throws Exception {
+        utx.begin();
 
         //create individual entity object
-        admin = new User("Admin");
-        entityManager.persist(admin);
+
 
 
         user1 = new User("User 1");
@@ -119,7 +121,10 @@ public abstract class BaseTest implements Serializable {
         document2Entity = EntityUtils.getEntityObjectFieldFor(EntityConstants.DOCUMENT, "2");
         document1EntityTitleField = EntityUtils.getEntityObjectFieldFor(EntityConstants.DOCUMENT, "Title", "1");
         document1EntityContentField = EntityUtils.getEntityObjectFieldFor(EntityConstants.DOCUMENT, "Content", "1");
+        entityManager.flush();
+        utx.commit();
 
+        createAdminWithPermissionsForUsersAndGroups();
     }
 
     protected void testPermissionSize(User user, int expectedSize) throws Exception {
@@ -127,5 +132,94 @@ public abstract class BaseTest implements Serializable {
         user1 = entityManager.find(User.class, user.getId());
         assertEquals(expectedSize, user1.getAllPermissions().size());
         utx.commit();
+    }
+
+    protected void createAdminWithPermissionsForUsers() throws Exception {
+        utx.begin();
+         if (admin != null) {
+            admin = entityManager.find(User.class, admin.getId());
+            for (Permission p : admin.getAllPermissions()) {
+                entityManager.remove(p);
+            }
+            entityManager.remove(admin);
+            entityManager.flush();
+        }
+        admin = new User("Admin");
+        entityManager.persist(admin);
+        entityManager.persist(permissionFactory.create(admin, grantAction, userEntity));
+        entityManager.persist(permissionFactory.create(admin, revokeAction, userEntity));
+        utx.commit();
+    }
+
+    protected void createAdminWithPermissionsForUserGroups() throws Exception {
+        utx.begin();
+        if (admin != null) {
+            admin = entityManager.find(User.class, admin.getId());
+            for (Permission p : admin.getAllPermissions()) {
+                entityManager.remove(p);
+            }
+            entityManager.remove(admin);
+            entityManager.flush();
+        }
+        admin = new User("Admin");
+        entityManager.persist(admin);
+        entityManager.persist(permissionFactory.create(admin, grantAction, groupEntity));
+        entityManager.persist(permissionFactory.create(admin, revokeAction, groupEntity));
+        utx.commit();
+    }
+
+    protected void createAdminWithPermissionsForUsersAndGroups() throws Exception {
+        utx.begin();
+         if (admin != null) {
+            admin = entityManager.find(User.class, admin.getId());
+            for (Permission p : admin.getAllPermissions()) {
+                entityManager.remove(p);
+            }
+            entityManager.remove(admin);
+            entityManager.flush();
+        }
+        admin = new User("Admin");
+        entityManager.persist(admin);
+        entityManager.persist(permissionFactory.create(admin, grantAction, userEntity));
+        entityManager.persist(permissionFactory.create(admin, revokeAction, userEntity));
+        entityManager.persist(permissionFactory.create(admin, grantAction, groupEntity));
+        entityManager.persist(permissionFactory.create(admin, revokeAction, groupEntity));
+        utx.commit();
+    }
+
+    protected void createAdminWithGrantPermissions() throws Exception {
+        utx.begin();
+        if (admin != null) {
+            admin = entityManager.find(User.class, admin.getId());
+            for (Permission p : admin.getAllPermissions()) {
+                entityManager.remove(p);
+            }
+            entityManager.remove(admin);
+            entityManager.flush();
+        }
+        admin = new User("Admin");
+        entityManager.persist(admin);
+        entityManager.persist(permissionFactory.create(admin, grantAction, userEntity));
+        entityManager.persist(permissionFactory.create(admin, grantAction, groupEntity));
+        utx.commit();
+
+    }
+
+    protected void createAdminWithRevokePermissions() throws Exception {
+        utx.begin();
+        if (admin != null) {
+            admin = entityManager.find(User.class, admin.getId());
+            for (Permission p : admin.getAllPermissions()) {
+                entityManager.remove(p);
+            }
+            entityManager.remove(admin);
+            entityManager.flush();
+        }
+        admin = new User("Admin");
+        entityManager.persist(admin);
+        entityManager.persist(permissionFactory.create(admin, revokeAction, userEntity));
+        entityManager.persist(permissionFactory.create(admin, revokeAction, groupEntity));
+        utx.commit();
+
     }
 }

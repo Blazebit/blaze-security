@@ -16,9 +16,10 @@
 package com.blazebit.security.impl;
 
 import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.RoleSecurityService;
-import com.blazebit.security.RoleService;
-import com.blazebit.security.SecurityService;
+import com.blazebit.security.service.RoleSecurityService;
+import com.blazebit.security.service.RoleService;
+import com.blazebit.security.SecurityActionException;
+import com.blazebit.security.service.SecurityService;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.UserPermission;
@@ -55,41 +56,7 @@ public class RoleServiceTest extends BaseTest {
 
     @Before
     public void init() throws Exception {
-        utx.begin();
         super.initData();
-
-        //admin has grant/revoke action to all user entity
-        UserPermission grantPermission = permissionFactory.create(admin, grantAction, userEntity);
-        entityManager.persist(grantPermission);
-        admin.getPermissions().add(grantPermission);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission revokePermission = permissionFactory.create(admin, revokeAction, userEntity);
-        entityManager.persist(revokePermission);
-        admin.getPermissions().add(revokePermission);
-        admin = (User) entityManager.merge(admin);
-
-
-        UserPermission grantPermissionGroup = permissionFactory.create(admin, grantAction, groupEntity);
-        entityManager.persist(grantPermissionGroup);
-        admin.getPermissions().add(grantPermissionGroup);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission revokePermissionGroup = permissionFactory.create(admin, revokeAction, groupEntity);
-        entityManager.persist(revokePermissionGroup);
-
-        admin.getPermissions().add(revokePermissionGroup);
-        admin = (User) entityManager.merge(admin);
-
-        UserPermission grantToGrant = permissionFactory.create(admin, grantAction, EntityUtils.getEntityFieldFor(grantAction));
-        entityManager.persist(grantToGrant);
-
-        admin.getPermissions().add(grantToGrant);
-        admin = (User) entityManager.merge(admin);
-
-        entityManager.flush();
-        //entityManager.getTransaction().commit();
-        utx.commit();
 
         utx.begin();
         ug1 = new UserGroup("ug1");
@@ -146,40 +113,72 @@ public class RoleServiceTest extends BaseTest {
     private void addUserToGroup(User user, UserGroup userGroup) throws Exception {
         utx.begin();
         user.getUserGroups().add(userGroup);
+        userGroup.getUsers().add(user);
+        entityManager.merge(userGroup);
         entityManager.merge(user);
+        entityManager.flush();
         utx.commit();
     }
 
     //check if user can be added to group
+    //user can be added to groups which are not only the same groups that the user already got permissions from
     @Test
     public void test_canUserBeAddedToGroup() throws Exception {
         addUserToGroup(user1, ug1111);
-        //user can be readded to the same group
-        assertTrue(roleService.canSubjectBeAddedToRole(user1, ug1111));
         assertTrue(roleService.canSubjectBeAddedToRole(user1, ug121));
         assertTrue(roleService.canSubjectBeAddedToRole(user1, ug12));
         assertTrue(roleService.canSubjectBeAddedToRole(user1, ug13));
         assertTrue(roleService.canSubjectBeAddedToRole(user1, ug112));
     }
 
+    //user already added to lowest level group. cannot be added to any of the parent's of the lowest group
     @Test
     public void test_canUserBeAddedToGroup1() throws Exception {
         addUserToGroup(user1, ug1112);
         assertFalse(roleService.canSubjectBeAddedToRole(user1, ug1));
         assertFalse(roleService.canSubjectBeAddedToRole(user1, ug11));
         assertFalse(roleService.canSubjectBeAddedToRole(user1, ug111));
+        assertFalse(roleService.canSubjectBeAddedToRole(user1, ug1112));
 
     }
 
+    //user added to second level groups -> user cannot be added to the root, but it can be added to any children of the groups he already belongs to
     @Test
     public void test_canUserBeAddedToGroup2() throws Exception {
+        addUserToGroup(user1, ug11);
+        addUserToGroup(user1, ug12);
+        addUserToGroup(user1, ug13);
+        assertFalse(roleService.canSubjectBeAddedToRole(user1, ug1));
+        assertTrue(roleService.canSubjectBeAddedToRole(user1, ug111));
+        assertTrue(roleService.canSubjectBeAddedToRole(user1, ug112));
+        assertTrue(roleService.canSubjectBeAddedToRole(user1, ug121));
+        assertTrue(roleService.canSubjectBeAddedToRole(user1, ug1111));
+    }
+
+    //user added to second level group -> user can be added to other second level groups, but not the root
+    @Test
+    public void test_canUserBeAddedToGroup3() throws Exception {
         addUserToGroup(user1, ug12);
         assertFalse(roleService.canSubjectBeAddedToRole(user1, ug1));
         assertTrue(roleService.canSubjectBeAddedToRole(user1, ug13));
         assertTrue(roleService.canSubjectBeAddedToRole(user1, ug11));
     }
 
+    //user can be added to other root group
+    @Test
+    public void test_canUserBeAddedToGroup4() throws Exception {
+        utx.begin();
+        UserGroup ug2 = new UserGroup("ug2");
+        entityManager.persist(ug2);
+        utx.commit();
+        addUserToGroup(user1, ug11);
+        assertFalse(roleService.canSubjectBeAddedToRole(user1, ug11));
+        assertFalse(roleService.canSubjectBeAddedToRole(user1, ug1));
+        assertTrue(roleService.canSubjectBeAddedToRole(user1, ug2));
+    }
+
     //add user to groups
+    //user gets the permissions from the group which he is added to
     @Test
     public void test_addSubjectToRole1() throws Exception {
         utx.begin();
@@ -192,6 +191,7 @@ public class RoleServiceTest extends BaseTest {
 
     }
 
+    //user is added to lowest level group, gets all the permissions "merged" from parent groups
     @Test
     public void test_addSubjectToRole2() throws Exception {
         utx.begin();
@@ -214,6 +214,7 @@ public class RoleServiceTest extends BaseTest {
 
     }
 
+    //user is added to lowest level group, gets all the permissions "merged" from parent groups
     @Test
     public void test_addSubjectToRole3() throws Exception {
         utx.begin();
@@ -234,6 +235,7 @@ public class RoleServiceTest extends BaseTest {
 
     }
 
+    //user is added to lowest level group, gets all the permissions "merged" from parent groups
     @Test
     public void test_addSubjectToRole4() throws Exception {
         utx.begin();
@@ -255,12 +257,11 @@ public class RoleServiceTest extends BaseTest {
 
     }
 
+    //user is added to lowest level group, gets all the permissions "merged" from parent groups
     @Test
     public void test_addSubjectToRole5() throws Exception {
         utx.begin();
         entityManager.persist(permissionFactory.create(ug1, accessAction, document1Entity));
-
-
         entityManager.persist(permissionFactory.create(ug11, accessAction, documentEntityTitleField));
         entityManager.persist(permissionFactory.create(ug11, accessAction, document1EntityContentField));
 
@@ -393,5 +394,49 @@ public class RoleServiceTest extends BaseTest {
         assertTrue(securityService.isGranted(user1, accessAction, emailEntity));
         assertTrue(securityService.isGranted(user2, accessAction, emailEntity));
         assertTrue(securityService.isGranted(user3, accessAction, emailEntity));
+    }
+
+    //remove subject from role
+    //ug1111->ug111->ug11->ug1
+    @Test
+    public void test_removeSubjectFromRole() throws Exception {
+        utx.begin();
+        entityManager.persist(permissionFactory.create(ug1, accessAction, document2Entity));
+        entityManager.persist(permissionFactory.create(ug1, accessAction, document1Entity));
+
+        entityManager.persist(permissionFactory.create(ug11, accessAction, document1EntityContentField));
+
+        entityManager.persist(permissionFactory.create(ug111, accessAction, document1EntityTitleField));
+        utx.commit();
+        roleService.addSubjectToRole(admin, user1, ug1111, true);
+
+        assertTrue(securityService.isGranted(user1, accessAction, document2Entity));
+        assertTrue(securityService.isGranted(user1, accessAction, document1Entity));
+
+        roleService.removeSubjectFromRole(admin, user1, ug1111, true);
+
+        assertFalse(securityService.isGranted(user1, accessAction, document2Entity));
+        assertFalse(securityService.isGranted(user1, accessAction, document1Entity));
+    }
+
+    @Test(expected = SecurityActionException.class)
+    public void test_removeSubjectFromRole_not_possible() throws Exception {
+        utx.begin();
+        entityManager.persist(permissionFactory.create(ug1, accessAction, document2Entity));
+        entityManager.persist(permissionFactory.create(ug1, accessAction, document1Entity));
+
+        entityManager.persist(permissionFactory.create(ug11, accessAction, document1EntityContentField));
+
+        entityManager.persist(permissionFactory.create(ug111, accessAction, document1EntityTitleField));
+        utx.commit();
+        roleService.addSubjectToRole(admin, user1, ug1111, true);
+
+        assertTrue(securityService.isGranted(user1, accessAction, document2Entity));
+        assertTrue(securityService.isGranted(user1, accessAction, document1Entity));
+
+        roleService.removeSubjectFromRole(admin, user1, ug111, true);
+
+        assertFalse(securityService.isGranted(user1, accessAction, document2Entity));
+        assertFalse(securityService.isGranted(user1, accessAction, document1Entity));
     }
 }
