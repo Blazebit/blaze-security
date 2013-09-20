@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security;
+package com.blazebit.security.impl.model;
+
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 
 /**
- *
  * @author Christian Beikov
  */
-public interface Permission {
+@Entity
+@ResourceName(name="User group permission")
+public class UserGroupPermission extends AbstractPermission<UserGroup, UserGroupPermissionId> {
 
-    public Action getAction();
+    private static final long serialVersionUID = 1L;
 
-    public Resource getResource();
+    public UserGroupPermission() {
+    }
 
-    public boolean matches(Permission permission);
-    
-
+    @EmbeddedId
+    public UserGroupPermissionId getId() {
+        return id;
+    }
 }

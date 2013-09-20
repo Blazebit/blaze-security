@@ -13,19 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security;
+package com.blazebit.security.impl.model;
 
 /**
  *
- * @author Christian Beikov
+ * @author cuszk
  */
-public interface Permission {
+public enum SubjectRoleConstants {
 
-    public Action getAction();
-
-    public Resource getResource();
-
-    public boolean matches(Permission permission);
+    USER(User.class.getName()),
+    USERGROUP(UserGroup.class.getName());
     
+    private String className;
 
+    private SubjectRoleConstants() {
+        this.className = name();
+    }
+
+    private SubjectRoleConstants(String className) {
+        this.className = className;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+    
+    
 }

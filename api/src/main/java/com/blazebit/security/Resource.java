@@ -19,7 +19,7 @@ package com.blazebit.security;
  *
  * @author Christian
  */
-public interface Resource {
+public interface Resource extends Target{
     
     public boolean matches(Resource resource);
 }

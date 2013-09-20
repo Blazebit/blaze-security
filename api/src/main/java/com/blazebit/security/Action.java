@@ -19,7 +19,7 @@ package com.blazebit.security;
  *
  * @author Christian Beikov
  */
-public interface Action {
+public interface Action extends Target{
     
     public boolean matches(Action action);
     

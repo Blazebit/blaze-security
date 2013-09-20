@@ -17,11 +17,6 @@ package com.blazebit.security.impl;
 
 import com.blazebit.exception.ExceptionUtils;
 import java.lang.reflect.InvocationTargetException;
-import org.apache.deltaspike.cdise.api.CdiContainer;
-import org.apache.deltaspike.cdise.api.CdiContainerLoader;
-import org.apache.deltaspike.cdise.api.ContextControl;
-import org.apache.deltaspike.core.api.literal.DefaultLiteral;
-import org.apache.deltaspike.core.api.provider.BeanProvider;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,9 +25,15 @@ import java.util.Map;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import org.apache.deltaspike.cdise.api.CdiContainer;
+import org.apache.deltaspike.cdise.api.CdiContainerLoader;
+import org.apache.deltaspike.cdise.api.ContextControl;
+import org.apache.deltaspike.core.api.literal.DefaultLiteral;
+import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
@@ -83,6 +84,21 @@ public class TestRunner extends BlockJUnit4ClassRunner {
     }
 
     @Override
+    protected Statement withBefores(final FrameworkMethod method, final Object target, final Statement statement) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                try {
+                    contextControl.startContext(RequestScoped.class);
+                    TestRunner.super.withBefores(method, target, statement).evaluate();
+                } finally {
+                    contextControl.stopContext(RequestScoped.class);
+                }
+            }
+        };
+    }
+
+    @Override
     protected List<TestRule> getTestRules(Object target) {
         List<TestRule> rules = new ArrayList<TestRule>(super.getTestRules(target));
         rules.add(new TestRule() {
@@ -95,6 +111,9 @@ public class TestRunner extends BlockJUnit4ClassRunner {
                         EntityManagerFactory emf = null;
                         Map<String, Object> properties = new HashMap<String, Object>();
 
+                        properties.put("javax.persistence.transactionType", "RESOURCE_LOCAL");
+                        properties.put("javax.persistence.jtaDataSource", null);
+
                         properties.put("javax.persistence.jdbc.driver", "org.h2.Driver");
                         properties.put("javax.persistence.jdbc.url", "jdbc:h2:mem:test;INIT=CREATE SCHEMA IF NOT EXISTS USERROLES;");
                         properties.put("javax.persistence.jdbc.password", "test");
@@ -102,7 +121,7 @@ public class TestRunner extends BlockJUnit4ClassRunner {
 
                         try {
                             contextControl.startContext(RequestScoped.class);
-                            //emf = Persistence.createEntityManagerFactory("TestPU", properties);
+                            emf = Persistence.createEntityManagerFactory("TestPU", properties);
                             base.evaluate();
                         } catch (Throwable e) {
                             e = ExceptionUtils.unwrap(e, InvocationTargetException.class);

@@ -19,6 +19,6 @@ package com.blazebit.security;
  *
  * @author cuszk
  */
-public interface Actor {
+public interface Actor extends Target{
     
 }

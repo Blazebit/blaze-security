@@ -19,13 +19,21 @@ package com.blazebit.security;
  *
  * @author Christian Beikov
  */
-public interface Permission {
+public class PermissionException extends RuntimeException {
 
-    public Action getAction();
+    public PermissionException() {
+    }
 
-    public Resource getResource();
+    public PermissionException(String message) {
+        super(message);
+    }
 
-    public boolean matches(Permission permission);
+    public PermissionException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public PermissionException(Throwable cause) {
+        super(cause);
+    }
     
-
 }

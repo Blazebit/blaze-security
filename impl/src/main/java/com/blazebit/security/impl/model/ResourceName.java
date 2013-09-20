@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security;
+package com.blazebit.security.impl.model;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  *
- * @author Christian Beikov
+ * @author cuszk
  */
-public interface Permission {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ResourceName {
 
-    public Action getAction();
-
-    public Resource getResource();
-
-    public boolean matches(Permission permission);
-    
-
+    String name() default "";
 }

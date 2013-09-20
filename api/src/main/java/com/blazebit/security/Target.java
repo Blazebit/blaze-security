@@ -17,15 +17,8 @@ package com.blazebit.security;
 
 /**
  *
- * @author Christian Beikov
+ * @author cuszk
  */
-public interface Permission {
-
-    public Action getAction();
-
-    public Resource getResource();
-
-    public boolean matches(Permission permission);
+public interface Target {
     
-
 }
