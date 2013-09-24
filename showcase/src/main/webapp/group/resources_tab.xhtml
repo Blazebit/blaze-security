@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:my="http://java.sun.com/jsf/composite/components">
+    <ui:composition> 
+        <p:tab title="Resources" disabled="#{empty userSession.selectedGroup}">
+            <f:event listener="#{groupResourcesBean.init}"
+                     type="javax.faces.event.PreRenderComponentEvent" />
+            <h3>Selected group #{userSession.selectedGroup.name}</h3>
+
+            <h:panelGrid columns="2" width="100%">
+                <h:panelGroup id="wizardPanel" style="vertical-align: top">
+                    <p:wizard flowListener="#{groupResourcesBean.resourceWizardListener}" widgetVar="wiz" showNavBar="false">
+
+                        <p:tab id="resources" title="Resources">
+                            <p:tree value="#{groupResourcesBean.resourceRoot}" var="_resource"  selectionMode="checkbox" selection="#{groupResourcesBean.selectedResourceNodes}" >  
+                                <p:treeNode>
+                                    <h:outputText value="#{_resource.name}"/>  
+                                </p:treeNode>
+                            </p:tree>
+                            <p:commandButton value="Next" onclick="wiz.next();"/>
+                        </p:tab>
+                        <p:tab id="actions" title="Actions">
+                            <p:tree  value="#{groupResourcesBean.actionRoot}" var="_action"   selectionMode="checkbox" selection="#{groupResourcesBean.selectedActionNodes}" >  
+                                <p:treeNode>
+                                    <h:outputText value="#{_action.name}"/>  
+                                </p:treeNode>
+                            </p:tree>
+                            <p:commandButton value="Back" onclick="wiz.back();"/>
+                            <p:commandButton value="Next" onclick="wiz.next();"/> 
+                        </p:tab>
+
+                        <p:tab id="permissions" title="Permission">
+                            <p:dataTable value="#{groupResourcesBean.selectedResourceActions}" var="resourceAction">
+                                <p:column><f:facet name="header">Resource</f:facet>#{resourceAction.resource.entity} #{resourceAction.resource.field}</p:column>
+                                <p:column><f:facet name="header">Action</f:facet>#{resourceAction.action.actionName}</p:column>
+                            </p:dataTable>
+
+                            <p:commandButton value="Back" onclick="wiz.back();"/>
+                            <p:commandButton style="float:right" value="Confirm" action="#{groupResourcesBean.confirmSelectedResourcesAndActions()}" process="@this" update=":form:tab:resourcesPermissionTableComp:resources_userPermissions" oncomplete="wiz.loadStep (wiz.cfg.steps [0], true)"/>
+                        </p:tab>
+                    </p:wizard>
+                </h:panelGroup>
+
+                <my:permissionTree id="resourcesPermissionTableComp" bean="#{groupResourcesBean}" tableId="resources_userPermissions" />
+            </h:panelGrid>
+
+        </p:tab>
+    </ui:composition>
+</html>

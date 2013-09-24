@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view contentType="text/html">
+        <h:head>
+            <f:facet name="first">
+                <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+                <title>Security Web</title>
+            </f:facet>
+        </h:head>
+
+        <h:body>
+            <h:form>
+
+                <p:menu>
+                    <p:submenu label="Menu">
+                        <p:menuitem value="Users" url="/user/users.xhtml"/>
+                        <p:menuitem value="Groups" url="group/groups.xhtml"/>
+                       
+                    </p:submenu>
+                </p:menu>
+
+                <p:dataTable value="#{indexBean.users}" var="user" style="width:20%">
+                    <p:column filterBy="#{user.username}">
+                        <f:facet name="header">Username</f:facet>
+                            #{user.username}
+                    </p:column>
+                    <p:column>
+                        <p:commandLink value="login" action="#{indexBean.logInAs(user)}" rendered="#{userSession.user ne user}" process="@this"/>
+                    </p:column>
+                </p:dataTable>
+
+            </h:form>
+        </h:body>
+
+    </f:view>
+</html>
+

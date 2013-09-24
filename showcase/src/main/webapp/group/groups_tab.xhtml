@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:my="http://java.sun.com/jsf/composite/components">
+    <ui:composition> 
+        <p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedGroup}">
+
+            <f:event listener="#{groupBean.init}"
+                     type="javax.faces.event.PreRenderComponentEvent" />
+            <h3>Selected group: #{userSession.selectedGroup.name}</h3>
+
+            <h:panelGrid columns="2" width="100%">
+
+                <p:dataTable value="#{groupBean.users}" var="user">
+                    <f:facet name="header">Users of #{userSession.selectedGroup.name}</f:facet>
+                    <p:column>
+                        <f:facet name="header"> Username</f:facet>
+                            #{user.username}
+                    </p:column>
+                </p:dataTable>
+
+                <my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
+            </h:panelGrid>
+
+            <p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single">  
+                <p:ajax event="select"   update=":form:tab" listener="#{groupBean.selectGroup}"/>  
+                <p:ajax event="unselect"  update=":form:tab" listener="#{groupBean.unselectGroup}"/>
+                <p:treeNode>
+                    <h:outputText value="#{group.name}"/>  
+                </p:treeNode>
+            </p:tree>
+
+
+        </p:tab>
+
+
+    </ui:composition>
+</html>

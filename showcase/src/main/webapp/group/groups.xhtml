@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view contentType="text/html">
+        <h:head>
+            <f:facet name="first">
+                <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+                <title>Users</title>
+            </f:facet>
+            <style>
+                .top{
+                    vertical-align:top
+                }
+            </style>
+        </h:head>
+
+        <h:body>
+            <p:menu>
+                <p:submenu label="Menu">
+                    <p:menuitem value="Start" url="/index.xhtml"/>
+                    <p:menuitem value="Users" url="/user/users.xhtml"/>
+                </p:submenu>
+            </p:menu>
+            <h:form id="form">
+
+                <h:panelGroup rendered="#{not empty userSession.user}">
+                    <h3>Logged in as #{userSession.user.username}. Login as a  <p:commandLink value="different user..." action="#{groupBean.backToIndex()}" process="@this"/> </h3>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{empty userSession.user}">
+                    <h:outputLink value="/SecurityWebProject/index.xhtml">Login first!!</h:outputLink>
+                </h:panelGroup>
+
+                <p:tabView id="tab" rendered="#{not empty userSession.user}" dynamic="true" cache="false">
+                    <ui:include src="/group/groups_tab.xhtml"/>
+                    <ui:include src="/group/users_tab.xhtml"/>
+                    <ui:include src="/group/resources_tab.xhtml"/>
+                </p:tabView>
+
+            </h:form>
+
+
+        </h:body>
+    </f:view>
+</html>

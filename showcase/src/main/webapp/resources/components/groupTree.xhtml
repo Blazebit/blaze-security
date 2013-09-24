@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <cc:interface>
+        <cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.GroupView"/>
+        <cc:attribute name="tableId" required="true" />
+    </cc:interface>
+
+    <cc:implementation>
+        <h:panelGroup id="#{cc.attrs.tableId}" layout="block">
+            <p:selectBooleanButton value="#{cc.attrs.bean.showGroupTreeView}" onLabel="Group tree" offLabel="Group table">
+                <p:ajax update=":#{cc.clientId}:switch" />
+            </p:selectBooleanButton>
+            <h:panelGroup id="switch">
+                <p:dataTable value="#{cc.attrs.bean.groups}" var="groupModel" rendered="#{not cc.attrs.bean.showGroupTreeView}" paginator="true" rows="10">
+                    <f:facet name="header">#{cc.attrs.bean.groupHeader}</f:facet>
+                    <p:column filterBy="#{groupModel.userGroup.name}" sortBy="#{groupModel.userGroup.name}"><f:facet name="header">Group name</f:facet>
+                            #{groupModel.userGroup.name}
+                    </p:column>
+                </p:dataTable>
+
+                <p:tree value="#{cc.attrs.bean.groupRoot}" var="group" rendered="#{cc.attrs.bean.showGroupTreeView}">
+                    <f:facet name="header"> #{cc.attrs.bean.groupHeader}</f:facet>
+                    <p:treeNode>
+                        <h:outputText value="#{group.userGroup.name}" style="#{group.marked ? 'color:red': ''}"/>
+                    </p:treeNode>
+                </p:tree>
+            </h:panelGroup>
+        </h:panelGroup>
+    </cc:implementation>
+</html>

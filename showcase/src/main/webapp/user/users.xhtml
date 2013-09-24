@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view contentType="text/html">
+        <h:head>
+            <f:facet name="first">
+                <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+                <title>Users</title>
+            </f:facet>
+            <style>
+                .top{
+                    vertical-align:top
+                }
+            </style>
+        </h:head>
+
+        <h:body>
+            <h:form id="form">
+
+                <h:panelGroup rendered="#{not empty userSession.user}">
+                    <h3>Logged in as #{userSession.user.username}. Login as a  <p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this"/> </h3>
+                </h:panelGroup>
+                <h:panelGroup rendered="#{empty userSession.user}">
+                    <h:outputLink value="/SecurityWebProject/index.xhtml">Login first!!</h:outputLink>
+                </h:panelGroup>
+
+                
+                    <p:menu>
+                        <p:submenu label="Menu">
+                            <p:menuitem value="Start" url="/index.xhtml"/>
+                            <p:menuitem value="Groups" url="/group/groups.xhtml"/>
+
+                        </p:submenu>
+                    </p:menu>
+
+                    <p:tabView id="tab" rendered="#{not empty userSession.user}" style="width:100%;height:100%;" dynamic="true" cache="false">
+                        <ui:include src="/user/users_tab.xhtml"/>
+                        <ui:include src="/user/groups_tab.xhtml"/>
+                        <ui:include src="/user/resources_tab.xhtml"/>
+                    </p:tabView>
+                
+            </h:form>
+         
+        </h:body>
+    </f:view>
+</html>

@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:cc="http://java.sun.com/jsf/composite"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <cc:interface>
+        <cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.PermissionView"/>
+        <cc:attribute name="tableId" required="true" />
+    </cc:interface>
+
+    <cc:implementation>
+        <h:panelGroup id="#{cc.attrs.tableId}" layout="block">
+            <p:selectBooleanButton value="#{cc.attrs.bean.showPermissionTreeView}" onLabel="Permission tree" offLabel="Permission table">
+                <p:ajax update=":#{cc.clientId}:switch" />
+            </p:selectBooleanButton>
+            <h:panelGroup id="switch">
+                <p:dataTable value="#{cc.attrs.bean.permissions}" var="permissionModel" rendered="#{not cc.attrs.bean.showPermissionTreeView}" paginator="true" rows="10">
+                    <f:facet name="header">Permissions for #{cc.attrs.bean.permissionHeader}</f:facet>
+                    <p:column filterBy="#{permissionModel.permission.id.entity}" sortBy="#{permissionModel.permission.id.entity}"><f:facet name="header">Resource</f:facet>
+                            #{permissionModel.permission.id.entity} #{permissionModel.permission.id.field}
+                    </p:column>
+                    <p:column filterBy="#{permissionModel.permission.id.actionName}" sortBy="#{permissionModel.permission.id.actionName}"><f:facet name="header">Action</f:facet>
+                            #{permissionModel.permission.id.actionName}
+                    </p:column>
+                </p:dataTable>
+
+                <p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission" rendered="#{cc.attrs.bean.showPermissionTreeView}">
+                    <p:treeNode>
+                        <h:outputText value="#{permission.name}" />
+                    </p:treeNode>
+                </p:tree>
+            </h:panelGroup>
+        </h:panelGroup>
+    </cc:implementation>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+    <ui:composition>
+        <p:tab title="Permissions" disabled="#{empty userBean.selectedUser}">
+            <h3>Selected user: #{userBean.selectedUser.username}</h3>
+
+            <p:dataTable value="#{userBean.userPermissions}" var="model" style="vertical-align: top" paginator="true" rows="10" >
+                <f:facet name="header">  
+                    Permissions for #{userBean.selectedUser.username}
+                </f:facet>  
+                <p:column sortBy="#{model.permission.id.entity}" filterBy="#{permission.id.entity}">
+                    <f:facet name="header">Resource</f:facet>
+                    <h:outputText value="#{model.permission.id.entity}"/>
+                    <h:outputText value="#{model.permission.id.field}" rendered="#{not empty model.permission.id.field}"/>
+                </p:column>
+                <p:column sortBy="#{model.permission.id.actionName}" filterBy="#{model.permission.id.actionName}">
+                    <f:facet name="header">Action</f:facet>
+                    <h:outputText value="#{model.permission.id.actionName}"/>
+                </p:column>
+                <p:column>
+                    <f:facet name="header"></f:facet>
+                    <p:commandButton value="Revoke" action="#{userBean.revoke(permission)}"/>
+                </p:column>
+            </p:dataTable>
+        </p:tab>
+    </ui:composition>
+</html>
