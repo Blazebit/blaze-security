@@ -15,24 +15,25 @@
  */
 package com.blazebit.security.impl;
 
+import static org.junit.Assert.assertNotNull;
+
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.security.PermissionException;
-import com.blazebit.security.SecurityService;
+import com.blazebit.security.PermissionService;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
-import com.blazebit.security.impl.model.EntityConstants;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.impl.utils.ActionUtils;
-import com.blazebit.security.impl.utils.EntityUtils;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  *
@@ -43,7 +44,7 @@ import org.junit.Test;
 public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Inject
-    private SecurityService securityService;
+    private PermissionService securityService;
     private Carrier carrier;
 
     @Before
@@ -79,17 +80,17 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test
     public void test_create_entity_with_primitive_field() {
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIER, EntityField.EMPTY_FIELD));
-        userContext.setUser(user1);
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
         self.get().persist(carrier);
         assertNotNull(carrier.getId());
     }
 
     @Test
     public void test_create_entity_with_one_to_one_field() {
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIER, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.PARTY, EntityField.EMPTY_FIELD));
-        userContext.setUser(user1);
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
         Party party = new Party();
         party.setPartyField1("party_field_1");
         self.get().persist(party);
@@ -100,8 +101,8 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test(expected = PermissionException.class)
     public void test_create_entity_with_one_to_one_field_not_permitted() {
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIER, EntityField.EMPTY_FIELD));
-        userContext.setUser(user1);
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
         Party party = new Party();
         party.setPartyField1("party_field_1");
         self.get().persist(party);
@@ -112,9 +113,9 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test
     public void test_create_entity_with_one_to_many_field() {
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIER, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CONTACT, EntityField.EMPTY_FIELD));
-        userContext.setUser(user1);
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
         Contact contact = new Contact();
         contact.setContactField("contact_field");
         self.get().persist(contact);
@@ -125,9 +126,9 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test
     public void test_create_entity_with_many_to_many_field() {
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIER, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIERGROUP, EntityField.EMPTY_FIELD));
-        userContext.setUser(user1);
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
         CarrierGroup group = new CarrierGroup();
         group.setName("group");
         self.get().persist(group);
@@ -138,8 +139,8 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test(expected = PermissionException.class)
     public void test_create_entity_with_many_to_many_field_not_permitted() {
-        securityService.grant(admin, user1, ActionUtils.getAction(ActionUtils.ActionConstants.CREATE), EntityUtils.getEntityFieldFor(EntityConstants.CARRIER, EntityField.EMPTY_FIELD));
-        userContext.setUser(user1);
+        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
         CarrierGroup group = new CarrierGroup();
         group.setName("group");
         self.get().persist(group);

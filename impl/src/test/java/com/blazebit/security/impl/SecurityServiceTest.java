@@ -1,35 +1,36 @@
 /*
  * Copyright 2013 Blazebit.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 package com.blazebit.security.impl;
 
-import com.blazebit.security.PermissionActionException;
-import com.blazebit.security.PermissionException;
-import com.blazebit.security.RoleSecurityService;
-import com.blazebit.security.SecurityService;
-import com.blazebit.security.impl.model.User;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 
+import com.blazebit.security.PermissionActionException;
+import com.blazebit.security.PermissionException;
+import com.blazebit.security.PermissionService;
+import com.blazebit.security.impl.model.User;
+
 /**
- *
+ * 
  * @author cuszk
  */
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -37,15 +38,13 @@ import org.junit.Test;
 public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
 
     @Inject
-    private SecurityService securityService;
-    @Inject
-    private RoleSecurityService roleSecurityService;
+    private PermissionService securityService;
 
     @Before
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void init() {
         super.initData();
-        setUserContext(user1);
+        setUserContext(admin);
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -62,11 +61,11 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
 
     @Test
     public void test_initial_data() {
-        //injections
+        // injections
         assertNotNull(securityService);
-        //entityManager
+        // entityManager
         assertNotNull(entityManager);
-        //entities
+        // entities
         assertNotNull(admin);
         assertNotNull(user1);
         assertNotNull(user2);
@@ -81,7 +80,8 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
         assertTrue(securityService.isGranted(admin, grantAction, groupEntity));
         assertTrue(securityService.isGranted(admin, revokeAction, groupEntity));
     }
-    //grant checks
+
+    // grant checks
 
     @Test
     public void test_admin_grants_action() {
@@ -129,8 +129,8 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
 
     @Test
     public void test_admin_grants_A_f_to_A_different_actions() {
-        securityService.grant(admin, user1, readAction, documentEntity);
-        securityService.grant(admin, user1, createAction, documentEntityTitleField);
+        securityService.grant(admin, user1, createAction, documentEntity);
+        securityService.grant(admin, user1, readAction, documentEntityTitleField);
     }
 
     @Test
@@ -145,7 +145,8 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
         securityService.grant(admin, user1, readAction, documentEntity);
         securityService.grant(admin, user2, readAction, documentEntityTitleField);
     }
-    //grant checks with error
+
+    // grant checks with error
 
     @Test(expected = PermissionActionException.class)
     public void test_admin_grants_A_to_A() {
@@ -171,63 +172,63 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
         securityService.grant(admin, user1, readAction, document1EntityTitleField);
     }
 
-    //grant checks when existing permissions need to be removed
+    // grant checks when existing permissions need to be removed
     @Test
     public void test_admin_grants_A_to_A_f() {
-        //user gets access to 1 field of document entity
+        // user gets access to 1 field of document entity
         securityService.grant(admin, user1, readAction, documentEntityTitleField);
-        //user gets access to document entity
+        // user gets access to document entity
         securityService.grant(admin, user1, readAction, documentEntity);
-        //user remains with only document entity permission
+        // user remains with only document entity permission
         testPermissionSize(user1, 1);
-        //user can access document entity
+        // user can access document entity
         assertTrue(securityService.isGranted(user1, readAction, documentEntity));
-        //user can access any field of document entity
+        // user can access any field of document entity
         assertTrue(securityService.isGranted(user1, readAction, documentEntityTitleField));
         assertTrue(securityService.isGranted(user1, readAction, documentEntityContentField));
     }
 
     @Test
     public void test_admin_grants_A_to_A_f_and_A_g() {
-        //user gets access to 2 fields of document entity
+        // user gets access to 2 fields of document entity
         securityService.grant(admin, user1, readAction, documentEntityTitleField);
         securityService.grant(admin, user1, readAction, documentEntityContentField);
         testPermissionSize(user1, 2);
-        //user gets access to document entity
+        // user gets access to document entity
         securityService.grant(admin, user1, readAction, documentEntity);
-        //user remains with only document entity permission
+        // user remains with only document entity permission
         testPermissionSize(user1, 1);
-        //user can access document entity
+        // user can access document entity
         assertTrue(securityService.isGranted(user1, readAction, documentEntity));
-        //user can access any field of document entity
+        // user can access any field of document entity
         assertTrue(securityService.isGranted(user1, readAction, documentEntityTitleField));
         assertTrue(securityService.isGranted(user1, readAction, documentEntityContentField));
     }
 
     @Test
     public void test_admin_grants_A_i_to_A_f_i() {
-        //user gets access to 1 field of document object with id 1
+        // user gets access to 1 field of document object with id 1
         securityService.grant(admin, user1, readAction, document1EntityTitleField);
-        //user gets access to document object with id 1
+        // user gets access to document object with id 1
         securityService.grant(admin, user1, readAction, document1Entity);
-        //user remains with only document object permission
+        // user remains with only document object permission
         testPermissionSize(user1, 1);
-        //user can access any field of document object
+        // user can access any field of document object
         assertTrue(securityService.isGranted(user1, readAction, document1EntityTitleField));
         assertTrue(securityService.isGranted(user1, readAction, document1EntityContentField));
     }
 
     @Test
     public void test_admin_grants_A_i_to_A_f_i_and_A_g_i() {
-        //user gets access to 2 fields of document object with id 1
+        // user gets access to 2 fields of document object with id 1
         securityService.grant(admin, user1, readAction, document1EntityTitleField);
         securityService.grant(admin, user1, readAction, document1EntityContentField);
         testPermissionSize(user1, 2);
-        //user gets access to document object with id 1
+        // user gets access to document object with id 1
         securityService.grant(admin, user1, readAction, document1Entity);
-        //user remains with only document object permission
+        // user remains with only document object permission
         testPermissionSize(user1, 1);
-        //user can access any field of document object
+        // user can access any field of document object
         assertTrue(securityService.isGranted(user1, readAction, document1EntityTitleField));
         assertTrue(securityService.isGranted(user1, readAction, document1EntityContentField));
     }
@@ -265,7 +266,7 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
         testPermissionSize(user1, 1);
     }
 
-    //revoke checks
+    // revoke checks
     @Test
     public void test_admin_revokes_action() {
         securityService.grant(admin, user1, readAction, documentEntity);
@@ -349,7 +350,7 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
         securityService.revoke(admin, user1, readAction, document1EntityTitleField);
     }
 
-    //access checks
+    // access checks
     @Test
     public void test_admin_grants_access_to_object_user_accesses_other_object() {
         securityService.grant(admin, user1, readAction, document1Entity);
@@ -405,34 +406,4 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
         assertTrue(securityService.isGranted(user1, readAction, documentEntityTitleField));
     }
 
-    //admin cannot grant to users
-
-    @Test(expected = PermissionException.class)
-    public void test_admin_with_limited_permissions_grants_action_to_user() {
-        self.get().createAdminWithRevokePermissions();
-        securityService.grant(admin, user1, readAction, documentEntity);
-    }
-
-    //admin cannot revoke
-    @Test(expected = PermissionException.class)
-    public void test_admin_with_limited_permissions_grants_action_to_user2() {
-        self.get().createAdminWithGrantPermissions();
-        securityService.grant(admin, user1, readAction, documentEntity);
-        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
-        securityService.revoke(admin, user1, readAction, documentEntity);
-    }
-
-    //admin has only grant and revoke permissions for users-> not allowed to grant to usergroups
-    @Test(expected = PermissionException.class)
-    public void test_admin_with_limited_permissions_grants_action_to_user4() {
-        self.get().createAdminWithPermissionsForUsers();
-        roleSecurityService.grant(admin, userGroupA, createAction, emailEntity);
-    }
-
-    //admin has only grant and revoke permissions for user groups -> not allowed to grant to users
-    @Test(expected = PermissionException.class)
-    public void test_admin_with_limited_permissions_grants_action_to_user5() {
-        self.get().createAdminWithPermissionsForUserGroups();
-        securityService.grant(admin, user1, createAction, emailEntity);
-    }
 }

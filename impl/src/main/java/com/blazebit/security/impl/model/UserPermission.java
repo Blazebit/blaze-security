@@ -19,7 +19,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
 @Entity
-@ResourceName(name="User Permission")
+@ResourceName(name="User permission")
 public class UserPermission extends AbstractPermission<User, UserPermissionId> {
 
     private static final long serialVersionUID = 1L;

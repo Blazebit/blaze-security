@@ -20,6 +20,7 @@
 	<modules>
 		<module>api</module>
 		<module>impl</module>
+		<module>showcase</module>
 	</modules>
 
 	<issueManagement>
@@ -62,6 +63,17 @@
 			<id>cchet</id>
 			<name>Thomas Herzog</name>
 			<email>t.herzog@curecomp.com</email>
+			<organization>Curecomp</organization>
+			<organizationUrl>http://www.curecomp.com</organizationUrl>
+			<timezone>UTC+1</timezone>
+			<roles>
+				<role>Committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>cuszk</id>
+			<name>Kinga Szabo</name>
+			<email>k.szabo@curecomp.com</email>
 			<organization>Curecomp</organization>
 			<organizationUrl>http://www.curecomp.com</organizationUrl>
 			<timezone>UTC+1</timezone>

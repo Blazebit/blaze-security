@@ -64,7 +64,7 @@ public class EntityAction implements Action {
     }
 
     @Override
-    public boolean matches(Action action) {
+    public boolean implies(Action action) {
         if (this.actionName != null) {
             return ((EntityAction) action).getActionName().equals(this.actionName);
         } else {

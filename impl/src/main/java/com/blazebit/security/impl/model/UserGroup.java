@@ -1,29 +1,23 @@
 /*
  * Copyright 2013 Blazebit.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 package com.blazebit.security.impl.model;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Permission;
-import com.blazebit.security.Role;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -32,11 +26,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import com.blazebit.security.IdHolder;
+import com.blazebit.security.Permission;
+import com.blazebit.security.Role;
+
 /**
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "UserGroup")
+@ResourceName(name = "User group")
 public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
 
     private static final long serialVersionUID = 1L;
@@ -75,14 +73,12 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
         this.name = name;
     }
 
-    @Override
     @ManyToOne
     @JoinColumn(name = "parent_group", nullable = true)
     public UserGroup getParent() {
         return this.parent;
     }
 
-    @Override
     public void setParent(UserGroup parent) {
         this.parent = parent;
     }
@@ -95,7 +91,6 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
     public void setUsers(Set<User> users) {
         this.users = users;
     }
-//TODO why eager?
 
     @OneToMany(mappedBy = "parent")
     public Set<UserGroup> getUserGroups() {
@@ -160,22 +155,4 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
         return "UserGroup{" + "name=" + name + '}';
     }
 
-    @Override
-    @Transient
-    public String getEntityId() {
-        //TODO add json format
-        return String.valueOf(id);
-    }
-
-    @Transient
-    @Override
-    public Set<User> getSubjects() {
-        return this.users;
-    }
-
-    @Transient
-    @Override
-    public Set<UserGroup> getRoles() {
-        return this.userGroups;
-    }
 }

@@ -35,8 +35,6 @@ import com.blazebit.security.impl.model.UserGroupPermissionId;
 import com.blazebit.security.impl.model.UserPermission;
 import com.blazebit.security.impl.model.UserPermissionId;
 import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 /**
  *
@@ -45,26 +43,19 @@ import javax.persistence.PersistenceContext;
 @Stateless
 public class PermissionFactoryImpl implements PermissionFactory {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Override
     public <R extends Role<R>, P extends Permission> P create(Subject<R> subject, Action action, Resource resource) {
         if (resource instanceof EntityObjectField) {
             UserDataPermission permission = new UserDataPermission();
             permission.setId(new UserDataPermissionId((User) subject, (EntityObjectField) resource, (EntityAction) action));
-            entityManager.persist(permission);
-            entityManager.flush();
             return (P) permission;
         } else {
             if (resource instanceof EntityField) {
                 UserPermission permission = new UserPermission();
                 permission.setId(new UserPermissionId((User) subject, (EntityField) resource, (EntityAction) action));
-                entityManager.persist(permission);
-                entityManager.flush();
                 return (P) permission;
             } else {
-                throw new IllegalArgumentException("Not supported resource type, subject type or action type");
+                throw new IllegalArgumentException("Not supported resource type!!");
             }
         }
 
@@ -75,19 +66,14 @@ public class PermissionFactoryImpl implements PermissionFactory {
         if (resource instanceof EntityObjectField) {
             UserGroupDataPermission permission = new UserGroupDataPermission();
             permission.setId(new UserGroupDataPermissionId((UserGroup) role, (EntityObjectField) resource, (EntityAction) action));
-            entityManager.persist(permission);
-            entityManager.flush();
             return (P) permission;
         } else {
             if (resource instanceof EntityField) {
                 UserGroupPermission permission = new UserGroupPermission();
                 permission.setId(new UserGroupPermissionId((UserGroup) role, (EntityField) resource, (EntityAction) action));
-                entityManager.persist(permission);
-                entityManager.flush();
                 return (P) permission;
-
             } else {
-                throw new IllegalArgumentException("Not supported resource type, role type or action type");
+                throw new IllegalArgumentException("Not supported resource type!!");
             }
         }
     }

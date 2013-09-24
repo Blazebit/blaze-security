@@ -21,15 +21,13 @@ import java.util.Collection;
  *
  * @author Christian Beikov
  */
-public interface Role<R extends Role<R>> extends Actor {
+public interface Role<R extends Role<R>> {
 
-    public R getParent();
-
-    public void setParent(R role);
-
+    /**
+     *
+     * @return collection of all the permissions of a role
+     */
     public Collection<Permission> getAllPermissions();
-
-    public <R extends Role<R>> Collection<R> getRoles();
-
-    public <S extends Subject<R>> Collection<S> getSubjects();
+    
+  
 }

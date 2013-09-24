@@ -28,18 +28,5 @@ public interface UserContext extends Serializable {
      * @return the user entity representing the logged user.
      */
     public User getUser();
-    
-     /**
-     * Gets the selected user.
-     *
-     * @return the user entity representing the selected user.
-     */
-    public User getSelectedUser();
-    
-     /**
-     * Gets the selected group.
-     *
-     * @return the user entity representing the selected group.
-     */
-    public UserGroup getSelectedGroup();
+  
 }

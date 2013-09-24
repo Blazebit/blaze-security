@@ -21,8 +21,25 @@ package com.blazebit.security;
  */
 public interface PermissionFactory {
 
+    /**
+     *
+     * @param <R>
+     * @param <P>
+     * @param subject
+     * @param action
+     * @param resource
+     * @return creates a permission for a subject
+     */
     public <R extends Role<R>, P extends Permission> P create(Subject<R> subject, Action action, Resource resource);
-    
-    public <R extends Role<R>, P extends Permission> P create(Role<R> role, Action action, Resource resource);
 
+    /**
+     *
+     * @param <R>
+     * @param <P>
+     * @param role
+     * @param action
+     * @param resource
+     * @return creates a permissions for a role
+     */
+    public <R extends Role<R>, P extends Permission> P create(Role<R> role, Action action, Resource resource);
 }

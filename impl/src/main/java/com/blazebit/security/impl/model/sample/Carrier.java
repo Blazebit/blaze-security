@@ -1,17 +1,14 @@
 /*
  * Copyright 2013 Blazebit.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 package com.blazebit.security.impl.model.sample;
 
@@ -31,11 +28,11 @@ import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 /**
- *
+ * 
  * @author cuszk
  */
 @Entity
-@ResourceName(name="Carrier")
+@ResourceName(name = "Carrier")
 public class Carrier implements Serializable, IdHolder {
 
     private Integer id;
@@ -47,8 +44,9 @@ public class Carrier implements Serializable, IdHolder {
     private Party party;
     private Set<Contact> contacts = new HashSet<Contact>();
     private Set<CarrierGroup> groups = new HashSet<CarrierGroup>();
-//    private Set<Email> emails = new HashSet<Email>();
-//    private Set<CarrierTeam> teams = new HashSet<CarrierTeam>();
+
+    // private Set<Email> emails = new HashSet<Email>();
+    // private Set<CarrierTeam> teams = new HashSet<CarrierTeam>();
 
     @Id
     @GeneratedValue
@@ -106,13 +104,7 @@ public class Carrier implements Serializable, IdHolder {
         this.field5 = field5;
     }
 
-    @Override
-    @Transient
-    public String getEntityId() {
-        return String.valueOf(id);
-    }
-
-    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToOne(cascade = { CascadeType.MERGE, CascadeType.REMOVE })
     public Party getParty() {
         return party;
     }
@@ -121,7 +113,7 @@ public class Carrier implements Serializable, IdHolder {
         this.party = party;
     }
 
-    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.REMOVE})
+    @OneToMany(cascade = { CascadeType.MERGE, CascadeType.REMOVE })
     public Set<Contact> getContacts() {
         return contacts;
     }
@@ -130,30 +122,30 @@ public class Carrier implements Serializable, IdHolder {
         this.contacts = contacts;
     }
 
-//    @OneToMany(
-//            mappedBy = "carrier")
-//    public Set<Email> getEmails() {
-//        return emails;
-//    }
-//    public void setEmails(Set<Email> emails) {
-//        this.emails = emails;
-//    }
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REMOVE})
+    // @OneToMany(
+    // mappedBy = "carrier")
+    // public Set<Email> getEmails() {
+    // return emails;
+    // }
+    // public void setEmails(Set<Email> emails) {
+    // this.emails = emails;
+    // }
+    @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.REMOVE })
     public Set<CarrierGroup> getGroups() {
         return this.groups;
     }
 
-//    @ManyToMany(mappedBy = "carriers")
-//    public Set<CarrierTeam> getTeams() {
-//        return this.teams;
-//    }
+    // @ManyToMany(mappedBy = "carriers")
+    // public Set<CarrierTeam> getTeams() {
+    // return this.teams;
+    // }
     public void setGroups(Set<CarrierGroup> groups) {
         this.groups = groups;
     }
 
-//    public void setTeams(Set<CarrierTeam> teams) {
-//        this.teams = teams;
-//    }
+    // public void setTeams(Set<CarrierTeam> teams) {
+    // this.teams = teams;
+    // }
     @Override
     public String toString() {
         return "Carrier{" + "id=" + id + '}';

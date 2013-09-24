@@ -10,6 +10,12 @@
     <class>com.blazebit.security.impl.model.UserDataPermission</class>
     <class>com.blazebit.security.impl.model.UserGroupPermission</class>
     <class>com.blazebit.security.impl.model.UserGroupDataPermission</class>
+    <class>com.blazebit.security.impl.model.sample.Carrier</class>
+    <class>com.blazebit.security.impl.model.sample.Party</class>
+    <class>com.blazebit.security.impl.model.sample.Contact</class>
+    <class>com.blazebit.security.impl.model.sample.CarrierGroup</class>
+    <class>com.blazebit.security.impl.model.sample.Document</class>
+    <class>com.blazebit.security.impl.model.sample.Email</class>
     
     
     

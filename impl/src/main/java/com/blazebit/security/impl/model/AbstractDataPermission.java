@@ -1,17 +1,14 @@
 /*
  * Copyright 2013 Blazebit.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 package com.blazebit.security.impl.model;
 
@@ -105,12 +102,8 @@ public abstract class AbstractDataPermission<S, P extends DataPermissionId<S>> i
 
     @Override
     public String toString() {
-        return "Permission{" + "id=" + id + ", entityAction=" + entityAction + ", entityObjectField=" + entityObjectField + ", subject=" + subject + '}';
+        return "Permission{" + "id=" + id + "}";
     }
 
-    @Override
-    public boolean matches(Permission _permission) {
-        AbstractDataPermission p = (AbstractDataPermission) _permission;
-        return this.id.getEntity().equals(p.id.getEntity()) && this.id.getField().equals(p.id.getField()) && this.id.getActionName().equals(p.id.getActionName()) && this.id.getEntityId().equals(p.id.getEntityId());
-    }
+   
 }

@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.security;
+package com.blazebit.security.constants;
 
 /**
  *
  * @author cuszk
  */
-public interface EntityResource {
+public enum ActionConstants {
 
-    public String getEntity();
-
-    public String getField();
+    CREATE,
+    UPDATE,
+    DELETE,
+    GRANT,
+    REVOKE,
+    READ,
 }
