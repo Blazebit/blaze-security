@@ -83,7 +83,8 @@ public class EntityFieldFactoryImpl implements EntityFieldFactory {
     }
 
     // TODO read automatically
-    public static Collection<Class<?>> getEntityClasses() {
+    @Override
+    public List<Class<?>> getEntityClasses() {
         List<Class<?>> ret = new ArrayList<Class<?>>();
         ret.add(Carrier.class);
         ret.add(Party.class);

@@ -12,6 +12,8 @@
  */
 package com.blazebit.security;
 
+import java.util.List;
+
 /**
  * 
  * @author cuszk
@@ -71,5 +73,7 @@ public interface EntityFieldFactory {
      * @return resource created for the given class with the given field and id
      */
     public Resource createResource(Class<?> clazz, String field, Integer id);
+
+    List<Class<?>> getEntityClasses();
 
 }

@@ -18,13 +18,18 @@ public class RoleManagerImpl implements RoleManager {
     private EntityManager entityManager;
 
     @Override
-    public List<Subject> getSubjects(Role role) {
-        return entityManager.createQuery("SELECT subject FROM " + User.class.getName() + " user WHERE user.groups.id='" + ((IdHolder) role).getId() + "'").getResultList();
+    public <R extends Role<R>, S extends Subject<?>> List<S> getSubjects(Role<R> role) {
+        return entityManager.createQuery("SELECT user FROM " + User.class.getName() + " user JOIN user.userGroups groups WHERE groups.id='" + ((IdHolder) role).getId() + "'").getResultList();
     }
 
     @Override
-    public List<Role> getRoles(Role role) {
-        return entityManager.createQuery("SELECT group FROM " + UserGroup.class.getName() + " group WHERE group.parent.id='" + ((IdHolder) role).getId() + "'").getResultList();
+    public <R extends Role<R>> List<R> getRoles(Role<R> role) {
+        return entityManager.createQuery("SELECT usergroup FROM " + UserGroup.class.getName() + " usergroup WHERE usergroup.parent.id='" + ((IdHolder) role).getId() + "'").getResultList();
+    }
+
+    @Override
+    public <R extends Role<R>> List<R> getRoles(Subject<R> subject) {
+        return entityManager.createQuery("SELECT usergroup FROM " + UserGroup.class.getName() + " usergroup JOIN usergroup.users users WHERE users.id='" + ((IdHolder) subject).getId() + "'").getResultList();
     }
 
 }
