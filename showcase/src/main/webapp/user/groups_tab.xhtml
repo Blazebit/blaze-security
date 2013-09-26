@@ -12,33 +12,34 @@
                          type="javax.faces.event.PreRenderComponentEvent" />
                 <h3>Selected user: #{userSession.selectedUser.username}</h3>
 
-                <h:panelGrid columns="2" width="100%">
+                <h:panelGrid columns="2" width="60%" columnClasses="top">
                     <p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="gwiz" showNavBar="false" style="width:50%">
 
                         <p:tab id="groups" title="Groups">
-                            <p:tree value="#{userGroupsBean.groupRoot}" var="group" selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" propagateSelectionDown="false" propagateSelectionUp="false">  
-                                <p:ajax event="select"   update=":form:tab:groupsActions"/>  
-                                <p:ajax event="unselect"  update=":form:tab:groupsActions"/>
-                                <p:treeNode>
-                                    <h:outputText value="#{group.userGroup.name}"/>  
-                                </p:treeNode>
-                            </p:tree>
+                            <p:treeTable value="#{userGroupsBean.groupRoot}" var="group" selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" propagateSelectionDown="false" propagateSelectionUp="false">  
+                                <p:column>
+                             	    <p:commandLink oncomplete="permissionDialog.show()" update=":dialogs" process="@this">
+                                    	<f:setPropertyActionListener target="#{userGroupsBean.selectedGroup}" value="#{group.userGroup}" />
+                                	    <h:outputText value="#{group.userGroup.name}"/>
+                                    </p:commandLink>
+                                </p:column>
+                            </p:treeTable>
                             <h:panelGroup id="groupsActions" layout="block" style="height:50px">
-                                <p:commandButton value="Next" onclick="gwiz.next();" style="float:left" rendered="#{not empty userGroupsBean.selectedGroupNodes}"/>
+                                <p:commandButton value="Next" onclick="gwiz.next();" style="float:left"/>
                             </h:panelGroup>
                         </p:tab>
 
                         <p:tab id="groupPermissions" title="Permissions">
-                            <h:panelGrid columns="2">
+                            <h:panelGrid columns="2" columnClasses="top">
                                 <p:tree value="#{userGroupsBean.currentPermissionTreeRoot}" var="currentPermission" id="currentPermissionTree">
                                     <p:treeNode>
                                         <h:outputText value="#{currentPermission.name}" style="#{currentPermission.marked  ? 'color:red' : ''}"/>  
                                     </p:treeNode>
                                 </p:tree>
                                 
-                                <p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree">
-                                    <p:ajax event="select"   update=":form:tab:"/>  
-                                    <p:ajax event="unselect"  update=":form:tab:groupsActions"/>
+                               	<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree" selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox">
+	                              	<p:ajax event="select"   update=":form:tab:currentPermissionTree" listener="#{userGroupsBean.rebuildCurrentPermissionTree}"/>  
+	                                <p:ajax event="unselect"  update=":form:tab:currentPermissionTree" listener="#{userGroupsBean.rebuildCurrentPermissionTree}"/>
                                     <p:treeNode>
                                         <h:outputText value="#{newPermission.name}" style="#{newPermission.marked  ? 'color:green' : ''}"/>  
                                     </p:treeNode>
@@ -46,14 +47,12 @@
                             </h:panelGrid>
                               <h:panelGroup id="groupsPermissionsActions" layout="block" style="height:50px">
                                 <p:commandButton value="Back" onclick="gwiz.back();" style="float:left"/>
-                                <p:commandButton value="Confirm" style="float:left"/>
+                                <p:commandButton value="Confirm" style="float:left" action="#{userGroupsBean.confirm}" process="@this" update=":form:tab:groupPermissionsTree:permissionPanelGroup"  oncomplete="gwiz.loadStep (gwiz.cfg.steps [0], true)"/>
                             </h:panelGroup>
                         </p:tab>
-
                     </p:wizard>
 
-
-                    <my:permissionTree id="groupPermissionTableComp" bean="#{userGroupsBean}" tableId="groups_userPermissions" />
+                    <my:permissionTree id="groupPermissionsTree" bean="#{userGroupsBean}"/>
                 </h:panelGrid>
 
             </h:panelGroup>

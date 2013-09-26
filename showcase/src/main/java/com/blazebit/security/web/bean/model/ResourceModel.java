@@ -13,8 +13,9 @@ public class ResourceModel {
     public enum ResourceType {
 
         ENTITY,
-        FIELD,
         ACTION,
+        FIELD,
+        
         USERGROUP,
     }
     private String name;
@@ -67,4 +68,11 @@ public class ResourceModel {
     public void setMarked(boolean marked) {
         this.marked = marked;
     }
+
+    @Override
+    public String toString() {
+        return "ResourceModel [name=" + name + ", type=" + type + ", target=" + target + ", marked=" + marked + "]";
+    }
+    
+    
 }

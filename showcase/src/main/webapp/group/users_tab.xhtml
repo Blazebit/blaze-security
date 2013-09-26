@@ -6,11 +6,11 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:my="http://java.sun.com/jsf/composite/components">
     <ui:composition> 
-        <p:tab id="groupUsers" title="Users" disabled="#{empty userSession.selectedGroup}">
+        <p:tab id="groupUsers" title="Users" disabled="#{empty userSession.selectedUserGroup}">
 
             <f:event listener="#{groupUsersBean.init}"
                      type="javax.faces.event.PreRenderComponentEvent" />
-            <h4>Selected group: #{userSession.selectedGroup.name}</h4>
+            <h4>Selected group: #{userSession.selectedUserGroup.name}</h4>
             
             <h4>Selected users: <ui:repeat value="#{groupUsersBean.selectedUsers}" var="userModel"><br/>#{userModel.username}</ui:repeat></h4>
             <p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false" widgetVar="uwiz">

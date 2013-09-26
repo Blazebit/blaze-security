@@ -1,6 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * To change this template, choose Tools | Templates and open the template in the editor.
  */
 package com.blazebit.security.web.service.impl;
 
@@ -11,7 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 /**
- *
+ * 
  * @author cuszk
  */
 @Stateless
@@ -24,7 +23,14 @@ public class UserServiceImpl implements UserService {
     public User createUser(String name) {
         User user = new User(name);
         entityManager.persist(user);
+        entityManager.flush();
         return user;
+    }
+
+    @Override
+    public void delete(User user) {
+        entityManager.remove(user);
+        entityManager.flush();
     }
 
     @Override

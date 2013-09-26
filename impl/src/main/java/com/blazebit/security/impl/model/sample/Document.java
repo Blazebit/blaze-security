@@ -36,6 +36,8 @@ public class Document implements Serializable, IdHolder {
     private Integer id;
     private String content;
     private String title;
+    private Integer size;
+    
 
     @Id
     @GeneratedValue
@@ -64,6 +66,15 @@ public class Document implements Serializable, IdHolder {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Basic
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
     }
 
 }

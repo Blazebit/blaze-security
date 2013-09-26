@@ -14,8 +14,8 @@ public interface RoleService {
 
     public boolean canUserBeAddedToRole(User user, UserGroup group);
 
-    public void addSubjectToRole(User user, User selectedUser, UserGroup userGroup, boolean b);
+    public void addSubjectToRole(User selectedUser, UserGroup userGroup);
 
-    public void removeSubjectFromRole(User user, User selectedUser, UserGroup userGroup, boolean b);
+    public void removeSubjectFromRole(User selectedUser, UserGroup userGroup);
 
 }

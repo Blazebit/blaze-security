@@ -26,6 +26,7 @@
       <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
       <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
       <property name="hibernate.ejb.interceptor" value="com.blazebit.security.impl.interceptor.ChangeInterceptor"/>
+      <property name="org.hibernate.FlushMode" value="commit" />
     </properties>
   </persistence-unit>
 </persistence>

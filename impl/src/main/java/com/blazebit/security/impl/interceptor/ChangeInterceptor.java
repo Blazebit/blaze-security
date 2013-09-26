@@ -87,11 +87,13 @@ public class ChangeInterceptor extends EmptyInterceptor {
             return super.onFlushDirty(entity, id, currentState, previousState, propertyNames, types);
         }
         List<String> changedPropertyNames = new ArrayList<String>();
-        for (int i = 0; i < currentState.length; i++) {
-            // we dont check collections here
-            if (!types[i].isCollectionType()) {
-                if ((currentState[i] != null && !currentState[i].equals(previousState[i])) || (currentState[i] == null && previousState[i] != null)) {
-                    changedPropertyNames.add(propertyNames[i]);
+        if (previousState != null) {
+            for (int i = 0; i < currentState.length; i++) {
+                // we dont check collections here
+                if (!types[i].isCollectionType()) {
+                    if ((currentState[i] != null && !currentState[i].equals(previousState[i])) || (currentState[i] == null && previousState[i] != null)) {
+                        changedPropertyNames.add(propertyNames[i]);
+                    }
                 }
             }
         }

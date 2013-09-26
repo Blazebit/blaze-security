@@ -74,6 +74,17 @@ public interface EntityFieldFactory {
      */
     public Resource createResource(Class<?> clazz, String field, Integer id);
 
+    /**
+     * 
+     * @return
+     */
     List<Class<?>> getEntityClasses();
+
+    /**
+     * 
+     * @param entity
+     * @return
+     */
+    public Resource createResource(String entity);
 
 }

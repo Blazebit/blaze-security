@@ -69,6 +69,7 @@ public class UserBean extends PermissionViewUtils implements GroupView, Permissi
     private TreeNode groupRoot;
     private boolean groupTreeView;
     private boolean permissionTreeView;
+    private String newUserName = "new_user";
 
     public void backToIndex() throws IOException {
         userSession.setUser(null);
@@ -80,6 +81,23 @@ public class UserBean extends PermissionViewUtils implements GroupView, Permissi
     @PostConstruct
     public void init() {
         users = userService.findUsers();
+        if (getSelectedUser() != null) {
+            selectUser(getSelectedUser());
+        }
+    }
+
+    private void initPermissionList(List<Permission> permissions) {
+        this.userPermissions.clear();
+        for (Permission permission : permissions) {
+            this.userPermissions.add(new PermissionModel(permission, false));
+        }
+    }
+
+    private void initGroupList(List<UserGroup> userGroups) {
+        this.userGroups.clear();
+        for (UserGroup userGroup : userGroups) {
+            this.userGroups.add(new GroupModel(userGroup, false, false));
+        }
     }
 
     // first tab: select user
@@ -101,6 +119,19 @@ public class UserBean extends PermissionViewUtils implements GroupView, Permissi
         buildGroupTree(groups, groupRoot);
         this.groupTreeView = true;
 
+    }
+
+    public void saveUser() {
+        userService.createUser(newUserName);
+        newUserName = "new_user";
+        users = userService.findUsers();
+    }
+
+    public void saveUser(User user) {
+        if (user.equals(getSelectedUser())) {
+            userSession.setUser(null);
+        }
+        userService.delete(user);
     }
 
     public User getSelectedUser() {
@@ -150,20 +181,6 @@ public class UserBean extends PermissionViewUtils implements GroupView, Permissi
         return permissionTreeView;
     }
 
-    private void initPermissionList(List<Permission> permissions) {
-        this.userPermissions.clear();
-        for (Permission permission : permissions) {
-            this.userPermissions.add(new PermissionModel(permission, false));
-        }
-    }
-
-    private void initGroupList(List<UserGroup> userGroups) {
-        this.userGroups.clear();
-        for (UserGroup userGroup : userGroups) {
-            this.userGroups.add(new GroupModel(userGroup, false, false));
-        }
-    }
-
     @Override
     public List<GroupModel> getGroups() {
         return userGroups;
@@ -178,4 +195,13 @@ public class UserBean extends PermissionViewUtils implements GroupView, Permissi
     public TreeNode getGroupRoot() {
         return groupRoot;
     }
+
+    public String getNewUserName() {
+        return newUserName;
+    }
+
+    public void setNewUserName(String newUserName) {
+        this.newUserName = newUserName;
+    }
+
 }

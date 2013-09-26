@@ -274,7 +274,7 @@ public class GroupUsersBean extends PermissionViewUtils implements PermissionVie
 
     public void confirmGrantSelectedPermissions() {
         for (User user : selectedUsers) {
-            roleService.addSubjectToRole(userContext.getUser(), user, getSelectedGroup(), false);
+            roleService.addSubjectToRole(user, getSelectedGroup());
             for (ResourceAction resourceAction : selectedResourceActions) {
                 permissionService.grant(userContext.getUser(), user, resourceAction.getAction(), resourceAction.getResource());
             }

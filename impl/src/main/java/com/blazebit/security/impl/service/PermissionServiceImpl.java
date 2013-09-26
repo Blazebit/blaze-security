@@ -12,6 +12,7 @@
  */
 package com.blazebit.security.impl.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -62,12 +63,12 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public <R extends Role<R>> boolean isGranted(Subject<R> subject, Action action, Resource resource) {
         Subject _subject = permissionManager.reloadSubjectWithPermissions(subject);
-        Set<Permission> permissions = new HashSet<Permission>(_subject.getAllPermissions());
-        // permissionManager.getAllPermissions(subject)
+        List<Permission> permissions = new ArrayList<Permission>(_subject.getAllPermissions());
+        // permissionManager.getAllPermissions(subject);
         // TODO alternative to fetch all the permissions. problem with getAllPermissions method that it invokes a flush before
         // the
         // query. When this is invoked from the flush interceptor it causes to invoke the flush interceptor again and again.
-        // See forum: https://hibernate.atlassian.net/browse/HB-1480
+        // See forum: https://hibernate.atlassian.net/browse/HB-1480, https://forum.hibernate.org/viewtopic.php?t=955313
         for (Permission permission : permissions) {
             if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
                 return true;

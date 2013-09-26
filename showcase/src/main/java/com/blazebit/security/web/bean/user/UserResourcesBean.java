@@ -6,12 +6,16 @@ package com.blazebit.security.web.bean.user;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import javax.enterprise.inject.spi.AnnotatedType;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
@@ -20,7 +24,6 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.Action;
@@ -30,18 +33,21 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
+import com.blazebit.security.Resource;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContext;
+import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.ResourceName;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.PermissionViewUtils;
+import com.blazebit.security.web.bean.ResourceNameExtension;
 import com.blazebit.security.web.bean.UserSession;
-import com.blazebit.security.web.bean.model.EntityModel;
 import com.blazebit.security.web.bean.model.PermissionModel;
 import com.blazebit.security.web.bean.model.ResourceAction;
 import com.blazebit.security.web.bean.model.ResourceModel;
+import com.blazebit.security.web.bean.model.ResourceModel.ResourceType;
 import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.impl.UserGroupService;
 import com.blazebit.security.web.service.impl.UserService;
@@ -75,179 +81,404 @@ public class UserResourcesBean extends PermissionViewUtils implements Permission
     @Inject
     private UserSession userSession;
 
-    private TreeNode[] selectedResourceNodes;
-    private TreeNode[] selectedActionNodes;
+    @Inject
+    ResourceNameExtension resourceNameExtension;
+
     private DefaultTreeNode actionRoot;
     private DefaultTreeNode resourceRoot;
     private DefaultTreeNode permissionRoot;
+    private TreeNode[] selectedPermissionNodes;
+
     private Set<EntityField> selectedResources = new HashSet<EntityField>();
     private Set<ResourceAction> selectedResourceActions = new HashSet<ResourceAction>();
+    private List<Permission> permissions = new ArrayList<Permission>();
+
+    // permissionview
     private List<PermissionModel> userPermissions = new ArrayList<PermissionModel>();
     private boolean showPermissionView;
     private TreeNode permissionViewRoot;
+    private DefaultTreeNode newPermissionTreeRoot;
+    private DefaultTreeNode currentPermissionTreeRoot;
 
     public void init() {
-        List<EntityModel> availableEntities = new ArrayList<EntityModel>();
-        for (Class<?> clazz : entityFieldFactory.getEntityClasses()) {
-            ResourceName resourceName = AnnotationUtils.findAnnotation(clazz, ResourceName.class);
-            if (resourceName != null) {
-                availableEntities.add(new EntityModel(clazz, resourceName.name()));
-            }
-
-        }
-        resourceRoot = new DefaultTreeNode("root", null);
-        for (EntityModel model : availableEntities) {
-            // entity
-            DefaultTreeNode entityRoot = new DefaultTreeNode("root", new ResourceModel(model.getName(), ResourceModel.ResourceType.ENTITY, entityFieldFactory.createResource(model
-                .getEntityClass())), resourceRoot);
-            entityRoot.setExpanded(true);
-            // fields for entity
-            Field[] allFields = ReflectionUtils.getInstanceFields(model.getEntityClass());
-            for (Field field : allFields) {
-
-                DefaultTreeNode fieldNode = new DefaultTreeNode(new ResourceModel(field.getName(), ResourceModel.ResourceType.FIELD, entityFieldFactory.createResource(model
-                    .getEntityClass(), field.getName())), entityRoot);
-                fieldNode.setExpanded(true);
-
-                for (Action action : actionFactory.getActionsForField()) {
-                    // DefaultTreeNode actionNode = new DefaultTreeNode(new ResourceModel(action.getActionName(),
-                    // ResourceModel.ResourceType.ACTION, action), fieldNode);
-                }
-
-            }
-
-        }
-
+        buildResourceTree();
         initPermissions();
-    }
-
-    public void selectResources() {
-        selectedResources.clear();
-        for (TreeNode resourceNode : selectedResourceNodes) {
-            ResourceModel model = (ResourceModel) resourceNode.getData();
-            EntityField resource = (EntityField) model.getTarget();
-
-            switch (model.getType()) {
-                case ENTITY:
-                    // entity is selected => permission for entity (all fields) and all actions
-                    selectedResources.add(resource);
-                    break;
-                case FIELD:
-                    // field is selected => permission for entity + field and all actions
-                    EntityField resourceWithoutField = new EntityField(resource.getEntity(), EntityField.EMPTY_FIELD);
-
-                    if (!selectedResources.contains(resourceWithoutField)) {
-                        selectedResources.add(resource);
-                    }
-                    break;
-            }
-        }
-        actionRoot = new DefaultTreeNode("Root", null);
-
-        for (EntityField resource : selectedResources) {
-            DefaultTreeNode resourceChild;
-            if (StringUtils.isEmpty(resource.getField())) {
-                resourceChild = new DefaultTreeNode(new ResourceModel(resource.getEntity(), ResourceModel.ResourceType.ENTITY, resource), actionRoot);
-                for (Action _action : actionFactory.getActionsForEntity()) {
-                    EntityAction action = (EntityAction) _action;
-                    new DefaultTreeNode(new ResourceModel(action.getActionName(), ResourceModel.ResourceType.ACTION, action), resourceChild);
-                }
-            } else {
-                resourceChild = new DefaultTreeNode(new ResourceModel(resource.getEntity() + " " + resource.getField(), ResourceModel.ResourceType.FIELD, resource), actionRoot);
-                for (Action _action : actionFactory.getActionsForField()) {
-                    EntityAction action = (EntityAction) _action;
-                    new DefaultTreeNode(new ResourceModel(action.getActionName(), ResourceModel.ResourceType.ACTION, action), resourceChild);
-                }
-            }
-        }
-
-    }
-
-    public void selectActions() {
-        selectedResourceActions.clear();
-        for (TreeNode actionNode : selectedActionNodes) {
-            ResourceModel model = (ResourceModel) actionNode.getData();
-            switch (model.getType()) {
-                case ENTITY:
-                    EntityField entityResource = (EntityField) model.getTarget();
-                    for (Action _action : actionFactory.getActionsForEntity()) {
-                        EntityAction action = (EntityAction) _action;
-                        selectedResourceActions.add(new ResourceAction(entityResource, action));
-                    }
-                    break;
-                case FIELD:
-                    EntityField fieldResource = (EntityField) model.getTarget();
-                    for (Action _action : actionFactory.getActionsForField()) {
-                        EntityAction action = (EntityAction) _action;
-                        selectedResourceActions.add(new ResourceAction(fieldResource, action));
-                    }
-                    break;
-                case ACTION:
-                    EntityAction action = (EntityAction) model.getTarget();
-                    TreeNode parent = actionNode.getParent();
-
-                    ResourceModel parentModel = (ResourceModel) parent.getData();
-                    EntityField parentResource = (EntityField) parentModel.getTarget();
-
-                    selectedResourceActions.add(new ResourceAction(parentResource, action));
-                    break;
-            }
-        }
-        // user permissions
-        for (ResourceAction ra : selectedResourceActions) {
-            if (permissionDataAccess.isGrantable(getSelectedUser(), ra.getAction(), ra.getResource())) {
-                Set<Permission> toRevoke = permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), ra.getAction(), ra.getResource());
-                for (PermissionModel userPermissionModel : userPermissions) {
-                    if (toRevoke.contains(userPermissionModel.getPermission())) {
-                        userPermissionModel.setSelected(true);
-                    }
-                }
-            }
-        }
     }
 
     public String resourceWizardListener(FlowEvent event) {
         if (event.getOldStep().equals("resources")) {
-            selectResources();
-        } else {
-            if (event.getOldStep().equals("actions")) {
-                selectActions();
-            }
+            processSelectedPermissions();
         }
         return event.getNewStep();
+    }
+
+    private void initPermissions() {
+        permissions = permissionManager.getAllPermissions(getSelectedUser());
+        this.userPermissions.clear();
+        for (Permission permission : permissions) {
+            this.userPermissions.add(new PermissionModel(permission, false));
+        }
+
+        this.permissionViewRoot = new DefaultTreeNode("root", null);
+        buildPermissionTree(permissions, permissionViewRoot);
+        this.showPermissionView = true;
+    }
+
+    private void buildResourceTree() {
+        resourceRoot = new DefaultTreeNode("root", null);
+        for (AnnotatedType<?> type : resourceNameExtension.getResourceNames()) {
+            Class<?> entityClass = (Class<?>) type.getBaseType();
+            EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
+            // check if logged in user can grant these resources
+            if (permissionService.isGranted(userSession.getUser(), actionFactory.createAction(ActionConstants.GRANT), entityField)) {
+                // entity
+                DefaultTreeNode entityNode = new DefaultTreeNode("root", new ResourceModel(entityField.getEntity(), ResourceModel.ResourceType.ENTITY, entityField), resourceRoot);
+                entityNode.setExpanded(true);
+                List<Action> entityActionFields = actionFactory.getActionsForEntity();
+                // fields for entity
+                Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
+                if (allFields.length > 0) {
+                    // actions for fields
+                    for (Action action : actionFactory.getActionsForField()) {
+                        EntityAction entityAction = (EntityAction) action;
+                        DefaultTreeNode actionNode = new DefaultTreeNode(new ResourceModel(entityAction.getActionName(), ResourceModel.ResourceType.ACTION, entityAction),
+                            entityNode);
+                        actionNode.setExpanded(true);
+                        // fields for entity
+                        for (Field field : allFields) {
+                            EntityField entityFieldWithField = (EntityField) entityFieldFactory.createResource(entityClass, field.getName());
+                            DefaultTreeNode fieldNode = new DefaultTreeNode(new ResourceModel(field.getName(), ResourceModel.ResourceType.FIELD, entityFieldWithField), actionNode);
+                            fieldNode.setExpanded(true);
+                            // check if user has exact permission for this field or the whole entity
+                            if (permissionDataAccess.findPermission(getSelectedUser(), entityAction, entityFieldWithField) != null
+                                || permissionDataAccess.findPermission(getSelectedUser(), entityAction, entityField) != null) {
+                                fieldNode.setSelected(true);
+                            }
+                        }
+                        markParentAsSelectedIfChildrenAreSelected(actionNode);
+                        entityActionFields.remove(action);
+                    }
+                }
+                // remaining action fields for entity
+                for (Action action : entityActionFields) {
+                    EntityAction entityAction = (EntityAction) action;
+                    DefaultTreeNode actionNode = new DefaultTreeNode(new ResourceModel(entityAction.getActionName(), ResourceModel.ResourceType.ACTION, entityAction), entityNode);
+                    if (permissionDataAccess.findPermission(getSelectedUser(), entityAction, entityField) != null) {
+                        actionNode.setSelected(true);
+                    }
+                }
+                // fix selections -> propagate "checked" to entity if every child checked
+                markParentAsSelectedIfChildrenAreSelected(entityNode);
+            }
+        }
+    }
+
+    /**
+     * helper
+     * 
+     * @param node
+     */
+    private void markParentAsSelectedIfChildrenAreSelected(DefaultTreeNode node) {
+        boolean foundOneUnselected = false;
+        for (TreeNode entityChild : node.getChildren()) {
+            if (!entityChild.isSelected()) {
+                foundOneUnselected = true;
+                break;
+            }
+        }
+        if (!foundOneUnselected) {
+            node.setSelected(true);
+        }
+    }
+
+    /**
+     * wizard step 1
+     */
+    public void processSelectedPermissions() {
+        selectedResourceActions.clear();
+        List<TreeNode> sortedSelectedNodes = Arrays.asList(selectedPermissionNodes);
+        Collections.sort(sortedSelectedNodes, new Comparator<TreeNode>() {
+
+            @Override
+            public int compare(TreeNode o1, TreeNode o2) {
+                ResourceModel model1 = (ResourceModel) o1.getData();
+                ResourceModel model2 = (ResourceModel) o2.getData();
+                if (model1.getType().ordinal() == model2.getType().ordinal()) {
+                    return 0;
+                } else {
+                    return model1.getType().ordinal() < model2.getType().ordinal() ? -1 : 1;
+                }
+            }
+
+        });
+        for (TreeNode permissionNode : sortedSelectedNodes) {
+            ResourceModel permissionNodeData = (ResourceModel) permissionNode.getData();
+            switch (permissionNodeData.getType()) {
+                case ENTITY:
+                    for (TreeNode actionNode : permissionNode.getChildren()) {
+                        ResourceModel actionNodeData = (ResourceModel) actionNode.getData();
+                        selectedResourceActions.add(new ResourceAction((EntityField) permissionNodeData.getTarget(), (EntityAction) actionNodeData.getTarget()));
+                    }
+                    break;
+                case ACTION:
+                    TreeNode entityNode = permissionNode.getParent();
+                    ResourceModel entityNodeModel = (ResourceModel) entityNode.getData();
+                    selectedResourceActions.add(new ResourceAction((EntityField) entityNodeModel.getTarget(), (EntityAction) permissionNodeData.getTarget()));
+                    break;
+                case FIELD:
+                    TreeNode actionNode = permissionNode.getParent();
+                    ResourceModel actionNodeData = (ResourceModel) actionNode.getData();
+
+                    TreeNode actionEntityNode = actionNode.getParent();
+                    ResourceModel actionEntityNodeModel = (ResourceModel) actionEntityNode.getData();
+                    if (!selectedResourceActions.contains(new ResourceAction((EntityField) actionEntityNodeModel.getTarget(), (EntityAction) actionNodeData.getTarget()))) {
+                        selectedResourceActions.add(new ResourceAction((EntityField) permissionNodeData.getTarget(), (EntityAction) actionNodeData.getTarget()));
+                    }
+                    break;
+
+            }
+        }
+
+        currentPermissionTreeRoot = new DefaultTreeNode();
+        Set<Permission> toRevoke = new HashSet<Permission>();
+        for (ResourceAction resourceAction : selectedResourceActions) {
+            toRevoke.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), resourceAction.getAction(), resourceAction.getResource()));
+        }
+        buildCurrentPermissionTree(currentPermissionTreeRoot, selectedResourceActions, toRevoke);
+        newPermissionTreeRoot = new DefaultTreeNode();
+        buildNewPermissionTree(newPermissionTreeRoot, selectedResourceActions);
+
+    }
+
+    private void buildNewPermissionTree(DefaultTreeNode permissionRoot, Set<ResourceAction> selectedResourceActions) {
+        // current permissions
+        Map<String, List<Permission>> permissionMap = groupPermissionsByEntity(permissions);
+        // selected permissions (existing + new - revoked)
+        Map<String, List<ResourceAction>> resourceActionMap = groupResourceActionsByEntity(selectedResourceActions);
+        // merge into resource actions map
+        for (String entity : permissionMap.keySet()) {
+            List<Permission> permissionGroup = new ArrayList<Permission>(permissionMap.get(entity));
+            for (Permission _permission : permissionGroup) {
+                AbstractPermission permission = (AbstractPermission) _permission;
+                List<ResourceAction> temp = new ArrayList<ResourceAction>();
+                if (resourceActionMap.containsKey(permission.getResource().getEntity())) {
+                    temp = resourceActionMap.get(permission.getResource().getEntity());
+                } else {
+                    temp = new ArrayList<ResourceAction>();
+                }
+                if (permission.getResource().isEmptyField()) {
+                    if (!temp.contains(new ResourceAction(permission.getResource(), permission.getAction()))) {
+                        temp.add(new ResourceAction(permission.getResource(), permission.getAction()));
+                        resourceActionMap.put(permission.getResource().getEntity(), temp);
+                    }
+                } else {
+                    // check if entity is there
+                    if (!temp.contains(new ResourceAction((EntityField) entityFieldFactory.createResource(permission.getResource().getEntity()), permission.getAction()))) {
+                        temp.add(new ResourceAction(permission.getResource(), permission.getAction()));
+                        resourceActionMap.put(permission.getResource().getEntity(), temp);
+                    }
+                }
+            }
+
+        }
+        // go through resource actions and build tree + mark new ones
+        for (String entity : resourceActionMap.keySet()) {
+            EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new ResourceModel(entity, ResourceModel.ResourceType.ENTITY, entityField), permissionRoot);
+            entityNode.setExpanded(true);
+            List<ResourceAction> resourceActionGroup = resourceActionMap.get(entity);
+            Map<Action, List<ResourceAction>> resourceActionMapByAction = groupResourceActionsByAction(resourceActionGroup);
+
+            for (Action action : resourceActionMapByAction.keySet()) {
+                EntityAction entityAction = (EntityAction) action;
+                DefaultTreeNode actionNode = new DefaultTreeNode(new ResourceModel(entityAction.getActionName(), ResourceModel.ResourceType.ACTION, entityAction, false),
+                    entityNode);
+
+                List<ResourceAction> resourcesByAction = resourceActionMapByAction.get(action);
+                for (ResourceAction resourceAction : resourcesByAction) {
+                    if (!resourceAction.getResource().isEmptyField()) {
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new ResourceModel(resourceAction.getResource().getField(), ResourceModel.ResourceType.FIELD,
+                            resourceAction.getResource(), !isNewPermission(new ResourceAction(resourceAction.getResource(), entityAction))), actionNode);
+                    }
+                }
+
+                markParentIfChildrenAreMarked(actionNode);
+            }
+
+            markParentIfChildrenAreMarked(entityNode);
+        }
+    }
+
+    /**
+     * helper to mark parent when children model is marked
+     * 
+     * @param node
+     */
+    private void markParentIfChildrenAreMarked(TreeNode node) {
+        boolean foundOneUnMarked = false;
+        for (TreeNode child : node.getChildren()) {
+            if (!((ResourceModel) child.getData()).isMarked()) {
+                foundOneUnMarked = true;
+                break;
+            }
+        }
+        ((ResourceModel) node.getData()).setMarked(!foundOneUnMarked);
+    }
+
+    private boolean isNewPermission(ResourceAction resourceAction) {
+        return permissionDataAccess.findPermission(getSelectedUser(), resourceAction.getAction(), resourceAction.getResource()) != null;
+    }
+
+    private Map<Action, List<ResourceAction>> groupResourceActionsByAction(List<ResourceAction> selectedResourceActions) {
+        Map<Action, List<ResourceAction>> ret = new HashMap<Action, List<ResourceAction>>();
+        List<ResourceAction> temp;
+        // group
+        for (ResourceAction resourceAction : selectedResourceActions) {
+            if (ret.containsKey(resourceAction.getAction())) {
+                temp = ret.get(resourceAction.getAction());
+            } else {
+                temp = new ArrayList<ResourceAction>();
+            }
+            temp.add(resourceAction);
+            ret.put(resourceAction.getAction(), temp);
+        }
+        // sort
+        for (Action action : ret.keySet()) {
+            temp = ret.get(action);
+            Collections.sort(temp, new Comparator<ResourceAction>() {
+
+                @Override
+                public int compare(ResourceAction o1, ResourceAction o2) {
+                    return o1.getResource().getField().compareTo(o2.getResource().getField());
+                }
+            });
+            ret.put(action, temp);
+
+        }
+        return ret;
+    }
+
+    private Map<String, List<ResourceAction>> groupResourceActionsByEntity(Set<ResourceAction> selectedResourceActions) {
+        Map<String, List<ResourceAction>> ret = new HashMap<String, List<ResourceAction>>();
+        List<ResourceAction> temp;
+        for (ResourceAction resourceAction : selectedResourceActions) {
+            if (ret.containsKey(resourceAction.getResource().getEntity())) {
+                temp = ret.get(resourceAction.getResource().getEntity());
+            } else {
+                temp = new ArrayList<ResourceAction>();
+            }
+            temp.add(resourceAction);
+            ret.put(resourceAction.getResource().getEntity(), temp);
+        }
+        // sort
+        for (String entity : ret.keySet()) {
+            temp = ret.get(entity);
+            Collections.sort(temp, new Comparator<ResourceAction>() {
+
+                @Override
+                public int compare(ResourceAction o1, ResourceAction o2) {
+                    return o1.getAction().getActionName().compareToIgnoreCase(o2.getAction().getActionName());
+                }
+            });
+            ret.put(entity, temp);
+
+        }
+        return ret;
+
+    }
+
+    private void buildCurrentPermissionTree(DefaultTreeNode permissionRoot, Set<ResourceAction> selectedResourceActions, Set<Permission> permissionsToRevoke) {
+        Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(permissions);
+
+        for (String entity : permissionMapByEntity.keySet()) {
+
+            List<Permission> permissionGroup = new ArrayList<Permission>(permissionMapByEntity.get(entity));
+            EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new ResourceModel(entity, ResourceModel.ResourceType.ENTITY, entityField), permissionRoot);
+            entityNode.setExpanded(true);
+
+            Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionGroup);
+            for (Action action : permissionMapByAction.keySet()) {
+                EntityAction entityAction = (EntityAction) action;
+                DefaultTreeNode actionNode = new DefaultTreeNode(new ResourceModel(entityAction.getActionName(), ResourceModel.ResourceType.ACTION, entityAction, false),
+                    entityNode);
+                actionNode.setExpanded(true);
+                List<Permission> resoucesByAction = permissionMapByAction.get(action);
+                for (Permission _permissionByAction : resoucesByAction) {
+                    AbstractPermission permissionByAction = (AbstractPermission) _permissionByAction;
+                    if (!StringUtils.isEmpty(permissionByAction.getResource().getField())) {
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new ResourceModel(permissionByAction.getResource().getField(), ResourceModel.ResourceType.FIELD,
+                            permissionByAction.getResource(), revokablePermissionsContains(permissionsToRevoke, permissionByAction)
+                                || !grantedPermissionsContains(selectedResourceActions, permissionByAction)), actionNode);
+                    } else {
+                        // entity and action.
+                        if (revokablePermissionsContains(permissionsToRevoke, permissionByAction) || !grantedPermissionsContains(selectedResourceActions, permissionByAction)) {
+                            ((ResourceModel) actionNode.getData()).setMarked(true);
+                        }
+                    }
+                    boolean foundOneNotMarked = false;
+                    for (TreeNode childNode : actionNode.getChildren()) {
+                        if (!((ResourceModel) childNode.getData()).isMarked()) {
+                            foundOneNotMarked = true;
+                            break;
+                        }
+                        if (!foundOneNotMarked) {
+                            ((ResourceModel) actionNode.getData()).setMarked(true);
+                        }
+                    }
+
+                }
+            }
+            boolean foundOneNotMarked = false;
+            for (TreeNode childNode : entityNode.getChildren()) {
+                if (!((ResourceModel) childNode.getData()).isMarked()) {
+                    foundOneNotMarked = true;
+                    break;
+                }
+                if (!foundOneNotMarked) {
+                    ((ResourceModel) entityNode.getData()).setMarked(true);
+                }
+            }
+        }
+    }
+
+    private boolean revokablePermissionsContains(Set<Permission> permissionsToRevoke, AbstractPermission givenPermission) {
+        for (Permission _permission : permissionsToRevoke) {
+            AbstractPermission permission = (AbstractPermission) _permission;
+            if (givenPermission.getAction().equals(permission.getAction()) && givenPermission.getResource().equals(permission.getResource())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean grantedPermissionsContains(Set<ResourceAction> grantedPermissions, AbstractPermission permission) {
+        for (ResourceAction resourceAction : grantedPermissions) {
+            if (resourceAction.getAction().equals(permission.getAction()) && resourceAction.getResource().equals(permission.getResource())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * confirm button when adding permissions to user
      * 
      */
-    public void confirmSelectedResourcesAndActions() {
-        for (ResourceAction ra : selectedResourceActions) {
-            permissionService.grant(userContext.getUser(), getSelectedUser(), ra.getAction(), ra.getResource());
+    public void confirm() {
+        for (Permission current : permissions) {
+            AbstractPermission permission = (AbstractPermission) current;
+            if (!grantedPermissionsContains(selectedResourceActions, permission)) {
+                permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
+            }
         }
 
-        this.selectedResourceActions.clear();
-        this.userPermissions.clear();
-        this.selectedActionNodes = new TreeNode[0];
-        this.selectedResourceNodes = new TreeNode[0];
-        this.selectedResources.clear();
-        initPermissions();
-    }
-
-    public TreeNode[] getSelectedResourceNodes() {
-        return selectedResourceNodes;
-    }
-
-    public void setSelectedResourceNodes(TreeNode[] selectedResourceNodes) {
-        this.selectedResourceNodes = selectedResourceNodes;
-    }
-
-    public TreeNode[] getSelectedActionNodes() {
-        return selectedActionNodes;
-    }
-
-    public void setSelectedActionNodes(TreeNode[] selectedActionNodes) {
-        this.selectedActionNodes = selectedActionNodes;
+        for (ResourceAction resourceAction : selectedResourceActions) {
+            if (isNewPermission(resourceAction)) {
+                permissionService.grant(userContext.getUser(), getSelectedUser(), resourceAction.getAction(), resourceAction.getResource());
+            }
+        }
+        init();
     }
 
     public DefaultTreeNode getActionRoot() {
@@ -264,20 +495,6 @@ public class UserResourcesBean extends PermissionViewUtils implements Permission
 
     public void setSelectedResources(Set<EntityField> selectedResources) {
         this.selectedResources = selectedResources;
-    }
-
-    public List<ResourceAction> getSelectedResourceActions() {
-        List<ResourceAction> ret = new ArrayList<ResourceAction>(selectedResourceActions);
-        Collections.sort(ret, new Comparator<ResourceAction>() {
-
-            @Override
-            public int compare(ResourceAction o1, ResourceAction o2) {
-                return o1.getResource().getEntity().compareToIgnoreCase(o2.getResource().getEntity());
-
-            }
-        });
-        return ret;
-
     }
 
     @Override
@@ -309,15 +526,27 @@ public class UserResourcesBean extends PermissionViewUtils implements Permission
         this.showPermissionView = set;
     }
 
-    private void initPermissions() {
-        List<Permission> permissions = permissionManager.getAllPermissions(getSelectedUser());
-        this.userPermissions.clear();
-        for (Permission permission : permissions) {
-            this.userPermissions.add(new PermissionModel(permission, false));
-        }
+    public DefaultTreeNode getNewPermissionTreeRoot() {
+        return newPermissionTreeRoot;
+    }
 
-        this.permissionViewRoot = new DefaultTreeNode("root", null);
-        buildPermissionTree(permissions, permissionViewRoot);
-        this.showPermissionView = true;
+    public void setNewPermissionTreeRoot(DefaultTreeNode newPermissionTreeRoot) {
+        this.newPermissionTreeRoot = newPermissionTreeRoot;
+    }
+
+    public DefaultTreeNode getCurrentPermissionTreeRoot() {
+        return currentPermissionTreeRoot;
+    }
+
+    public void setCurrentPermissionTreeRoot(DefaultTreeNode currentPermissionTreeRoot) {
+        this.currentPermissionTreeRoot = currentPermissionTreeRoot;
+    }
+
+    public TreeNode[] getSelectedPermissionNodes() {
+        return selectedPermissionNodes;
+    }
+
+    public void setSelectedPermissionNodes(TreeNode[] selectedPermissionNodes) {
+        this.selectedPermissionNodes = selectedPermissionNodes;
     }
 }

@@ -77,18 +77,26 @@ public class StartupBean {
         groups.add(userGroupService.createUserGroup("UserGroup7"));
         groups.add(userGroupService.createUserGroup("UserGroup8"));
         groups.add(userGroupService.createUserGroup("UserGroup9"));
+        groups.add(userGroupService.createUserGroup("UserGroup10"));
+        groups.add(userGroupService.createUserGroup("UserGroup11"));
+        groups.add(userGroupService.createUserGroup("UserGroup12"));
 
         // groups.get(1).setParent(groups.get(0));
         // entityManager.merge(groups.get(1));
         // entityManager.flush();
         roleService.addGroupToGroup(groups.get(1), groups.get(0));
         roleService.addGroupToGroup(groups.get(2), groups.get(0));
-        roleService.addGroupToGroup(groups.get(3), groups.get(2));
-        roleService.addGroupToGroup(groups.get(4), groups.get(2));
+        roleService.addGroupToGroup(groups.get(3), groups.get(0));
+        
+        roleService.addGroupToGroup(groups.get(4), groups.get(1));
         roleService.addGroupToGroup(groups.get(5), groups.get(1));
-        roleService.addGroupToGroup(groups.get(6), groups.get(3));
-        roleService.addGroupToGroup(groups.get(7), groups.get(3));
-        roleService.addGroupToGroup(groups.get(8), groups.get(0));
+        
+        roleService.addGroupToGroup(groups.get(6), groups.get(2));
+        roleService.addGroupToGroup(groups.get(7), groups.get(2));
+        roleService.addGroupToGroup(groups.get(8), groups.get(3));
+        
+        roleService.addGroupToGroup(groups.get(9), groups.get(3));
+        roleService.addGroupToGroup(groups.get(10), groups.get(3));
         //
         EntityAction grantAction = actionFactory.createAction(ActionConstants.GRANT);
         EntityAction revokeAction = actionFactory.createAction(ActionConstants.REVOKE);
@@ -108,7 +116,8 @@ public class StartupBean {
 
         // allow admin to create permissions, then activate interceptor <--- not needed now because only update interceptor is
         // activated
-
+        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(User.class)));
+        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroup.class)));
         entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserPermission.class)));
         entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
         entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupPermission.class)));
@@ -148,22 +157,53 @@ public class StartupBean {
         entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(updateAction)));
         entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(readAction)));
 
-        UserGroup group = groups.get(2);
+        UserGroup group = groups.get(0);
         entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(CarrierGroup.class)));
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(CarrierGroup.class)));
         entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(CarrierGroup.class)));
-
-        group = groups.get(3);
-
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(CarrierGroup.class)));
+        group = groups.get(1);
+        entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Party.class)));
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Party.class)));
+        entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Party.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Party.class)));
+        group = groups.get(2);
         entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Carrier.class)));
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Carrier.class)));
         entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Carrier.class)));
-
-        entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Party.class)));
-        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Party.class, "partyField1")));
-        entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Party.class)));
-
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Party.class)));
+        group = groups.get(3);
+        entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Contact.class)));
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Contact.class)));
+        entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Contact.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Party.class)));
+        group = groups.get(4);
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Contact.class, "contactField")));
+        group = groups.get(6);
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Party.class, "partyField1")));
+        group = groups.get(5);
+        entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Document.class)));
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Document.class)));
+        entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Document.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Document.class)));
+        group = groups.get(8);
+        entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Email.class)));
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Email.class)));
+        entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Email.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Document.class)));
+        group = groups.get(7);
+        entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(User.class)));
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(User.class)));
+        entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(User.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(User.class)));
+        
+        group = groups.get(9);
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Document.class, "content")));
+        group = groups.get(10);
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Document.class, "title")));
+        group = groups.get(11);
+        entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Document.class, "size")));
+        
 
         ChangeInterceptor.activate();
     }

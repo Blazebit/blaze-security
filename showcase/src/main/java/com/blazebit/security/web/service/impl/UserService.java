@@ -18,4 +18,6 @@ public interface UserService {
     public List<User> findUsers();
 
     public User loadUser(User user);
+
+    public void delete(User user);
 }

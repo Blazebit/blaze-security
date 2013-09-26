@@ -112,4 +112,5 @@ public interface PermissionDataAccess {
      */
     public Permission findPermission(Role role, Action action, Resource resource);
 
+
 }

@@ -11,45 +11,48 @@
                          type="javax.faces.event.PreRenderComponentEvent" />
             <h3>Selected user: #{userSession.selectedUser.username}</h3>
 
-            <h:panelGrid columns="2" width="100%">
                 <h:panelGroup id="wizardPanel" style="vertical-align: top">
-                    <p:wizard flowListener="#{userResourcesBean.resourceWizardListener}" widgetVar="wiz" showNavBar="false">
-
-                        <p:tab id="resources" title="Resources">
-                            <p:tree value="#{userResourcesBean.resourceRoot}" var="_resource"  selectionMode="checkbox" selection="#{userResourcesBean.selectedResourceNodes}" >  
-                                <p:treeNode type="root">
-                                    <h:outputText value="#{_resource.name}"/>  
-                                </p:treeNode>
-                                 <p:treeNode>
-                                    <h:outputText value="#{_resource.name}"/>  
-                                </p:treeNode>
-                            </p:tree>
-                            <p:commandButton value="Next" onclick="wiz.next();"/>
+                    <p:wizard flowListener="#{userResourcesBean.resourceWizardListener}" widgetVar="resourceWizard" showNavBar="false">
+                       
+                      <p:tab id="resources" title="Resources">
+                           	<p:commandButton value="Next" onclick="resourceWizard.next();"/>
+                           	<h:panelGrid columns="2" columnClasses="top">
+	                            <p:tree value="#{userResourcesBean.resourceRoot}" var="_resource"  selectionMode="checkbox" selection="#{userResourcesBean.selectedPermissionNodes}"  propagateSelectionDown="true" propagateSelectionUp="true">  
+	                                <p:treeNode type="root">
+	                                    <h:outputText value="#{_resource.name}"/>  
+	                                </p:treeNode>
+	                                 <p:treeNode>
+	                                    <h:outputText value="#{_resource.name}"/>  
+	                                </p:treeNode>
+	                            </p:tree>
+                            
+                            	<my:permissionTree id="resourcesPermissions" bean="#{userResourcesBean}" />
+                            </h:panelGrid>
+                            <p:commandButton value="Next" onclick="resourceWizard.next();" process="@this"/>
                         </p:tab>
-                        <p:tab id="actions" title="Actions">
-                            <p:tree  value="#{userResourcesBean.actionRoot}" var="_action"   selectionMode="checkbox" selection="#{userResourcesBean.selectedActionNodes}" >  
-                                <p:treeNode>
-                                    <h:outputText value="#{_action.name}"/>  
-                                </p:treeNode>
-                            </p:tree>
-                            <p:commandButton value="Back" onclick="wiz.back();"/>
-                            <p:commandButton value="Next" onclick="wiz.next();" update=":form:tab:resourcesPermissionTableComp:resources_userPermissions"/> 
-                        </p:tab>
+                       
+                       <p:tab id="permissions" title="Permissions">
+                           <h:panelGrid columns="2" columnClasses="top">
+                                <p:tree value="#{userResourcesBean.currentPermissionTreeRoot}" var="currentPermission">
+                                    <p:treeNode>
+                                        <h:outputText value="#{currentPermission.name}" style="#{currentPermission.marked  ? 'color:red' : ''}"/>  
+                                    </p:treeNode>
+                                </p:tree>
+                                
+                               	<p:tree value="#{userResourcesBean.newPermissionTreeRoot}" var="newPermission" >
+	                                <p:treeNode>
+                                        <h:outputText value="#{newPermission.name}" style="#{newPermission.marked  ? 'color:green' : ''}"/>  
+                                    </p:treeNode>
+                                </p:tree>
+                            </h:panelGrid>
+                              <h:panelGroup layout="block" style="height:50px">
+                                <p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left"/>
+                                <p:commandButton value="Confirm" style="float:left" action="#{userResourcesBean.confirm}" process="@this"  oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"/>
+                            </h:panelGroup>
+                       </p:tab>
 
-                        <p:tab id="permissions" title="Permission">
-                            <p:dataTable value="#{userResourcesBean.selectedResourceActions}" var="resourceAction">
-                                <p:column><f:facet name="header">Resource</f:facet>#{resourceAction.resource.entity} #{resourceAction.resource.field}</p:column>
-                                <p:column><f:facet name="header">Action</f:facet>#{resourceAction.action.actionName}</p:column>
-                            </p:dataTable>
-
-                            <p:commandButton value="Back" onclick="wiz.back();"/>
-                            <p:commandButton style="float:right" value="Confirm" action="#{userResourcesBean.confirmSelectedResourcesAndActions()}" update=":form:tab:resourcesPermissionTableComp:resources_userPermissions" process="@this" oncomplete="wiz.loadStep (wiz.cfg.steps [0], true)"/>
-                        </p:tab>
                     </p:wizard>
                 </h:panelGroup>
-
-                <my:permissionTree id="resourcesPermissionTableComp" bean="#{userResourcesBean}" tableId="resources_userPermissions" />
-            </h:panelGrid>
 
         </p:tab>
     </ui:composition>

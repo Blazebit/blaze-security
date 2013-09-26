@@ -94,9 +94,6 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
         if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
         final AbstractPermission<S, P> other = (AbstractPermission<S, P>) obj;
         if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
             return false;

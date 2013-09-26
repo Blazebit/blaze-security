@@ -101,7 +101,7 @@ public class EntityField implements Resource {
         }
     }
 
-    protected boolean isEmptyField() {
+    public boolean isEmptyField() {
         return this.getField().equals(EMPTY_FIELD);
     }
 

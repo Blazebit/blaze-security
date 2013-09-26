@@ -6,16 +6,16 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:my="http://java.sun.com/jsf/composite/components">
     <ui:composition> 
-        <p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedGroup}">
+        <p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedUserGroup}">
 
             <f:event listener="#{groupBean.init}"
                      type="javax.faces.event.PreRenderComponentEvent" />
-            <h3>Selected group: #{userSession.selectedGroup.name}</h3>
+            <h3>Selected group: #{userSession.selectedUserGroup.name}</h3>
 
             <h:panelGrid columns="2" width="100%">
 
                 <p:dataTable value="#{groupBean.users}" var="user">
-                    <f:facet name="header">Users of #{userSession.selectedGroup.name}</f:facet>
+                    <f:facet name="header">Users of #{userSession.selectedUserGroup.name}</f:facet>
                     <p:column>
                         <f:facet name="header"> Username</f:facet>
                             #{user.username}

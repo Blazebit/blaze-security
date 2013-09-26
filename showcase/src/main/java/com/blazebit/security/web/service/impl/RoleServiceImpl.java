@@ -97,22 +97,25 @@ public class RoleServiceImpl implements RoleService {
         // subject can be removed from role if role contains subject
         return roleManager.getSubjects(group).contains(user);
     }
-
+    
+    
     @Override
-    public void addSubjectToRole(User authorizer, User selectedUser, UserGroup userGroup, boolean b) {
+    public void addSubjectToRole(User selectedUser, UserGroup userGroup) {
         if (canUserBeAddedToRole(selectedUser, userGroup)) {
-            selectedUser.getUserGroups().add(userGroup);
-            entityManager.merge(selectedUser);
-            entityManager.flush();
+            UserGroup group=entityManager.find(UserGroup.class, userGroup.getId());
+            group.getUsers().add(selectedUser);
+            entityManager.merge(group);
+            //entityManager.flush();
         }
 
     }
 
     @Override
-    public void removeSubjectFromRole(User authorizer, User selectedUser, UserGroup userGroup, boolean b) {
+    public void removeSubjectFromRole(User selectedUser, UserGroup userGroup) {
         if (canUserBeRemovedFromRole(selectedUser, userGroup)) {
-            selectedUser.getUserGroups().remove(userGroup);
-            entityManager.merge(selectedUser);
+            UserGroup group=entityManager.find(UserGroup.class, userGroup.getId());
+            group.getUsers().remove(selectedUser);
+            entityManager.merge(group);
             entityManager.flush();
         }
 

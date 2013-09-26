@@ -45,6 +45,11 @@ import com.blazebit.security.impl.model.sample.Party;
 public class EntityFieldFactoryImpl implements EntityFieldFactory {
 
     @Override
+    public EntityField createResource(String entity) {
+        return new EntityField(entity, EntityField.EMPTY_FIELD);
+    }
+
+    @Override
     public EntityField createResource(Class<?> clazz, String field, Integer id) {
         ResourceName annotation = (ResourceName) AnnotationUtils.findAnnotation(clazz, ResourceName.class);
         if (annotation != null) {
@@ -54,8 +59,7 @@ public class EntityFieldFactoryImpl implements EntityFieldFactory {
                 return new EntityField(annotation.name(), field);
             }
         } else {
-            throw new IllegalArgumentException("Class " + clazz
-                + " does not have a ResourceName annotation, therefore it cannot be a resource!");
+            throw new IllegalArgumentException("Class " + clazz + " does not have a ResourceName annotation, therefore it cannot be a resource!");
         }
     }
 
@@ -71,8 +75,7 @@ public class EntityFieldFactoryImpl implements EntityFieldFactory {
         if (annotation != null) {
             return new EntityField(annotation.name(), field);
         } else {
-            throw new IllegalArgumentException("Class " + clazz
-                + " does not have a ResourceName annotation, therefore it cannot be a resource!");
+            throw new IllegalArgumentException("Class " + clazz + " does not have a ResourceName annotation, therefore it cannot be a resource!");
         }
     }
 

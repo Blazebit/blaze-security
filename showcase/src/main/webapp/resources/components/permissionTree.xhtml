@@ -8,15 +8,14 @@
 
     <cc:interface>
         <cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.PermissionView"/>
-        <cc:attribute name="tableId" required="true" />
     </cc:interface>
 
     <cc:implementation>
-        <h:panelGroup id="#{cc.attrs.tableId}" layout="block">
-            <p:selectBooleanButton value="#{cc.attrs.bean.showPermissionTreeView}" onLabel="Permission tree" offLabel="Permission table">
+        <h:panelGroup id="permissionPanelGroup" layout="block">
+            <p:selectBooleanButton value="#{cc.attrs.bean.showPermissionTreeView}" onLabel="Permission tree" offLabel="Permission table" rendered="#{not empty cc.attrs.bean.permissions}">
                 <p:ajax update=":#{cc.clientId}:switch" />
             </p:selectBooleanButton>
-            <h:panelGroup id="switch">
+            <h:panelGroup id="switch" rendered="#{not empty cc.attrs.bean.permissions}">
                 <p:dataTable value="#{cc.attrs.bean.permissions}" var="permissionModel" rendered="#{not cc.attrs.bean.showPermissionTreeView}" paginator="true" rows="10">
                     <f:facet name="header">Permissions for #{cc.attrs.bean.permissionHeader}</f:facet>
                     <p:column filterBy="#{permissionModel.permission.id.entity}" sortBy="#{permissionModel.permission.id.entity}"><f:facet name="header">Resource</f:facet>
@@ -33,6 +32,7 @@
                     </p:treeNode>
                 </p:tree>
             </h:panelGroup>
+            <h:outputText value="NO permissions available" rendered="#{empty cc.attrs.bean.permissions}"/>
         </h:panelGroup>
     </cc:implementation>
 </html>

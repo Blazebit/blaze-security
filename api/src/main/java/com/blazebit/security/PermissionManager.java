@@ -37,14 +37,14 @@ public interface PermissionManager {
      * @param subject
      * @return list of all permissions for a given subject
      */
-    public <P extends Permission> List<P> getAllPermissions(Subject subject);
+    public <P extends Permission> List<P> getAllPermissions(Subject<?> subject);
 
     /**
      * 
      * @param role
      * @return list of all permissions for a given role
      */
-    public <P extends Permission> List<P> getAllPermissions(Role role);
+    public <P extends Permission> List<P> getAllPermissions(Role<?> role);
 
     /**
      * deletes a permission

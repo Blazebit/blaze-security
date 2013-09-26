@@ -6,10 +6,10 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:my="http://java.sun.com/jsf/composite/components">
     <ui:composition> 
-        <p:tab title="Resources" disabled="#{empty userSession.selectedGroup}">
+        <p:tab title="Resources" disabled="#{empty userSession.selectedUserGroup}">
             <f:event listener="#{groupResourcesBean.init}"
                      type="javax.faces.event.PreRenderComponentEvent" />
-            <h3>Selected group #{userSession.selectedGroup.name}</h3>
+            <h3>Selected group #{userSession.selectedUserGroup.name}</h3>
 
             <h:panelGrid columns="2" width="100%">
                 <h:panelGroup id="wizardPanel" style="vertical-align: top">

@@ -18,8 +18,10 @@ import org.apache.deltaspike.core.util.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.AbstractPermission;
+import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.UserGroupPermission;
@@ -125,6 +127,35 @@ public class PermissionViewUtils {
                 }
             });
             ret.put(entityName, group);
+
+        }
+        return ret;
+    }
+
+    protected Map<Action, List<Permission>> groupPermissionsByAction(List<Permission> permissions) {
+        Map<Action, List<Permission>> ret = new HashMap<Action, List<Permission>>();
+        List<Permission> group;
+        for (Permission p : permissions) {
+            EntityAction entityAction = (EntityAction) p.getAction();
+            if (ret.containsKey(entityAction)) {
+                group = ret.get(entityAction);
+            } else {
+                group = new ArrayList<Permission>();
+
+            }
+            group.add(p);
+            ret.put(entityAction, group);
+        }
+        for (Action entityAction : ret.keySet()) {
+            group = ret.get(entityAction);
+            Collections.sort(group, new Comparator<Permission>() {
+
+                @Override
+                public int compare(Permission o1, Permission o2) {
+                    return ((AbstractPermission) o1).getResource().getField().compareTo(((AbstractPermission) o2).getResource().getField());
+                }
+            });
+            ret.put(entityAction, group);
 
         }
         return ret;

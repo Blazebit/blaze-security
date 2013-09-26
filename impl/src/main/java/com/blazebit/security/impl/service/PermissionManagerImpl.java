@@ -49,15 +49,17 @@ public class PermissionManagerImpl implements PermissionManager {
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <P extends Permission> List<P> getAllPermissions(Subject subject) {
+    public <P extends Permission> List<P> getAllPermissions(Subject<?> subject) {
         return (List<P>) entityManager.createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='"
                                                        + ((IdHolder) subject).getId() + "'").getResultList();
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <P extends Permission> List<P> getAllPermissions(Role role) {
+    public <P extends Permission> List<P> getAllPermissions(Role<?> role) {
         return (List<P>) entityManager.createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='"
                                                        + ((IdHolder) role).getId() + "'").getResultList();
     }

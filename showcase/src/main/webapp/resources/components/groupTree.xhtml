@@ -8,11 +8,10 @@
 
     <cc:interface>
         <cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.GroupView"/>
-        <cc:attribute name="tableId" required="true" />
     </cc:interface>
 
     <cc:implementation>
-        <h:panelGroup id="#{cc.attrs.tableId}" layout="block">
+        <h:panelGroup id="groupPanelGroup" layout="block">
             <p:selectBooleanButton value="#{cc.attrs.bean.showGroupTreeView}" onLabel="Group tree" offLabel="Group table">
                 <p:ajax update=":#{cc.clientId}:switch" />
             </p:selectBooleanButton>
