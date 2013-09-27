@@ -53,7 +53,7 @@ public class PermissionManagerImpl implements PermissionManager {
     @Override
     public <P extends Permission> List<P> getAllPermissions(Subject<?> subject) {
         return (List<P>) entityManager.createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='"
-                                                       + ((IdHolder) subject).getId() + "'").getResultList();
+                                                       + ((IdHolder) subject).getId() + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName").getResultList();
 
     }
 
@@ -61,7 +61,7 @@ public class PermissionManagerImpl implements PermissionManager {
     @Override
     public <P extends Permission> List<P> getAllPermissions(Role<?> role) {
         return (List<P>) entityManager.createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='"
-                                                       + ((IdHolder) role).getId() + "'").getResultList();
+                                                       + ((IdHolder) role).getId() + "'  ORDER BY permission.id.entity, permission.id.field, permission.id.actionName").getResultList();
     }
 
     @Override

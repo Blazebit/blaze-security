@@ -82,7 +82,7 @@ public class UserGroupsBean extends PermissionHandlingBaseBean implements Permis
     private void initUserPermissions() {
         currentUserPermissions = permissionManager.getAllPermissions(getSelectedUser());
         this.permissionViewRoot = new DefaultTreeNode("root", null);
-        buildPermissionTree(currentUserPermissions, permissionViewRoot);
+        buildPermissionViewTree(currentUserPermissions, permissionViewRoot);
 
     }
 

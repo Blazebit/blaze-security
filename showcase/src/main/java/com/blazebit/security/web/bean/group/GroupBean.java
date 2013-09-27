@@ -123,7 +123,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
         this.users = userGroupService.getUsersFor(selectedGroup);
         List<Permission> permissions = permissionManager.getAllPermissions(selectedGroup);
         this.permissionRoot = new DefaultTreeNode("root", null);
-        buildPermissionTree(permissions, permissionRoot);
+        buildPermissionViewTree(permissions, permissionRoot);
     }
 
     public void unselectGroup(NodeSelectEvent event) {

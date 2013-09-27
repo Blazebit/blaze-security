@@ -88,15 +88,12 @@ public class UserBean extends PermissionHandlingBaseBean implements GroupView, P
         List<Permission> permissions = permissionManager.getAllPermissions(selectedUser);
 
         this.permissionRoot = new DefaultTreeNode("root", null);
-        buildPermissionTree(permissions, permissionRoot);
-        this.permissionTreeView = true;
+        buildPermissionViewTree(permissions, permissionRoot);
 
         List<UserGroup> groups = userGroupService.getGroupsForUser(selectedUser);
         initGroupList(groups);
         this.groupRoot = new DefaultTreeNode("root", null);
         buildGroupTree(groups, groupRoot);
-        this.groupTreeView = true;
-
     }
 
     public void saveUser() {
@@ -128,7 +125,6 @@ public class UserBean extends PermissionHandlingBaseBean implements GroupView, P
     public TreeNode getPermissionViewRoot() {
         return permissionRoot;
     }
-  
 
     @Override
     public TreeNode getGroupRoot() {

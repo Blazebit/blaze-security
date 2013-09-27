@@ -56,6 +56,8 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
 
     private Set<EntityField> selectedResources = new HashSet<EntityField>();
     private List<Permission> userPermissions = new ArrayList<Permission>();
+    private Set<Permission> selectedPermissions;
+    private DefaultTreeNode resourceRoot;
 
     // permissionview
     private TreeNode permissionViewRoot;
@@ -65,18 +67,11 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
         initPermissions();
     }
 
-    public String resourceWizardListener(FlowEvent event) {
-        if (event.getOldStep().equals("resources")) {
-            processSelectedPermissions();
-        }
-        return event.getNewStep();
-    }
-
     private void initPermissions() {
         userPermissions = permissionManager.getAllPermissions(getSelectedUser());
 
         this.permissionViewRoot = new DefaultTreeNode("root", null);
-        buildPermissionTree(userPermissions, permissionViewRoot);
+        buildPermissionViewTree(userPermissions, permissionViewRoot);
 
     }
 
@@ -98,7 +93,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
                     for (Action action : actionFactory.getActionsForField()) {
                         EntityAction entityAction = (EntityAction) action;
                         DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
-                        actionNode.setExpanded(true);
+                        // actionNode.setExpanded(true);
                         // fields for entity
                         for (Field field : allFields) {
                             EntityField entityFieldWithField = (EntityField) entityFieldFactory.createResource(entityClass, field.getName());
@@ -146,32 +141,33 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
         }
     }
 
-    private Set<Permission> selectedPermissions;
-
-    private DefaultTreeNode resourceRoot;
+    public String resourceWizardListener(FlowEvent event) {
+        if (event.getOldStep().equals("resources")) {
+            processSelectedPermissions();
+        }
+        return event.getNewStep();
+    }
 
     /**
      * wizard step 1
      */
     public void processSelectedPermissions() {
         selectedPermissions = processSelectedPermissions(selectedPermissionNodes);
-
-        currentPermissionTreeRoot = new DefaultTreeNode();
         Set<Permission> toRevoke = new HashSet<Permission>();
         for (Permission permission : selectedPermissions) {
             toRevoke.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), permission.getAction(), permission.getResource()));
         }
-        buildCurrentPermissionTree(currentPermissionTreeRoot, selectedPermissions, toRevoke);
-        newPermissionTreeRoot = new DefaultTreeNode();
-        buildNewPermissionTree(newPermissionTreeRoot, selectedPermissions);
+        buildCurrentPermissionTree(selectedPermissions, toRevoke);
+        buildNewPermissionTree(selectedPermissions);
 
     }
 
-    private void buildNewPermissionTree(DefaultTreeNode permissionRoot, Set<Permission> selectedPermissions) {
+    private void buildNewPermissionTree(Set<Permission> selectedPermissions) {
+        newPermissionTreeRoot = new DefaultTreeNode();
         // current permissions
         Map<String, List<Permission>> currentPermissionMap = groupPermissionsByEntity(userPermissions);
         // selected permissions (existing + new - revoked)
-        Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(selectedPermissions);
+        Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(new ArrayList<Permission>(selectedPermissions));
         // merge into resource actions map
         for (String entity : currentPermissionMap.keySet()) {
             List<Permission> permissionGroup = new ArrayList<Permission>(currentPermissionMap.get(entity));
@@ -201,7 +197,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
         // go through resource actions and build tree + mark new ones
         for (String entity : mergedPermissionMap.keySet()) {
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), permissionRoot);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), newPermissionTreeRoot);
             entityNode.setExpanded(true);
             List<Permission> permissionsByEntity = mergedPermissionMap.get(entity);
             Map<Action, List<Permission>> resourceActionMapByAction = groupPermissionsByAction(permissionsByEntity);
@@ -242,14 +238,15 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
         ((NodeModel) node.getData()).setMarked(!foundOneUnMarked);
     }
 
-    private void buildCurrentPermissionTree(DefaultTreeNode permissionRoot, Set<Permission> selectedPermissions, Set<Permission> permissionsToRevoke) {
+    private void buildCurrentPermissionTree(Set<Permission> selectedPermissions, Set<Permission> permissionsToRevoke) {
+        currentPermissionTreeRoot = new DefaultTreeNode();
         Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(userPermissions);
 
         for (String entity : permissionMapByEntity.keySet()) {
 
             List<Permission> permissionGroup = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), permissionRoot);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), currentPermissionTreeRoot);
             entityNode.setExpanded(true);
 
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionGroup);
