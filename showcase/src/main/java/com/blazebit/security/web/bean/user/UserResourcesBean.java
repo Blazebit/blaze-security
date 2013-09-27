@@ -62,6 +62,9 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
     // permissionview
     private TreeNode permissionViewRoot;
 
+    private List<Permission> currentPermissionsToConfirm;
+    private Set<Permission> revokedPermissionsToConfirm;
+
     public void init() {
         buildResourceTree();
         initPermissions();
@@ -129,15 +132,17 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
      * @param node
      */
     private void markParentAsSelectedIfChildrenAreSelected(DefaultTreeNode node) {
-        boolean foundOneUnselected = false;
-        for (TreeNode entityChild : node.getChildren()) {
-            if (!entityChild.isSelected()) {
-                foundOneUnselected = true;
-                break;
+        if (node.getChildCount() > 0) {
+            boolean foundOneUnselected = false;
+            for (TreeNode entityChild : node.getChildren()) {
+                if (!entityChild.isSelected()) {
+                    foundOneUnselected = true;
+                    break;
+                }
             }
-        }
-        if (!foundOneUnselected) {
-            node.setSelected(true);
+            if (!foundOneUnselected) {
+                node.setSelected(true);
+            }
         }
     }
 
@@ -153,19 +158,49 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
      */
     public void processSelectedPermissions() {
         selectedPermissions = processSelectedPermissions(selectedPermissionNodes);
+        List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
         Set<Permission> toRevoke = new HashSet<Permission>();
         for (Permission permission : selectedPermissions) {
             toRevoke.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), permission.getAction(), permission.getResource()));
         }
-        buildCurrentPermissionTree(selectedPermissions, toRevoke);
-        buildNewPermissionTree(selectedPermissions);
-
+        revokedPermissionsToConfirm = new HashSet<Permission>();
+        for (Permission permission : currentPermissions) {
+            if (!contains(selectedPermissions, permission)) {
+                revokedPermissionsToConfirm.add(permission);
+            }
+        }
+        toRevoke.addAll(revokedPermissionsToConfirm);
+        buildCurrentPermissionTree(currentPermissions, selectedPermissions, toRevoke);
+        // new permission tree
+        Set<Permission> granted = new HashSet<Permission>();
+        for (Permission permission : selectedPermissions) {
+            if (!contains(currentPermissions, permission)) {
+                if (permissionDataAccess.isGrantable(getSelectedUser(), permission.getAction(), permission.getResource())) {
+                    granted.add(permission);
+                }
+            }
+        }
+        // filter out redundant permissions
+        Set<Permission> redundantPermissions = new HashSet<Permission>();
+        for (Permission permission : granted) {
+            EntityField entityField = (EntityField) permission.getResource();
+            if (!entityField.isEmptyField()) {
+                if (contains(granted, permissionFactory.create(getSelectedUser(), permission.getAction(), entityFieldFactory.createResource(entityField.getEntity())))) {
+                    redundantPermissions.add(permission);
+                }
+            }
+        }
+        granted.removeAll(redundantPermissions);
+        currentPermissionsToConfirm = new ArrayList<Permission>();
+        currentPermissionsToConfirm = removeAll(currentPermissions, revokedPermissionsToConfirm);
+        currentPermissionsToConfirm.addAll(granted);
+        buildNewPermissionTree(currentPermissionsToConfirm, granted);
     }
 
-    private void buildNewPermissionTree(Set<Permission> selectedPermissions) {
+    private void buildNewPermissionTree(List<Permission> currentPermissions, Set<Permission> selectedPermissions) {
         newPermissionTreeRoot = new DefaultTreeNode();
         // current permissions
-        Map<String, List<Permission>> currentPermissionMap = groupPermissionsByEntity(userPermissions);
+        Map<String, List<Permission>> currentPermissionMap = groupPermissionsByEntity(currentPermissions);
         // selected permissions (existing + new - revoked)
         Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(new ArrayList<Permission>(selectedPermissions));
         // merge into resource actions map
@@ -211,7 +246,9 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
                     AbstractPermission permission = (AbstractPermission) _permission;
                     if (!permission.getResource().isEmptyField()) {
                         DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
-                            !permissionExists(permissionFactory.create(getSelectedUser(), entityAction, permission.getResource()))), actionNode);
+                            contains(selectedPermissions, permission)), actionNode);
+                    } else {
+                        ((NodeModel) actionNode.getData()).setMarked(contains(selectedPermissions, permissionFactory.create(getSelectedUser(), entityAction, entityField)));
                     }
                 }
 
@@ -228,19 +265,21 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
      * @param node
      */
     private void markParentIfChildrenAreMarked(TreeNode node) {
-        boolean foundOneUnMarked = false;
-        for (TreeNode child : node.getChildren()) {
-            if (!((NodeModel) child.getData()).isMarked()) {
-                foundOneUnMarked = true;
-                break;
+        if (node.getChildCount() > 0) {
+            boolean foundOneUnMarked = false;
+            for (TreeNode child : node.getChildren()) {
+                if (!((NodeModel) child.getData()).isMarked()) {
+                    foundOneUnMarked = true;
+                    break;
+                }
             }
+            ((NodeModel) node.getData()).setMarked(!foundOneUnMarked);
         }
-        ((NodeModel) node.getData()).setMarked(!foundOneUnMarked);
     }
 
-    private void buildCurrentPermissionTree(Set<Permission> selectedPermissions, Set<Permission> permissionsToRevoke) {
+    private void buildCurrentPermissionTree(List<Permission> currentPermissions, Set<Permission> selectedPermissions, Set<Permission> permissionsToRevoke) {
         currentPermissionTreeRoot = new DefaultTreeNode();
-        Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(userPermissions);
+        Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(currentPermissions);
 
         for (String entity : permissionMapByEntity.keySet()) {
 
@@ -297,17 +336,13 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
      * 
      */
     public void confirm() {
-        for (Permission current : userPermissions) {
-            AbstractPermission permission = (AbstractPermission) current;
-            if (!contains(selectedPermissions, permission)) {
-                permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-            }
-        }
-
-        for (Permission permission : selectedPermissions) {
-            if (permissionExists(permission)) {
+        for (Permission permission : currentPermissionsToConfirm) {
+            if (!contains(userPermissions, permission)) {
                 permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
             }
+        }
+        for (Permission permission : revokedPermissionsToConfirm) {
+            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
         init();
     }
