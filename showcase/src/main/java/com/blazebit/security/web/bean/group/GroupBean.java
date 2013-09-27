@@ -27,10 +27,9 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.PermissionViewUtils;
 import com.blazebit.security.web.bean.UserSession;
-import com.blazebit.security.web.bean.model.PermissionModel;
 import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.impl.UserGroupService;
 import com.blazebit.security.web.service.impl.UserService;
@@ -41,7 +40,7 @@ import com.blazebit.security.web.service.impl.UserService;
  */
 @ManagedBean(name = "groupBean")
 @ViewScoped
-public class GroupBean extends PermissionViewUtils implements PermissionView, Serializable {
+public class GroupBean extends PermissionHandlingBaseBean implements PermissionView, Serializable {
 
     @Inject
     private UserService userService;
@@ -60,7 +59,7 @@ public class GroupBean extends PermissionViewUtils implements PermissionView, Se
     @Inject
     private PermissionManager permissionManager;
     private List<User> users = new ArrayList<User>();
-    private List<PermissionModel> groupPermissions = new ArrayList<PermissionModel>();
+
     private DefaultTreeNode groupRoot;
     private UserGroup selectedGroup;
     private DefaultTreeNode permissionRoot;
@@ -101,18 +100,8 @@ public class GroupBean extends PermissionViewUtils implements PermissionView, Se
         }
     }
 
-    @Override
-    public List<PermissionModel> getPermissions() {
-        return this.groupPermissions;
-    }
-
     public UserGroup getSelectedGroup() {
         return userSession.getSelectedUserGroup();
-    }
-
-    @Override
-    public String getPermissionHeader() {
-        return "UserGroup - " + (getSelectedGroup() != null ? getSelectedGroup().getName() : "");
     }
 
     public List<User> getUsers() {
@@ -132,7 +121,6 @@ public class GroupBean extends PermissionViewUtils implements PermissionView, Se
         selectedGroup = (UserGroup) selectedNode.getData();
         userSession.setSelectedUserGroup(selectedGroup);
         this.users = userGroupService.getUsersFor(selectedGroup);
-        this.groupPermissions.clear();
         List<Permission> permissions = permissionManager.getAllPermissions(selectedGroup);
         this.permissionRoot = new DefaultTreeNode("root", null);
         buildPermissionTree(permissions, permissionRoot);
@@ -141,7 +129,7 @@ public class GroupBean extends PermissionViewUtils implements PermissionView, Se
     public void unselectGroup(NodeSelectEvent event) {
         userSession.setSelectedUserGroup(null);
         this.users.clear();
-        this.groupPermissions.clear();
+
     }
 
     @Override
@@ -149,12 +137,4 @@ public class GroupBean extends PermissionViewUtils implements PermissionView, Se
         return this.permissionRoot;
     }
 
-    @Override
-    public boolean isShowPermissionTreeView() {
-        return true;
-    }
-
-    @Override
-    public void setShowPermissionTreeView(boolean set) {
-    }
 }

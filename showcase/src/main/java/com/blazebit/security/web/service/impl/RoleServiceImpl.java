@@ -79,14 +79,14 @@ public class RoleServiceImpl implements RoleService {
             if (currentGroup.equals(group)) {
                 return false;
             }
-            // subject cannot be added to the parent roles of the roles where he belongs
-            UserGroup parent = currentGroup.getParent();
-            while (parent != null) {
-                if (parent.equals(group)) {
-                    return false;
-                }
-                parent = parent.getParent();
-            }
+            // // subject cannot be added to the parent roles of the roles where he belongs
+            // UserGroup parent = currentGroup.getParent();
+            // while (parent != null) {
+            // if (parent.equals(group)) {
+            // return false;
+            // }
+            // parent = parent.getParent();
+            // }
 
         }
         return true;
@@ -97,15 +97,14 @@ public class RoleServiceImpl implements RoleService {
         // subject can be removed from role if role contains subject
         return roleManager.getSubjects(group).contains(user);
     }
-    
-    
+
     @Override
     public void addSubjectToRole(User selectedUser, UserGroup userGroup) {
         if (canUserBeAddedToRole(selectedUser, userGroup)) {
-            UserGroup group=entityManager.find(UserGroup.class, userGroup.getId());
+            UserGroup group = entityManager.find(UserGroup.class, userGroup.getId());
             group.getUsers().add(selectedUser);
             entityManager.merge(group);
-            //entityManager.flush();
+            // entityManager.flush();
         }
 
     }
@@ -113,7 +112,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public void removeSubjectFromRole(User selectedUser, UserGroup userGroup) {
         if (canUserBeRemovedFromRole(selectedUser, userGroup)) {
-            UserGroup group=entityManager.find(UserGroup.class, userGroup.getId());
+            UserGroup group = entityManager.find(UserGroup.class, userGroup.getId());
             group.getUsers().remove(selectedUser);
             entityManager.merge(group);
             entityManager.flush();

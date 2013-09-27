@@ -68,18 +68,18 @@ public class StartupBean {
         userService.createUser("user2");
 
         List<UserGroup> groups = new ArrayList<UserGroup>();
-        groups.add(userGroupService.createUserGroup("UserGroup1"));
-        groups.add(userGroupService.createUserGroup("UserGroup2"));
-        groups.add(userGroupService.createUserGroup("UserGroup3"));
-        groups.add(userGroupService.createUserGroup("UserGroup4"));
-        groups.add(userGroupService.createUserGroup("UserGroup5"));
-        groups.add(userGroupService.createUserGroup("UserGroup6"));
-        groups.add(userGroupService.createUserGroup("UserGroup7"));
-        groups.add(userGroupService.createUserGroup("UserGroup8"));
-        groups.add(userGroupService.createUserGroup("UserGroup9"));
-        groups.add(userGroupService.createUserGroup("UserGroup10"));
-        groups.add(userGroupService.createUserGroup("UserGroup11"));
-        groups.add(userGroupService.createUserGroup("UserGroup12"));
+        groups.add(userGroupService.createUserGroup("UserGroup1 (Carrier Group)"));
+        groups.add(userGroupService.createUserGroup("UserGroup2 (Party)"));
+        groups.add(userGroupService.createUserGroup("UserGroup3 (Carrier)"));
+        groups.add(userGroupService.createUserGroup("UserGroup4 (Contact)"));
+        groups.add(userGroupService.createUserGroup("UserGroup5 (Contact-field)"));
+        groups.add(userGroupService.createUserGroup("UserGroup6 (Document)"));
+        groups.add(userGroupService.createUserGroup("UserGroup7 (Party-field)"));
+        groups.add(userGroupService.createUserGroup("UserGroup8 (User)"));
+        groups.add(userGroupService.createUserGroup("UserGroup9 (Email)"));
+        groups.add(userGroupService.createUserGroup("UserGroup10 (Document-field)"));
+        groups.add(userGroupService.createUserGroup("UserGroup11 (Document-field)"));
+        groups.add(userGroupService.createUserGroup("UserGroup12 (Docuemnt-field)"));
 
         // groups.get(1).setParent(groups.get(0));
         // entityManager.merge(groups.get(1));
@@ -171,12 +171,12 @@ public class StartupBean {
         entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Carrier.class)));
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Carrier.class)));
         entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Carrier.class)));
-        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Party.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Carrier.class)));
         group = groups.get(3);
         entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Contact.class)));
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Contact.class)));
         entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Contact.class)));
-        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Party.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Contact.class)));
         group = groups.get(4);
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Contact.class, "contactField")));
         group = groups.get(6);
@@ -190,7 +190,7 @@ public class StartupBean {
         entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Email.class)));
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Email.class)));
         entityManager.persist(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Email.class)));
-        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Document.class)));
+        entityManager.persist(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Email.class)));
         group = groups.get(7);
         entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(User.class)));
         entityManager.persist(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(User.class)));

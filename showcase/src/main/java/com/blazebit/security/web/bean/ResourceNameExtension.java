@@ -48,7 +48,7 @@ public class ResourceNameExtension implements Extension {
 
             @Override
             public int compare(AnnotatedType<?> o1, AnnotatedType<?> o2) {
-                return o1.getBaseType().getClass().getSimpleName().compareToIgnoreCase(o2.getBaseType().getClass().getSimpleName());
+                return ((Class<?>)o1.getBaseType()).getSimpleName().compareToIgnoreCase(((Class<?>)o2.getBaseType()).getSimpleName());
             }
 
         });

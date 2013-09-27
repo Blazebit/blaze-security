@@ -12,27 +12,15 @@
 
     <cc:implementation>
         <h:panelGroup id="permissionPanelGroup" layout="block">
-            <p:selectBooleanButton value="#{cc.attrs.bean.showPermissionTreeView}" onLabel="Permission tree" offLabel="Permission table" rendered="#{not empty cc.attrs.bean.permissions}">
-                <p:ajax update=":#{cc.clientId}:switch" />
-            </p:selectBooleanButton>
-            <h:panelGroup id="switch" rendered="#{not empty cc.attrs.bean.permissions}">
-                <p:dataTable value="#{cc.attrs.bean.permissions}" var="permissionModel" rendered="#{not cc.attrs.bean.showPermissionTreeView}" paginator="true" rows="10">
-                    <f:facet name="header">Permissions for #{cc.attrs.bean.permissionHeader}</f:facet>
-                    <p:column filterBy="#{permissionModel.permission.id.entity}" sortBy="#{permissionModel.permission.id.entity}"><f:facet name="header">Resource</f:facet>
-                            #{permissionModel.permission.id.entity} #{permissionModel.permission.id.field}
-                    </p:column>
-                    <p:column filterBy="#{permissionModel.permission.id.actionName}" sortBy="#{permissionModel.permission.id.actionName}"><f:facet name="header">Action</f:facet>
-                            #{permissionModel.permission.id.actionName}
-                    </p:column>
-                </p:dataTable>
+        	Permissions
 
-                <p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission" rendered="#{cc.attrs.bean.showPermissionTreeView}">
+                <p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission" rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}">
                     <p:treeNode>
                         <h:outputText value="#{permission.name}" />
                     </p:treeNode>
                 </p:tree>
-            </h:panelGroup>
-            <h:outputText value="NO permissions available" rendered="#{empty cc.attrs.bean.permissions}"/>
+                <br/>
+            <h:outputText value="No permissions available" rendered="#{cc.attrs.bean.permissionViewRoot.childCount eq 0}"/>
         </h:panelGroup>
     </cc:implementation>
 </html>

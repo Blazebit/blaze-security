@@ -8,7 +8,7 @@ package com.blazebit.security.web.bean.model;
  *
  * @author cuszk
  */
-public class ResourceModel {
+public class NodeModel {
 
     public enum ResourceType {
 
@@ -23,14 +23,14 @@ public class ResourceModel {
     private Object target;
     private boolean marked;
 
-    public ResourceModel(String name, ResourceType type, Object target) {
+    public NodeModel(String name, ResourceType type, Object target) {
         this.name = name;
         this.type = type;
         this.target = target;
         this.marked = false;
     }
 
-    public ResourceModel(String name, ResourceType type, Object target, boolean marked) {
+    public NodeModel(String name, ResourceType type, Object target, boolean marked) {
         this.name = name;
         this.type = type;
         this.target = target;

@@ -16,7 +16,7 @@
                        
                       <p:tab id="resources" title="Resources">
                            	<p:commandButton value="Next" onclick="resourceWizard.next();"/>
-                           	<h:panelGrid columns="2" columnClasses="top">
+                           	<h:panelGrid columns="2" columnClasses="top,top">
 	                            <p:tree value="#{userResourcesBean.resourceRoot}" var="_resource"  selectionMode="checkbox" selection="#{userResourcesBean.selectedPermissionNodes}"  propagateSelectionDown="true" propagateSelectionUp="true">  
 	                                <p:treeNode type="root">
 	                                    <h:outputText value="#{_resource.name}"/>  
