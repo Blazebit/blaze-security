@@ -22,6 +22,8 @@ public interface UserGroupService {
     
     public List<UserGroup> getGroupsForGroup(UserGroup group);
 
-    public List<User> getUsersFor(UserGroup selectedGroup);
+    public List<User> getUsersFor(UserGroup group);
+
+    public UserGroup saveGroup(UserGroup group);
 
 }

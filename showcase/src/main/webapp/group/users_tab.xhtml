@@ -1,67 +1,52 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:my="http://java.sun.com/jsf/composite/components">
-    <ui:composition> 
-        <p:tab id="groupUsers" title="Users" disabled="#{empty userSession.selectedUserGroup}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:my="http://java.sun.com/jsf/composite/components">
+<ui:composition>
+	<p:tab id="groupUsers" title="Users" disabled="#{empty userSession.selectedUserGroup}">
 
-            <f:event listener="#{groupUsersBean.init}"
-                     type="javax.faces.event.PreRenderComponentEvent" />
-            <h4>Selected group: #{userSession.selectedUserGroup.name}</h4>
-            
-            <h4>Selected users: <ui:repeat value="#{groupUsersBean.selectedUsers}" var="userModel"><br/>#{userModel.username}</ui:repeat></h4>
-            <p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false" widgetVar="uwiz">
-                <p:tab id="users" title="Users">
+		<f:event listener="#{groupUsersBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
+		<h4>Selected group: #{userSession.selectedUserGroup.name}</h4>
 
-                    <p:dataTable value="#{groupUsersBean.users}" var="userModel" style="width:50%">
-                        <p:column>
-                            <f:facet name="header">Select</f:facet>
-                            <p:selectBooleanCheckbox value="#{userModel.selected}"/>
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">Username</f:facet>
-                                #{userModel.user.username}
-                        </p:column>
-                    </p:dataTable>
-                    <h:panelGroup layout="block">
-                        <p:commandButton value="Back" onclick="uwiz.back();" style="float:left"/>
-                        <p:commandButton value="Next"  onclick="uwiz.next();" style="float:right" update=":form:tab:groupUsers"/>
-                    </h:panelGroup>
-                </p:tab>
+		<p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false" widgetVar="uwiz">
+			<p:tab id="users" title="Users">
 
-                <p:tab id="groupPermissions" title="Permissions">
+				<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
+					<p:dataTable value="#{groupUsersBean.userList}" var="userModel">
+						<p:column>
+							<p:selectBooleanCheckbox value="#{userModel.selected}" />
+						</p:column>
+						<p:column>
+							<f:facet name="header">Username</f:facet>
+							<h:outputText value="#{userModel.user.username}" />
+						</p:column>
+					</p:dataTable>
 
-                    <p:tree value="#{groupUsersBean.permissionRoot}" var="permission" selectionMode="checkbox" selection="#{groupUsersBean.selectedPermissionNodes}">  
-                        <p:treeNode>
-                            <h:outputText value="#{permission.name}"/>  
-                        </p:treeNode>
-                    </p:tree>
-                    <h:panelGroup layout="block">
-                        <p:commandButton value="Back" onclick="uwiz.back();" style="float:left"/>
-                        <p:commandButton value="Next"  onclick="uwiz.next();" style="float:right"/>
-                    </h:panelGroup>
-                </p:tab>
 
-                <p:tab id="selectedResourcesActions" title="Confirm">
-                    <p:dataTable value="#{groupUsersBean.selectedResourceActions}" var="resourceAction">
-                        <p:column>
-                            <f:facet name="header">Resource</f:facet>
-                                #{resourceAction.resource.entity} #{resourceAction.resource.field}
-                        </p:column>
-                        <p:column>
-                            <f:facet name="header">Action</f:facet>
-                                #{resourceAction.action.actionName}
-                        </p:column>
-                    </p:dataTable>
-                    <h:panelGroup layout="block">
-                        <p:commandButton value="Back" onclick="uwiz.back();" style="float:left"/>
-                        <p:commandButton value="Confirm" action="#{groupUsersBean.confirmGrantSelectedPermissions}" style="float:right" process="@this" oncomplete="uwiz.loadStep (uwiz.cfg.steps [0], true)"/>
-                    </h:panelGroup>
-                </p:tab>
-            </p:wizard>
-        </p:tab>
-    </ui:composition>
+					<my:permissionTree id="groupPermissionsTree" bean="#{groupUsersBean}" tableId="groups_userPermissions" />
+				</h:panelGrid>
+				<h:panelGroup layout="block">
+					<p:commandButton value="Back" onclick="uwiz.back();" style="float:left" />
+					<p:commandButton value="Next" onclick="uwiz.next();" style="float:left" />
+				</h:panelGroup>
+			</p:tab>
+
+			<p:tab id="groupPermissions" title="Permissions">
+
+				<p:tree value="#{groupUsersBean.permissionRoot}" var="permissionModel" selectionMode="checkbox">
+					<p:treeNode>
+						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" />
+					</p:treeNode>
+				</p:tree>
+				<h:panelGroup layout="block">
+					<p:commandButton value="Back" onclick="uwiz.back();" style="float:left" />
+					<p:commandButton value="Confirm" style="float:left" action="#{groupUsersBean.confirm}" process="@this"
+						oncomplete="uwiz.loadStep (uwiz.cfg.steps [0], true)" />
+				</h:panelGroup>
+			</p:tab>
+
+
+		</p:wizard>
+	</p:tab>
+</ui:composition>
 </html>

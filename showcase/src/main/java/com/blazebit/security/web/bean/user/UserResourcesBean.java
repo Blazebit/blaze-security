@@ -33,6 +33,7 @@ import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceNameExtension;
 import com.blazebit.security.web.bean.model.NodeModel;
+import com.blazebit.security.web.bean.model.NodeModel.Marking;
 
 /**
  * 
@@ -157,7 +158,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
      * wizard step 1
      */
     public void processSelectedPermissions() {
-        selectedPermissions = processSelectedPermissions(selectedPermissionNodes);
+        selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
         Set<Permission> toRevoke = new HashSet<Permission>();
         for (Permission permission : selectedPermissions) {
@@ -185,7 +186,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
         for (Permission permission : granted) {
             EntityField entityField = (EntityField) permission.getResource();
             if (!entityField.isEmptyField()) {
-                if (contains(granted, permissionFactory.create(getSelectedUser(), permission.getAction(), entityFieldFactory.createResource(entityField.getEntity())))) {
+                if (contains(granted, permissionFactory.create(permission.getAction(), entityFieldFactory.createResource(entityField.getEntity())))) {
                     redundantPermissions.add(permission);
                 }
             }
@@ -200,35 +201,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
     private void buildNewPermissionTree(List<Permission> currentPermissions, Set<Permission> selectedPermissions) {
         newPermissionTreeRoot = new DefaultTreeNode();
         // current permissions
-        Map<String, List<Permission>> currentPermissionMap = groupPermissionsByEntity(currentPermissions);
-        // selected permissions (existing + new - revoked)
-        Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(new ArrayList<Permission>(selectedPermissions));
-        // merge into resource actions map
-        for (String entity : currentPermissionMap.keySet()) {
-            List<Permission> permissionGroup = new ArrayList<Permission>(currentPermissionMap.get(entity));
-            for (Permission _permission : permissionGroup) {
-                AbstractPermission permission = (AbstractPermission) _permission;
-                List<Permission> temp = new ArrayList<Permission>();
-                if (mergedPermissionMap.containsKey(permission.getResource().getEntity())) {
-                    temp = mergedPermissionMap.get(permission.getResource().getEntity());
-                } else {
-                    temp = new ArrayList<Permission>();
-                }
-                if (permission.getResource().isEmptyField()) {
-                    if (!temp.contains(permissionFactory.create(getSelectedUser(), permission.getAction(), permission.getResource()))) {
-                        temp.add(permissionFactory.create(getSelectedUser(), permission.getAction(), permission.getResource()));
-                        mergedPermissionMap.put(permission.getResource().getEntity(), temp);
-                    }
-                } else {
-                    // check if entity is there
-                    if (!temp.contains(permissionFactory.create(getSelectedUser(), permission.getAction(),
-                                                                (EntityField) entityFieldFactory.createResource(permission.getResource().getEntity())))) {
-                        temp.add(permissionFactory.create(getSelectedUser(), permission.getAction(), permission.getResource()));
-                        mergedPermissionMap.put(permission.getResource().getEntity(), temp);
-                    }
-                }
-            }
-        }
+        Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(currentPermissions, selectedPermissions);
         // go through resource actions and build tree + mark new ones
         for (String entity : mergedPermissionMap.keySet()) {
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
@@ -239,16 +212,17 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
 
             for (Action action : resourceActionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction, false), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
 
                 List<Permission> permissionsByAction = resourceActionMapByAction.get(action);
                 for (Permission _permission : permissionsByAction) {
                     AbstractPermission permission = (AbstractPermission) _permission;
                     if (!permission.getResource().isEmptyField()) {
                         DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
-                            contains(selectedPermissions, permission)), actionNode);
+                            contains(selectedPermissions, permission) ? Marking.GREEN : Marking.NONE), actionNode);
                     } else {
-                        ((NodeModel) actionNode.getData()).setMarked(contains(selectedPermissions, permissionFactory.create(getSelectedUser(), entityAction, entityField)));
+                        ((NodeModel) actionNode.getData())
+                            .setMarking(contains(selectedPermissions, permissionFactory.create(entityAction, entityField)) ? Marking.GREEN : Marking.NONE);
                     }
                 }
 
@@ -267,13 +241,17 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
     private void markParentIfChildrenAreMarked(TreeNode node) {
         if (node.getChildCount() > 0) {
             boolean foundOneUnMarked = false;
+            Marking firstMarking = ((NodeModel) node.getChildren().get(0).getData()).getMarking();
             for (TreeNode child : node.getChildren()) {
-                if (!((NodeModel) child.getData()).isMarked()) {
+                NodeModel childNodeData = (NodeModel) child.getData();
+                if (!childNodeData.getMarking().equals(firstMarking)) {
                     foundOneUnMarked = true;
                     break;
                 }
             }
-            ((NodeModel) node.getData()).setMarked(!foundOneUnMarked);
+            if (!foundOneUnMarked) {
+                ((NodeModel) node.getData()).setMarking(firstMarking);
+            }
         }
     }
 
@@ -291,18 +269,19 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionGroup);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction, false), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> resoucesByAction = permissionMapByAction.get(action);
                 for (Permission _permissionByAction : resoucesByAction) {
                     AbstractPermission permissionByAction = (AbstractPermission) _permissionByAction;
                     if (!StringUtils.isEmpty(permissionByAction.getResource().getField())) {
                         DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permissionByAction.getResource().getField(), NodeModel.ResourceType.FIELD,
-                            permissionByAction.getResource(), contains(permissionsToRevoke, permissionByAction) || !contains(selectedPermissions, permissionByAction)), actionNode);
+                            permissionByAction.getResource(),
+                            contains(permissionsToRevoke, permissionByAction) || !contains(selectedPermissions, permissionByAction) ? Marking.RED : Marking.NONE), actionNode);
                     } else {
                         // entity and action.
                         if (contains(permissionsToRevoke, permissionByAction) || !contains(selectedPermissions, permissionByAction)) {
-                            ((NodeModel) actionNode.getData()).setMarked(true);
+                            ((NodeModel) actionNode.getData()).setMarking(Marking.RED);
                         }
                     }
                     boolean foundOneNotMarked = false;
@@ -312,7 +291,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
                             break;
                         }
                         if (!foundOneNotMarked) {
-                            ((NodeModel) actionNode.getData()).setMarked(true);
+                            ((NodeModel) actionNode.getData()).setMarking(Marking.RED);
                         }
                     }
 
@@ -325,7 +304,7 @@ public class UserResourcesBean extends PermissionHandlingBaseBean implements Per
                     break;
                 }
                 if (!foundOneNotMarked) {
-                    ((NodeModel) entityNode.getData()).setMarked(true);
+                    ((NodeModel) entityNode.getData()).setMarking(Marking.RED);
                 }
             }
         }

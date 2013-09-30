@@ -18,22 +18,24 @@
 
 		</h:panelGroup>
 
-		<p:dataTable value="#{indexBean.users}" var="user" style="width:50%" id="users">
-			<p:column filterBy="#{user.username}">
-				<f:facet name="header">Username</f:facet>
-				<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
-				<f:facet name="footer">
-					<h:inputText value="#{userBean.newUserName}" />
-				</f:facet>
-			</p:column>
-			<p:column>
-				<f:facet name="header">Action</f:facet>
-				<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users" />
-				<f:facet name="footer">
-					<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users" />
-				</f:facet>
-			</p:column>
-		</p:dataTable>
+		<h:panelGroup id="users">
+			<p:dataTable value="#{userBean.users}" var="user" style="width:50%">
+				<p:column filterBy="#{user.username}">
+					<f:facet name="header">Username</f:facet>
+					<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
+					<f:facet name="footer">
+						<h:inputText value="#{userBean.newUserName}" />
+					</f:facet>
+				</p:column>
+				<p:column>
+					<f:facet name="header">Action</f:facet>
+					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users" />
+					<f:facet name="footer">
+						<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users" />
+					</f:facet>
+				</p:column>
+			</p:dataTable>
+		</h:panelGroup>
 	</p:tab>
 </ui:composition>
 </html>

@@ -1,41 +1,43 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:my="http://java.sun.com/jsf/composite/components">
-    <ui:composition> 
-        <p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedUserGroup}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:my="http://java.sun.com/jsf/composite/components">
+<ui:composition>
+	<p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedUserGroup}">
 
-            <f:event listener="#{groupBean.init}"
-                     type="javax.faces.event.PreRenderComponentEvent" />
-            <h3>Selected group: #{userSession.selectedUserGroup.name}</h3>
+		<f:event listener="#{groupBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
+		<h3>Selected group: #{userSession.selectedUserGroup.name}</h3>
+		<p:commandButton action="#{groupBean.unselectGroup()}" update=":form:tab" value="X"/>
 
-            <h:panelGrid columns="2" width="100%">
+		<h:panelGrid columns="2" width="100%" columnClasses="top,top">
 
-                <p:dataTable value="#{groupBean.users}" var="user">
-                    <f:facet name="header">Users of #{userSession.selectedUserGroup.name}</f:facet>
-                    <p:column>
-                        <f:facet name="header"> Username</f:facet>
+			<h:panelGroup>
+				<p:dataTable value="#{groupBean.users}" var="user">
+					<f:facet name="header">Users of #{userSession.selectedUserGroup.name}</f:facet>
+					<p:column>
+						<f:facet name="header"> Username</f:facet>
                             #{user.username}
                     </p:column>
-                </p:dataTable>
+				</p:dataTable>
 
-                <my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
-            </h:panelGrid>
+				<h:inputText value="#{groupBean.newGroupName}" />
+				<p:commandButton value="Save" action="#{groupBean.saveGroup}" update=":form:tab:groupTree" />
+			</h:panelGroup>
 
-            <p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single">  
-                <p:ajax event="select"   update=":form:tab" listener="#{groupBean.selectGroup}"/>  
-                <p:ajax event="unselect"  update=":form:tab" listener="#{groupBean.unselectGroup}"/>
-                <p:treeNode>
-                    <h:outputText value="#{group.name}"/>  
-                </p:treeNode>
-            </p:tree>
+			<my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
+		</h:panelGrid>
+
+		<h:panelGroup id="groupTree">
+			<p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single">
+				<p:ajax event="select" update=":form:tab" listener="#{groupBean.selectGroup}" />
+				<p:ajax event="unselect" update=":form:tab" listener="#{groupBean.unselectGroup}" />
+				<p:treeNode>
+					<h:outputText value="#{group.name}" />
+				</p:treeNode>
+			</p:tree>
+		</h:panelGroup>
+	</p:tab>
 
 
-        </p:tab>
-
-
-    </ui:composition>
+</ui:composition>
 </html>

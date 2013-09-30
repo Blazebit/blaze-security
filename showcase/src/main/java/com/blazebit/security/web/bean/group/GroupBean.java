@@ -30,6 +30,9 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.UserSession;
+import com.blazebit.security.web.bean.model.NodeModel;
+import com.blazebit.security.web.bean.model.NodeModel.Marking;
+import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
 import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.impl.UserGroupService;
 import com.blazebit.security.web.service.impl.UserService;
@@ -46,28 +49,18 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     private UserService userService;
     @Inject
     private UserGroupService userGroupService;
-    @Inject
-    private RoleService roleService;
-    @Inject
-    private PermissionService permissionService;
-    @Inject
-    private UserContext userContext;
-    @Inject
-    private UserSession userSession;
-    @Inject
-    private PermissionDataAccess permissionDataAccess;
-    @Inject
-    private PermissionManager permissionManager;
+
     private List<User> users = new ArrayList<User>();
 
     private DefaultTreeNode groupRoot;
     private UserGroup selectedGroup;
     private DefaultTreeNode permissionRoot;
+    private String newGroupName = "new_group";
 
     public void backToIndex() throws IOException {
         userSession.setUser(null);
         ((HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false)).invalidate();
-        FacesContext.getCurrentInstance().getExternalContext().redirect("/SecurityWebProject/index.xhtml");
+        FacesContext.getCurrentInstance().getExternalContext().redirect("../index.xhtml");
         FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
@@ -100,6 +93,16 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
         }
     }
 
+    public void saveGroup() {
+        UserGroup ug = userGroupService.createUserGroup(newGroupName);
+        if (getSelectedGroup() != null) {
+            ug.setParent(getSelectedGroup());
+            userGroupService.saveGroup(ug);
+        }
+
+        initUserGroups();
+    }
+
     public UserGroup getSelectedGroup() {
         return userSession.getSelectedUserGroup();
     }
@@ -121,9 +124,31 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
         selectedGroup = (UserGroup) selectedNode.getData();
         userSession.setSelectedUserGroup(selectedGroup);
         this.users = userGroupService.getUsersFor(selectedGroup);
-        List<Permission> permissions = permissionManager.getAllPermissions(selectedGroup);
+        initPermissions();
+    }
+
+    public void unselectGroup() {
+        userSession.setSelectedUserGroup(null);
+    }
+
+    private void initPermissions() {
+        List<UserGroup> parents = new ArrayList<UserGroup>();
+        UserGroup parent = getSelectedGroup().getParent();
+        parents.add(getSelectedGroup());
+        while (parent != null) {
+            parents.add(0, parent);
+            parent = parent.getParent();
+        }
         this.permissionRoot = new DefaultTreeNode("root", null);
-        buildPermissionViewTree(permissions, permissionRoot);
+        DefaultTreeNode groupNode = permissionRoot;
+        for (UserGroup group : parents) {
+            groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
+            groupNode.setExpanded(true);
+            List<Permission> permissions = permissionManager.getAllPermissions(group);
+            buildPermissionViewTree(permissions, groupNode);
+        }
+        ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);
+
     }
 
     public void unselectGroup(NodeSelectEvent event) {
@@ -135,6 +160,14 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     @Override
     public TreeNode getPermissionViewRoot() {
         return this.permissionRoot;
+    }
+
+    public String getNewGroupName() {
+        return newGroupName;
+    }
+
+    public void setNewGroupName(String newGroupName) {
+        this.newGroupName = newGroupName;
     }
 
 }

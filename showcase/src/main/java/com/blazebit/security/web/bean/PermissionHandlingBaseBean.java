@@ -34,6 +34,7 @@ import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.model.GroupModel;
 import com.blazebit.security.web.bean.model.NodeModel;
+import com.blazebit.security.web.bean.model.NodeModel.Marking;
 import com.blazebit.security.web.service.impl.UserGroupService;
 
 /**
@@ -122,7 +123,14 @@ public class PermissionHandlingBaseBean {
         return permissions;
     }
 
-    public Set<Permission> processSelectedPermissions(TreeNode[] selectedPermissionNodes) {
+    /**
+     * 
+     * @param selectedPermissionNodes - selected tree nodes
+     * @param allFieldsListed - decides whether the permissions are selected from the resources view or from the group view. in
+     *        the resources view all the fields are listed, while at the groups only the ones from the group
+     * @return list of permissions
+     */
+    protected Set<Permission> processSelectedPermissions(TreeNode[] selectedPermissionNodes, boolean allFieldsListed) {
         Set<Permission> ret = new HashSet<Permission>();
         List<TreeNode> sortedSelectedNodes = sortTreeNodesByType(selectedPermissionNodes);
         for (TreeNode permissionNode : sortedSelectedNodes) {
@@ -131,15 +139,12 @@ public class PermissionHandlingBaseBean {
                 case ENTITY:
                     for (TreeNode actionNode : permissionNode.getChildren()) {
                         NodeModel actionNodeData = (NodeModel) actionNode.getData();
-                        if (actionNode.getChildCount() == 0 || allChildrenSelected(actionNode)) {
-                            ret
-                                .add(permissionFactory.create(userSession.getSelectedUser(), (EntityAction) actionNodeData.getTarget(),
-                                                              (EntityField) permissionNodeData.getTarget()));
+                        if (actionNode.getChildCount() == 0 || (allFieldsListed && allChildrenSelected(actionNode))) {
+                            ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) permissionNodeData.getTarget()));
                         } else {
                             for (TreeNode fieldNode : actionNode.getChildren()) {
                                 NodeModel fieldNodeData = (NodeModel) fieldNode.getData();
-                                ret
-                                    .add(permissionFactory.create(userSession.getSelectedUser(), (EntityAction) actionNodeData.getTarget(), (EntityField) fieldNodeData.getTarget()));
+                                ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) fieldNodeData.getTarget()));
                             }
                         }
                     }
@@ -147,11 +152,10 @@ public class PermissionHandlingBaseBean {
                 case ACTION:
                     TreeNode entityNode = permissionNode.getParent();
                     NodeModel entityNodeModel = (NodeModel) entityNode.getData();
-                    Permission actionPermission = permissionFactory.create(userSession.getSelectedUser(), (EntityAction) permissionNodeData.getTarget(),
-                                                                           (EntityField) entityNodeModel.getTarget());
-                    if (permissionNode.getChildCount() == 0 || allChildrenSelected(permissionNode)) {
+                    Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget());
+                    if (permissionNode.getChildCount() == 0 || (allFieldsListed && allChildrenSelected(permissionNode))) {
                         if (!contains(ret, actionPermission)) {
-                            ret.add(permissionFactory.create(userSession.getUser(), (EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget()));
+                            ret.add(permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget()));
                         }
                     }
                     break;
@@ -200,15 +204,21 @@ public class PermissionHandlingBaseBean {
                     AbstractPermission permission = (AbstractPermission) _permission;
                     if (!permission.getResource().isEmptyField()) {
                         DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource()),
-                            entityNode);
+                            actionNode);
                     }
                 }
             }
         }
     }
 
-    protected SortedMap<String, List<Permission>> groupPermissionsByEntity(List<Permission> permissions) {
-        SortedMap<String, List<Permission>> ret = new TreeMap<String, List<Permission>>();
+    protected SortedMap<String, List<Permission>> groupPermissionsByEntity(Collection<Permission> permissions) {
+        SortedMap<String, List<Permission>> ret = new TreeMap<String, List<Permission>>(new Comparator<String>() {
+
+            @Override
+            public int compare(String o1, String o2) {
+                return o1.compareToIgnoreCase(o2);
+            }
+        });
         List<Permission> group;
         for (Permission p : permissions) {
             String entityName = ((EntityField) p.getResource()).getEntity();
@@ -236,8 +246,14 @@ public class PermissionHandlingBaseBean {
         return ret;
     }
 
-    protected SortedMap<Action, List<Permission>> groupPermissionsByAction(List<Permission> permissions) {
-        SortedMap<Action, List<Permission>> ret = new TreeMap<Action, List<Permission>>();
+    protected SortedMap<Action, List<Permission>> groupPermissionsByAction(Collection<Permission> permissions) {
+        SortedMap<Action, List<Permission>> ret = new TreeMap<Action, List<Permission>>(new Comparator<Action>() {
+
+            @Override
+            public int compare(Action o1, Action o2) {
+                return ((EntityAction) o1).getActionName().compareToIgnoreCase(((EntityAction) o2).getActionName());
+            }
+        });
         List<Permission> group;
         for (Permission p : permissions) {
             EntityAction entityAction = (EntityAction) p.getAction();
@@ -263,6 +279,119 @@ public class PermissionHandlingBaseBean {
 
         }
         return ret;
+    }
+
+    /**
+     * TODO created permissions dont have a subject/role now. take care when granting!
+     * 
+     * @param currentPermissions
+     * @param selectedPermissions
+     * @return
+     */
+    protected Map<String, List<Permission>> groupPermissionsByEntity(Collection<Permission> currentPermissions, Collection<Permission> selectedPermissions) {
+        Map<String, List<Permission>> currentPermissionMap = groupPermissionsByEntity(currentPermissions);
+        // selected permissions (existing + new - revoked)
+        Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(new ArrayList<Permission>(selectedPermissions));
+        // merge into resource actions map
+        for (String entity : currentPermissionMap.keySet()) {
+            List<Permission> permissionGroup = new ArrayList<Permission>(currentPermissionMap.get(entity));
+            for (Permission _permission : permissionGroup) {
+                AbstractPermission permission = (AbstractPermission) _permission;
+                List<Permission> temp = new ArrayList<Permission>();
+                if (mergedPermissionMap.containsKey(permission.getResource().getEntity())) {
+                    temp = mergedPermissionMap.get(permission.getResource().getEntity());
+                } else {
+                    temp = new ArrayList<Permission>();
+                }
+                if (permission.getResource().isEmptyField()) {
+                    if (!contains(temp, permissionFactory.create(permission.getAction(), permission.getResource()))) {
+                        temp.add(permissionFactory.create(permission.getAction(), permission.getResource()));
+                        mergedPermissionMap.put(permission.getResource().getEntity(), temp);
+                    }
+                } else {
+                    // check if entity is there
+                    if (!contains(temp, permission)
+                        && !contains(temp, permissionFactory.create(permission.getAction(), (EntityField) entityFieldFactory.createResource(permission.getResource().getEntity())))) {
+                        temp.add(permissionFactory.create(permission.getAction(), permission.getResource()));
+                        mergedPermissionMap.put(permission.getResource().getEntity(), temp);
+                    }
+                }
+            }
+        }
+        return mergedPermissionMap;
+    }
+
+    /**
+     * helper to mark parent nodes when child nodes are marked
+     * 
+     * @param node
+     */
+    protected void markAndSelectParents(DefaultTreeNode node, TreeNode[] selectedNodes) {
+        if (node.getChildCount() > 0) {
+            NodeModel firstChild = ((NodeModel) node.getChildren().get(0).getData());
+            boolean foundDifferentMarking = false;
+            boolean foundUnSelected = false;
+            boolean foundSelectable = false;
+            Marking firstMarking = firstChild.getMarking();
+            UserGroup firstRelation = firstChild.getRelation();
+            boolean foundDifferentRelation = false;
+            for (TreeNode child : node.getChildren()) {
+                NodeModel childNodeModel = ((NodeModel) child.getData());
+                if (child.isSelectable()) {
+                    foundSelectable = true;
+                }
+                if (!child.isSelected()) {
+                    foundUnSelected = true;
+                }
+                if (!childNodeModel.getMarking().equals(firstMarking)) {
+                    foundDifferentMarking = true;
+                }
+                if ((childNodeModel.getRelation() == null && firstRelation != null)
+                    || (childNodeModel.getRelation() != null && !childNodeModel.getRelation().equals(firstRelation))) {
+                    foundDifferentRelation = true;
+                }
+            }
+            node.setSelectable(foundSelectable);
+            NodeModel nodeModel = ((NodeModel) node.getData());
+            if (!foundDifferentMarking) {
+                nodeModel.setMarking(firstMarking);
+            } else {
+                nodeModel.setMarking(Marking.NONE);
+            }
+            if (!foundUnSelected) {
+                if (selectedNodes != null) {
+                    addToSelectedPermissionNodes(node, selectedNodes);
+                }
+                node.setSelected(true);
+            }
+            if (!foundDifferentRelation && firstRelation != null) {
+                nodeModel.setRelation(firstRelation);
+                nodeModel.setName(nodeModel.getName() + " (" + firstRelation.getName() + ")");
+            } else {
+                if (firstRelation != null) {
+                    // iterate through children again and add related group name
+                    for (TreeNode child : node.getChildren()) {
+                        NodeModel childNodeModel = ((NodeModel) child.getData());
+                        if (childNodeModel.getRelation() != null) {
+                            childNodeModel.setName(childNodeModel.getName() + " (" + childNodeModel.getRelation().getName() + ")");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * helper to mark node as selected
+     * 
+     * @param node
+     */
+    protected void addToSelectedPermissionNodes(DefaultTreeNode node, TreeNode[] selectedNodes) {
+        if (selectedNodes.length == 0) {
+            selectedNodes = new TreeNode[1];
+            selectedNodes[0] = node;
+        }
+        selectedNodes[selectedNodes.length - 1] = node;
     }
 
     @Inject

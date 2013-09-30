@@ -1,6 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * To change this template, choose Tools | Templates and open the template in the editor.
  */
 package com.blazebit.security.web.service.impl;
 
@@ -13,7 +12,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 /**
- *
+ * 
  * @author cuszk
  */
 @Stateless
@@ -36,7 +35,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
-    public List<UserGroup> getAllParentGroups(/*TODO add companyId or something*/) {
+    public List<UserGroup> getAllParentGroups(/* TODO add companyId or something */) {
         return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.parent is null", UserGroup.class).getResultList();
     }
 
@@ -47,6 +46,14 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     @Override
     public List<User> getUsersFor(UserGroup group) {
-        return entityManager.createQuery("select users from " + UserGroup.class.getCanonicalName() + " ug JOIN ug.users users where ug.id  = " + group.getId(), User.class).getResultList();
+        return entityManager.createQuery("select users from " + UserGroup.class.getCanonicalName() + " ug JOIN ug.users users where ug.id  = " + group.getId()
+                                             + " order by users.username", User.class).getResultList();
+    }
+
+    @Override
+    public UserGroup saveGroup(UserGroup ug) {
+        UserGroup ret = entityManager.merge(ug);
+        entityManager.flush();
+        return ret;
     }
 }

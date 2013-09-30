@@ -35,13 +35,13 @@
                            <h:panelGrid columns="2" columnClasses="top">
                                 <p:tree value="#{userResourcesBean.currentPermissionTreeRoot}" var="currentPermission">
                                     <p:treeNode>
-                                        <h:outputText value="#{currentPermission.name}" style="#{currentPermission.marked  ? 'color:red' : ''}"/>  
+                                        <h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}"/>  
                                     </p:treeNode>
                                 </p:tree>
                                 
                                	<p:tree value="#{userResourcesBean.newPermissionTreeRoot}" var="newPermission" >
 	                                <p:treeNode>
-                                        <h:outputText value="#{newPermission.name}" style="#{newPermission.marked  ? 'color:green' : ''}"/>  
+                                        <h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}"/>  
                                     </p:treeNode>
                                 </p:tree>
                             </h:panelGrid>

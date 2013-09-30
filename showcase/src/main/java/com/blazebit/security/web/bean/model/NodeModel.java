@@ -1,11 +1,12 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * To change this template, choose Tools | Templates and open the template in the editor.
  */
 package com.blazebit.security.web.bean.model;
 
+import com.blazebit.security.impl.model.UserGroup;
+
 /**
- *
+ * 
  * @author cuszk
  */
 public class NodeModel {
@@ -15,26 +16,54 @@ public class NodeModel {
         ENTITY,
         ACTION,
         FIELD,
-        
+
         USERGROUP,
+        USER,
     }
+
+    public enum Marking {
+        NONE,
+        RED("color:red"),
+        GREEN("color:green");
+
+        private String style;
+
+        Marking() {
+
+        }
+
+        Marking(String style) {
+            this.style = style;
+        }
+
+        public String getStyle() {
+            return style;
+        }
+
+        public void setStyle(String style) {
+            this.style = style;
+        }
+
+    }
+
     private String name;
     private ResourceType type;
     private Object target;
-    private boolean marked;
+    private Marking marking;
+    private UserGroup relation;
 
     public NodeModel(String name, ResourceType type, Object target) {
         this.name = name;
         this.type = type;
         this.target = target;
-        this.marked = false;
+        this.marking = Marking.NONE;
     }
 
-    public NodeModel(String name, ResourceType type, Object target, boolean marked) {
+    public NodeModel(String name, ResourceType type, Object target, Marking marking) {
         this.name = name;
         this.type = type;
         this.target = target;
-        this.marked = marked;
+        this.marking = marking;
     }
 
     public String getName() {
@@ -61,18 +90,29 @@ public class NodeModel {
         this.target = target;
     }
 
-    public boolean isMarked() {
-        return marked;
+    public UserGroup getRelation() {
+        return relation;
     }
 
-    public void setMarked(boolean marked) {
-        this.marked = marked;
+    public void setRelation(UserGroup relation) {
+        this.relation = relation;
+    }
+
+    public Marking getMarking() {
+        return marking;
+    }
+
+    public void setMarking(Marking marking) {
+        this.marking = marking;
     }
 
     @Override
     public String toString() {
-        return "ResourceModel [name=" + name + ", type=" + type + ", target=" + target + ", marked=" + marked + "]";
+        return "ResourceModel [name=" + name + ", type=" + type + ", target=" + target + ", marking=" + marking + "]";
     }
-    
-    
+
+    public boolean isMarked() {
+        return Marking.RED.equals(this.getMarking()) || Marking.GREEN.equals(this.getMarking());
+    }
+
 }

@@ -16,7 +16,7 @@
 
                 <p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission" rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}">
                     <p:treeNode>
-                        <h:outputText value="#{permission.name}" />
+                        <h:outputText value="#{permission.name}" style="#{permission.marking.style}"/>
                     </p:treeNode>
                 </p:tree>
                 <br/>

@@ -11,7 +11,7 @@
 			<p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="gwiz" showNavBar="false">
 
 				<p:tab id="groups" title="Groups">
-					<h:panelGrid columns="2" columnClasses="top,top">
+					<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
 						<h:panelGroup>
 						User groups
 						<p:tree value="#{userGroupsBean.groupRoot}" var="group" selectionMode="checkbox"
@@ -39,7 +39,7 @@
 							<p:tree value="#{userGroupsBean.currentPermissionTreeRoot}" var="currentPermission" id="currentPermissionTree"
 								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount ne 0}">
 								<p:treeNode>
-									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marked  ? 'color:red' : ''}" />
+									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -53,7 +53,7 @@
 								<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
-									<h:outputText value="#{newPermission.name}" style="#{newPermission.marked  ? 'color:green' : ''}" />
+									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

@@ -42,4 +42,8 @@ public interface PermissionFactory {
      * @return creates a permissions for a role
      */
     public <R extends Role<R>, P extends Permission> P create(Role<R> role, Action action, Resource resource);
+
+    public <P extends Permission> P create(Action action, Resource resource);
+
+    
 }

@@ -32,6 +32,9 @@
                     <p:column>
                         <p:commandLink value="login" action="#{indexBean.logInAs(user)}" rendered="#{userSession.user ne user}" process="@this"/>
                     </p:column>
+                    <p:column>
+                        <p:commandLink value="reset" action="#{indexBean.reset(user)}" process="@this"/>
+                    </p:column>
                 </p:dataTable>
 
             </h:form>

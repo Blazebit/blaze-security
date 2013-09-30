@@ -1,15 +1,13 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * To change this template, choose Tools | Templates and open the template in the editor.
  */
 package com.blazebit.security.web.bean;
 
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.web.service.impl.UserService;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
@@ -17,8 +15,13 @@ import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 
+import com.blazebit.security.Permission;
+import com.blazebit.security.PermissionManager;
+import com.blazebit.security.impl.model.User;
+import com.blazebit.security.web.service.impl.UserService;
+
 /**
- *
+ * 
  * @author cuszk
  */
 @ManagedBean(name = "indexBean")
@@ -29,6 +32,9 @@ public class IndexBean implements Serializable {
     private UserService userService;
     @Inject
     private UserSession userSession;
+    @Inject
+    private PermissionManager permissionManager;
+
     private List<User> users = new ArrayList<User>();
 
     @PostConstruct
@@ -40,6 +46,11 @@ public class IndexBean implements Serializable {
         userSession.setUser(user);
         FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
+    }
+
+    public void reset(User user) {
+        List<Permission> permissions = permissionManager.getAllPermissions(user);
+        permissionManager.remove(permissions);
     }
 
     public List<User> getUsers() {
