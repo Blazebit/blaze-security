@@ -56,6 +56,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     private UserGroup selectedGroup;
     private DefaultTreeNode permissionRoot;
     private String newGroupName = "new_group";
+    private TreeNode selectedGroupTreeNode;
 
     public void backToIndex() throws IOException {
         userSession.setUser(null);
@@ -119,16 +120,19 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
         return groupRoot;
     }
 
-    public void selectGroup(NodeSelectEvent event) {
-        TreeNode selectedNode = event.getTreeNode();
-        selectedGroup = (UserGroup) selectedNode.getData();
-        userSession.setSelectedUserGroup(selectedGroup);
-        this.users = userGroupService.getUsersFor(selectedGroup);
-        initPermissions();
+    public void selectGroup() {
+        if (selectedGroupTreeNode != null) {
+            selectedGroup = (UserGroup) selectedGroupTreeNode.getData();
+            userSession.setSelectedUserGroup(selectedGroup);
+            this.users = userGroupService.getUsersFor(selectedGroup);
+            initPermissions();
+        }
     }
 
     public void unselectGroup() {
+        selectedGroupTreeNode = null;
         userSession.setSelectedUserGroup(null);
+        this.users.clear();
     }
 
     private void initPermissions() {
@@ -151,12 +155,6 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
 
     }
 
-    public void unselectGroup(NodeSelectEvent event) {
-        userSession.setSelectedUserGroup(null);
-        this.users.clear();
-
-    }
-
     @Override
     public TreeNode getPermissionViewRoot() {
         return this.permissionRoot;
@@ -168,6 +166,15 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
 
     public void setNewGroupName(String newGroupName) {
         this.newGroupName = newGroupName;
+    }
+
+    public TreeNode getSelectedGroupTreeNode() {
+        return selectedGroupTreeNode;
+    }
+
+    public void setSelectedGroupTreeNode(TreeNode selectedGroupTreeNode) {
+        this.selectedGroupTreeNode = selectedGroupTreeNode;
+        selectGroup();
     }
 
 }

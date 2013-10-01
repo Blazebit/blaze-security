@@ -31,6 +31,7 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.model.GroupModel;
 import com.blazebit.security.web.bean.model.NodeModel;
@@ -83,6 +84,16 @@ public class PermissionHandlingBaseBean {
 
     protected boolean contains(Collection<Permission> permissions, Permission permission) {
         return find(permissions, permission) != null;
+    }
+
+    protected boolean implies(Collection<Permission> permissions, Permission permission) {
+        for (Permission p : permissions) {
+            AbstractPermission givenPermission = (AbstractPermission) p;
+            if (givenPermission.getAction().implies(permission.getAction()) && givenPermission.getResource().implies(permission.getResource())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected Permission find(Collection<Permission> permissions, Permission permission) {
@@ -419,5 +430,31 @@ public class PermissionHandlingBaseBean {
         for (UserGroup ug : userGroupService.getGroupsForGroup(group)) {
             createGroupNode(ug, allowedGroups, childNode, expand);
         }
+    }
+
+    protected Set<Permission> getReplaceablePermissions(User user, List<Permission> permissions, Set<Permission> selectedPermissions) {
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Permission permission : selectedPermissions) {
+            Set<Permission> revokable = permissionDataAccess.getRevokablePermissionsWhenGranting(user, permission.getAction(), permission.getResource());
+            for (Permission currentPermission : permissions) {
+                if (contains(revokable, currentPermission)) {
+                    ret.add(currentPermission);
+                }
+            }
+        }
+        return ret;
+    }
+    
+    protected Set<Permission> getReplaceablePermissions(UserGroup group, List<Permission> permissions, Set<Permission> selectedPermissions) {
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Permission permission : selectedPermissions) {
+            Set<Permission> revokable = permissionDataAccess.getRevokablePermissionsWhenGranting(group, permission.getAction(), permission.getResource());
+            for (Permission currentPermission : permissions) {
+                if (contains(revokable, currentPermission)) {
+                    ret.add(currentPermission);
+                }
+            }
+        }
+        return ret;
     }
 }

@@ -8,7 +8,7 @@
 		<f:event listener="#{groupUsersBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
 		<h4>Selected group: #{userSession.selectedUserGroup.name}</h4>
 
-		<p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false" widgetVar="uwiz">
+		<p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false" widgetVar="uwiz" step="#{groupUsersBean.wizardStep}" >
 			<p:tab id="users" title="Users">
 
 				<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">

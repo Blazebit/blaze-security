@@ -16,6 +16,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 
+import org.primefaces.component.wizard.Wizard;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -63,13 +64,14 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
     private DefaultTreeNode permissionTreeViewRoot;
     private List<Permission> selectedGroupPermissions = new ArrayList<Permission>();
     private List<Permission> selectedGroupParentPermissions = new ArrayList<Permission>();
+    private String wizardStep;
 
-    @PostConstruct
     public void init() {
         if (getSelectedGroup() != null) {
             initUsers();
             initPermissions();
         }
+        wizardStep = "users";
     }
 
     private void initPermissions() {
@@ -334,6 +336,14 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
 
     public List<UserModel> getUserList() {
         return userList;
+    }
+
+    public String getWizardStep() {
+        return wizardStep;
+    }
+
+    public void setWizardStep(String wizardStep) {
+        this.wizardStep = wizardStep;
     }
 
 }

@@ -53,7 +53,8 @@
 								<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
-									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+									<h:outputText id="permission" value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+									<p:tooltip for="permission" rendered="#{not empty newPermission.relation}" value="#{newPermission.relation.name}"/>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

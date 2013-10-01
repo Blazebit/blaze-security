@@ -83,7 +83,7 @@ public interface PermissionDataAccess {
      * @param _resource
      * @return set of permissions to be revoked when granting the given action and resource to the subject
      */
-    public Set<Permission> getRevokablePermissionsWhenGranting(Subject subject, Action _action, Resource _resource);
+    public Set<Permission> getRevokablePermissionsWhenGranting(Subject subject, Action action, Resource resource);
 
     /**
      * 

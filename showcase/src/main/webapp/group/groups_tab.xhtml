@@ -6,12 +6,17 @@
 	<p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedUserGroup}">
 
 		<f:event listener="#{groupBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
-		<h3>Selected group: #{userSession.selectedUserGroup.name}</h3>
-		<p:commandButton action="#{groupBean.unselectGroup()}" update=":form:tab" value="X"/>
 
-		<h:panelGrid columns="2" width="100%" columnClasses="top,top">
+
+
+		<h:panelGrid columns="2" width="100%" columnClasses="top,top" rendered="#{not empty userSession.selectedUserGroup}" style="height:200px">
 
 			<h:panelGroup>
+				<h3>
+					Selected group: #{userSession.selectedUserGroup.name}
+					<p:commandButton action="#{groupBean.unselectGroup}" update=":form:tab" value="X"
+						rendered="#{not empty userSession.selectedUserGroup}" process="@this"/>
+				</h3>
 				<p:dataTable value="#{groupBean.users}" var="user">
 					<f:facet name="header">Users of #{userSession.selectedUserGroup.name}</f:facet>
 					<p:column>
@@ -28,13 +33,18 @@
 		</h:panelGrid>
 
 		<h:panelGroup id="groupTree">
-			<p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single">
-				<p:ajax event="select" update=":form:tab" listener="#{groupBean.selectGroup}" />
-				<p:ajax event="unselect" update=":form:tab" listener="#{groupBean.unselectGroup}" />
-				<p:treeNode>
+			<p:treeTable value="#{groupBean.groupRoot}" var="group" selectionMode="single"
+				selection="#{groupBean.selectedGroupTreeNode}">
+				<p:ajax event="select" update=":form:tab" partialSubmit="true"/>
+				<p:column>
+					<f:facet name="header">Group name</f:facet>
 					<h:outputText value="#{group.name}" />
-				</p:treeNode>
-			</p:tree>
+				</p:column>
+				<p:column>
+					<f:facet name="header">Action</f:facet>
+					<p:commandButton value="Delete" />
+				</p:column>
+			</p:treeTable>
 		</h:panelGroup>
 	</p:tab>
 

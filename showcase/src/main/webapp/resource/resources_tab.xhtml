@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:my="http://java.sun.com/jsf/composite/components">
+<ui:composition>
+	<p:tab title="Resources" disabled="#{empty userSession.selectedUserGroup}">
+		<f:event listener="#{resourcesBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
+		<h3>Selected user: #{userSession.selectedUserGroup.name}</h3>
+
+		<h:panelGroup id="wizardPanel" style="vertical-align: top">
+			<p:wizard flowListener="#{resourcesBean.resourceWizardListener}" widgetVar="resourceWizard" showNavBar="false"
+				id="resourceWizard">
+
+				<p:tab id="resources" title="Resources">
+					<p:commandButton value="Next" onclick="resourceWizard.next();" />
+					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
+						selection="#{resourcesBean.selectedPermissionNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
+						<p:treeNode type="root">
+							<h:outputText value="#{_resource.name}" />
+						</p:treeNode>
+						<p:treeNode>
+							<h:outputText value="#{_resource.name}" />
+						</p:treeNode>
+					</p:tree>
+					<p:commandButton value="Next" onclick="resourceWizard.next();" process="@this" />
+				</p:tab>
+
+				<p:tab id="permissions" title="Users/Groups">
+
+					<p:tabView activeIndex="#{resourcesBean.activeTabIndex}" >
+						<p:ajax event="tabChange" />
+						<p:tab title="Users" id="permissionsUser">
+							<p:dataTable value="#{resourcesBean.userList}" var="userModel">
+								<p:column>
+									<p:selectBooleanCheckbox value="#{userModel.selected}" />
+								</p:column>
+								<p:column>
+									<f:facet name="header">Username</f:facet>
+									<h:outputText value="#{userModel.user.username}" />
+								</p:column>
+							</p:dataTable>
+						</p:tab>
+						<p:tab title="Groups" id="permissionsGroup">
+							<p:tree value="#{resourcesBean.groupRoot}" var="group" selection="#{resourcesBean.selectedGroupNodes}"
+								selectionMode="checkbox" propagateSelectionDown="false" propagateSelectionUp="false">
+								<p:treeNode>
+									<h:outputText value="#{group.name}" />
+								</p:treeNode>
+							</p:tree>
+						</p:tab>
+					</p:tabView>
+
+
+					<h:panelGroup layout="block" style="height:50px">
+						<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
+						<p:commandButton value="Next" style="float:left" process="@this" onclick="resourceWizard.next();" />
+					</h:panelGroup>
+
+				</p:tab>
+
+				<p:tab id="groupPermissions" title="Permissions" rendered="#{resourcesBean.activeTabIndex eq 1}">
+					<h:panelGrid columns="2" columnClasses="top,top">
+						<p:tree value="#{resourcesBean.currentGroupRoot}" var="currentGroupRoot">
+							<p:treeNode>
+								<h:outputText value="#{currentGroupRoot.name}" style="#{currentGroupRoot.marking.style}" />
+							</p:treeNode>
+						</p:tree>
+						<p:tree value="#{resourcesBean.newGroupRoot}" var="newGroupRoot">
+							<p:treeNode>
+								<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" />
+							</p:treeNode>
+						</p:tree>
+						<h:panelGroup layout="block" style="height:50px">
+							<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
+							<p:commandButton value="Confirm and Propagate to users" style="float:left" process="@this"
+								onclick="resourceWizard.next();" />
+						</h:panelGroup>
+					</h:panelGrid>
+				</p:tab>
+
+				<p:tab id="groupUserPermissions" title="Users" rendered="#{resourcesBean.activeTabIndex eq 1}">
+					<h:panelGrid columns="2" columnClasses="top,top">
+						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot">
+							<p:treeNode>
+								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
+							</p:treeNode>
+						</p:tree>
+						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot">
+							<p:treeNode>
+								<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" />
+							</p:treeNode>
+						</p:tree>
+						<h:panelGroup layout="block" style="height:50px">
+							<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
+							<p:commandButton value="Confirm" action="#{resourcesBean.confirmPropagatedUserPermissions()}" style="float:left"
+								process="@this" oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)" />
+						</h:panelGroup>
+					</h:panelGrid>
+				</p:tab>
+
+
+				<p:tab id="userPermissions" title="Permissions" rendered="#{resourcesBean.activeTabIndex eq 0}">
+					<h:panelGrid columns="2" columnClasses="top,top">
+						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot">
+							<p:treeNode>
+								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
+							</p:treeNode>
+						</p:tree>
+						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot">
+							<p:treeNode>
+								<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" />
+							</p:treeNode>
+						</p:tree>
+						<h:panelGroup layout="block" style="height:50px">
+							<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
+							<p:commandButton value="Confirm" action="#{resourcesBean.confirmUserPermissions()}" style="float:left"
+								process="@this" oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)" />
+						</h:panelGroup>
+					</h:panelGrid>
+				</p:tab>
+			</p:wizard>
+		</h:panelGroup>
+
+	</p:tab>
+</ui:composition>
+</html>
