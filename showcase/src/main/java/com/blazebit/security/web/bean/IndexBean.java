@@ -11,13 +11,16 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.faces.component.UIViewRoot;
-import javax.faces.context.FacesContext;
+import javax.faces.event.ValueChangeEvent;
+import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 
-import com.blazebit.security.Permission;
+import org.primefaces.event.SelectEvent;
+
 import com.blazebit.security.PermissionManager;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.impl.UserService;
 
 /**
@@ -36,21 +39,35 @@ public class IndexBean implements Serializable {
     private PermissionManager permissionManager;
 
     private List<User> users = new ArrayList<User>();
+    private Company selectedCompany;
+    List<Company> companies;
+
+    @Inject
+    private CompanyService companyService;
 
     @PostConstruct
     public void init() {
-        users = userService.findUsers();
+        companies = companyService.findCompanies();
+        if (!companies.isEmpty()) {
+            setSelectedCompany(companyService.findCompanies().get(0));
+            users = userService.findUsers(selectedCompany);
+        }
     }
 
     public void logInAs(User user) throws IOException {
         userSession.setUser(user);
-        FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
-        FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
+        // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
+        // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
+    }
+
+    public void beUser(User user) throws IOException {
+        userSession.setSecondLoggedInUser(user);
+        // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
+        // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
     public void reset(User user) {
-        List<Permission> permissions = permissionManager.getAllPermissions(user);
-        permissionManager.remove(permissions);
+        permissionManager.removeAllPermissions(user);
     }
 
     public List<User> getUsers() {
@@ -59,5 +76,24 @@ public class IndexBean implements Serializable {
 
     public void setUsers(List<User> users) {
         this.users = users;
+    }
+
+    public List<Company> getCompanies() {
+        return companies;
+    }
+
+    public Company getSelectedCompany() {
+        return selectedCompany;
+    }
+
+    public void setSelectedCompany(Company selectedCompany) {
+        this.selectedCompany = selectedCompany;
+        userSession.setSelectedCompany(selectedCompany);
+        users = userService.findUsers(selectedCompany);
+    }
+
+    public void changeCompany(ValueChangeEvent event) {
+        Company newCompany = (Company) event.getNewValue();
+        setSelectedCompany(newCompany);
     }
 }

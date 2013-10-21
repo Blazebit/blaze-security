@@ -36,34 +36,28 @@ public class ActionFactoryImpl implements ActionFactory {
         ret.add(createAction(ActionConstants.READ));
         return ret;
     }
-
+    
     @Override
-    public List<EntityAction> getActionsForSubject() {
+    public List<EntityAction> getActionsForEntityObject() {
         List<EntityAction> ret = new ArrayList<EntityAction>();
-        ret.add(createAction(ActionConstants.CREATE));
         ret.add(createAction(ActionConstants.UPDATE));
         ret.add(createAction(ActionConstants.DELETE));
         ret.add(createAction(ActionConstants.READ));
+        return ret;
+    }
+
+    @Override
+    public List<EntityAction> getSpecialActions() {
+        List<EntityAction> ret = new ArrayList<EntityAction>();
         ret.add(createAction(ActionConstants.GRANT));
         ret.add(createAction(ActionConstants.REVOKE));
         return ret;
     }
 
-    @Override
-    public List<EntityAction> getActionsForRole() {
-        List<EntityAction> ret = new ArrayList<EntityAction>();
-        ret.add(createAction(ActionConstants.CREATE));
-        ret.add(createAction(ActionConstants.UPDATE));
-        ret.add(createAction(ActionConstants.DELETE));
-        ret.add(createAction(ActionConstants.READ));
-        return ret;
-    }
-    
     @Override
     public List<EntityAction> getExceptionalActions() {
         List<EntityAction> ret = new ArrayList<EntityAction>();
-        ret.add(createAction(ActionConstants.GRANT));
-        ret.add(createAction(ActionConstants.REVOKE));
+        ret.addAll(getSpecialActions());
         ret.add(createAction(ActionConstants.CREATE));
         ret.add(createAction(ActionConstants.DELETE));
         return ret;

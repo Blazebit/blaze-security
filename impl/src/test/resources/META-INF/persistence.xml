@@ -16,6 +16,7 @@
     <class>com.blazebit.security.impl.model.sample.CarrierGroup</class>
     <class>com.blazebit.security.impl.model.sample.Document</class>
     <class>com.blazebit.security.impl.model.sample.Email</class>
+    <class>com.blazebit.security.impl.model.Company</class>
     
     
     
@@ -24,7 +25,7 @@
       <property name="hibernate.debug" value="true"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
-      <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
       <property name="hibernate.ejb.interceptor" value="com.blazebit.security.impl.interceptor.ChangeInterceptor"/>
       <property name="org.hibernate.FlushMode" value="commit" />
     </properties>

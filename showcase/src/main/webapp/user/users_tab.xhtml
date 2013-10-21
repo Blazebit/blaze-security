@@ -8,7 +8,7 @@
 		<h:panelGroup id="selectedUser" rendered="#{not empty userBean.selectedUser}" layout="block">
 			<h3>Selected user: #{userBean.selectedUser.username}</h3>
 
-			<h:panelGrid columns="2" width="50%" columnClasses="top">
+			<h:panelGrid columns="2" width="50%" columnClasses="top,top">
 
 				<my:groupTree bean="#{userBean}" />
 				<my:permissionTree bean="#{userBean}" />
@@ -20,21 +20,27 @@
 
 		<h:panelGroup id="users">
 			<p:dataTable value="#{userBean.users}" var="user" style="width:50%">
+				<f:facet name="header">Existing users (click on username to select user)</f:facet>
 				<p:column filterBy="#{user.username}">
 					<f:facet name="header">Username</f:facet>
 					<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
 					<f:facet name="footer">
-						<h:inputText value="#{userBean.newUserName}" />
+						<h:inputText value="#{userBean.newUserName}" rendered="#{userBean.isAuthorized('CREATE')}"/>
 					</f:facet>
 				</p:column>
 				<p:column>
 					<f:facet name="header">Action</f:facet>
-					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users" />
+					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users"  rendered="#{userBean.isAuthorized('DELETE', user)}" />
 					<f:facet name="footer">
-						<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users" />
+						<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users" rendered="#{userBean.isAuthorized('CREATE')}"/>
 					</f:facet>
 				</p:column>
 			</p:dataTable>
+			<br/>
+			Logged in <p:commandLink value="#{userSession.loggedInUser.username}" action="#{userBean.selectUser(userSession.loggedInUser)}" process="@this" update=":form:tab" />
+			<br/>
+			Acting as <p:commandLink value="#{userSession.user.username}" action="#{userBean.selectUser(userSession.user)}" process="@this" update=":form:tab" />
+			<br/>
 		</h:panelGroup>
 	</p:tab>
 </ui:composition>

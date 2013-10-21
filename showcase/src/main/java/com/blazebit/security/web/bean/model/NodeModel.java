@@ -19,10 +19,12 @@ public class NodeModel {
 
         USERGROUP,
         USER,
+        MODULE,
     }
 
     public enum Marking {
         NONE,
+        BLUE("color:blue"),
         RED("color:red"),
         GREEN("color:green");
 
@@ -50,7 +52,7 @@ public class NodeModel {
     private ResourceType type;
     private Object target;
     private Marking marking;
-    private UserGroup relation;
+    private String tooltip;
 
     public NodeModel(String name, ResourceType type, Object target) {
         this.name = name;
@@ -90,14 +92,6 @@ public class NodeModel {
         this.target = target;
     }
 
-    public UserGroup getRelation() {
-        return relation;
-    }
-
-    public void setRelation(UserGroup relation) {
-        this.relation = relation;
-    }
-
     public Marking getMarking() {
         return marking;
     }
@@ -113,6 +107,14 @@ public class NodeModel {
 
     public boolean isMarked() {
         return Marking.RED.equals(this.getMarking()) || Marking.GREEN.equals(this.getMarking());
+    }
+
+    public String getTooltip() {
+        return tooltip;
+    }
+
+    public void setTooltip(String tooltip) {
+        this.tooltip = tooltip;
     }
 
 }

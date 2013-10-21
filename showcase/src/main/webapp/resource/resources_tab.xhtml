@@ -27,7 +27,7 @@
 
 				<p:tab id="permissions" title="Users/Groups">
 
-					<p:tabView activeIndex="#{resourcesBean.activeTabIndex}" >
+					<p:tabView activeIndex="#{resourcesBean.activeTabIndex}">
 						<p:ajax event="tabChange" />
 						<p:tab title="Users" id="permissionsUser">
 							<p:dataTable value="#{resourcesBean.userList}" var="userModel">
@@ -80,12 +80,15 @@
 
 				<p:tab id="groupUserPermissions" title="Users" rendered="#{resourcesBean.activeTabIndex eq 1}">
 					<h:panelGrid columns="2" columnClasses="top,top">
-						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot">
+						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentTree">
 							<p:treeNode>
 								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
 							</p:treeNode>
 						</p:tree>
-						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot">
+						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot"
+							selection="#{resourcesBean.selectedUserPermissionNodes}" selectionMode="checkbox">
+							<p:ajax event="select" update=":form:tab:currentTree" listener="#{resourcesBean.groupUserPermissionListener}"/>
+							<p:ajax event="unselect"  update=":form:tab:currentTree" listener="#{resourcesBean.groupUserPermissionListener}"/>
 							<p:treeNode>
 								<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" />
 							</p:treeNode>

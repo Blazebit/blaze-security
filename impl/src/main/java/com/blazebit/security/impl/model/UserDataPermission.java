@@ -22,7 +22,7 @@ import javax.persistence.Entity;
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name="User data permission")
+@ResourceName(name="User data permission", module="Core")
 public class UserDataPermission extends AbstractDataPermission<User, UserDataPermissionId>  {
 
     public UserDataPermission() {

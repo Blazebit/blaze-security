@@ -9,7 +9,11 @@
 
 <cc:implementation>
 	<h:panelGroup id="groupPanelGroup" layout="block">
-		<f:facet name="header">Groups for #{userSession.selectedUser.username}</f:facet>
+		<h4>
+			Groups of
+			<h:outputText value=" #{userSession.selectedUser.username}" rendered="#{userSession.selectedUser ne null}" />
+			<h:outputText value=" #{userSession.selectedUserGroup.name}" rendered="#{userSession.selectedUserGroup ne null}" />
+		</h4>
 
 		<p:tree value="#{cc.attrs.bean.groupRoot}" var="group">
 			<p:treeNode>

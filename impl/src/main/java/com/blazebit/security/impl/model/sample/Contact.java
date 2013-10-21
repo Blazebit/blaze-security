@@ -25,7 +25,7 @@ import javax.persistence.Transient;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Contact")
+@ResourceName(name = "Contact", module="Carrier")
 public class Contact implements Serializable, IdHolder {
 
     private Integer id;

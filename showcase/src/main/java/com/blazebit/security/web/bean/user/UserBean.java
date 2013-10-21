@@ -21,8 +21,11 @@ import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
+import com.blazebit.security.Resource;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.model.sample.Carrier;
+import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.GroupView;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
@@ -36,7 +39,7 @@ import com.blazebit.security.web.service.impl.UserService;
  */
 @ManagedBean(name = "userBean")
 @ViewScoped
-public class UserBean extends PermissionHandlingBaseBean implements GroupView, PermissionView, Serializable {
+public class UserBean extends GroupHandlerBaseBean implements GroupView, PermissionView, Serializable {
 
     /**
      * 
@@ -54,8 +57,6 @@ public class UserBean extends PermissionHandlingBaseBean implements GroupView, P
     private List<GroupModel> userGroups = new ArrayList<GroupModel>();
     private TreeNode permissionRoot;
     private TreeNode groupRoot;
-    private boolean groupTreeView;
-    private boolean permissionTreeView;
     private String newUserName = "new_user";
 
     public void backToIndex() throws IOException {
@@ -67,7 +68,8 @@ public class UserBean extends PermissionHandlingBaseBean implements GroupView, P
 
     @PostConstruct
     public void init() {
-        users = userService.findUsers();
+        users = userService.findUsers(userSession.getSelectedCompany());
+        users.remove(userSession.getUser());
         if (getSelectedUser() != null) {
             selectUser(getSelectedUser());
         }
@@ -88,25 +90,50 @@ public class UserBean extends PermissionHandlingBaseBean implements GroupView, P
         List<Permission> permissions = permissionManager.getAllPermissions(selectedUser);
 
         this.permissionRoot = new DefaultTreeNode("root", null);
-        buildPermissionViewTree(permissions, permissionRoot);
+        getPermissionTree(permissions, permissionRoot);
 
         List<UserGroup> groups = userGroupService.getGroupsForUser(selectedUser);
         initGroupList(groups);
-        this.groupRoot = new DefaultTreeNode("root", null);
-        buildGroupTree(groups, groupRoot);
+        this.groupRoot = buildGroupTree(groups);
+    }
+
+    private DefaultTreeNode buildGroupTree(List<UserGroup> userGroups) {
+        DefaultTreeNode root = new DefaultTreeNode("root", null);
+        List<UserGroup> parentGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
+        for (UserGroup parent : parentGroups) {
+            createGroupNode(parent, userGroups, root);
+        }
+        return root;
+    }
+
+    private void createGroupNode(UserGroup group, List<UserGroup> allowedGroups, TreeNode node) {
+        DefaultTreeNode childNode = new DefaultTreeNode(new GroupModel(group, allowedGroups.contains(group), false), node);
+        childNode.setExpanded(true);
+        for (UserGroup ug : userGroupService.getGroupsForGroup(group)) {
+            createGroupNode(ug, allowedGroups, childNode);
+        }
     }
 
     public void saveUser() {
-        userService.createUser(newUserName);
+        userService.createUser(userSession.getSelectedCompany(), newUserName);
         newUserName = "new_user";
-        users = userService.findUsers();
+        users = userService.findUsers(userSession.getSelectedCompany());
+        users.remove(userSession.getUser());
     }
 
     public void saveUser(User user) {
         if (user.equals(getSelectedUser())) {
             userSession.setUser(null);
         }
+
+    }
+
+    public void deleteUser(User user) {
+        if (user.equals(userSession.getSelectedUser())) {
+            userSession.setSelectedUser(null);
+        }
         userService.delete(user);
+        users = userService.findUsers(userSession.getSelectedCompany());
     }
 
     public User getSelectedUser() {
@@ -137,6 +164,26 @@ public class UserBean extends PermissionHandlingBaseBean implements GroupView, P
 
     public void setNewUserName(String newUserName) {
         this.newUserName = newUserName;
+    }
+
+    @Override
+    public Resource getResource() {
+        return entityFieldFactory.createResource(User.class);
+    }
+
+    @Override
+    public Resource getResource(String field) {
+        return entityFieldFactory.createResource(User.class, field);
+    }
+
+    @Override
+    public Resource getResource(Integer id) {
+        return entityFieldFactory.createResource(User.class, id);
+    }
+
+    @Override
+    public Resource getResource(String field, Integer id) {
+        return entityFieldFactory.createResource(User.class, field, id);
     }
 
 }

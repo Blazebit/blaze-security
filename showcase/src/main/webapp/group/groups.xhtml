@@ -28,11 +28,11 @@
 			</h:panelGroup>
 
 
-			<p:menu>
+			<p:menu rendered="#{not empty userSession.user}">
 				<p:submenu label="Menu">
 					<p:menuitem value="Start" url="../index.xhtml" />
 					<p:menuitem value="Users" url="/user/users.xhtml" />
-					<p:menuitem value="Resouces" url="/resource/resources.xhtml" />
+					<p:menuitem value="Resources" url="/resource/resources.xhtml" />
 				</p:submenu>
 			</p:menu>
 

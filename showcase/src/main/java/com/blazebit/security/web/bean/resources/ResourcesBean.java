@@ -4,7 +4,6 @@
 package com.blazebit.security.web.bean.resources;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,33 +12,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.enterprise.inject.spi.AnnotatedType;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 
 import org.primefaces.event.FlowEvent;
+import org.primefaces.event.NodeSelectEvent;
+import org.primefaces.event.NodeUnselectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.lang.StringUtils;
-import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
-import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
-import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.ResourceNameExtension;
+import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
+import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.UserModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
 import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
+import com.blazebit.security.web.bean.model.UserModel;
 import com.blazebit.security.web.service.impl.UserGroupService;
 import com.blazebit.security.web.service.impl.UserService;
 
@@ -49,7 +45,7 @@ import com.blazebit.security.web.service.impl.UserService;
  */
 @ViewScoped
 @ManagedBean(name = "resourcesBean")
-public class ResourcesBean extends PermissionHandlingBaseBean implements Serializable {
+public class ResourcesBean extends ResourceHandlingBaseBean implements Serializable {
 
     /**
      * 
@@ -57,16 +53,20 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
     private static final long serialVersionUID = 1L;
 
     @Inject
-    private ResourceNameExtension resourceNameExtension;
-
-    @Inject
     private UserGroupService userGroupService;
 
     @Inject
     private UserService userService;
 
-    private DefaultTreeNode resourceRoot;
-    private TreeNode[] selectedPermissionNodes;
+    @Inject
+    private UserSession userSession;
+
+    @Inject
+    private PermissionService permissionService;
+
+    private TreeNode resourceRoot;
+    private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
+    private TreeNode[] selectedUserPermissionNodes = new TreeNode[] {};
 
     private List<UserModel> userList = new ArrayList<UserModel>();
 
@@ -82,67 +82,7 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
     private Integer activeTabIndex = 0;
 
     public void init() {
-        buildResourceTree();
-    }
-
-    private void buildResourceTree() {
-        resourceRoot = new DefaultTreeNode("root", null);
-        for (AnnotatedType<?> type : resourceNameExtension.getResourceNames()) {
-            Class<?> entityClass = (Class<?>) type.getBaseType();
-            EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
-            // check if logged in user can grant these resources
-            if (permissionService.isGranted(userSession.getUser(), actionFactory.createAction(ActionConstants.GRANT), entityField)) {
-                // entity
-                DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), resourceRoot);
-                entityNode.setExpanded(true);
-                List<Action> entityActionFields = actionFactory.getActionsForEntity();
-                // fields for entity
-                Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
-                if (allFields.length > 0) {
-                    // actions for fields
-                    for (Action action : actionFactory.getActionsForField()) {
-                        EntityAction entityAction = (EntityAction) action;
-                        DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
-                        // actionNode.setExpanded(true);
-                        // fields for entity
-                        for (Field field : allFields) {
-                            EntityField entityFieldWithField = (EntityField) entityFieldFactory.createResource(entityClass, field.getName());
-                            DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(field.getName(), NodeModel.ResourceType.FIELD, entityFieldWithField), actionNode);
-                            fieldNode.setExpanded(true);
-                        }
-                        markParentAsSelectedIfChildrenAreSelected(actionNode);
-                        entityActionFields.remove(action);
-                    }
-                }
-                // remaining action fields for entity
-                for (Action action : entityActionFields) {
-                    EntityAction entityAction = (EntityAction) action;
-                    DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
-                }
-                // fix selections -> propagate "checked" to entity if every child checked
-                markParentAsSelectedIfChildrenAreSelected(entityNode);
-            }
-        }
-    }
-
-    /**
-     * helper
-     * 
-     * @param node
-     */
-    private void markParentAsSelectedIfChildrenAreSelected(DefaultTreeNode node) {
-        if (node.getChildCount() > 0) {
-            boolean foundOneUnselected = false;
-            for (TreeNode entityChild : node.getChildren()) {
-                if (!entityChild.isSelected()) {
-                    foundOneUnselected = true;
-                    break;
-                }
-            }
-            if (!foundOneUnselected) {
-                node.setSelected(true);
-            }
-        }
+        resourceRoot = getResourceTree();
     }
 
     public String resourceWizardListener(FlowEvent event) {
@@ -183,7 +123,7 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
         newGroupRoot = new DefaultTreeNode();
         DefaultTreeNode newGroupNode = new DefaultTreeNode(groupNodeModel, newGroupRoot);
         newGroupNode.setExpanded(true);
-        createCurrentPermissionNode(currentGroupNode);
+        createCurrentPermissionNode(currentGroupNode, selectedPermissions);
         createNewPermissionNode(newGroupNode);
     }
 
@@ -202,8 +142,9 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
         DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
         currentUserNode.setExpanded(true);
         DefaultTreeNode newUserNode = new DefaultTreeNode(userNodeModel, newUserRoot);
+        newUserNode.setSelectable(false);
         newUserNode.setExpanded(true);
-        createCurrentPermissionNode(currentUserNode);
+        createCurrentPermissionNode(currentUserNode, selectedPermissions);
         createNewPermissionNode(newUserNode);
     }
 
@@ -213,7 +154,7 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
         Set<Permission> revokablePermissions = null;
         if (nodeModel.getTarget() instanceof User) {
             User user = (User) nodeModel.getTarget();
-            permissions = permissionManager.getAllPermissions(user);
+            permissions = permissionManager.getPermissions(user);
             revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
         } else {
             if (nodeModel.getTarget() instanceof UserGroup) {
@@ -222,7 +163,7 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
                 revokablePermissions = getReplaceablePermissions(group, permissions, selectedPermissions);
             }
         }
-        permissions = removeAll(permissions, revokablePermissions);
+        permissions = (List<Permission>) removeAll(permissions, revokablePermissions);
         Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(permissions, selectedPermissions);
 
         for (String entity : permissionMapByEntity.keySet()) {
@@ -237,16 +178,20 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
                 DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
-                for (Permission _permission : permissionsByAction) {
-                    AbstractPermission permission = (AbstractPermission) _permission;
-                    if (!permission.getResource().isEmptyField()) {
+                for (Permission permission : permissionsByAction) {
+                    if (!((EntityField) permission.getResource()).isEmptyField()) {
                         // decide marking
                         Marking marking = Marking.NONE;
                         if (!contains(permissions, permission) && contains(selectedPermissions, permission)) {
                             marking = Marking.GREEN;
                         }
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
                             marking), actionNode);
+                        fieldNode.setSelectable(Marking.GREEN.equals(marking));
+                        fieldNode.setSelected(Marking.GREEN.equals(marking));
+                        if (Marking.GREEN.equals(marking)) {
+                            selectedUserPermissionNodes = addNodeToSelectedNodes(fieldNode, selectedUserPermissionNodes);
+                        }
                     } else {
                         // mark actionNode if needed
                         Permission actionPermission = permissionFactory.create(entityAction, entityField);
@@ -254,24 +199,29 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
                         if (!contains(permissions, actionPermission) && contains(selectedPermissions, actionPermission)) {
                             marking = Marking.GREEN;
                         }
+                        actionNode.setSelectable(Marking.GREEN.equals(marking));
+                        actionNode.setSelected(Marking.GREEN.equals(marking));
                         ((NodeModel) actionNode.getData()).setMarking(marking);
+                        if (Marking.GREEN.equals(marking)) {
+                            selectedUserPermissionNodes = addNodeToSelectedNodes(actionNode, selectedUserPermissionNodes);
+                        }
 
                     }
                 }
-                markAndSelectParents(actionNode, null);
+                selectedUserPermissionNodes = propagateSelectionAndMarkingUp(actionNode, selectedUserPermissionNodes);
             }
-            markAndSelectParents(entityNode, null);
+            selectedUserPermissionNodes = propagateSelectionAndMarkingUp(entityNode, selectedUserPermissionNodes);
         }
 
     }
 
-    private void createCurrentPermissionNode(DefaultTreeNode userNode) {
+    private void createCurrentPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions) {
         NodeModel nodeModel = (NodeModel) userNode.getData();
         List<Permission> permissions = null;
         Set<Permission> revokablePermissions = null;
         if (nodeModel.getTarget() instanceof User) {
             User user = (User) nodeModel.getTarget();
-            permissions = permissionManager.getAllPermissions(user);
+            permissions = permissionManager.getPermissions(user);
             revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
         } else {
             if (nodeModel.getTarget() instanceof UserGroup) {
@@ -294,12 +244,11 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
                 DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
-                for (Permission _permission : permissionsByAction) {
-                    AbstractPermission permission = (AbstractPermission) _permission;
-                    if (!permission.getResource().isEmptyField()) {
+                for (Permission permission : permissionsByAction) {
+                    if (!((EntityField) permission.getResource()).isEmptyField()) {
                         // decide marking
                         Marking marking = contains(revokablePermissions, permission) ? Marking.RED : Marking.NONE;
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
                             marking), actionNode);
                     } else {
                         // mark actionNode if needed
@@ -309,9 +258,9 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
 
                     }
                 }
-                markAndSelectParents(actionNode, null);
+                propagateSelectionAndMarkingUp(actionNode, null);
             }
-            markAndSelectParents(entityNode, null);
+            propagateSelectionAndMarkingUp(entityNode, null);
         }
     }
 
@@ -325,7 +274,7 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
     }
 
     private void initUsers() {
-        List<User> allUsers = userService.findUsers();
+        List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
         userList.clear();
         for (User user : allUsers) {
             userList.add(new UserModel(user, false));
@@ -334,7 +283,7 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
 
     private void initUserGroups() {
         // init groups tree
-        List<UserGroup> availableGroups = userGroupService.getAllParentGroups();
+        List<UserGroup> availableGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
         this.groupRoot = new DefaultTreeNode("", null);
         groupRoot.setExpanded(true);
         for (UserGroup group : availableGroups) {
@@ -370,13 +319,12 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
     }
 
     public void confirmPropagatedUserPermissions() {
-        for (TreeNode groupNode : selectedGroupNodes) {
-            UserGroup group = (UserGroup) groupNode.getData();
-            for (User user : userGroupService.getUsersFor(group)) {
-                for (Permission permission : selectedPermissions) {
-                    if (permissionDataAccess.isGrantable(user, permission.getAction(), permission.getResource())) {
-                        permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
-                    }
+        for (TreeNode userNode : newUserRoot.getChildren()) {
+            User user = (User) ((NodeModel) userNode.getData()).getTarget();
+            Set<Permission> selectedPermissions = processSelectedPermissions(selectedUserPermissionNodes, false);
+            for (Permission permission : selectedPermissions) {
+                if (permissionDataAccess.isGrantable(user, permission.getAction(), permission.getResource())) {
+                    permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
                 }
             }
         }
@@ -396,11 +344,32 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
         }
         currentUserRoot = new DefaultTreeNode();
         newUserRoot = new DefaultTreeNode();
+        Set<User> users = new HashSet<User>();
         for (UserGroup group : selectedGroups) {
-            for (User user : userGroupService.getUsersFor(group)) {
-                createUserNode(user);
-            }
+            collectUsers(group, users);
         }
+        List<User> sortedUsers = new ArrayList<User>(users);
+        Collections.sort(sortedUsers, new Comparator<User>() {
+
+            @Override
+            public int compare(User o1, User o2) {
+                return o1.getUsername().compareToIgnoreCase(o2.getUsername());
+            }
+
+        });
+        for (User user : sortedUsers) {
+            createUserNode(user);
+        }
+    }
+
+    private void collectUsers(UserGroup group, Set<User> users) {
+        for (User user : userGroupService.getUsersFor(group)) {
+            users.add(user);
+        }
+        for (UserGroup child : userGroupService.getGroupsForGroup(group)) {
+            collectUsers(child, users);
+        }
+
     }
 
     public void userGroupTabChange() {
@@ -413,7 +382,33 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
         }
     }
 
-    public DefaultTreeNode getResourceRoot() {
+    public void groupUserPermissionListener(NodeUnselectEvent event) {
+        currentUserRoot = new DefaultTreeNode();
+        for (TreeNode groupNode : selectedGroupNodes) {
+            UserGroup group = (UserGroup) groupNode.getData();
+            for (User user : userGroupService.getUsersFor(group)) {
+                NodeModel userNodeModel = new NodeModel(user.getUsername(), ResourceType.USER, user);
+                DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
+                currentUserNode.setExpanded(true);
+                createCurrentPermissionNode(currentUserNode, processSelectedPermissions(selectedUserPermissionNodes, false));
+            }
+        }
+    }
+
+    public void groupUserPermissionListener(NodeSelectEvent event) {
+        currentUserRoot = new DefaultTreeNode();
+        for (TreeNode groupNode : selectedGroupNodes) {
+            UserGroup group = (UserGroup) groupNode.getData();
+            for (User user : userGroupService.getUsersFor(group)) {
+                NodeModel userNodeModel = new NodeModel(user.getUsername(), ResourceType.USER, user);
+                DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
+                currentUserNode.setExpanded(true);
+                createCurrentPermissionNode(currentUserNode, processSelectedPermissions(selectedUserPermissionNodes, false));
+            }
+        }
+    }
+
+    public TreeNode getResourceRoot() {
         return resourceRoot;
     }
 
@@ -463,6 +458,14 @@ public class ResourcesBean extends PermissionHandlingBaseBean implements Seriali
 
     public void setSelectedGroupNodes(TreeNode[] selectedGroupNodes) {
         this.selectedGroupNodes = selectedGroupNodes;
+    }
+
+    public TreeNode[] getSelectedUserPermissionNodes() {
+        return selectedUserPermissionNodes;
+    }
+
+    public void setSelectedUserPermissionNodes(TreeNode[] selectedUserPermissionNodes) {
+        this.selectedUserPermissionNodes = selectedUserPermissionNodes;
     }
 
 }

@@ -29,6 +29,7 @@ import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
+import com.blazebit.security.web.bean.SecurityBaseBean;
 import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.bean.model.NodeModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
@@ -45,8 +46,11 @@ import com.blazebit.security.web.service.impl.UserService;
 @ViewScoped
 public class GroupBean extends PermissionHandlingBaseBean implements PermissionView, Serializable {
 
-    @Inject
-    private UserService userService;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     @Inject
     private UserGroupService userGroupService;
 
@@ -72,7 +76,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
 
     private void initUserGroups() {
         // init groups tree
-        List<UserGroup> availableGroups = userGroupService.getAllParentGroups();
+        List<UserGroup> availableGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
         this.groupRoot = new DefaultTreeNode("", null);
         groupRoot.setExpanded(true);
         for (UserGroup group : availableGroups) {
@@ -95,7 +99,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     }
 
     public void saveGroup() {
-        UserGroup ug = userGroupService.createUserGroup(newGroupName);
+        UserGroup ug = userGroupService.createUserGroup(userSession.getSelectedCompany(), newGroupName);
         if (getSelectedGroup() != null) {
             ug.setParent(getSelectedGroup());
             userGroupService.saveGroup(ug);
@@ -149,7 +153,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
             groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
             List<Permission> permissions = permissionManager.getAllPermissions(group);
-            buildPermissionViewTree(permissions, groupNode);
+            getPermissionTree(permissions, groupNode);
         }
         ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);
 

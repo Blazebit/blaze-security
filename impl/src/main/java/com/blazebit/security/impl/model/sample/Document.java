@@ -26,7 +26,7 @@ import javax.persistence.Transient;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Document")
+@ResourceName(name = "Document", module="Document management")
 public class Document implements Serializable, IdHolder {
 
     /**

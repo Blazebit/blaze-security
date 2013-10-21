@@ -12,6 +12,7 @@
  */
 package com.blazebit.security;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -69,12 +70,33 @@ public interface PermissionDataAccess {
 
     /**
      * 
+     * @param permissions given permissions
+     * @param subject
+     * @param action
+     * @param _resource
+     * @return true if permission to be created from the given action and resource can be granted to the subject with the given
+     *         permissions
+     */
+    boolean isGrantable(List<Permission> permissions, Subject subject, Action action, Resource _resource);
+
+    /**
+     * 
      * @param role
      * @param action
      * @param _resource
      * @return true if permission to be created from the given action and resource can be granted to the role
      */
     public boolean isGrantable(Role role, Action action, Resource resource);
+
+    /**
+     * 
+     * @param permissions
+     * @param role
+     * @param action
+     * @param _resource
+     * @return
+     */
+    public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource _resource);
 
     /**
      * 
@@ -112,5 +134,24 @@ public interface PermissionDataAccess {
      */
     public Permission findPermission(Role role, Action action, Resource resource);
 
+    /**
+     * 
+     * @param permissions
+     * @param subject
+     * @param action
+     * @param resource
+     * @return
+     */
+    public Permission findPermission(List<Permission> permissions, Subject subject, Action action, Resource resource);
+
+    /**
+     * 
+     * @param permissions
+     * @param role
+     * @param action
+     * @param resource
+     * @return
+     */
+    public Permission findPermission(List<Permission> permissions, Role role, Action action, Resource resource);
 
 }

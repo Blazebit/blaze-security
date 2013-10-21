@@ -105,6 +105,10 @@ public class EntityField implements Resource {
         return this.getField().equals(EMPTY_FIELD);
     }
 
+    public boolean isObject() {
+        return this instanceof EntityObjectField;
+    }
+
     public String getEntity() {
         return permissionId == null ? entity : permissionId.getEntity();
     }
@@ -143,9 +147,9 @@ public class EntityField implements Resource {
         if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+         if (getClass() != obj.getClass()) {
+         return false;
+         }
         final EntityField other = (EntityField) obj;
         if ((this.entity == null) ? (other.entity != null) : !this.entity.equals(other.entity)) {
             return false;

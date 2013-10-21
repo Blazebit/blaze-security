@@ -12,31 +12,16 @@
  */
 package com.blazebit.security.impl.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.security.Action;
 import com.blazebit.security.EntityFieldFactory;
 import com.blazebit.security.IdHolder;
-import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.ResourceName;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserDataPermission;
-import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.model.UserGroupDataPermission;
-import com.blazebit.security.impl.model.UserGroupPermission;
-import com.blazebit.security.impl.model.UserPermission;
-import com.blazebit.security.impl.model.sample.Carrier;
-import com.blazebit.security.impl.model.sample.CarrierGroup;
-import com.blazebit.security.impl.model.sample.Contact;
-import com.blazebit.security.impl.model.sample.Party;
 
 /**
  * 
@@ -46,6 +31,21 @@ public class EntityFieldFactoryImpl implements EntityFieldFactory {
 
     @Override
     public EntityField createResource(String entity) {
+        return new EntityField(entity, EntityField.EMPTY_FIELD);
+    }
+
+    @Override
+    public EntityField createResource(String entity, String field) {
+        return new EntityField(entity, EntityField.EMPTY_FIELD);
+    }
+
+    @Override
+    public EntityObjectField createResource(String entity, Integer id) {
+        return new EntityObjectField(entity, EntityField.EMPTY_FIELD, String.valueOf(id));
+    }
+
+    @Override
+    public EntityField createResource(String entity, String field, Integer id) {
         return new EntityField(entity, EntityField.EMPTY_FIELD);
     }
 
@@ -83,23 +83,6 @@ public class EntityFieldFactoryImpl implements EntityFieldFactory {
     public EntityField createResource(Class<?> clazz, Integer id) {
         return createResource(clazz, EntityField.EMPTY_FIELD, id);
 
-    }
-
-    // TODO read automatically
-    @Override
-    public List<Class<?>> getEntityClasses() {
-        List<Class<?>> ret = new ArrayList<Class<?>>();
-        ret.add(Carrier.class);
-        ret.add(Party.class);
-        ret.add(Contact.class);
-        ret.add(CarrierGroup.class);
-        ret.add(UserPermission.class);
-        ret.add(UserDataPermission.class);
-        ret.add(UserGroupPermission.class);
-        ret.add(UserGroupDataPermission.class);
-        ret.add(User.class);
-        ret.add(UserGroup.class);
-        return ret;
     }
 
     @Override

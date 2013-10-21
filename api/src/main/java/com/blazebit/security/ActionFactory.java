@@ -15,7 +15,7 @@ public interface ActionFactory {
 
     /**
      * 
-     * @return list of possible actions  for an entity
+     * @return list of possible actions for an entity
      */
     public <A extends Action> List<A> getActionsForEntity();
 
@@ -27,20 +27,20 @@ public interface ActionFactory {
 
     /**
      * 
-     * @return list of possible actions for a role
-     */
-    public <A extends Action> List<A> getActionsForRole();
-
-    /**
-     * 
-     * @return list of possible actions for a subject
-     */
-    public <A extends Action> List<A> getActionsForSubject();
-
-    /**
-     * 
      * @return list of exceptional actions
      */
     public <A extends Action> List<A> getExceptionalActions();
+
+    /**
+     * 
+     * @return list of special actions
+     */
+    public <A extends Action> List<A> getSpecialActions();
+
+    /**
+     * 
+     * @return list of possible action for an object
+     */
+    public <A extends Action> List<A> getActionsForEntityObject();
 
 }

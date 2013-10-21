@@ -12,7 +12,7 @@
  */
 package com.blazebit.security;
 
-import java.util.List;
+
 
 /**
  * 
@@ -76,15 +76,15 @@ public interface EntityFieldFactory {
 
     /**
      * 
-     * @return
-     */
-    List<Class<?>> getEntityClasses();
-
-    /**
-     * 
      * @param entity
      * @return
      */
     public Resource createResource(String entity);
+
+    public Resource createResource(String entity, String field);
+
+    public Resource createResource(String entity, Integer id);
+
+    public Resource createResource(String entity, String field, Integer id);
 
 }

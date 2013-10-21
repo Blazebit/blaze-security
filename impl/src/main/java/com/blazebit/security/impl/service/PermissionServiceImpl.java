@@ -80,13 +80,14 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public <R extends Role<R>> void grant(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) throws PermissionException, PermissionActionException {
         if (!isGranted(authorizer, getGrantAction(), entityFieldFactory.createResource(subject))) {
-            throw new PermissionException(authorizer + " is not allowed to " + action + " to " + subject);
+            throw new PermissionException(authorizer + " is not allowed to grant " + action + " to " + subject);
         }
-        if (!isGranted(authorizer, getGrantAction(), entityFieldFactory.createResource(action))) {
-            throw new PermissionException(authorizer + " is not allowed to " + getGrantAction() + " to " + action);
-        }
+        // TODO currently grant action to action not checked
+        // if (!isGranted(authorizer, getGrantAction(), entityFieldFactory.createResource(action))) {
+        // throw new PermissionException(authorizer + " is not allowed to grant " + getGrantAction() + " to " + action);
+        // }
         if (!isGranted(authorizer, getGrantAction(), resource)) {
-            throw new PermissionException(authorizer + " is not allowed to " + getGrantAction() + " to " + resource);
+            throw new PermissionException(authorizer + " is not allowed to grant " + getGrantAction() + " to " + resource);
         }
         if (!permissionDataAccess.isGrantable(subject, action, resource)) {
             throw new PermissionActionException("Permission for " + subject + ", " + action + "," + resource + " cannot be granted");
@@ -108,9 +109,9 @@ public class PermissionServiceImpl implements PermissionService {
         if (!isGranted(authorizer, getRevokeAction(), resource)) {
             throw new PermissionException(authorizer + " is not allowed to " + getRevokeAction() + " to " + resource);
         }
-        if (!isGranted(authorizer, getRevokeAction(), entityFieldFactory.createResource(getRevokeAction()))) {
-            throw new PermissionException(authorizer + " is not allowed to " + getRevokeAction() + " to " + getRevokeAction());
-        }
+//        if (!isGranted(authorizer, getRevokeAction(), entityFieldFactory.createResource(getRevokeAction()))) {
+//            throw new PermissionException(authorizer + " is not allowed to " + getRevokeAction() + " to " + getRevokeAction());
+//        }
         if (!permissionDataAccess.isRevokable(subject, action, resource)) {
             throw new PermissionActionException("Permission : " + subject + ", " + action + ", " + resource + " cannot be revoked");
         }

@@ -35,6 +35,7 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceNameExtension;
+import com.blazebit.security.web.bean.SecurityBaseBean;
 import com.blazebit.security.web.bean.model.NodeModel;
 import com.blazebit.security.web.bean.model.UserModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
@@ -101,7 +102,7 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
             groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
             permissions = permissionManager.getAllPermissions(group);
-            buildPermissionViewTree(permissions, groupNode);
+            getPermissionTree(permissions, groupNode);
         }
         groupPermissions = permissions;
         ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);
@@ -226,7 +227,7 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
         }
         granted.removeAll(redundantPermissions);
         currentPermissionsToConfirm = new ArrayList<Permission>();
-        currentPermissionsToConfirm = removeAll(currentPermissions, revokedPermissionsToConfirm);
+        currentPermissionsToConfirm = (List<Permission>) removeAll(currentPermissions, revokedPermissionsToConfirm);
         currentPermissionsToConfirm.addAll(granted);
         buildNewPermissionTree(currentPermissionsToConfirm, granted);
     }
@@ -248,11 +249,10 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
                 DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
 
                 List<Permission> permissionsByAction = resourceActionMapByAction.get(action);
-                for (Permission _permission : permissionsByAction) {
-                    AbstractPermission permission = (AbstractPermission) _permission;
-                    if (!permission.getResource().isEmptyField()) {
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
-                            contains(selectedPermissions, permission) ? Marking.GREEN : Marking.NONE), actionNode);
+                for (Permission permission : permissionsByAction) {
+                    if (!((EntityField) permission.getResource()).isEmptyField()) {
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                            permission.getResource(), contains(selectedPermissions, permission) ? Marking.GREEN : Marking.NONE), actionNode);
                     } else {
                         ((NodeModel) actionNode.getData())
                             .setMarking(contains(selectedPermissions, permissionFactory.create(entityAction, entityField)) ? Marking.GREEN : Marking.NONE);
@@ -348,7 +348,7 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
      * 
      */
     public void confirmPermissions() {
-        currentPermissionsToConfirm = removeAll(currentPermissionsToConfirm, groupPermissions);
+        currentPermissionsToConfirm = (List<Permission>) removeAll(currentPermissionsToConfirm, groupPermissions);
         for (Permission permission : currentPermissionsToConfirm) {
             permissionService.grant(userSession.getUser(), getSelectedUserGroup(), permission.getAction(), permission.getResource());
         }
@@ -378,8 +378,7 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
         for (User user : sortedUsers) {
             DefaultTreeNode permissionRoot = new DefaultTreeNode(new NodeModel(user.getUsername(), ResourceType.USER, user), userPermissionTreeRoot);
             permissionRoot.setExpanded(true);
-            List<Permission> userPermissions = permissionManager.getAllPermissions(user);
-            List<Permission> groupPermissions = permissionManager.getAllPermissions(getSelectedUserGroup());
+            List<Permission> userPermissions = permissionManager.getPermissions(user);
             buildPermissionViewTreeForUser(permissionRoot, userPermissions, grantedPermissions, revokedPermissions);
         }
 
@@ -438,9 +437,9 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
                         actionNodeModel.setMarking(marking);
                     }
                 }
-                markAndSelectParents(actionNode, selectedUserNodes);
+                propagateSelectionAndMarkingUp(actionNode, selectedUserNodes);
             }
-            markAndSelectParents(entityNode, selectedUserNodes);
+            propagateSelectionAndMarkingUp(entityNode, selectedUserNodes);
         }
 
     }
@@ -548,4 +547,5 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
     public void setSelectedPermissionNodes(TreeNode[] selectedPermissionNodes) {
         this.selectedPermissionNodes = selectedPermissionNodes;
     }
+
 }

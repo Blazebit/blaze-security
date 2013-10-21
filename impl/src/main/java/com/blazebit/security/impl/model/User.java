@@ -12,28 +12,31 @@
  */
 package com.blazebit.security.impl.model;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Permission;
-import com.blazebit.security.Subject;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
+import com.blazebit.security.IdHolder;
+import com.blazebit.security.Permission;
+import com.blazebit.security.Subject;
 
 /**
  * @author Christian Beikov
  */
 @Entity(name = "User_")
 @Table(name = "User_")
-@ResourceName(name = "User")
+@ResourceName(name = "User",module="Core")
 public class User implements Subject<UserGroup>, Serializable, IdHolder {
 
     private static final long serialVersionUID = 1L;
@@ -43,6 +46,7 @@ public class User implements Subject<UserGroup>, Serializable, IdHolder {
     private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
     private Set<UserPermission> permissions = new HashSet<UserPermission>(0);
     private Set<UserDataPermission> dataPermissions = new HashSet<UserDataPermission>(0);
+    private Company company;
 
     public User() {
     }
@@ -140,6 +144,16 @@ public class User implements Subject<UserGroup>, Serializable, IdHolder {
             return false;
         }
         return true;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "company")
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
 }

@@ -1,4 +1,5 @@
 /*
+ * 
  * Copyright 2013 Blazebit.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
@@ -12,6 +13,7 @@
  */
 package com.blazebit.security.impl.service;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.ejb.Stateless;
@@ -23,9 +25,10 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
-import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.UserDataPermission;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.model.UserPermission;
 
 /**
  * 
@@ -52,26 +55,59 @@ public class PermissionManagerImpl implements PermissionManager {
     @SuppressWarnings("unchecked")
     @Override
     public <P extends Permission> List<P> getAllPermissions(Subject<?> subject) {
-        return (List<P>) entityManager.createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='"
-                                                       + ((IdHolder) subject).getId() + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName").getResultList();
+        return (List<P>) entityManager
+            .createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId()
+                             + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
+            .getResultList();
+
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public <P extends Permission> List<P> getPermissions(Subject<?> subject) {
+        return (List<P>) entityManager
+            .createQuery("SELECT permission FROM " + UserPermission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId()
+                             + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
+            .getResultList();
+
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public <P extends Permission> List<P> getDataPermissions(Subject<?> subject) {
+        return (List<P>) entityManager
+            .createQuery("SELECT permission FROM " + UserDataPermission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId()
+                             + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
+            .getResultList();
+
+    }
+
+    @Override
+    public void removeAllPermissions(Subject<?> subject) {
+        entityManager
+            .createQuery("DELETE FROM " + UserPermission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId() + "'")
+            .executeUpdate();
 
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <P extends Permission> List<P> getAllPermissions(Role<?> role) {
-        return (List<P>) entityManager.createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='"
-                                                       + ((IdHolder) role).getId() + "'  ORDER BY permission.id.entity, permission.id.field, permission.id.actionName").getResultList();
+        return (List<P>) entityManager
+            .createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) role).getId()
+                             + "'  ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
+            .getResultList();
     }
 
     @Override
     public <P extends Permission> void remove(P permission) {
         entityManager.remove(permission);
+        entityManager.flush();
 
     }
 
     @Override
-    public <P extends Permission> void remove(List<P> permissions) {
+    public <P extends Permission> void remove(Collection<P> permissions) {
         for (Permission p : permissions) {
             remove(p);
         }

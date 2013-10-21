@@ -16,6 +16,7 @@
 		<class>com.blazebit.security.impl.model.sample.Party</class>
 		<class>com.blazebit.security.impl.model.sample.Contact</class>
 		<class>com.blazebit.security.impl.model.sample.CarrierGroup</class>
+		<class>com.blazebit.security.impl.model.Company</class>
 
 
 
@@ -23,7 +24,7 @@
 			<property name="hibernate.log" value="trace" />
 			<property name="hibernate.debug" value="true" />
 			<property name="hibernate.show_sql" value="true" />
-			<property name="hibernate.hbm2ddl.auto" value="create-drop" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
 			<property name="hibernate.ejb.interceptor"
 				value="com.blazebit.security.impl.interceptor.ChangeInterceptor" />
 		</properties>

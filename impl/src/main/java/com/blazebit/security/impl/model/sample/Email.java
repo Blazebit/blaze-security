@@ -26,7 +26,7 @@ import javax.persistence.Transient;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Email")
+@ResourceName(name = "Email", module="Document management")
 public class Email implements Serializable, IdHolder {
 
     /**

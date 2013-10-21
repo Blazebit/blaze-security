@@ -8,63 +8,69 @@
 			<f:event listener="#{userGroupsBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
 			<h3>Selected user: #{userSession.selectedUser.username}</h3>
 
-			<p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="gwiz" showNavBar="false">
+			<p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="groupWizard" showNavBar="false"
+				step="#{userGroupsBean.groupWizardStep}">
 
 				<p:tab id="groups" title="Groups">
 					<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
 						<h:panelGroup>
-						User groups
-						<p:tree value="#{userGroupsBean.groupRoot}" var="group" selectionMode="checkbox"
-							selection="#{userGroupsBean.selectedGroupNodes}" propagateSelectionDown="false" propagateSelectionUp="false">
-							<p:treeNode>
-								<p:commandLink oncomplete="permissionDialog.show()" update=":dialogs" process="@this">
-									<f:setPropertyActionListener target="#{userGroupsBean.selectedGroup}" value="#{group.userGroup}" />
+							Select groups to add selected user to groups<br />
+							Selected groups mean that the selected user is already in the group.<br /> 
+							To remove the selected user from the group unselect the group.<br />
+							<p:tree value="#{userGroupsBean.groupRoot}" propagateSelectionDown="false" propagateSelectionUp="false"
+								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group">
+								<p:treeNode type="default">
 									<h:outputText value="#{group.userGroup.name}" />
-								</p:commandLink>
-							</p:treeNode>
-						</p:tree>
+									<p:commandLink oncomplete="permissionDialog.show()" update=":dialogs" process="@this">
+										<f:setPropertyActionListener target="#{userGroupsBean.selectedGroup}" value="#{group.userGroup}" />
+										<h:outputText value=" (permissions)" />
+									</p:commandLink>
+								</p:treeNode>
+							</p:tree>
 						</h:panelGroup>
-						
 						<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
 					</h:panelGrid>
-					<p:commandButton value="Next" onclick="gwiz.next();" style="float:left" />
+
+					<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" />
 				</p:tab>
 
 				<p:tab id="groupPermissions" title="Permissions">
-					<h:panelGrid columns="2" columnClasses="top">
+					<h:panelGrid columns="2" columnClasses="top, top" style="width:80%">
 						<h:panelGroup>
 					    Current permissions<br />
 							<h:outputText value="No permissions available"
 								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount eq 0}" />
 							<p:tree value="#{userGroupsBean.currentPermissionTreeRoot}" var="currentPermission" id="currentPermissionTree"
-								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount ne 0}">
+								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount ne 0}" style="width:50%;height:400px;">
 								<p:treeNode>
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
-
+						
 						<h:panelGroup>
 					    New permissions<br />
 							<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree"
-								selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox">
+								selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox" style="width:50%;height:400px;">
 								<p:ajax event="select" update=":form:tab:currentPermissionTree"
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
 									<h:outputText id="permission" value="#{newPermission.name}" style="#{newPermission.marking.style}" />
-									<p:tooltip for="permission" rendered="#{not empty newPermission.relation}" value="#{newPermission.relation.name}"/>
+									<p:tooltip for="permission" rendered="#{not empty newPermission.tooltip}"
+										value="#{newPermission.tooltip}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
+
 					</h:panelGrid>
 
 					<h:panelGroup id="groupsPermissionsActions" layout="block" style="height:50px">
-						<p:commandButton value="Back" onclick="gwiz.back();" style="float:left" />
+						<p:commandButton value="Back" onclick="groupWizard.back();" style="float:left" />
 						<p:commandButton value="Confirm" style="float:left" action="#{userGroupsBean.confirm}" process="@this"
 							update=":form:tab:groupPermissionsTree:permissionPanelGroup"
-							oncomplete="gwiz.loadStep (gwiz.cfg.steps [0], true)" />
+							oncomplete="groupWizard.loadStep (groupWizard.cfg.steps [0], true)" />
 					</h:panelGroup>
 				</p:tab>
 			</p:wizard>

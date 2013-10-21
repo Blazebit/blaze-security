@@ -1,26 +1,29 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:cc="http://java.sun.com/jsf/composite"
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:p="http://primefaces.org/ui">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:cc="http://java.sun.com/jsf/composite"
+	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
 
-    <cc:interface>
-        <cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.PermissionView"/>
-    </cc:interface>
+<cc:interface>
+	<cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.PermissionView" />
+</cc:interface>
 
-    <cc:implementation>
-        <h:panelGroup id="permissionPanelGroup" layout="block">
-        	Permissions
-
-                <p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission" rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}">
-                    <p:treeNode>
-                        <h:outputText value="#{permission.name}" style="#{permission.marking.style}"/>
-                    </p:treeNode>
-                </p:tree>
-                <br/>
-            <h:outputText value="No permissions available" rendered="#{cc.attrs.bean.permissionViewRoot.childCount eq 0}"/>
-        </h:panelGroup>
-    </cc:implementation>
+<cc:implementation>
+	<h:panelGroup id="permissionPanelGroup" layout="block">
+		<h4>
+			Permissions of
+			<h:outputText value="#{userSession.selectedUser.username}" rendered="#{not empty userSession.selectedUser}" />
+			<h:outputText value="#{userSession.selectedUserGroup.name}" rendered="#{not empty userSession.selectedUserGroup}" />
+		</h4>
+		<p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission"
+			rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}">
+			<p:treeNode>
+				<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="perm" />
+				<p:tooltip for="perm" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
+					hideEffect="fade" style="#{permission.marking.style}" />
+			</p:treeNode>
+		</p:tree>
+		<br />
+		<h:outputText value="No permissions available" rendered="#{cc.attrs.bean.permissionViewRoot.childCount eq 0}" />
+	</h:panelGroup>
+</cc:implementation>
 </html>

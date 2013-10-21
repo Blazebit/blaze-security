@@ -34,7 +34,7 @@ import com.blazebit.security.Role;
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "User group")
+@ResourceName(name = "User group",module="Core")
 public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
 
     private static final long serialVersionUID = 1L;
@@ -45,6 +45,7 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
     private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
     private Set<UserGroupPermission> permissions = new HashSet<UserGroupPermission>(0);
     private Set<UserGroupDataPermission> dataPermissions = new HashSet<UserGroupDataPermission>(0);
+    private Company company;
 
     public UserGroup() {
     }
@@ -153,6 +154,16 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
     @Override
     public String toString() {
         return "UserGroup{" + "name=" + name + '}';
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "company")
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
 }

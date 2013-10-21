@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>Grant permissions</title>
+		</f:facet>
+		<style>
+.top {
+	vertical-align: top
+}
+</style>
+
+		<f:metadata>
+			<f:viewParam name="id" value="#{grantBean.id}" />
+			<f:viewParam name="resource" value="#{grantBean.resourceName}" />
+		</f:metadata>
+	</h:head>
+
+	<h:body>
+		<h:form id="form">
+			<h3>
+				Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
+				<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
+			</h3>
+			<h:panelGrid columns="2">
+Actions			
+				<p:selectManyMenu value="#{grantBean.selectedActions}">
+					<f:selectItems value="#{grantBean.actions}" var="action" itemValue="#{action.actionName}"
+						itemLabel="#{action.actionName}" />
+				</p:selectManyMenu>
+Users
+				<p:selectManyMenu value="#{grantBean.selectedUsers}">
+					<f:selectItems value="#{grantBean.users}" var="user" itemValue="#{user.id}" itemLabel="#{user.username}" />
+				</p:selectManyMenu>
+			</h:panelGrid>
+			<p:commandButton value="Grant" action="#{grantBean.grant}" update=":form:result"/>
+			
+			<h:panelGroup id="result">
+				#{grantBean.resultMessage}
+			</h:panelGroup>
+
+		</h:form>
+	</h:body>
+</f:view>
+</html>

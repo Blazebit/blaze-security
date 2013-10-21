@@ -103,23 +103,27 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
         }
         return ret;
     }
-    
-  
+
     @Override
-    public boolean isGrantable(Subject subject, Action action, Resource _resource) {
+    public boolean isGrantable(Subject subject, Action action, Resource resource) {
+        List<Permission> permissions = permissionManager.getAllPermissions(subject);
+        return isGrantable(permissions, subject, action, resource);
+    }
+
+    @Override
+    public boolean isGrantable(List<Permission> permissions, Subject subject, Action action, Resource resource) {
         // first lookup the exact permission. if it already exists granting is not allowed
-        Permission itself = findPermission(subject, action, _resource);
+        Permission itself = findPermission(permissions, subject, action, resource);
         if (itself != null) {
             LOG.warning("Same permission found");
             return false;
         } else {
-            List<Permission> permissions = permissionManager.getAllPermissions(subject);
             // cast to entity resource to access fields
-            EntityField resource = (EntityField) _resource;
+            EntityField _resource = (EntityField) resource;
             // check whether action is exceptional. if it is then resource cannot have a field specified
             if (isExceptionalAction(action)) {
-                if (!StringUtils.isEmpty(resource.getField())) {
-                    LOG.warning("Action " + action + " cannot be applied to " + resource);
+                if (!StringUtils.isEmpty(_resource.getField())) {
+                    LOG.warning("Action " + action + " cannot be applied to " + _resource);
                     return false;
                 }
                 // entityid cannot be specified for add action
@@ -134,9 +138,9 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
             // if field is specified -> find permission for entity with no field specified (means that there exists already a
             // permission for all entities with all fields and ids)
             // for Afi-> find A or for Af-> find A.
-            if (!StringUtils.isEmpty(resource.getField())) {
-                EntityField resourceWithoutField = new EntityField(resource.getEntity(), EntityField.EMPTY_FIELD);
-                if (findPermission(subject, action, resourceWithoutField) != null) {
+            if (!StringUtils.isEmpty(_resource.getField())) {
+                EntityField resourceWithoutField = new EntityField(_resource.getEntity(), EntityField.EMPTY_FIELD);
+                if (findPermission(permissions, subject, action, resourceWithoutField) != null) {
                     LOG.warning("Permission for all fields already exists");
                     return false;
                 }
@@ -145,15 +149,15 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
             if (_resource instanceof EntityObjectField) {
                 EntityObjectField objectResource = (EntityObjectField) _resource;
                 // if (!StringUtils.isEmpty(resource.getField())) {
-                EntityField resourceWithField = new EntityField(resource.getEntity(), resource.getField());
+                EntityField resourceWithField = new EntityField(_resource.getEntity(), _resource.getField());
                 // if field and id is specified -> look for permission for entity with given field
-                if (findPermission(subject, action, resourceWithField) != null) {
+                if (findPermission(permissions, subject, action, resourceWithField) != null) {
                     LOG.warning("Permission for all entities with this fields already exists");
                     return false;
                 }
                 // if field and id is specified -> look for permission for entity with given id
                 EntityObjectField resourceObjectWithoutField = new EntityObjectField(objectResource.getEntity(), EntityField.EMPTY_FIELD, objectResource.getEntityId());
-                if (findPermission(subject, action, resourceObjectWithoutField) != null) {
+                if (findPermission(permissions, subject, action, resourceObjectWithoutField) != null) {
                     LOG.warning("Data Permission for all entities with this id for all fields already exists");
                     return false;
                 }
@@ -180,11 +184,11 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
     }
 
     @Override
-    public boolean isGrantable(Role role, Action action, Resource _resource) {
+    public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource _resource) {
         // first lookup the exact permission. if it already exists granting is not allowed
-        Permission itself = findPermission(role, action, _resource);
+        Permission itself = findPermission(permissions, role, action, _resource);
         if (itself != null) {
-            System.err.println(new StringBuilder("Permission for ").append(action).append(" and ").append(_resource).append(" already exists"));
+            LOG.warning("Same permission found");
             return false;
         } else {
             // cast to entity resource to access fields
@@ -209,7 +213,7 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
             // for Afi-> find A or for Af-> find A.
             if (!StringUtils.isEmpty(resource.getField())) {
                 EntityField resourceWithoutField = new EntityField(resource.getEntity(), EntityField.EMPTY_FIELD);
-                if (findPermission(role, action, resourceWithoutField) != null) {
+                if (findPermission(permissions, role, action, resourceWithoutField) != null) {
                     LOG.warning(new StringBuilder().append("Permission already exists for ").append(resourceWithoutField).append(" and ").append(action).toString());
                     return false;
                 }
@@ -220,19 +224,26 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
                 // if (!StringUtils.isEmpty(resource.getField())) {
                 EntityField resourceWithField = new EntityField(resource.getEntity(), resource.getField());
                 // if field and id is specified -> look for permission for entity with given field
-                if (findPermission(role, action, resourceWithField) != null) {
+                if (findPermission(permissions, role, action, resourceWithField) != null) {
                     LOG.warning(new StringBuilder().append("Permission already exists for ").append(resourceWithField).append(" and ").append(action).toString());
                     return false;
                 }
                 // if field and id is specified -> look for permission for entity with given id
                 EntityObjectField resourceObjectWithoutField = new EntityObjectField(objectResource.getEntity(), EntityField.EMPTY_FIELD, objectResource.getEntityId());
-                if (findPermission(role, action, resourceObjectWithoutField) != null) {
+                if (findPermission(permissions, role, action, resourceObjectWithoutField) != null) {
                     LOG.warning(new StringBuilder().append("Permission already exists for ").append(resourceObjectWithoutField).append(" and ").append(action).toString());
                     return false;
                 }
             }
             return true;
         }
+    }
+
+    @Override
+    public boolean isGrantable(Role role, Action action, Resource resource) {
+        List<Permission> permissions = permissionManager.getAllPermissions(role);
+        return isGrantable(permissions, role, action, resource);
+
     }
 
     @Override
@@ -244,6 +255,21 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
     @Override
     public Permission findPermission(Subject subject, Action action, Resource resource) {
         List<Permission> permissions = permissionManager.getAllPermissions(subject);
+        return findPermission(permissions, subject, action, resource);
+    }
+
+    @Override
+    public Permission findPermission(List<Permission> permissions, Subject subject, Action action, Resource resource) {
+        for (Permission permission : permissions) {
+            if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
+                return permission;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Permission findPermission(List<Permission> permissions, Role role, Action action, Resource resource) {
         for (Permission permission : permissions) {
             if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
                 return permission;
@@ -255,12 +281,6 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
     @Override
     public Permission findPermission(Role role, Action action, Resource resource) {
         List<Permission> permissions = permissionManager.getAllPermissions(role);
-        for (Permission permission : permissions) {
-            if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
-                return permission;
-            }
-        }
-        return null;
+        return findPermission(permissions, role, action, resource);
     }
-
 }

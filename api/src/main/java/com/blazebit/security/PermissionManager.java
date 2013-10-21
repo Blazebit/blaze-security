@@ -12,6 +12,7 @@
  */
 package com.blazebit.security;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -51,14 +52,14 @@ public interface PermissionManager {
      * 
      * @param permission
      */
-    public <P extends Permission> void remove(P permission);
+    public <P extends Permission> void remove(Collection<P> permissions);
 
     /**
      * deletes a list of permissions
      * 
      * @param permissions
      */
-    public <P extends Permission> void remove(List<P> permissions);
+    public <P extends Permission> void remove(P permission);
 
     /**
      * 
@@ -73,5 +74,11 @@ public interface PermissionManager {
      * @return reloaded role with all the permissions
      */
     public Role reloadSubjectWithPermissions(Role role);
+
+    void removeAllPermissions(Subject<?> subject);
+
+    <P extends Permission> List<P> getPermissions(Subject<?> subject);
+
+    <P extends Permission> List<P> getDataPermissions(Subject<?> subject);
 
 }

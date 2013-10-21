@@ -32,7 +32,7 @@ import javax.persistence.Transient;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Carrier")
+@ResourceName(name = "Carrier", module="Carrier")
 public class Carrier implements Serializable, IdHolder {
 
     private Integer id;

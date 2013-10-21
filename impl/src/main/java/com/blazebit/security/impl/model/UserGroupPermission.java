@@ -22,7 +22,7 @@ import javax.persistence.Entity;
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name="User group permission")
+@ResourceName(name="User group permission", module="Core")
 public class UserGroupPermission extends AbstractPermission<UserGroup, UserGroupPermissionId> {
 
     private static final long serialVersionUID = 1L;

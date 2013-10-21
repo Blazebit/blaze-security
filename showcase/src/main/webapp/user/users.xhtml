@@ -23,7 +23,7 @@
 
 			<h:panelGroup rendered="#{not empty userSession.user}">
 				<h3>
-					Logged in as #{userSession.user.username}. Login as a
+					Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
 					<p:commandLink value="different user..."
 						action="#{userBean.backToIndex()}" process="@this" />
 				</h3>
@@ -33,11 +33,11 @@
 			</h:panelGroup>
 
 
-			<p:menu>
+			<p:menu rendered="#{not empty userSession.user}">
 				<p:submenu label="Menu">
 					<p:menuitem value="Start" url="../index.xhtml" />
 					<p:menuitem value="Groups" url="/group/groups.xhtml" />
-					<p:menuitem value="Resouces" url="/resource/resources.xhtml" />
+					<p:menuitem value="Resources" url="/resource/resources.xhtml" />
 
 				</p:submenu>
 			</p:menu>
