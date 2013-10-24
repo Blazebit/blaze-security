@@ -14,6 +14,7 @@ import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 
 import org.primefaces.event.FlowEvent;
@@ -25,6 +26,7 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionService;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
@@ -81,8 +83,42 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     private Integer activeTabIndex = 0;
 
+    private boolean revokeSelectedPermissions;
+
+    private boolean receivedParameters;
+
     public void init() {
-        resourceRoot = getResourceTree();
+        selectedPermissions = new HashSet<Permission>();
+        selectedPermissionNodes = new TreeNode[] {};
+        Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
+        if (params.containsKey("revoke")) {
+            setRevokeSelectedPermissions(Boolean.valueOf(params.get("revoke")));
+        }
+        if (params.containsKey("resource") && params.containsKey("id")) {
+            try {
+                String field = EntityField.EMPTY_FIELD;
+                if (params.containsKey("field")) {
+                    field = params.get("field");
+                }
+                if (params.containsKey("action")) {
+                    selectedPermissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.valueOf(params.get("action"))),
+                                                                     entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
+                                                                                                       Integer.valueOf(params.get("id")))));
+                } else {
+                    for (Action action : actionFactory.getActionsForEntityObject()) {
+                        selectedPermissions.add(permissionFactory.create(action,
+                                                                         entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
+                                                                                                           Integer.valueOf(params.get("id")))));
+                    }
+                    receivedParameters = true;
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("what");
+            } catch (ClassNotFoundException e) {
+                System.err.println("what");
+            }
+        }
+        resourceRoot = getResourceTree(selectedPermissions, selectedPermissionNodes, receivedParameters);
     }
 
     public String resourceWizardListener(FlowEvent event) {
@@ -185,10 +221,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                         if (!contains(permissions, permission) && contains(selectedPermissions, permission)) {
                             marking = Marking.GREEN;
                         }
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
-                            marking), actionNode);
-                        fieldNode.setSelectable(Marking.GREEN.equals(marking));
-                        fieldNode.setSelected(Marking.GREEN.equals(marking));
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                            permission.getResource(), marking), actionNode);
+                        // fieldNode.setSelectable(Marking.GREEN.equals(marking));
+                        // fieldNode.setSelected(Marking.GREEN.equals(marking));
                         if (Marking.GREEN.equals(marking)) {
                             selectedUserPermissionNodes = addNodeToSelectedNodes(fieldNode, selectedUserPermissionNodes);
                         }
@@ -199,8 +235,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                         if (!contains(permissions, actionPermission) && contains(selectedPermissions, actionPermission)) {
                             marking = Marking.GREEN;
                         }
-                        actionNode.setSelectable(Marking.GREEN.equals(marking));
-                        actionNode.setSelected(Marking.GREEN.equals(marking));
+                        // actionNode.setSelectable(Marking.GREEN.equals(marking));
+                        // actionNode.setSelected(Marking.GREEN.equals(marking));
                         ((NodeModel) actionNode.getData()).setMarking(marking);
                         if (Marking.GREEN.equals(marking)) {
                             selectedUserPermissionNodes = addNodeToSelectedNodes(actionNode, selectedUserPermissionNodes);
@@ -248,8 +284,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                     if (!((EntityField) permission.getResource()).isEmptyField()) {
                         // decide marking
                         Marking marking = contains(revokablePermissions, permission) ? Marking.RED : Marking.NONE;
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
-                            marking), actionNode);
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                            permission.getResource(), marking), actionNode);
                     } else {
                         // mark actionNode if needed
                         Permission actionPermission = permissionFactory.create(entityAction, entityField);
@@ -268,17 +304,23 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
      * wizard step 1
      */
     public void processSelectedPermissions() {
-        selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
+        if (!receivedParameters) {
+            selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
+        }else{
+            //check which has been unselected
+        }
         initUsers();
         initUserGroups();
     }
 
     private void initUsers() {
         List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
+        // if (!revokeSelectedPermissions) {
         userList.clear();
         for (User user : allUsers) {
             userList.add(new UserModel(user, false));
         }
+        // }
     }
 
     private void initUserGroups() {
@@ -309,8 +351,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         for (UserModel userModel : userList) {
             if (userModel.isSelected()) {
                 for (Permission permission : selectedPermissions) {
-                    if (permissionDataAccess.isGrantable(userModel.getUser(), permission.getAction(), permission.getResource())) {
-                        permissionService.grant(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
+                    if (!revokeSelectedPermissions) {
+                        if (permissionDataAccess.isGrantable(userModel.getUser(), permission.getAction(), permission.getResource())) {
+                            permissionService.grant(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
+                        }
+                    } else {
+                        if (permissionDataAccess.isRevokable(userModel.getUser(), permission.getAction(), permission.getResource())) {
+                            permissionService.revoke(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
+                        }
                     }
                 }
             }
@@ -466,6 +514,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     public void setSelectedUserPermissionNodes(TreeNode[] selectedUserPermissionNodes) {
         this.selectedUserPermissionNodes = selectedUserPermissionNodes;
+    }
+
+    public boolean isRevokeSelectedPermissions() {
+        return revokeSelectedPermissions;
+    }
+
+    public void setRevokeSelectedPermissions(boolean revokeSelectedPermissions) {
+        this.revokeSelectedPermissions = revokeSelectedPermissions;
     }
 
 }

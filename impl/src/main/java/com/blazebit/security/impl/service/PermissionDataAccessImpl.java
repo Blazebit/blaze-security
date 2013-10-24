@@ -43,7 +43,7 @@ import com.blazebit.security.impl.model.EntityObjectField;
 public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     private static final Logger LOG = Logger.getLogger(PermissionDataAccessImpl.class.getName());
-
+ 
     @Inject
     private ActionFactory actionFactory;
 

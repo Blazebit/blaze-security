@@ -12,9 +12,7 @@ import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.inject.Inject;
 
-import org.hibernate.ejb.criteria.expression.function.CurrentDateFunction;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -23,14 +21,12 @@ import com.blazebit.lang.StringUtils;
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
-import com.blazebit.security.web.bean.ResourceNameExtension;
 import com.blazebit.security.web.bean.model.NodeModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
 
@@ -95,7 +91,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         for (Permission permission : selectedPermissions) {
             Set<Permission> removeWhenGranting = permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), permission.getAction(), permission.getResource());
             for (Permission toBeRevoked : removeWhenGranting) {
-                if (isAuthorizedResource(ActionConstants.REVOKE, toBeRevoked.getResource())) {
+                if (isAuthorized(ActionConstants.REVOKE, toBeRevoked.getResource())) {
                     toRevoke.add(toBeRevoked);
                 }
             }
@@ -103,7 +99,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         revokedPermissionsToConfirm = new HashSet<Permission>();
         for (Permission currentPermission : currentPermissions) {
             if (!contains(selectedPermissions, currentPermission)) {
-                if (isAuthorizedResource(ActionConstants.GRANT, currentPermission.getResource())) {
+                if (isAuthorized(ActionConstants.GRANT, currentPermission.getResource())) {
                     revokedPermissionsToConfirm.add(currentPermission);
                 }
             }

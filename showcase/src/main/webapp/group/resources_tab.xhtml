@@ -45,12 +45,14 @@
 					</h:panelGrid>
 					<h:panelGroup layout="block" style="height:50px">
 						<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
-						<p:commandButton value="Confirm and Propagate changes to users" style="float:left" process="@this" onclick="resourceWizard.next();" />
+						<p:commandButton value="Confirm and Propagate changes to users" style="float:left" process="@this"
+							onclick="resourceWizard.next();" />
 					</h:panelGroup>
 				</p:tab>
 
 				<p:tab id="usersPermissions" title="Users">
-					<p:tree value="#{groupResourcesBean.userRoot}" var="user" selectionMode="checkbox">
+					<h:outputText value="No users found" rendered="#{groupResourcesBean.userRoot.childCount eq 0}" />
+					<p:tree value="#{groupResourcesBean.userRoot}" var="user" selectionMode="checkbox" rendered="#{groupResourcesBean.userRoot.childCount ne 0}">
 						<p:treeNode>
 							<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 						</p:treeNode>
@@ -60,7 +62,7 @@
 					<h:panelGroup layout="block" style="height:50px">
 						<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
 						<p:commandButton value="Confirm" style="float:left" action="#{groupResourcesBean.confirmUsers}" process="@this"
-							oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"/>
+							oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)" />
 					</h:panelGroup>
 				</p:tab>
 			</p:wizard>

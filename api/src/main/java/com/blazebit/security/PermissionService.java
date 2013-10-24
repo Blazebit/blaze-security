@@ -135,4 +135,16 @@ public interface PermissionService {
      */
     public Action getRevokeAction();
 
+    /**
+     * 
+     * @return create action
+     */
+    public Action getCreateAction();
+
+    /**
+     * 
+     * @return delete action
+     */
+    public Action getDeleteAction();
+
 }

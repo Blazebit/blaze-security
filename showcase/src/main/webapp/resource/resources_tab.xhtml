@@ -5,7 +5,7 @@
 <ui:composition>
 	<p:tab title="Resources" disabled="#{empty userSession.selectedUserGroup}">
 		<f:event listener="#{resourcesBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
-		<h3>Selected user: #{userSession.selectedUserGroup.name}</h3>
+		<h:outputText value="#{resourcesBean.revokeSelectedPermissions ?  'Revoke selected permissions!' : ''}" />
 
 		<h:panelGroup id="wizardPanel" style="vertical-align: top">
 			<p:wizard flowListener="#{resourcesBean.resourceWizardListener}" widgetVar="resourceWizard" showNavBar="false"
@@ -13,13 +13,14 @@
 
 				<p:tab id="resources" title="Resources">
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
+					<p style="font-size:0.5em">Entries marked with BLUE refer to entity resources with an ID.</p> 
 					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 						selection="#{resourcesBean.selectedPermissionNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
 						<p:treeNode type="root">
-							<h:outputText value="#{_resource.name}" />
+							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}"/>
 						</p:treeNode>
 						<p:treeNode>
-							<h:outputText value="#{_resource.name}" />
+							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
 						</p:treeNode>
 					</p:tree>
 					<p:commandButton value="Next" onclick="resourceWizard.next();" process="@this" />
@@ -80,12 +81,14 @@
 
 				<p:tab id="groupUserPermissions" title="Users" rendered="#{resourcesBean.activeTabIndex eq 1}">
 					<h:panelGrid columns="2" columnClasses="top,top">
-						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentTree">
+						<h:outputText value="No users found" rendered="#{resourcesBean.currentUserRoot.childCount eq 0}"/>
+						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentTree" rendered="#{resourcesBean.currentUserRoot.childCount ne 0}">
 							<p:treeNode>
 								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
 							</p:treeNode>
 						</p:tree>
-						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot"
+						<h:outputText value="No users found" rendered="#{resourcesBean.newUserRoot.childCount eq 0}"/>
+						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot" rendered="#{resourcesBean.newUserRoot.childCount ne 0}"
 							selection="#{resourcesBean.selectedUserPermissionNodes}" selectionMode="checkbox">
 							<p:ajax event="select" update=":form:tab:currentTree" listener="#{resourcesBean.groupUserPermissionListener}"/>
 							<p:ajax event="unselect"  update=":form:tab:currentTree" listener="#{resourcesBean.groupUserPermissionListener}"/>
@@ -104,12 +107,14 @@
 
 				<p:tab id="userPermissions" title="Permissions" rendered="#{resourcesBean.activeTabIndex eq 0}">
 					<h:panelGrid columns="2" columnClasses="top,top">
-						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot">
+					<h:outputText value="No users found" rendered="#{resourcesBean.currentUserRoot.childCount eq 0}"/>
+						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" rendered="#{resourcesBean.currentUserRoot.childCount ne 0}">
 							<p:treeNode>
 								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
 							</p:treeNode>
 						</p:tree>
-						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot">
+						<h:outputText value="No users found" rendered="#{resourcesBean.newUserRoot.childCount eq 0}"/>
+						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot" rendered="#{resourcesBean.newUserRoot.childCount ne 0}">
 							<p:treeNode>
 								<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" />
 							</p:treeNode>

@@ -17,6 +17,7 @@
     <class>com.blazebit.security.impl.model.sample.Document</class>
     <class>com.blazebit.security.impl.model.sample.Email</class>
     <class>com.blazebit.security.impl.model.Company</class>
+    <class>com.blazebit.security.impl.model.sample.Comment</class>
     
     
     

@@ -14,9 +14,10 @@
 				<p:tab id="groups" title="Groups">
 					<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
 						<h:panelGroup>
-							Select groups to add selected user to groups<br />
-							Selected groups mean that the selected user is already in the group.<br /> 
-							To remove the selected user from the group unselect the group.<br />
+							<p style="font-size:0.5em">
+								Select groups to add selected user to groups<br /> Selected groups mean that the selected user is already in
+								the group.<br /> To remove the selected user from the group unselect the group.<br />
+							</p>
 							<p:tree value="#{userGroupsBean.groupRoot}" propagateSelectionDown="false" propagateSelectionUp="false"
 								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group">
 								<p:treeNode type="default">
@@ -47,7 +48,7 @@
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
-						
+
 						<h:panelGroup>
 					    New permissions<br />
 							<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree"
@@ -58,8 +59,7 @@
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
 									<h:outputText id="permission" value="#{newPermission.name}" style="#{newPermission.marking.style}" />
-									<p:tooltip for="permission" rendered="#{not empty newPermission.tooltip}"
-										value="#{newPermission.tooltip}" />
+									<p:tooltip for="permission" rendered="#{not empty newPermission.tooltip}" value="#{newPermission.tooltip}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

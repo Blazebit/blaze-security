@@ -20,7 +20,7 @@ public interface UserService {
 
     public void delete(User user);
 
-    public User findUser(String username);
+    public User findUser(String username, Company company);
 
     List<User> findUsers(Company company);
 }

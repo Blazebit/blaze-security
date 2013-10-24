@@ -1,7 +1,8 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
-	xmlns:my="http://java.sun.com/jsf/composite/components">
+	xmlns:my="http://java.sun.com/jsf/composite/components"
+		xmlns:c="http://java.sun.com/jsp/jstl/core">
 <ui:composition>
 	<p:tab title="Users">
 		<f:event listener="#{userBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
@@ -20,27 +21,32 @@
 
 		<h:panelGroup id="users">
 			<p:dataTable value="#{userBean.users}" var="user" style="width:50%">
+				<c:set var="userClazz" value="#{user.class.name}" />
 				<f:facet name="header">Existing users (click on username to select user)</f:facet>
 				<p:column filterBy="#{user.username}">
 					<f:facet name="header">Username</f:facet>
 					<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
 					<f:facet name="footer">
-						<h:inputText value="#{userBean.newUserName}" rendered="#{userBean.isAuthorized('CREATE')}"/>
+						<h:inputText value="#{userBean.newUserName}"  />
 					</f:facet>
 				</p:column>
 				<p:column>
 					<f:facet name="header">Action</f:facet>
-					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users"  rendered="#{userBean.isAuthorized('DELETE', user)}" />
+					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users"
+						rendered="#{userBean.isAuthorizedResource('DELETE', user)}" />
 					<f:facet name="footer">
-						<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users" rendered="#{userBean.isAuthorized('CREATE')}"/>
+						<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users"
+							 />
 					</f:facet>
 				</p:column>
 			</p:dataTable>
-			<br/>
-			Logged in <p:commandLink value="#{userSession.loggedInUser.username}" action="#{userBean.selectUser(userSession.loggedInUser)}" process="@this" update=":form:tab" />
-			<br/>
-			Acting as <p:commandLink value="#{userSession.user.username}" action="#{userBean.selectUser(userSession.user)}" process="@this" update=":form:tab" />
-			<br/>
+			<br />
+			Logged in <p:commandLink value="#{userSession.loggedInUser.username}"
+				action="#{userBean.selectUser(userSession.loggedInUser)}" process="@this" update=":form:tab" />
+			<br />
+			Acting as <p:commandLink value="#{userSession.user.username}" action="#{userBean.selectUser(userSession.user)}"
+				process="@this" update=":form:tab" />
+			<br />
 		</h:panelGroup>
 	</p:tab>
 </ui:composition>

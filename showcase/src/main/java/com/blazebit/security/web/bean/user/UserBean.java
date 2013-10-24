@@ -134,6 +134,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         }
         userService.delete(user);
         users = userService.findUsers(userSession.getSelectedCompany());
+        users.remove(userSession.getUser());
     }
 
     public User getSelectedUser() {
@@ -164,26 +165,6 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
 
     public void setNewUserName(String newUserName) {
         this.newUserName = newUserName;
-    }
-
-    @Override
-    public Resource getResource() {
-        return entityFieldFactory.createResource(User.class);
-    }
-
-    @Override
-    public Resource getResource(String field) {
-        return entityFieldFactory.createResource(User.class, field);
-    }
-
-    @Override
-    public Resource getResource(Integer id) {
-        return entityFieldFactory.createResource(User.class, id);
-    }
-
-    @Override
-    public Resource getResource(String field, Integer id) {
-        return entityFieldFactory.createResource(User.class, field, id);
     }
 
 }

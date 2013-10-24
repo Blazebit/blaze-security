@@ -22,7 +22,9 @@ import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.web.bean.model.NodeModel;
+import com.blazebit.security.web.bean.model.NodeModel.Marking;
 
 public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
 
@@ -39,12 +41,16 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
         return getResourceTree(new HashSet<Permission>(), null);
     }
 
+    protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes) {
+        return getResourceTree(selectedPermissions, selectedNodes, false);
+    }
+
     /**
      * builds up a resource tree
      * 
      * @return
      */
-    protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes) {
+    protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes, boolean disableTree) {
         DefaultTreeNode root = new DefaultTreeNode("root", null);
         Map<String, List<AnnotatedType<?>>> modules = resourceNameExtension.getResourceNamesByModule();
         for (String module : modules.keySet()) {
@@ -55,7 +61,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                     Class<?> entityClass = (Class<?>) type.getBaseType();
                     EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
                     // check if logged in user can grant these resources
-                    if (isAuthorizedResource(ActionConstants.GRANT, entityField)) {
+                    if (isAuthorized(ActionConstants.GRANT, entityField)) {
                         // entity
                         DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), moduleNode);
                         entityNode.setExpanded(true);
@@ -63,7 +69,9 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                         // if (ReflectionUtils.isSubtype(entityClass, Subject.class) || ReflectionUtils.isSubtype(entityClass,
                         // Role.class)
                         // || ReflectionUtils.isSubtype(entityClass, Permission.class)) {
-                        entityActionFields.addAll(actionFactory.getSpecialActions());
+                        if (!ReflectionUtils.isSubtype(entityClass, Permission.class)) {
+                            entityActionFields.addAll(actionFactory.getSpecialActions());
+                        }
                         // }
                         // fields for entity
                         Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
@@ -80,14 +88,23 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                                     DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(field.getName(), NodeModel.ResourceType.FIELD, entityFieldWithField), actionNode);
                                     fieldNode.setExpanded(true);
 
-                                    if (contains(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField))
-                                        || contains(selectedPermissions, permissionFactory.create(entityAction, entityField))) {
+                                    Permission foundWithField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField));
+                                    Permission foundWithoutField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityField));
+
+                                    if ((foundWithField != null && foundWithField.getResource() instanceof EntityObjectField)
+                                        || (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField)) {
+                                        ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
+                                    }
+                                    if (disableTree) {
+                                        fieldNode.setSelectable(false);
+                                    }
+                                    if (foundWithField != null || foundWithoutField != null) {
                                         fieldNode.setSelected(true);
                                         selectedNodes = addNodeToSelectedNodes(fieldNode, selectedNodes);
-                                        fieldNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityField));
+                                        // fieldNode.setSelectable(isAuthorized(ActionConstants.REVOKE, entityField));
                                     } else {
                                         // permission can be granted if logged in user has permission to do it
-                                        fieldNode.setSelectable(isAuthorizedResource(ActionConstants.GRANT, entityField));
+                                        // fieldNode.setSelectable(isAuthorized(ActionConstants.GRANT, entityField));
                                     }
                                 }
                                 selectedNodes = propagateSelectionAndMarkingUp(actionNode, selectedNodes);
@@ -98,10 +115,19 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                         for (Action action : entityActionFields) {
                             EntityAction entityAction = (EntityAction) action;
                             DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
-                            if (contains(selectedPermissions, permissionFactory.create(entityAction, entityField))) {
+
+                            Permission foundWithoutField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityField));
+
+                            if (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField) {
+                                ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            }
+                            if (disableTree) {
+                                actionNode.setSelectable(false);
+                            }
+                            if (foundWithoutField != null) {
                                 actionNode.setSelected(true);
                                 addNodeToSelectedNodes(actionNode, selectedNodes);
-                                actionNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityField));
+                                // actionNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityField));
                             }
                         }
                         // fix selections -> propagate "checked" to entity if every child checked
@@ -112,5 +138,4 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
         }
         return root;
     }
-
 }

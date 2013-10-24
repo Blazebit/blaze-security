@@ -34,6 +34,7 @@ import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
+import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.ResourceNameExtension;
 import com.blazebit.security.web.bean.SecurityBaseBean;
 import com.blazebit.security.web.bean.model.NodeModel;
@@ -49,7 +50,7 @@ import com.blazebit.security.web.service.impl.UserService;
  */
 @ViewScoped
 @ManagedBean(name = "groupResourcesBean")
-public class GroupResourcesBean extends PermissionHandlingBaseBean implements PermissionView, Serializable {
+public class GroupResourcesBean extends ResourceHandlingBaseBean implements PermissionView, Serializable {
 
     /**
      * 
@@ -83,8 +84,11 @@ public class GroupResourcesBean extends PermissionHandlingBaseBean implements Pe
     private Set<Permission> revokedPermissionsToConfirm;
 
     public void init() {
-        buildResourceTree();
+        //buildResourceTree();
         initPermissions();
+        selectedPermissionNodes = new TreeNode[] {};
+        resourceRoot=getResourceTree(groupPermissions, selectedPermissionNodes);
+        
     }
 
     private void initPermissions() {

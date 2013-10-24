@@ -56,6 +56,7 @@ public class IndexBean implements Serializable {
 
     public void logInAs(User user) throws IOException {
         userSession.setUser(user);
+        userSession.setAdmin(userService.findUser("admin", selectedCompany));
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }

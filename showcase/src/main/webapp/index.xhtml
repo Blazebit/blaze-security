@@ -20,12 +20,15 @@
 						<p:menuitem value="Resources" url="/resource/resources.xhtml" />
 						<p:menubar/>
 						<p:menuitem value="Carriers" url="/demo/carriers.xhtml" />
+						<p:menubar />
+						<p:menuitem value="Comments" url="/demo/comments.xhtml" />
 					</p:submenu>
 				</p:menu>
 				<p:dataTable value="#{indexBean.companies}" var="company" style="width:20%">
 					<p:column>
 						<f:facet name="header">Name</f:facet>
-						<p:commandLink value="#{company.name}" action="#{indexBean.setSelectedCompany(company)}" update=":form:users" />
+						<p:commandLink value="#{company.name}" action="#{indexBean.setSelectedCompany(company)}" update=":form" />
+						<h:outputText value="( selected )" rendered="#{company eq userSession.selectedCompany}" />
 					</p:column>
 				</p:dataTable>
 

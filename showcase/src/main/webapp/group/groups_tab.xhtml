@@ -25,8 +25,8 @@
                     </p:column>
 				</p:dataTable>
 
-				<h:inputText value="#{groupBean.newGroupName}" />
-				<p:commandButton value="Save" action="#{groupBean.saveGroup}" update=":form:tab:groupTree" />
+				<h:inputText value="#{groupBean.newGroupName}"/>
+				<p:commandButton value="Save" action="#{groupBean.saveGroup}" update=":form:tab:groupTree"/>
 			</h:panelGroup>
 
 			<my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
@@ -42,7 +42,7 @@
 				</p:column>
 				<p:column>
 					<f:facet name="header">Action</f:facet>
-					<p:commandButton value="Delete" />
+					<p:commandButton value="Delete" rendered="#{groupBean.isAuthorized('DELETE', group.class.name, '')}"/>
 				</p:column>
 			</p:treeTable>
 		</h:panelGroup>

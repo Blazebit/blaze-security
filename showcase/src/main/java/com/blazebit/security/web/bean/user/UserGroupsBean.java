@@ -358,12 +358,12 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                         // mark and select permission on field level-> will be propagated upwards at the end
                         if (contains(selectedPermissions, permission)) {
                             fieldNode.setSelected(true);
-                            fieldNode.setSelectable(isAuthorizedResource(ActionConstants.GRANT, entityFieldFactory.createResource(UserPermission.class)));
+                            fieldNode.setSelectable(isAuthorized(ActionConstants.GRANT, entityFieldFactory.createResource(UserPermission.class)));
                             selectedPermissionNodes = addNodeToSelectedNodes(fieldNode, selectedPermissionNodes);
                         } else {
                             if (contains(notSelectedPermissions, permission)) {
                                 fieldNode.setSelected(false);
-                                fieldNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityFieldFactory.createResource(UserPermission.class)));
+                                fieldNode.setSelectable(isAuthorized(ActionConstants.REVOKE, entityFieldFactory.createResource(UserPermission.class)));
                             } else {
                                 fieldNode.setSelectable(false);
                             }
@@ -385,13 +385,13 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                         if (contains(selectedPermissions, entityPermission)) {
                             ((NodeModel) actionNode.getData()).setMarking(Marking.GREEN);
                             actionNode.setSelected(true);
-                            actionNode.setSelectable(isAuthorizedResource(ActionConstants.GRANT, entityField)
-                                && isAuthorizedResource(ActionConstants.GRANT, entityFieldFactory.createResource(UserPermission.class)));
+                            actionNode.setSelectable(isAuthorized(ActionConstants.GRANT, entityField)
+                                && isAuthorized(ActionConstants.GRANT, entityFieldFactory.createResource(UserPermission.class)));
                             addNodeToSelectedNodes(actionNode, selectedPermissionNodes);
                         } else {
                             if (contains(notSelectedPermissions, entityPermission)) {
                                 actionNode.setSelected(false);
-                                actionNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityFieldFactory.createResource(UserPermission.class)));
+                                actionNode.setSelectable(isAuthorized(ActionConstants.REVOKE, entityFieldFactory.createResource(UserPermission.class)));
                             } else {
                                 actionNode.setSelectable(false);
                             }

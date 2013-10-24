@@ -25,6 +25,7 @@ public class UserSession implements Serializable {
     private UserGroup selectedUserGroup;
     private User secondLoggedInUser;
     private Company company;
+    private User admin;
 
     public User getLoggedInUser() {
         return user;
@@ -71,5 +72,15 @@ public class UserSession implements Serializable {
     public Company getSelectedCompany() {
         return company;
     }
+
+    public User getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(User admin) {
+        this.admin = admin;
+    }
+    
+    
 
 }

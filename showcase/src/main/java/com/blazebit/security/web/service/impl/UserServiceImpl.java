@@ -69,11 +69,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findUser(String username) {
+    public User findUser(String username, Company company) {
         try {
-            return entityManager.createQuery("select u from " + User.class.getCanonicalName() + " u where u.username='" + username + "'", User.class).getSingleResult();
+            return entityManager.createQuery("select u from " + User.class.getCanonicalName() + " u where u.username='" + username + "' and u.company.id=" + company.getId(),
+                                             User.class).getSingleResult();
         } catch (NoResultException nre) {
             return null;
         }
     }
+
 }

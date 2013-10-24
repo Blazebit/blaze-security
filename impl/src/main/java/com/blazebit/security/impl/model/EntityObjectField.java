@@ -167,12 +167,6 @@ public class EntityObjectField extends EntityField {
         if (getClass() != obj.getClass())
             return false;
         EntityObjectField other = (EntityObjectField) obj;
-        if ((this.entity == null) ? (other.entity != null) : !this.entity.equals(other.entity)) {
-            return false;
-        }
-        if ((this.field == null) ? (other.field != null) : !this.field.equals(other.field)) {
-            return false;
-        }
         if ((this.entityId == null) ? (other.entityId != null) : !this.entityId.equals(other.entityId)) {
             return false;
         }

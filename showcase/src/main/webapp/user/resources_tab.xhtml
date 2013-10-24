@@ -11,8 +11,10 @@
 			<p:wizard flowListener="#{userResourcesBean.resourceWizardListener}" widgetVar="resourceWizard" showNavBar="false">
 
 				<p:tab id="resources" title="Resources">
-				Select entities, fields and actions to grant.<br/> 
-				Checked entities or fields are already granted to the user.By unselecting them they will be revoked.<br/>
+					<p style="font-size: 0.8em">
+						Select entities, fields and actions to grant.<br /> Checked entities or fields are already granted to the user.By
+						unselecting them they will be revoked.<br />
+					</p>
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
 					<h:panelGrid columns="2" columnClasses="top,top">
 						<p:tree value="#{userResourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
@@ -41,7 +43,7 @@
 							<p:tree value="#{userResourcesBean.currentPermissionTreeRoot}" var="currentPermission">
 								<p:treeNode>
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="perm" />
-									<p:tooltip for="perm" value="#{currentPermission.tooltip}" showEffect="fade" hideEffect="fade"/>
+									<p:tooltip for="perm" value="#{currentPermission.tooltip}" showEffect="fade" hideEffect="fade" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

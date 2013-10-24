@@ -27,8 +27,6 @@ import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
-import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
@@ -57,9 +55,17 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     protected ActionFactory actionFactory;
     @Inject
     protected PermissionService permissionService;
-
+    
     protected boolean contains(Collection<Permission> permissions, Permission permission) {
-        return find(permissions, permission) != null;
+        return contains(permissions, permission, true);
+    }
+
+    protected boolean contains(Collection<Permission> permissions, Permission permission, boolean differentiateObjectResources) {
+        if (differentiateObjectResources) {
+            return find(permissions, permission) != null;
+        } else {
+            return findWithoutIdDifferentiation(permissions, permission) != null;
+        }
     }
 
     protected boolean implies(Collection<Permission> permissions, Permission givenPermission) {
@@ -75,6 +81,27 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         for (Permission permission : permissions) {
             if (givenPermission.getAction().equals(permission.getAction()) && givenPermission.getResource().equals(permission.getResource())) {
                 return permission;
+            }
+        }
+        return null;
+    }
+
+    protected Permission findWithoutIdDifferentiation(Collection<Permission> permissions, Permission givenPermission) {
+        for (Permission permission : permissions) {
+            if (givenPermission.getAction().equals(permission.getAction())) {
+                if (givenPermission.getResource().getClass().equals(permission.getResource().getClass())) {
+                    if (givenPermission.getResource().equals(permission.getResource())) {
+                        return permission;
+                    }
+                } else {
+                    if ((permission.getResource() instanceof EntityObjectField) && !(givenPermission.getResource() instanceof EntityObjectField)) {
+                        if (((EntityField) permission.getResource()).getEntity().equals(((EntityField) givenPermission.getResource()).getEntity())
+                            && ((EntityField) permission.getResource()).getField().equals(((EntityField) givenPermission.getResource()).getField())) {
+                            return permission;
+                        }
+                    }
+                }
+
             }
         }
         return null;
@@ -197,7 +224,7 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
                             permission.getResource()), actionNode);
                         if (permission.getResource() instanceof EntityObjectField) {
                             ((NodeModel) fieldNode.getData()).setTooltip("Contains permissions for specific entity objects");
-                            ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
                         }
                     }
                     if (permission.getResource() instanceof EntityObjectField) {

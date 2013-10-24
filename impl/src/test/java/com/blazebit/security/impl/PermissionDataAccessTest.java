@@ -614,4 +614,12 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         assertTrue(securityService.isGranted(user1, readAction, document1Entity));
         assertTrue(securityService.isGranted(user1, readAction, document1EntityTitleField));
     }
+    
+    //entity object field 1 + entity object field 2  + entity object= entity object
+    @Test
+    public void test_isGrantable_Afi_Afj_plus_A() throws Exception {
+        createPermission(user1, readAction, document1EntityTitleField);
+        createPermission(user1, readAction, document1EntityContentField);
+        assertTrue(permissionDataAccess.isGrantable(user1, readAction, documentEntity));
+    }
 }

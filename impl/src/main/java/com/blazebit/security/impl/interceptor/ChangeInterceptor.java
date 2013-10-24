@@ -23,9 +23,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.type.Type;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.ActionFactory;
 import com.blazebit.security.EntityFieldFactory;
 import com.blazebit.security.IdHolder;
+import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionException;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.constants.ActionConstants;
@@ -144,7 +146,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
                                                                                                        entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
 
             if (!isGranted) {
-                throw new PermissionException("Entity " + owner + " is not permitted to be flushed by " + userContext.getUser());
+                throw new PermissionException("Entity " + owner + "'s collection " + fieldName + " is not permitted to be updated by " + userContext.getUser());
             } else {
                 super.onCollectionUpdate(collection, key);
             }
@@ -172,6 +174,9 @@ public class ChangeInterceptor extends EmptyInterceptor {
         if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
             return super.onSave(entity, id, state, propertyNames, types);
         }
+        if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
+            return super.onSave(entity, id, state, propertyNames, types);
+        }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
         EntityFieldFactory entityFieldFactory = BeanProvider.getContextualReference(EntityFieldFactory.class);
@@ -191,7 +196,12 @@ public class ChangeInterceptor extends EmptyInterceptor {
     public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
         if (!ChangeInterceptor.activeDelete) {
             super.onDelete(entity, id, state, propertyNames, types);
-
+        }
+        if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
+            super.onDelete(entity, id, state, propertyNames, types);
+        }
+        if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
+            super.onDelete(entity, id, state, propertyNames, types);
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
