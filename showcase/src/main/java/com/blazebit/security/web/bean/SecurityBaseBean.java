@@ -38,7 +38,11 @@ public class SecurityBaseBean {
 
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject) {
         if (entityObject != null && entityObject instanceof IdHolder) {
-            return isAuthorized(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), ((IdHolder) entityObject).getId()));
+            Integer id = null;
+            if (((IdHolder) entityObject).getId() != null) {
+                id = ((IdHolder) entityObject).getId();
+            }
+            return isAuthorized(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), id));
         } else {
             return false;
             // throw new IllegalArgumentException("entityobject empty for " + actionConstant);

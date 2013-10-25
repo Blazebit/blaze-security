@@ -3,7 +3,7 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
 	xmlns:my="http://java.sun.com/jsf/composite/components">
 <ui:composition>
-	<p:tab title="Resources" disabled="#{empty userSession.selectedUserGroup}">
+	<p:tab title="Resources">
 		<f:event listener="#{resourcesBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
 		<h:outputText value="#{resourcesBean.revokeSelectedPermissions ?  'Revoke selected permissions!' : ''}" />
 

@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
@@ -23,6 +25,8 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     @PersistenceContext
     private EntityManager entityManager;
+    @Inject
+    private PermissionManager permissionManager;
 
     @Override
     public UserGroup createUserGroup(Company company, String name) {
@@ -33,6 +37,26 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
+    public void delete(UserGroup userGroup) {
+        UserGroup reloadedUserGroup = loadUserGroup(userGroup);
+        permissionManager.remove(reloadedUserGroup.getAllPermissions());
+        for (UserGroup ug : reloadedUserGroup.getUserGroups()) {
+            ug.setParent(null);
+            entityManager.merge(ug);
+        }
+        entityManager.remove(reloadedUserGroup);
+        entityManager.flush();
+    }
+
+    @Override
+    public UserGroup loadUserGroup(UserGroup userGroup) {
+        UserGroup reloadedUserGroup = entityManager.find(UserGroup.class, userGroup.getId());
+        reloadedUserGroup.getUserGroups();
+        reloadedUserGroup.getAllPermissions();
+        return reloadedUserGroup;
+    }
+
+    @Override
     public List<UserGroup> getGroupsForUser(User user) {
         User reloadedUser = entityManager.find(User.class, user.getId());
         return new ArrayList<UserGroup>(reloadedUser.getUserGroups());
@@ -40,8 +64,8 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     @Override
     public List<UserGroup> getAllParentGroups(Company company) {
-        return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.parent is null and ug.company.id='" + company.getId()+"' order by ug.name",
-                                         UserGroup.class).getResultList();
+        return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.parent is null and ug.company.id='" + company.getId()
+                                             + "' order by ug.name", UserGroup.class).getResultList();
     }
 
     @Override

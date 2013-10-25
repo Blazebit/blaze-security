@@ -48,6 +48,7 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
     private Company company;
 
     public UserGroup() {
+        
     }
 
     public UserGroup(String name) {

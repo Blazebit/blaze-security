@@ -52,7 +52,8 @@ public class UserServiceImpl implements UserService {
         entityManager.remove(reloadedUser);
         entityManager.flush();
     }
-
+    
+  
     @Override
     public List<User> findUsers(Company company) {
         return entityManager

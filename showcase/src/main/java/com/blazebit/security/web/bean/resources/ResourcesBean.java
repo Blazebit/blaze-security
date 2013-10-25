@@ -27,7 +27,6 @@ import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.model.AbstractPermission;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
@@ -126,8 +125,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             processSelectedPermissions();
         } else {
             if (event.getOldStep().equals("permissions")) {
+                if (event.getNewStep().equals("resources")) {
+                    return "resources";
+                }
                 if (Integer.valueOf(0).equals(activeTabIndex)) {
                     processPermissionsForUsers();
+
                     return "userPermissions";
                 } else {
                     if (Integer.valueOf(1).equals(activeTabIndex)) {
@@ -137,6 +140,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 }
             } else {
                 if (event.getOldStep().equals("groupPermissions")) {
+//                    if (event.getNewStep().equals("resources")) {
+//                        return "resources";
+//                    }
+                    if (event.getNewStep().equals("")) {
+                        return "permissions";
+                    }
                     confirmGroupPermissions();
                     return "groupUserPermissions";
                 }
@@ -306,8 +315,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     public void processSelectedPermissions() {
         if (!receivedParameters) {
             selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
-        }else{
-            //check which has been unselected
+        } else {
+            // check which has been unselected
         }
         initUsers();
         initUserGroups();

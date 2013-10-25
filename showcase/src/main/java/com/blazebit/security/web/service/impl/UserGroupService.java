@@ -27,4 +27,8 @@ public interface UserGroupService {
 
     List<UserGroup> getAllParentGroups(Company company);
 
+    void delete(UserGroup userGroup);
+
+    UserGroup loadUserGroup(UserGroup userGroup);
+
 }

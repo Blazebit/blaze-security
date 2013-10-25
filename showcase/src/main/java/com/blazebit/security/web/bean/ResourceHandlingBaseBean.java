@@ -57,6 +57,9 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
             if (!modules.get(module).isEmpty()) {
                 DefaultTreeNode moduleNode = new DefaultTreeNode(new NodeModel(module, NodeModel.ResourceType.MODULE, null), root);
                 moduleNode.setExpanded(true);
+                if (disableTree){
+                    moduleNode.setSelectable(false);
+                }
                 for (AnnotatedType<?> type : modules.get(module)) {
                     Class<?> entityClass = (Class<?>) type.getBaseType();
                     EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);

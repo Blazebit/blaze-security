@@ -57,7 +57,9 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
     private List<GroupModel> userGroups = new ArrayList<GroupModel>();
     private TreeNode permissionRoot;
     private TreeNode groupRoot;
-    private String newUserName = "new_user";
+    private User newUser = new User();
+
+    // private String newUserName = "new_user";
 
     public void backToIndex() throws IOException {
         userSession.setUser(null);
@@ -115,8 +117,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
     }
 
     public void saveUser() {
-        userService.createUser(userSession.getSelectedCompany(), newUserName);
-        newUserName = "new_user";
+        userService.createUser(userSession.getSelectedCompany(), newUser.getUsername());
         users = userService.findUsers(userSession.getSelectedCompany());
         users.remove(userSession.getUser());
     }
@@ -159,12 +160,12 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         return groupRoot;
     }
 
-    public String getNewUserName() {
-        return newUserName;
+    public User getNewUser() {
+        return newUser;
     }
 
-    public void setNewUserName(String newUserName) {
-        this.newUserName = newUserName;
+    public void setNewUser(User newUser) {
+        this.newUser = newUser;
     }
 
 }

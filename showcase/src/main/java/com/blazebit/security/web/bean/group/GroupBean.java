@@ -59,7 +59,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     private DefaultTreeNode groupRoot;
     private UserGroup selectedGroup;
     private DefaultTreeNode permissionRoot;
-    private String newGroupName = "new_group";
+    private UserGroup newGroup = new UserGroup("new_group");
     private TreeNode selectedGroupTreeNode;
 
     public void backToIndex() throws IOException {
@@ -99,13 +99,14 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     }
 
     public void saveGroup() {
-        UserGroup ug = userGroupService.createUserGroup(userSession.getSelectedCompany(), newGroupName);
+        UserGroup ug = userGroupService.createUserGroup(userSession.getSelectedCompany(), newGroup.getName());
         if (getSelectedGroup() != null) {
             ug.setParent(getSelectedGroup());
             userGroupService.saveGroup(ug);
         }
 
         initUserGroups();
+        newGroup = new UserGroup();
     }
 
     public UserGroup getSelectedGroup() {
@@ -159,17 +160,19 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
 
     }
 
+    public void deleteGroup(UserGroup group) {
+        if (group.equals(userSession.getSelectedUserGroup())) {
+            userSession.setSelectedUserGroup(null);
+            this.users = new ArrayList<User>();
+            this.permissionRoot = new DefaultTreeNode("root", null);
+        }
+        userGroupService.delete(group);
+        initUserGroups();
+    }
+
     @Override
     public TreeNode getPermissionViewRoot() {
         return this.permissionRoot;
-    }
-
-    public String getNewGroupName() {
-        return newGroupName;
-    }
-
-    public void setNewGroupName(String newGroupName) {
-        this.newGroupName = newGroupName;
     }
 
     public TreeNode getSelectedGroupTreeNode() {
@@ -179,6 +182,14 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
     public void setSelectedGroupTreeNode(TreeNode selectedGroupTreeNode) {
         this.selectedGroupTreeNode = selectedGroupTreeNode;
         selectGroup();
+    }
+
+    public UserGroup getNewGroup() {
+        return newGroup;
+    }
+
+    public void setNewGroup(UserGroup newGroup) {
+        this.newGroup = newGroup;
     }
 
 }
