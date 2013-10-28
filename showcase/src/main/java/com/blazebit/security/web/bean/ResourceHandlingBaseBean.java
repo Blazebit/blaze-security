@@ -52,29 +52,34 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
      */
     protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes, boolean disableTree) {
         DefaultTreeNode root = new DefaultTreeNode("root", null);
+        // gets all the entities that are annotated with resource name -> groups by module name
         Map<String, List<AnnotatedType<?>>> modules = resourceNameExtension.getResourceNamesByModule();
         for (String module : modules.keySet()) {
             if (!modules.get(module).isEmpty()) {
+                // creates module as first root
                 DefaultTreeNode moduleNode = new DefaultTreeNode(new NodeModel(module, NodeModel.ResourceType.MODULE, null), root);
                 moduleNode.setExpanded(true);
-                if (disableTree){
+                if (disableTree) {
                     moduleNode.setSelectable(false);
                 }
                 for (AnnotatedType<?> type : modules.get(module)) {
                     Class<?> entityClass = (Class<?>) type.getBaseType();
+                    // second root must always be an entity resource with the entity name
                     EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
                     // check if logged in user can grant these resources
                     if (isAuthorized(ActionConstants.GRANT, entityField)) {
                         // entity
                         DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), moduleNode);
                         entityNode.setExpanded(true);
+                        // action node comes under entity node
                         List<Action> entityActionFields = actionFactory.getActionsForEntity();
                         // if (ReflectionUtils.isSubtype(entityClass, Subject.class) || ReflectionUtils.isSubtype(entityClass,
                         // Role.class)
                         // || ReflectionUtils.isSubtype(entityClass, Permission.class)) {
-                        if (!ReflectionUtils.isSubtype(entityClass, Permission.class)) {
-                            entityActionFields.addAll(actionFactory.getSpecialActions());
-                        }
+                        // if (ReflectionUtils.isSubtype(entityClass, Permission.class)) {
+                        // every entity also permissions must have create, read, update, delete, grant and revoke actions
+                        entityActionFields.addAll(actionFactory.getSpecialActions());
+                        // }
                         // }
                         // fields for entity
                         Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
@@ -91,9 +96,11 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                                     DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(field.getName(), NodeModel.ResourceType.FIELD, entityFieldWithField), actionNode);
                                     fieldNode.setExpanded(true);
 
+                                    //decide how field node should be marked (red, blue, green) 
                                     Permission foundWithField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField));
                                     Permission foundWithoutField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityField));
 
+                                    //entity object resources are blue
                                     if ((foundWithField != null && foundWithField.getResource() instanceof EntityObjectField)
                                         || (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField)) {
                                         ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
@@ -133,7 +140,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                                 // actionNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityField));
                             }
                         }
-                        // fix selections -> propagate "checked" to entity if every child checked
+                        // fix selections -> propagate "checked" and "color" to entity if every child checked
                         selectedNodes = propagateSelectionAndMarkingUp(entityNode, selectedNodes);
                     }
                 }

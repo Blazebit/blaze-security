@@ -198,6 +198,11 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     public void processSelectedPermissions() {
         Set<Permission> selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
         List<Permission> currentPermissions = new ArrayList<Permission>(groupPermissions);
+        for (Permission permission : currentPermissions) {
+            if (!isAuthorized(ActionConstants.GRANT, permission.getResource())) {
+                selectedPermissions.add(permission);
+            }
+        }
         Set<Permission> toRevoke = new HashSet<Permission>();
         for (Permission permission : selectedPermissions) {
             toRevoke.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUserGroup(), permission.getAction(), permission.getResource()));

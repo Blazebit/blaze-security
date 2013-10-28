@@ -85,12 +85,21 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      * wizard step 1
      */
     public void processSelectedPermissions() {
+        // get selected permissions
         selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
+        // add permissions of ther user that did not appear in the list because the logged in user does not have permission to
+        // grant or revoke them
+        for (Permission permission : permissionManager.getPermissions(userSession.getSelectedUser())) {
+            if (!isAuthorized(ActionConstants.GRANT, permission.getResource())) {
+                selectedPermissions.add(permission);
+            }
+        }
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
         Set<Permission> toRevoke = new HashSet<Permission>();
         for (Permission permission : selectedPermissions) {
             Set<Permission> removeWhenGranting = permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), permission.getAction(), permission.getResource());
             for (Permission toBeRevoked : removeWhenGranting) {
+                //check logged in user can revoke it or not
                 if (isAuthorized(ActionConstants.REVOKE, toBeRevoked.getResource())) {
                     toRevoke.add(toBeRevoked);
                 }

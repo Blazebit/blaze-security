@@ -176,6 +176,7 @@ public class StartupBean {
             entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
             entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Document.class)));
             entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
+            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Comment.class)));
 
             entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
             entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
@@ -184,20 +185,20 @@ public class StartupBean {
             entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Document.class)));
             entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Email.class)));
 
-            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(grantAction)));
-            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(revokeAction)));
-            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(grantAction)));
-            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(revokeAction)));
+//            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(grantAction)));
+//            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(revokeAction)));
+//            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(grantAction)));
+//            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(revokeAction)));
+//
+//            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(deleteAction)));
+//            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(createAction)));
+//            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(updateAction)));
+//            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(readAction)));
 
-            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(deleteAction)));
-            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(createAction)));
-            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(updateAction)));
-            entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(readAction)));
-
-            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(deleteAction)));
-            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(createAction)));
-            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(updateAction)));
-            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(readAction)));
+//            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(deleteAction)));
+//            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(createAction)));
+//            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(updateAction)));
+//            entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(readAction)));
 
             UserGroup group = groups.get(0);
             entityManager.persist(permissionFactory.create(group, createAction, entityFieldFactory.createResource(CarrierGroup.class)));

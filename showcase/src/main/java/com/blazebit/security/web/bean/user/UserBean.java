@@ -21,13 +21,10 @@ import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
-import com.blazebit.security.Resource;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.GroupView;
-import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.model.GroupModel;
 import com.blazebit.security.web.service.impl.UserGroupService;
@@ -61,6 +58,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
 
     // private String newUserName = "new_user";
 
+    // redirects to start page
     public void backToIndex() throws IOException {
         userSession.setUser(null);
         ((HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false)).invalidate();
@@ -68,6 +66,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
+    // loads all users, excludes logged in user
     @PostConstruct
     public void init() {
         users = userService.findUsers(userSession.getSelectedCompany());
@@ -77,14 +76,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         }
     }
 
-    private void initGroupList(List<UserGroup> userGroups) {
-        this.userGroups.clear();
-        for (UserGroup userGroup : userGroups) {
-            this.userGroups.add(new GroupModel(userGroup, false, false));
-        }
-    }
-
-    // first tab: select user
+    // first tab: select user -> display groups and permissions of selected user
     public void selectUser(User user) {
         this.selectedUser = user;
         this.userSession.setSelectedUser(selectedUser);
@@ -97,6 +89,13 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         List<UserGroup> groups = userGroupService.getGroupsForUser(selectedUser);
         initGroupList(groups);
         this.groupRoot = buildGroupTree(groups);
+    }
+
+    private void initGroupList(List<UserGroup> userGroups) {
+        this.userGroups.clear();
+        for (UserGroup userGroup : userGroups) {
+            this.userGroups.add(new GroupModel(userGroup, false, false));
+        }
     }
 
     private DefaultTreeNode buildGroupTree(List<UserGroup> userGroups) {
@@ -116,6 +115,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         }
     }
 
+    // saves new user
     public void saveUser() {
         userService.createUser(userSession.getSelectedCompany(), newUser.getUsername());
         users = userService.findUsers(userSession.getSelectedCompany());

@@ -117,7 +117,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 System.err.println("what");
             }
         }
-        resourceRoot = getResourceTree(selectedPermissions, selectedPermissionNodes, receivedParameters);
+        resourceRoot = getResourceTree(selectedPermissions, selectedPermissionNodes);
     }
 
     public String resourceWizardListener(FlowEvent event) {
@@ -140,9 +140,9 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 }
             } else {
                 if (event.getOldStep().equals("groupPermissions")) {
-//                    if (event.getNewStep().equals("resources")) {
-//                        return "resources";
-//                    }
+                    // if (event.getNewStep().equals("resources")) {
+                    // return "resources";
+                    // }
                     if (event.getNewStep().equals("")) {
                         return "permissions";
                     }
@@ -315,8 +315,25 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     public void processSelectedPermissions() {
         if (!receivedParameters) {
             selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
+            for (Permission permission : permissionManager.getPermissions(userSession.getSelectedUser())) {
+                if (!isAuthorized(ActionConstants.GRANT, permission.getResource())) {
+                    selectedPermissions.add(permission);
+                }
+            }
         } else {
+            Set<Permission> processedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
+            Set<Permission> finalSelectedPermissions = new HashSet<Permission>();
             // check which has been unselected
+            for (Permission permission : selectedPermissions) {
+                for (Permission processedPermission : processedPermissions) {
+                    if (((EntityField) permission.getResource()).getEntity().equals(((EntityField) processedPermission.getResource()).getEntity())
+                        && ((EntityField) permission.getResource()).getField().equals(((EntityField) processedPermission.getResource()).getField())
+                        && permission.getAction().equals(processedPermission.getAction())) {
+                        finalSelectedPermissions.add(permission);
+                    }
+                }
+            }
+            selectedPermissions = finalSelectedPermissions;
         }
         initUsers();
         initUserGroups();
