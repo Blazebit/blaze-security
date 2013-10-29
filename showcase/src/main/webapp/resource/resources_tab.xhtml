@@ -16,11 +16,8 @@
 					<p style="font-size:0.5em">Entries marked with BLUE refer to entity resources with an ID.</p> 
 					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 						selection="#{resourcesBean.selectedPermissionNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
-						<p:treeNode type="root">
-							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}"/>
-						</p:treeNode>
 						<p:treeNode>
-							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}"/>
 						</p:treeNode>
 					</p:tree>
 					<p:commandButton value="Next" onclick="resourceWizard.next();" process="@this" />

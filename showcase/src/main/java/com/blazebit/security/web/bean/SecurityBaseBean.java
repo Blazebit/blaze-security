@@ -20,6 +20,14 @@ public class SecurityBaseBean {
     @Inject
     protected UserSession userSession;
 
+    /**
+     * authorization check for resource name with field. usage from EL
+     * 
+     * @param actionConstant
+     * @param resourceName
+     * @param field
+     * @return
+     */
     public boolean isAuthorized(ActionConstants actionConstant, String resourceName, String field) {
         try {
             return isAuthorized(actionConstant, entityFieldFactory.createResource(Class.forName(resourceName), field));
@@ -28,6 +36,13 @@ public class SecurityBaseBean {
         }
     }
 
+    /**
+     * authorization check for resource name. usage from EL
+     * 
+     * @param actionConstant
+     * @param resourceName
+     * @return
+     */
     public boolean isAuthorized(ActionConstants actionConstant, String resourceName) {
         try {
             return isAuthorized(actionConstant, entityFieldFactory.createResource(Class.forName(resourceName)));
@@ -36,6 +51,13 @@ public class SecurityBaseBean {
         }
     }
 
+    /**
+     * authorization check for a concrete object
+     * 
+     * @param actionConstant
+     * @param entityObject
+     * @return
+     */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject) {
         if (entityObject != null && entityObject instanceof IdHolder) {
             Integer id = null;
@@ -49,6 +71,13 @@ public class SecurityBaseBean {
         }
     }
 
+    /**
+     * authorization check for a field of a concrete object
+     * 
+     * @param actionConstant
+     * @param entityObject
+     * @return
+     */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String field) {
         if (entityObject != null && entityObject instanceof IdHolder) {
             return isAuthorized(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), field, ((IdHolder) entityObject).getId()));

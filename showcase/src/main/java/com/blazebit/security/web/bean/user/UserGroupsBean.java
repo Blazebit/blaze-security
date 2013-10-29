@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
@@ -76,11 +77,14 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     private TreeNode[] selectedPermissionNodes;
 
     private Set<Permission> revokableWhenRemovingFromGroup = new HashSet<Permission>();
+    private Set<Permission> notRevokableWhenRemovingFromGroup = new HashSet<Permission>();
 
     private Map<UserGroup, List<Permission>> groupPermissionsMap = new HashMap<UserGroup, List<Permission>>();
     private String groupWizardStep;
 
     private List<Permission> currentUserDataPermissions;
+
+    private Set<Permission> notGrantableWhenAddingToGroup = new HashSet<Permission>();
 
     public void init() {
         initUserGroups();
@@ -141,10 +145,12 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         removeFromGroupsWithParents.removeAll(selectedGroupsWithParents);
         // store revokable permissions from all removed groups and parent
         revokableWhenRemovingFromGroup = new HashSet<Permission>();
-        revokableWhenRemovingFromGroup = getRevokablePermissions(removeFromGroupsWithParents);
+        revokableWhenRemovingFromGroup = getRevokablePermissions(removeFromGroupsWithParents).get(0);
+        notRevokableWhenRemovingFromGroup = getRevokablePermissions(removeFromGroupsWithParents).get(1);
 
         // get all permissions of the selected groups and their parents
-        Set<Permission> grantable = getAllGroupPermissions(selectedGroupsWithParents);
+        Set<Permission> grantable = getGrantablePermissions(selectedGroupsWithParents).get(0);
+        notGrantableWhenAddingToGroup = getGrantablePermissions(addToGroups).get(1);
         // get all revokable permissions
         Set<Permission> revokable = new HashSet<Permission>(revokableWhenRemovingFromGroup);
         revokable.removeAll(grantable);
@@ -185,14 +191,17 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      * @param selectedGroupsWithParents
      * @return
      */
-    private Set<Permission> getAllGroupPermissions(Set<UserGroup> selectedGroupsWithParents) {
+    private List<Set<Permission>> getGrantablePermissions(Set<UserGroup> selectedGroupsWithParents) {
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         groupPermissionsMap = new HashMap<UserGroup, List<Permission>>();
         Set<Permission> grantable = new HashSet<Permission>();
+        Set<Permission> notGrantable = new HashSet<Permission>();
         for (UserGroup selecteGroup : selectedGroupsWithParents) {
             List<Permission> groupPermissions = permissionManager.getAllPermissions(selecteGroup);
             for (Permission permission : groupPermissions) {
                 // filter out grantable permissions
-                if (permissionDataAccess.isGrantable(getSelectedUser(), permission.getAction(), permission.getResource())) {
+                if (permissionDataAccess.isGrantable(getSelectedUser(), permission.getAction(), permission.getResource())
+                    && isAuthorized(ActionConstants.GRANT, permission.getResource())) {
                     grantable.add(permission);
                     List<Permission> temp;
                     if (groupPermissionsMap.containsKey(selecteGroup)) {
@@ -202,6 +211,8 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                     }
                     temp.add(permission);
                     groupPermissionsMap.put(selecteGroup, temp);
+                } else {
+                    notGrantable.add(permission);
                 }
             }
         }
@@ -216,7 +227,9 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
             }
         }
         grantable.removeAll(redundantPermissions);
-        return grantable;
+        ret.add(grantable);
+        ret.add(notGrantable);
+        return ret;
     }
 
     /**
@@ -242,22 +255,28 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      * @param removeFromGroupsWithParents
      * @return
      */
-    private Set<Permission> getRevokablePermissions(Set<UserGroup> removeFromGroupsWithParents) {
+    private List<Set<Permission>> getRevokablePermissions(Set<UserGroup> removeFromGroupsWithParents) {
+        String[] a = new String[] {};
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         Set<Permission> revokable = new HashSet<Permission>();
+        //
         Set<Permission> notRevokable = new HashSet<Permission>();
         // collect permissions to be revoked from unselected groups and their parents
         for (UserGroup group : removeFromGroupsWithParents) {
             List<Permission> groupPermissions = permissionManager.getAllPermissions(group);
             for (Permission permission : groupPermissions) {
                 // filter out revokable permissions
-                if (permissionDataAccess.isRevokable(getSelectedUser(), permission.getAction(), permission.getResource())) {
+                if (permissionDataAccess.isRevokable(getSelectedUser(), permission.getAction(), permission.getResource())
+                    && isAuthorized(ActionConstants.REVOKE, permission.getResource())) {
                     revokable.add(permission);
                 } else {
-
+                    notRevokable.add(permission);
                 }
             }
         }
-        return revokable;
+        ret.add(revokable);
+        ret.add(notRevokable);
+        return ret;
     }
 
     /**
@@ -541,4 +560,13 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     public void setGroupWizardStep(String groupWizardStep) {
         this.groupWizardStep = groupWizardStep;
     }
+
+    public List<Permission> getNotRevokableWhenRemovingFromGroup() {
+        return new ArrayList<Permission>(notRevokableWhenRemovingFromGroup);
+    }
+
+    public List<Permission> getNotGrantable() {
+        return new ArrayList<Permission>(notGrantableWhenAddingToGroup);
+    }
+
 }

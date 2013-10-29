@@ -26,7 +26,6 @@ import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
-import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;

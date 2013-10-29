@@ -3,14 +3,12 @@
  */
 package com.blazebit.security.web.bean;
 
-import com.blazebit.security.impl.context.UserContext;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
-
 import javax.enterprise.context.RequestScoped;
-import javax.faces.bean.ManagedBean;
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import com.blazebit.security.impl.context.UserContext;
+import com.blazebit.security.impl.model.User;
 
 /**
  * 

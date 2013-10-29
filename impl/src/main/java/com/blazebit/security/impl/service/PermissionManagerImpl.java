@@ -52,6 +52,7 @@ public class PermissionManagerImpl implements PermissionManager {
 
     }
 
+    //TODO cannot be invoked from the onFlushDirty method because it causes an endless loop
     @SuppressWarnings("unchecked")
     @Override
     public <P extends Permission> List<P> getAllPermissions(Subject<?> subject) {

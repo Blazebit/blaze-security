@@ -8,33 +8,10 @@ import java.util.List;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.model.NodeModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
 
 public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
-
-    /**
-     * helper
-     * 
-     * @param node
-     */
-    protected TreeNode[] propagateSelectionUp(DefaultTreeNode node, TreeNode[] selectedNodes) {
-        if (node.getChildCount() > 0) {
-            boolean foundOneUnselected = false;
-            for (TreeNode entityChild : node.getChildren()) {
-                if (!entityChild.isSelected()) {
-                    foundOneUnselected = true;
-                    break;
-                }
-            }
-            if (!foundOneUnselected) {
-                node.setSelected(true);
-                selectedNodes = addNodeToSelectedNodes(node, selectedNodes);
-            }
-        }
-        return selectedNodes;
-    }
 
     /**
      * helper to mark parent nodes when child nodes are marked

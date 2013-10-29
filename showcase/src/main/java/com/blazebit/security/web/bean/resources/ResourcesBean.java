@@ -315,11 +315,6 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     public void processSelectedPermissions() {
         if (!receivedParameters) {
             selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
-            for (Permission permission : permissionManager.getPermissions(userSession.getSelectedUser())) {
-                if (!isAuthorized(ActionConstants.GRANT, permission.getResource())) {
-                    selectedPermissions.add(permission);
-                }
-            }
         } else {
             Set<Permission> processedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
             Set<Permission> finalSelectedPermissions = new HashSet<Permission>();

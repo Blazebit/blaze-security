@@ -16,9 +16,6 @@
 						<p:tree value="#{groupResourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 							selection="#{groupResourcesBean.selectedPermissionNodes}" propagateSelectionDown="true"
 							propagateSelectionUp="true">
-							<p:treeNode type="root">
-								<h:outputText value="#{_resource.name}" />
-							</p:treeNode>
 							<p:treeNode>
 								<h:outputText value="#{_resource.name}" />
 							</p:treeNode>

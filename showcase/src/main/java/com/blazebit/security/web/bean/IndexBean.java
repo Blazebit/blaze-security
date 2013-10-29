@@ -31,6 +31,10 @@ import com.blazebit.security.web.service.impl.UserService;
 @ViewScoped
 public class IndexBean implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     @Inject
     private UserService userService;
     @Inject

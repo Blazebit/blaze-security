@@ -31,10 +31,15 @@ import org.junit.Test;
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
+import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
+import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
+import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 
@@ -59,7 +64,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
     public void init() throws Exception {
         super.initData();
         email1Entity = (EntityObjectField) entityFieldFactory.createResource(Email.class, EntityField.EMPTY_FIELD, 1);
-        emailEntityWithSubject = (EntityField) entityFieldFactory.createResource(Email.class,Subject_Field);
+        emailEntityWithSubject = (EntityField) entityFieldFactory.createResource(Email.class, Subject_Field);
         document2EntityTitleField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Title_Field, 2);
         email1EntityTitleField = (EntityObjectField) entityFieldFactory.createResource(Email.class, Subject_Field, 1);
         setUserContext(admin);
@@ -85,9 +90,24 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @param resource
      * @throws Exception
      */
-    private void createPermission(Subject subject, Action action, com.blazebit.security.Resource resource) throws Exception {
+    private Permission createPermission(Subject subject, Action action, com.blazebit.security.Resource resource) {
         Permission permission = permissionFactory.create(subject, action, resource);
         self.get().persist(permission);
+        return permission;
+    }
+
+    /**
+     * creates a permission
+     * 
+     * @param subject
+     * @param action
+     * @param resource
+     * @throws Exception
+     */
+    private Permission createPermission(Role role, Action action, com.blazebit.security.Resource resource) {
+        Permission permission = permissionFactory.create(role, action, resource);
+        self.get().persist(permission);
+        return permission;
     }
 
     // REVOKE
@@ -614,12 +634,64 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         assertTrue(securityService.isGranted(user1, readAction, document1Entity));
         assertTrue(securityService.isGranted(user1, readAction, document1EntityTitleField));
     }
-    
-    //entity object field 1 + entity object field 2  + entity object= entity object
+
+    // entity object field 1 + entity object field 2 + entity object= entity object
     @Test
     public void test_isGrantable_Afi_Afj_plus_A() throws Exception {
         createPermission(user1, readAction, document1EntityTitleField);
         createPermission(user1, readAction, document1EntityContentField);
         assertTrue(permissionDataAccess.isGrantable(user1, readAction, documentEntity));
     }
+
+    @Inject
+    private PermissionManager permissionManager;
+
+    @Test
+    public void test_add_user_to_groups_1() {
+        Set<Permission> expectedToBeGranted = new HashSet<Permission>();
+        Set<Permission> actualToBeGranted = new HashSet<Permission>();
+
+        UserGroup userGroup1 = new UserGroup("Usergroup 1");
+        self.get().persist(userGroup1);
+        expectedToBeGranted.add(createPermission(userGroup1, readAction, documentEntity));
+
+        UserGroup userGroup2 = new UserGroup("Usergroup 2");
+        userGroup2.setParent(userGroup1);
+        self.get().persist(userGroup2);
+        expectedToBeGranted.add(createPermission(userGroup2, readAction, entityFieldFactory.createResource(Comment.class)));
+
+        UserGroup userGroup3 = new UserGroup("Usergroup 3");
+        userGroup3.setParent(userGroup2);
+        self.get().persist(userGroup3);
+
+        expectedToBeGranted.add(createPermission(userGroup3, readAction, emailEntity));
+
+        User user = new User("user");
+        self.get().persist(user);
+
+        Permission ret = createPermission(user, readAction, entityFieldFactory.createResource(Comment.class, "text"));
+        Set<Permission> expectedToBeRevoked = new HashSet<Permission>();
+        expectedToBeRevoked.add(ret);
+        Set<Permission> actualToBeRevoked = new HashSet<Permission>();
+
+        Set<UserGroup> selectedGroups = new HashSet<UserGroup>();
+        selectedGroups.add(userGroup3);
+        for (UserGroup userGroup : selectedGroups) {
+            // add user to userGroup 3
+            UserGroup parent = userGroup;
+            while (parent != null) {
+                for (Permission p : permissionManager.getAllPermissions(parent)) {
+                    if (permissionDataAccess.isGrantable(user, p.getAction(), p.getResource())) {
+                        actualToBeGranted.add(p);
+                    }
+                    actualToBeRevoked.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(user, p.getAction(), p.getResource()));
+                }
+                parent = parent.getParent();
+            }
+        }
+        assertEquals(expectedToBeRevoked, actualToBeRevoked);
+        assertEquals(expectedToBeGranted, actualToBeGranted);
+    }
+
+ 
 }

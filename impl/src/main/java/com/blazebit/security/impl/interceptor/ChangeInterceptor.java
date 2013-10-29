@@ -41,6 +41,10 @@ import com.blazebit.security.impl.model.ResourceName;
  */
 public class ChangeInterceptor extends EmptyInterceptor {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private static volatile boolean activeUpdate = false;
     private static volatile boolean activeDelete = false;
     private static volatile boolean activePersist = false;
@@ -91,7 +95,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         List<String> changedPropertyNames = new ArrayList<String>();
         if (previousState != null) {
             for (int i = 0; i < currentState.length; i++) {
-                // we dont check collections here
+                // we dont check collections here, there is a separate method for it
                 if (!types[i].isCollectionType()) {
                     if ((currentState[i] != null && !currentState[i].equals(previousState[i])) || (currentState[i] == null && previousState[i] != null)) {
                         changedPropertyNames.add(propertyNames[i]);

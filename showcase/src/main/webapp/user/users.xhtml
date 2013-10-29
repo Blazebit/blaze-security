@@ -69,6 +69,68 @@
                     </p:column>
 				</p:dataTable>
 			</p:dialog>
+			
+			<p:dialog id="permissionWarningDialogId" widgetVar="permissionWarningDialog">
+				<p:dataTable value="#{userGroupsBean.notRevokableWhenRemovingFromGroup}"
+					var="permission" paginator="true" rows="10">
+					<f:facet name="header">Permissions that cannot be revoked</f:facet>
+					<p:column filterBy="#{permission.id.entity}"
+						sortBy="#{permission.id.entity}">
+						<f:facet name="header">Resource</f:facet>
+                            #{permission.id.entity} #{permission.id.field}
+                    </p:column>
+					<p:column filterBy="#{permission.id.actionName}"
+						sortBy="#{permission.id.actionName}">
+						<f:facet name="header">Action</f:facet>
+                            #{permission.id.actionName}
+                    </p:column>
+				</p:dataTable>
+					<p:dataTable value="#{userGroupsBean.notGrantable}"
+					var="permission" paginator="true" rows="10">
+					<f:facet name="header">Permissions that cannot be granted</f:facet>
+					<p:column filterBy="#{permission.id.entity}"
+						sortBy="#{permission.id.entity}">
+						<f:facet name="header">Resource</f:facet>
+                            #{permission.id.entity} #{permission.id.field}
+                    </p:column>
+					<p:column filterBy="#{permission.id.actionName}"
+						sortBy="#{permission.id.actionName}">
+						<f:facet name="header">Action</f:facet>
+                            #{permission.id.actionName}
+                    </p:column>
+				</p:dataTable>
+			</p:dialog>
+			
+			<p:dialog id="permissionWarningDialog2Id" widgetVar="permissionWarningDialog2">
+				<p:dataTable value="#{userResourcesBean.notRevokableWhenRemovingFromGroup}"
+					var="permission" paginator="true" rows="10">
+					<f:facet name="header">Permissions that cannot be revoked</f:facet>
+					<p:column filterBy="#{permission.id.entity}"
+						sortBy="#{permission.id.entity}">
+						<f:facet name="header">Resource</f:facet>
+                            #{permission.id.entity} #{permission.id.field}
+                    </p:column>
+					<p:column filterBy="#{permission.id.actionName}"
+						sortBy="#{permission.id.actionName}">
+						<f:facet name="header">Action</f:facet>
+                            #{permission.id.actionName}
+                    </p:column>
+				</p:dataTable>
+					<p:dataTable value="#{userResourcesBean.notGrantable}"
+					var="permission" paginator="true" rows="10">
+					<f:facet name="header">Permissions that cannot be granted</f:facet>
+					<p:column filterBy="#{permission.id.entity}"
+						sortBy="#{permission.id.entity}">
+						<f:facet name="header">Resource</f:facet>
+                            #{permission.id.entity} #{permission.id.field}
+                    </p:column>
+					<p:column filterBy="#{permission.id.actionName}"
+						sortBy="#{permission.id.actionName}">
+						<f:facet name="header">Action</f:facet>
+                            #{permission.id.actionName}
+                    </p:column>
+				</p:dataTable>
+			</p:dialog>
 		</h:panelGroup>
 	</h:body>
 </f:view>

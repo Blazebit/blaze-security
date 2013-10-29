@@ -51,7 +51,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
      * @return
      */
     protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes, boolean disableTree) {
-        DefaultTreeNode root = new DefaultTreeNode("root", null);
+        DefaultTreeNode root = new DefaultTreeNode();
         // gets all the entities that are annotated with resource name -> groups by module name
         Map<String, List<AnnotatedType<?>>> modules = resourceNameExtension.getResourceNamesByModule();
         for (String module : modules.keySet()) {
@@ -69,7 +69,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                     // check if logged in user can grant these resources
                     if (isAuthorized(ActionConstants.GRANT, entityField)) {
                         // entity
-                        DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), moduleNode);
+                        DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), moduleNode);
                         entityNode.setExpanded(true);
                         // action node comes under entity node
                         List<Action> entityActionFields = actionFactory.getActionsForEntity();

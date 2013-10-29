@@ -5,6 +5,7 @@ package com.blazebit.security.web.bean.user;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.model.NodeModel;
@@ -60,6 +62,9 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
 
     private List<Permission> userDataPermissions = new ArrayList<Permission>();
 
+    private Set<Permission> notRevokableWhenRemovingFromGroup = new HashSet<Permission>();
+    private Set<Permission> notGrantableWhenAddingToGroup = new HashSet<Permission>();
+
     public void init() {
         initPermissions();
         selectedPermissionNodes = new TreeNode[] {};
@@ -69,7 +74,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
     private void initPermissions() {
         userPermissions = permissionManager.getPermissions(getSelectedUser());
         userDataPermissions = permissionManager.getDataPermissions(getSelectedUser());
-        this.permissionViewRoot = new DefaultTreeNode("root", null);
+        this.permissionViewRoot = new DefaultTreeNode();
         getPermissionTree(permissionManager.getAllPermissions(getSelectedUser()), permissionViewRoot);
 
     }
@@ -99,16 +104,13 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         for (Permission permission : selectedPermissions) {
             Set<Permission> removeWhenGranting = permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), permission.getAction(), permission.getResource());
             for (Permission toBeRevoked : removeWhenGranting) {
-                //check logged in user can revoke it or not
-                if (isAuthorized(ActionConstants.REVOKE, toBeRevoked.getResource())) {
                     toRevoke.add(toBeRevoked);
-                }
             }
         }
         revokedPermissionsToConfirm = new HashSet<Permission>();
         for (Permission currentPermission : currentPermissions) {
             if (!contains(selectedPermissions, currentPermission)) {
-                if (isAuthorized(ActionConstants.GRANT, currentPermission.getResource())) {
+                if (isAuthorized(ActionConstants.REVOKE, currentPermission.getResource())) {
                     revokedPermissionsToConfirm.add(currentPermission);
                 }
             }
@@ -125,6 +127,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
             if (!contains(currentUserPermissions, permission)) {
                 if (permissionDataAccess.isGrantable(currentUserPermissions, getSelectedUser(), permission.getAction(), permission.getResource())) {
                     granted.add(permission);
+                } else {
+                    notGrantableWhenAddingToGroup.add(permission);
                 }
             }
         }
@@ -321,6 +325,14 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
 
     public void setSelectedPermissionNodes(TreeNode[] selectedPermissionNodes) {
         this.selectedPermissionNodes = selectedPermissionNodes;
+    }
+
+    public List<Permission> getNotRevokableWhenRemovingFromGroup() {
+        return new ArrayList<Permission>(notRevokableWhenRemovingFromGroup);
+    }
+
+    public List<Permission> getNotGrantable() {
+        return new ArrayList<Permission>(notGrantableWhenAddingToGroup);
     }
 
 }

@@ -33,7 +33,7 @@
 						<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
 					</h:panelGrid>
 
-					<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" />
+					<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" oncomplete="permissionWarningDialog.show()" update=":dialogs"/>
 				</p:tab>
 
 				<p:tab id="groupPermissions" title="Permissions">
