@@ -50,7 +50,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
      * 
      * @return
      */
-    protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes, boolean disableTree) {
+    protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions, TreeNode[] selectedNodes, boolean dontSelectObjects) {
         DefaultTreeNode root = new DefaultTreeNode();
         // gets all the entities that are annotated with resource name -> groups by module name
         Map<String, List<AnnotatedType<?>>> modules = resourceNameExtension.getResourceNamesByModule();
@@ -59,9 +59,6 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                 // creates module as first root
                 DefaultTreeNode moduleNode = new DefaultTreeNode(new NodeModel(module, NodeModel.ResourceType.MODULE, null), root);
                 moduleNode.setExpanded(true);
-                if (disableTree) {
-                    moduleNode.setSelectable(false);
-                }
                 for (AnnotatedType<?> type : modules.get(module)) {
                     Class<?> entityClass = (Class<?>) type.getBaseType();
                     // second root must always be an entity resource with the entity name
@@ -96,21 +93,22 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                                     DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(field.getName(), NodeModel.ResourceType.FIELD, entityFieldWithField), actionNode);
                                     fieldNode.setExpanded(true);
 
-                                    //decide how field node should be marked (red, blue, green) 
+                                    // decide how field node should be marked (red, blue, green)
                                     Permission foundWithField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField));
                                     Permission foundWithoutField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityField));
 
-                                    //entity object resources are blue
-                                    if ((foundWithField != null && foundWithField.getResource() instanceof EntityObjectField)
-                                        || (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField)) {
-                                        ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
-                                    }
-                                    if (disableTree) {
-                                        fieldNode.setSelectable(false);
-                                    }
                                     if (foundWithField != null || foundWithoutField != null) {
-                                        fieldNode.setSelected(true);
-                                        selectedNodes = addNodeToSelectedNodes(fieldNode, selectedNodes);
+                                        // entity object resources are blue
+                                        if ((foundWithField!=null && foundWithField.getResource() instanceof EntityObjectField) || (foundWithoutField!=null && foundWithoutField.getResource() instanceof EntityObjectField)) {
+                                            ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
+                                            ((NodeModel) fieldNode.getData()).setTooltip("Contains permissions for specific entity objects");
+                                            if (dontSelectObjects) {
+                                                fieldNode.setSelected(false);
+                                            }
+                                        } else {
+                                            fieldNode.setSelected(true);
+                                            selectedNodes = addNodeToSelectedNodes(fieldNode, selectedNodes);
+                                        }
                                         // fieldNode.setSelectable(isAuthorized(ActionConstants.REVOKE, entityField));
                                     } else {
                                         // permission can be granted if logged in user has permission to do it
@@ -128,15 +126,17 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
 
                             Permission foundWithoutField = findWithoutIdDifferentiation(selectedPermissions, permissionFactory.create(entityAction, entityField));
 
-                            if (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField) {
-                                ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
-                            }
-                            if (disableTree) {
-                                actionNode.setSelectable(false);
-                            }
                             if (foundWithoutField != null) {
-                                actionNode.setSelected(true);
-                                addNodeToSelectedNodes(actionNode, selectedNodes);
+                                if (foundWithoutField.getResource() instanceof EntityObjectField) {
+                                    if (dontSelectObjects) {
+                                        actionNode.setSelected(false);
+                                    }
+                                    ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                                    ((NodeModel) actionNode.getData()).setTooltip("Contains permissions for specific entity objects");
+                                } else {
+                                    actionNode.setSelected(true);
+                                    addNodeToSelectedNodes(actionNode, selectedNodes);
+                                }
                                 // actionNode.setSelectable(isAuthorizedResource(ActionConstants.REVOKE, entityField));
                             }
                         }

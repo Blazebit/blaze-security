@@ -5,7 +5,6 @@ package com.blazebit.security.web.bean.user;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,6 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.model.NodeModel;
@@ -68,7 +66,9 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
     public void init() {
         initPermissions();
         selectedPermissionNodes = new TreeNode[] {};
-        resourceRoot = getResourceTree(userPermissions, selectedPermissionNodes);
+        List<Permission> all=new ArrayList<Permission>(userPermissions);
+        all.addAll(userDataPermissions);
+        resourceRoot = getResourceTree(all, selectedPermissionNodes, true);
     }
 
     private void initPermissions() {

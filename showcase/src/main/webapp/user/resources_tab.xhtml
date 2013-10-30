@@ -22,7 +22,8 @@
 							selection="#{userResourcesBean.selectedPermissionNodes}" propagateSelectionDown="true"
 							propagateSelectionUp="true">
 							<p:treeNode>
-								<h:outputText value="#{_resource.name}" />
+								<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission"/>
+								<p:tooltip for="permission">#{_resource.tooltip}</p:tooltip>
 							</p:treeNode>
 						</p:tree>
 

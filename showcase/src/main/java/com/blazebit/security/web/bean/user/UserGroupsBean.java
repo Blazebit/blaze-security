@@ -26,6 +26,7 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.UserPermission;
@@ -155,14 +156,17 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         Set<Permission> revokable = new HashSet<Permission>(revokableWhenRemovingFromGroup);
         revokable.removeAll(grantable);
 
-        // existing user permissions
-        List<Permission> currentPermissions = new ArrayList<Permission>(currentUserPermissions);
         // current permission tree
         // mark removable permissions
         Set<Permission> revokeablePermissionsWhenGranting = getRevokablePermissionsWhenGranting(grantable);
         revokable.addAll(revokeablePermissionsWhenGranting);
-        buildCurrentPermissionTree(currentPermissions, revokable);
+        List<Permission> all = new ArrayList<Permission>(currentUserPermissions);
+        all.addAll(currentUserDataPermissions);
+        buildCurrentPermissionTree(all, revokable);
+
         // new permission tree
+        // existing user permissions
+        List<Permission> currentPermissions = new ArrayList<Permission>(currentUserPermissions);
         currentPermissions = (List<Permission>) removeAll(currentPermissions, revokeablePermissionsWhenGranting);
         currentPermissions.addAll(grantable);
         buildNewPermissionTree(currentPermissions, grantable, revokable);
@@ -319,11 +323,26 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                 for (Permission permission : permissionsByAction) {
                     // entity with field-> create node
                     if (!StringUtils.isEmpty(((EntityField) permission.getResource()).getField())) {
+
                         DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
-                            permission.getResource(), contains(markedPermissions, permission) ? Marking.RED : Marking.NONE), actionNode);
+                            permission.getResource(), Marking.NONE), actionNode);
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            ((NodeModel) fieldNode.getData()).setTooltip("Contains permissions for specific entity objects");
+                        }
+                        if (contains(markedPermissions, permission)) {
+                            ((NodeModel) fieldNode.getData()).setMarking(Marking.RED);
+                        }
                     } else {
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            ((NodeModel) actionNode.getData()).setTooltip("Contains permissions for specific entity objects");
+                        }
                         // entity without field permission -> dont create node but mark action if permission is marked
-                        ((NodeModel) actionNode.getData()).setMarking(contains(markedPermissions, permission) ? Marking.RED : Marking.NONE);
+                        if (contains(markedPermissions, permission)) {
+                            ((NodeModel) actionNode.getData()).setMarking(Marking.RED);
+                        }
+
                     }
                 }
                 propagateSelectionAndMarkingUp(actionNode, selectedPermissionNodes);
@@ -401,12 +420,16 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                             tooltip.deleteCharAt(tooltip.lastIndexOf(","));
                         NodeModel actionNodeModel = ((NodeModel) actionNode.getData());
                         actionNodeModel.setTooltip(tooltip.toString());
-                        if (contains(selectedPermissions, entityPermission)) {
+                        
+                        if (contains(selectedPermissions, entityPermission, false)) {
                             ((NodeModel) actionNode.getData()).setMarking(Marking.GREEN);
                             actionNode.setSelected(true);
                             actionNode.setSelectable(isAuthorized(ActionConstants.GRANT, entityField)
                                 && isAuthorized(ActionConstants.GRANT, entityFieldFactory.createResource(UserPermission.class)));
                             addNodeToSelectedNodes(actionNode, selectedPermissionNodes);
+                            if (entityPermission.getResource() instanceof EntityObjectField){
+                                actionNodeModel.setTooltip("Contains object reference");
+                            }
                         } else {
                             if (contains(notSelectedPermissions, entityPermission)) {
                                 actionNode.setSelected(false);
@@ -439,6 +462,8 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedPermissions = processSelectedPermissions(selectedPermissionNodes, false);
         List<Permission> currentPermissions = new ArrayList<Permission>(currentUserPermissions);
+        currentPermissions.addAll(currentUserDataPermissions);
+
         Set<Permission> revokablePermissions = new HashSet<Permission>();
 
         for (Permission selectedPermission : selectedPermissions) {
