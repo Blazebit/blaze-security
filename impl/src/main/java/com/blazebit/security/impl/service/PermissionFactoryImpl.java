@@ -12,6 +12,8 @@
  */
 package com.blazebit.security.impl.service;
 
+import javax.ejb.Stateless;
+
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionFactory;
@@ -31,7 +33,6 @@ import com.blazebit.security.impl.model.UserGroupPermission;
 import com.blazebit.security.impl.model.UserGroupPermissionId;
 import com.blazebit.security.impl.model.UserPermission;
 import com.blazebit.security.impl.model.UserPermissionId;
-import javax.ejb.Stateless;
 
 /**
  * 
@@ -41,16 +42,16 @@ import javax.ejb.Stateless;
 public class PermissionFactoryImpl implements PermissionFactory {
 
     @Override
-    public <P extends Permission> P create(Action action, Resource resource) {
+    public Permission create(Action action, Resource resource) {
         if (resource instanceof EntityObjectField) {
             UserDataPermission permission = new UserDataPermission();
             permission.setId(new UserDataPermissionId(null, (EntityObjectField) resource, (EntityAction) action));
-            return (P) permission;
+            return permission;
         } else {
             if (resource instanceof EntityField) {
                 UserPermission permission = new UserPermission();
                 permission.setId(new UserPermissionId(null, (EntityField) resource, (EntityAction) action));
-                return (P) permission;
+                return permission;
             } else {
                 throw new IllegalArgumentException("Not supported resource type!!");
             }
@@ -59,16 +60,16 @@ public class PermissionFactoryImpl implements PermissionFactory {
     }
 
     @Override
-    public <R extends Role<R>, P extends Permission> P create(Subject<R> subject, Action action, Resource resource) {
+    public Permission create(Subject subject, Action action, Resource resource) {
         if (resource instanceof EntityObjectField) {
             UserDataPermission permission = new UserDataPermission();
             permission.setId(new UserDataPermissionId((User) subject, (EntityObjectField) resource, (EntityAction) action));
-            return (P) permission;
+            return permission;
         } else {
             if (resource instanceof EntityField) {
                 UserPermission permission = new UserPermission();
                 permission.setId(new UserPermissionId((User) subject, (EntityField) resource, (EntityAction) action));
-                return (P) permission;
+                return permission;
             } else {
                 throw new IllegalArgumentException("Not supported resource type!!");
             }
@@ -77,16 +78,16 @@ public class PermissionFactoryImpl implements PermissionFactory {
     }
 
     @Override
-    public <R extends Role<R>, P extends Permission> P create(Role<R> role, Action action, Resource resource) {
+    public Permission create(Role role, Action action, Resource resource) {
         if (resource instanceof EntityObjectField) {
             UserGroupDataPermission permission = new UserGroupDataPermission();
             permission.setId(new UserGroupDataPermissionId((UserGroup) role, (EntityObjectField) resource, (EntityAction) action));
-            return (P) permission;
+            return permission;
         } else {
             if (resource instanceof EntityField) {
                 UserGroupPermission permission = new UserGroupPermission();
                 permission.setId(new UserGroupPermissionId((UserGroup) role, (EntityField) resource, (EntityAction) action));
-                return (P) permission;
+                return permission;
             } else {
                 throw new IllegalArgumentException("Not supported resource type!!");
             }

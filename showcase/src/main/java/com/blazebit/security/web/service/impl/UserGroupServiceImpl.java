@@ -23,7 +23,7 @@ import com.blazebit.security.impl.model.UserGroup;
 @Stateless
 public class UserGroupServiceImpl implements UserGroupService {
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
     @Inject
     private PermissionManager permissionManager;

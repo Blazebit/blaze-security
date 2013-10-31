@@ -12,7 +12,6 @@
  */
 package com.blazebit.security;
 
-
 /**
  * 
  * @author Christian Beikov

@@ -10,11 +10,8 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.Resource;
-import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
-import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Party;
 import com.blazebit.security.web.bean.SecurityBaseBean;
@@ -27,7 +24,7 @@ public class CarrierBean extends SecurityBaseBean {
 
     private List<Carrier> carriers = new ArrayList<Carrier>();
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;
 
     private Carrier newCarrier = new Carrier();

@@ -66,16 +66,16 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
     public void init() {
         initPermissions();
         selectedPermissionNodes = new TreeNode[] {};
-        List<Permission> all=new ArrayList<Permission>(userPermissions);
+        List<Permission> all = new ArrayList<Permission>(userPermissions);
         all.addAll(userDataPermissions);
         resourceRoot = getResourceTree(all, selectedPermissionNodes, true);
     }
 
     private void initPermissions() {
-        userPermissions = permissionManager.getPermissions(getSelectedUser());
-        userDataPermissions = permissionManager.getDataPermissions(getSelectedUser());
+        userPermissions = filterPermissions(permissionManager.getPermissions(getSelectedUser())).get(0);
+        userDataPermissions = filterPermissions(permissionManager.getPermissions(getSelectedUser())).get(1);
         this.permissionViewRoot = new DefaultTreeNode();
-        getPermissionTree(permissionManager.getAllPermissions(getSelectedUser()), permissionViewRoot);
+        getPermissionTree(permissionManager.getPermissions(getSelectedUser()), permissionViewRoot);
 
     }
 
@@ -94,7 +94,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
         // add permissions of ther user that did not appear in the list because the logged in user does not have permission to
         // grant or revoke them
-        for (Permission permission : permissionManager.getPermissions(userSession.getSelectedUser())) {
+        for (Permission permission : filterPermissions(permissionManager.getPermissions(userSession.getSelectedUser())).get(0)) {
             if (!isAuthorized(ActionConstants.GRANT, permission.getResource())) {
                 selectedPermissions.add(permission);
             }
@@ -104,7 +104,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         for (Permission permission : selectedPermissions) {
             Set<Permission> removeWhenGranting = permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), permission.getAction(), permission.getResource());
             for (Permission toBeRevoked : removeWhenGranting) {
-                    toRevoke.add(toBeRevoked);
+                toRevoke.add(toBeRevoked);
             }
         }
         revokedPermissionsToConfirm = new HashSet<Permission>();

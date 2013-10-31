@@ -42,6 +42,10 @@ import com.blazebit.security.impl.model.sample.Party;
 @Stateless
 public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     @Inject
     private PermissionService securityService;
     private Carrier carrier;

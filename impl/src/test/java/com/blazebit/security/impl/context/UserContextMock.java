@@ -3,9 +3,9 @@
  */
 package com.blazebit.security.impl.context;
 
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
 import javax.enterprise.context.RequestScoped;
+
+import com.blazebit.security.impl.model.User;
 
 /**
  * This is the mock used for the test where no logged user is present. This implementation uses the dataManager directly and

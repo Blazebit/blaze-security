@@ -13,12 +13,7 @@
 package com.blazebit.security.impl.service;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.security.Action;
-import com.blazebit.security.EntityFieldFactory;
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
-import com.blazebit.security.impl.model.EntityAction;
+import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.ResourceName;
@@ -27,7 +22,7 @@ import com.blazebit.security.impl.model.ResourceName;
  * 
  * @author cuszk
  */
-public class EntityFieldFactoryImpl implements EntityFieldFactory {
+public class EntityResourceFactoryImpl implements EntityResourceFactory {
 
     @Override
     public EntityField createResource(String entity) {
@@ -83,22 +78,6 @@ public class EntityFieldFactoryImpl implements EntityFieldFactory {
     public EntityField createResource(Class<?> clazz, Integer id) {
         return createResource(clazz, EntityField.EMPTY_FIELD, id);
 
-    }
-
-    @Override
-    public EntityField createResource(Subject subject) {
-        return createResource(subject.getClass(), EntityField.EMPTY_FIELD, ((IdHolder) subject).getId());
-
-    }
-
-    @Override
-    public EntityField createResource(Role role) {
-        return createResource(role.getClass(), EntityField.EMPTY_FIELD, ((IdHolder) role).getId());
-    }
-
-    @Override
-    public EntityField createResource(Action action) {
-        return new EntityField(action.getClass().getSimpleName(), ((EntityAction) action).getActionName());
     }
 
 }

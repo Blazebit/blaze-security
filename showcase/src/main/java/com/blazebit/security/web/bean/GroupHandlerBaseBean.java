@@ -23,7 +23,7 @@ public abstract class GroupHandlerBaseBean extends PermissionHandlingBaseBean {
         DefaultTreeNode root = new DefaultTreeNode();
         for (UserGroup group : availableGroups) {
             // only those groups are shown which can be granted by the logged in user
-            if (isAuthorized(ActionConstants.GRANT, entityFieldFactory.createResource(group)))
+            if (isAuthorized(ActionConstants.GRANT, resourceFactory.createResource(group)))
                 createNode(group, root, selectedGroups, selectedGroupNodes);
         }
         return root;

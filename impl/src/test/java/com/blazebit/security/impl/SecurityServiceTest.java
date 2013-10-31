@@ -37,6 +37,7 @@ import com.blazebit.security.impl.model.User;
 @Stateless
 public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
 
+    private static final long serialVersionUID = 1L;
     @Inject
     private PermissionService securityService;
 

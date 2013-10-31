@@ -12,8 +12,14 @@
  */
 package com.blazebit.security.impl.model;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.blazebit.lang.StringUtils;
+import com.blazebit.security.Action;
 import com.blazebit.security.Resource;
+import com.blazebit.security.constants.ActionConstants;
 
 /**
  * Class that represents an entity object with an id. Field attribute is inherited from EntityField and it is optional. If not
@@ -174,4 +180,21 @@ public class EntityObjectField extends EntityField {
         return true;
     }
 
+    @Override
+    public Collection<Resource> parents() {
+        List<Resource> l = new ArrayList<Resource>(2);
+        l.add(this);
+        l.add(new EntityField(entity));
+
+        if (!isEmptyField()) {
+            l.add(new EntityObjectField(entity, entityId));
+        }
+
+        return l;
+    }
+
+    @Override
+    public boolean isApplicable(Action action) {
+        return !action.implies(new EntityAction(ActionConstants.CREATE));
+    }
 }

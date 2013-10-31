@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
@@ -99,10 +98,10 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     }
 
     private void initUserPermissions() {
-        currentUserPermissions = permissionManager.getPermissions(getSelectedUser());
-        currentUserDataPermissions = permissionManager.getDataPermissions(getSelectedUser());
+        currentUserPermissions = filterPermissions(permissionManager.getPermissions(getSelectedUser())).get(0);
+        currentUserDataPermissions = filterPermissions(permissionManager.getPermissions(getSelectedUser())).get(1);
         this.permissionViewRoot = new DefaultTreeNode("root", null);
-        getPermissionTree(permissionManager.getAllPermissions(getSelectedUser()), permissionViewRoot);
+        getPermissionTree(permissionManager.getPermissions(getSelectedUser()), permissionViewRoot);
 
     }
 
@@ -201,7 +200,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         Set<Permission> grantable = new HashSet<Permission>();
         Set<Permission> notGrantable = new HashSet<Permission>();
         for (UserGroup selecteGroup : selectedGroupsWithParents) {
-            List<Permission> groupPermissions = permissionManager.getAllPermissions(selecteGroup);
+            List<Permission> groupPermissions = permissionManager.getPermissions(selecteGroup);
             for (Permission permission : groupPermissions) {
                 // filter out grantable permissions
                 if (permissionDataAccess.isGrantable(getSelectedUser(), permission.getAction(), permission.getResource())
@@ -267,7 +266,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         Set<Permission> notRevokable = new HashSet<Permission>();
         // collect permissions to be revoked from unselected groups and their parents
         for (UserGroup group : removeFromGroupsWithParents) {
-            List<Permission> groupPermissions = permissionManager.getAllPermissions(group);
+            List<Permission> groupPermissions = permissionManager.getPermissions(group);
             for (Permission permission : groupPermissions) {
                 // filter out revokable permissions
                 if (permissionDataAccess.isRevokable(getSelectedUser(), permission.getAction(), permission.getResource())
@@ -420,14 +419,14 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                             tooltip.deleteCharAt(tooltip.lastIndexOf(","));
                         NodeModel actionNodeModel = ((NodeModel) actionNode.getData());
                         actionNodeModel.setTooltip(tooltip.toString());
-                        
+
                         if (contains(selectedPermissions, entityPermission, false)) {
                             ((NodeModel) actionNode.getData()).setMarking(Marking.GREEN);
                             actionNode.setSelected(true);
                             actionNode.setSelectable(isAuthorized(ActionConstants.GRANT, entityField)
                                 && isAuthorized(ActionConstants.GRANT, entityFieldFactory.createResource(UserPermission.class)));
                             addNodeToSelectedNodes(actionNode, selectedPermissionNodes);
-                            if (entityPermission.getResource() instanceof EntityObjectField){
+                            if (entityPermission.getResource() instanceof EntityObjectField) {
                                 actionNodeModel.setTooltip("Contains object reference");
                             }
                         } else {
@@ -572,7 +571,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     // dialog
     public List<Permission> getSelectedGroupPermissions() {
         if (selectedGroup != null) {
-            return permissionManager.getAllPermissions(selectedGroup);
+            return permissionManager.getPermissions(selectedGroup);
         } else {
             return new ArrayList<Permission>();
         }

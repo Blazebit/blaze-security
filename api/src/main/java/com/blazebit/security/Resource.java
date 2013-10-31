@@ -12,6 +12,8 @@
  */
 package com.blazebit.security;
 
+import java.util.Collection;
+
 /**
  * 
  * @author Christian
@@ -32,5 +34,7 @@ public interface Resource {
      */
     public boolean isReplaceableBy(Resource resource);
 
+    public Collection<Resource> parents();
 
+    public boolean isApplicable(Action action);
 }

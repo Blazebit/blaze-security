@@ -12,21 +12,22 @@
  */
 package com.blazebit.security.impl.model.sample;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.impl.model.ResourceName;
 import java.io.Serializable;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Transient;
+
+import com.blazebit.security.IdHolder;
+import com.blazebit.security.impl.model.ResourceName;
 
 /**
  * 
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Document", module="Document management")
+@ResourceName(name = "Document", module = "Document management")
 public class Document implements Serializable, IdHolder {
 
     /**
@@ -37,7 +38,6 @@ public class Document implements Serializable, IdHolder {
     private String content;
     private String title;
     private Integer size;
-    
 
     @Id
     @GeneratedValue

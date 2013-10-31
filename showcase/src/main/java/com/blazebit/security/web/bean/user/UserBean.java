@@ -81,7 +81,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         this.selectedUser = user;
         this.userSession.setSelectedUser(selectedUser);
 
-        List<Permission> permissions = permissionManager.getAllPermissions(selectedUser);
+        List<Permission> permissions = permissionManager.getPermissions(selectedUser);
 
         this.permissionRoot = new DefaultTreeNode("root", null);
         getPermissionTree(permissions, permissionRoot);

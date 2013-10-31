@@ -12,10 +12,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.event.ValueChangeEvent;
-import javax.faces.model.SelectItem;
 import javax.inject.Inject;
-
-import org.primefaces.event.SelectEvent;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;

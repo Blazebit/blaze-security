@@ -13,17 +13,22 @@
 package com.blazebit.security.impl.model;
 
 import com.blazebit.security.Action;
+import com.blazebit.security.constants.ActionConstants;
 
 /**
  * 
  * @author Christian
  */
-public class EntityAction implements Action, Comparable {
+public class EntityAction implements Action, Comparable<EntityAction> {
 
     private String actionName;
     private PermissionId<?> permissionId;
 
     public EntityAction() {
+    }
+
+    public EntityAction(ActionConstants constant) {
+        this.actionName = constant.name();
     }
 
     public String getActionName() {
@@ -97,7 +102,8 @@ public class EntityAction implements Action, Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
-        return ((EntityAction) o).getActionName().compareToIgnoreCase(actionName);
+    public int compareTo(EntityAction o) {
+        return o.getActionName().compareToIgnoreCase(actionName);
     }
+
 }

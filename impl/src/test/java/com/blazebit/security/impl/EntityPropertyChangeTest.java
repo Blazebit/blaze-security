@@ -42,12 +42,11 @@ import com.blazebit.security.impl.model.sample.Party;
 @Stateless
 public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest> {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     private PermissionService securityService;
     private Carrier carrier;
-    private Carrier carrierWithParty;
-    private Carrier carrierWithContact;
-    private Carrier carrierWithGroup;
 
     @Before
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -73,10 +72,10 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
         carrier.getGroups().add(g1);
         entityManager.persist(carrier);
 
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD)));
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD)));
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD)));
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD)));
         ChangeInterceptor.activate();
         setUserContext(admin);
     }
@@ -107,7 +106,7 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
         setUserContext(user1);
         carrier.setField1("field1_changed");
         carrier = (Carrier) self.get().merge(carrier);
-
+        permissionManager.getPermissions(admin);
         assertEquals(entityManager.find(Carrier.class, carrier.getId()).getField1(), "field1_changed");
     }
 
@@ -318,10 +317,14 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
         Contact newContact = new Contact();
         newContact.setContactField("new_contact_field");
         self.get().persist(newContact);
+        Contact newContact2 = new Contact();
+        newContact2.setContactField("new_contact_field");
+        self.get().persist(newContact2);
         carrier.getContacts().add(newContact);
+        carrier.getContacts().add(newContact2);
         carrier = (Carrier) self.get().merge(carrier);
 
-        assertEquals(2, carrier.getContacts().size());
+        assertEquals(3, carrier.getContacts().size());
 
     }
 

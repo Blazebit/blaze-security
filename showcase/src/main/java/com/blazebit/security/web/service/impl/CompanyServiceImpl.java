@@ -3,7 +3,6 @@ package com.blazebit.security.web.service.impl;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-
 import javax.persistence.PersistenceContext;
 
 import com.blazebit.security.impl.model.Company;
@@ -11,7 +10,7 @@ import com.blazebit.security.web.service.api.CompanyService;
 
 public class CompanyServiceImpl implements CompanyService {
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;
 
     @Override

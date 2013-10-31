@@ -13,6 +13,7 @@
 package com.blazebit.security.impl.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,13 +30,14 @@ import javax.persistence.Transient;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
 import com.blazebit.security.Role;
+import com.blazebit.security.Subject;
 
 /**
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "User group",module="Core")
-public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
+@ResourceName(name = "User group", module = "Core")
+public class UserGroup implements Role, Serializable, IdHolder {
 
     private static final long serialVersionUID = 1L;
     private Integer id;
@@ -48,7 +50,7 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
     private Company company;
 
     public UserGroup() {
-        
+
     }
 
     public UserGroup(String name) {
@@ -154,7 +156,7 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
 
     @Override
     public String toString() {
-        return "UserGroup{" + "name=" + name + '}';
+        return "UserGroup [id=" + id + ", name=" + name + "]";
     }
 
     @ManyToOne
@@ -165,6 +167,20 @@ public class UserGroup implements Role<UserGroup>, Serializable, IdHolder {
 
     public void setCompany(Company company) {
         this.company = company;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    @Transient
+    public Collection<Subject> getSubjects() {
+        return (Collection<Subject>) (Collection<?>) users;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    @Transient
+    public Collection<Role> getRoles() {
+        return (Collection<Role>) (Collection<?>) userGroups;
     }
 
 }

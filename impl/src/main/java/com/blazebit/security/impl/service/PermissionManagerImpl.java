@@ -17,18 +17,16 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Role;
+import com.blazebit.security.RolePermission;
 import com.blazebit.security.Subject;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserDataPermission;
-import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.model.UserPermission;
+import com.blazebit.security.SubjectPermission;
+import com.blazebit.security.impl.context.Security;
 
 /**
  * 
@@ -37,98 +35,57 @@ import com.blazebit.security.impl.model.UserPermission;
 @Stateless
 public class PermissionManagerImpl implements PermissionManager {
 
-    @PersistenceContext
+    @Inject
+    @Security
     private EntityManager entityManager;
 
     @Override
     public <P extends Permission> P save(P permission) {
         entityManager.persist(permission);
+        entityManager.flush();
         return permission;
     }
 
     @Override
-    public void flush() {
-        entityManager.flush();
-
-    }
-
-    //TODO cannot be invoked from the onFlushDirty method because it causes an endless loop
-    @SuppressWarnings("unchecked")
-    @Override
-    public <P extends Permission> List<P> getAllPermissions(Subject<?> subject) {
-        return (List<P>) entityManager
-            .createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId()
-                             + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
-            .getResultList();
-
-    }
-    
-    @SuppressWarnings("unchecked")
-    @Override
-    public <P extends Permission> List<P> getPermissions(Subject<?> subject) {
-        return (List<P>) entityManager
-            .createQuery("SELECT permission FROM " + UserPermission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId()
-                             + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
-            .getResultList();
-
-    }
-    
-    @SuppressWarnings("unchecked")
-    @Override
-    public <P extends Permission> List<P> getDataPermissions(Subject<?> subject) {
-        return (List<P>) entityManager
-            .createQuery("SELECT permission FROM " + UserDataPermission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId()
-                             + "' ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
-            .getResultList();
-
-    }
-
-    @Override
-    public void removeAllPermissions(Subject<?> subject) {
-        entityManager
-            .createQuery("DELETE FROM " + UserPermission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) subject).getId() + "'")
-            .executeUpdate();
-
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <P extends Permission> List<P> getAllPermissions(Role<?> role) {
-        return (List<P>) entityManager
-            .createQuery("SELECT permission FROM " + Permission.class.getName() + " permission WHERE permission.id.subject.id='" + ((IdHolder) role).getId()
-                             + "'  ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
-            .getResultList();
-    }
-
-    @Override
-    public <P extends Permission> void remove(P permission) {
+    public void remove(Permission permission) {
         entityManager.remove(permission);
         entityManager.flush();
-
     }
 
     @Override
-    public <P extends Permission> void remove(Collection<P> permissions) {
+    public void remove(Collection<? extends Permission> permissions) {
         for (Permission p : permissions) {
             remove(p);
         }
     }
 
-    // TODO alternative to fetch all the permissions. problem with getAllPermissions method that it invokes a flush before the
-    // query. When this is invoked from the flush interceptor it causes to invoke the flush interceptor again and again.
-    // See forum: https://hibernate.atlassian.net/browse/HB-1480
+    @SuppressWarnings("unchecked")
     @Override
-    public Subject reloadSubjectWithPermissions(Subject subject) {
-        User user = entityManager.find(User.class, ((IdHolder) subject).getId());
-        user.getAllPermissions();
-        return user;
+    public List<Permission> getPermissions(Subject subject) {
+        return entityManager
+            .createQuery("SELECT permission FROM " + SubjectPermission.class.getName()
+                             + " permission WHERE permission.id.subject = :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
+            .setParameter("subject", subject)
+            .getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Permission> getPermissions(Role role) {
+        return entityManager
+            .createQuery("SELECT permission FROM " + RolePermission.class.getName()
+                             + " permission WHERE permission.id.subject= :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
+            .setParameter("subject", role)
+            .getResultList();
     }
 
     @Override
-    public Role reloadSubjectWithPermissions(Role role) {
-        UserGroup group = entityManager.find(UserGroup.class, ((IdHolder) role).getId());
-        group.getAllPermissions();
-        return group;
+    public void removeAllPermissions(Subject subject) {
+        entityManager
+            .createQuery("DELETE FROM " + SubjectPermission.class.getName() + " permission WHERE permission.id.subject=:subject")
+            .setParameter("subject", subject)
+            .executeUpdate();
+
     }
 
 }

@@ -76,7 +76,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
     }
 
     private void initPermissions() {
-        selectedGroupPermissions = permissionManager.getAllPermissions(getSelectedGroup());
+        selectedGroupPermissions = permissionManager.getPermissions(getSelectedGroup());
         selectedGroupParentPermissions.clear();
 
         List<UserGroup> parents = new ArrayList<UserGroup>();
@@ -91,7 +91,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
         for (UserGroup group : parents) {
             groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
-            List<Permission> permissions = permissionManager.getAllPermissions(group);
+            List<Permission> permissions = permissionManager.getPermissions(group);
             selectedGroupParentPermissions.addAll(permissions);
             getPermissionTree(permissions, groupNode);
         }
@@ -157,7 +157,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
 
     private void createPermissionNode(DefaultTreeNode userNode, boolean addedUser) {
         NodeModel userNodeModel = (NodeModel) userNode.getData();
-        List<Permission> userPermissions = permissionManager.getPermissions((User) userNodeModel.getTarget());
+        List<Permission> userPermissions = filterPermissions(permissionManager.getPermissions((User) userNodeModel.getTarget())).get(0);
         Map<String, List<Permission>> permissionMapByEntity = addedUser ? groupPermissionsByEntity(userPermissions,
                                                                                                    filterOutGrantablePermissions((User) userNodeModel.getTarget(),
                                                                                                                                  selectedGroupParentPermissions)) : groupPermissionsByEntity(userPermissions);
@@ -185,8 +185,8 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
                                 marking = Marking.GREEN;
                             }
                         }
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD, permission.getResource(),
-                            marking), actionNode);
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                            permission.getResource(), marking), actionNode);
                         fieldNode.setSelected(addedUser || (!addedUser && !contains(selectedGroupParentPermissions, permission)));
                         fieldNode.setSelectable(!contains(userPermissions, permission) || !addedUser);
                     } else {

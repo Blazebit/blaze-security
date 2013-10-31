@@ -25,6 +25,7 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.Action;
+import com.blazebit.security.ActionFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.AbstractPermission;
@@ -32,13 +33,10 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.ResourceNameExtension;
-import com.blazebit.security.web.bean.SecurityBaseBean;
 import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.UserModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
 import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
 import com.blazebit.security.web.service.impl.UserGroupService;
@@ -66,6 +64,9 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     @Inject
     private UserService userService;
 
+    @Inject
+    private ActionFactory actionFactory1;
+
     private List<Permission> groupPermissions = new ArrayList<Permission>();
 
     private TreeNode[] selectedPermissionNodes;
@@ -84,11 +85,11 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     private Set<Permission> revokedPermissionsToConfirm;
 
     public void init() {
-        //buildResourceTree();
+        // buildResourceTree();
         initPermissions();
         selectedPermissionNodes = new TreeNode[] {};
-        resourceRoot=getResourceTree(groupPermissions, selectedPermissionNodes);
-        
+        resourceRoot = getResourceTree(groupPermissions, selectedPermissionNodes);
+
     }
 
     private void initPermissions() {
@@ -105,7 +106,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         for (UserGroup group : parents) {
             groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
-            permissions = permissionManager.getAllPermissions(group);
+            permissions = permissionManager.getPermissions(group);
             getPermissionTree(permissions, groupNode);
         }
         groupPermissions = permissions;
@@ -119,7 +120,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             Class<?> entityClass = (Class<?>) type.getBaseType();
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
             // check if logged in user can grant these resources
-            if (permissionService.isGranted(userSession.getUser(), actionFactory.createAction(ActionConstants.GRANT), entityField)) {
+            if (permissionService.isGranted(userSession.getUser(), actionFactory1.createAction(ActionConstants.GRANT), entityField)) {
                 // entity
                 DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), resourceRoot);
                 entityNode.setExpanded(true);
@@ -387,7 +388,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         for (User user : sortedUsers) {
             DefaultTreeNode permissionRoot = new DefaultTreeNode(new NodeModel(user.getUsername(), ResourceType.USER, user), userPermissionTreeRoot);
             permissionRoot.setExpanded(true);
-            List<Permission> userPermissions = permissionManager.getPermissions(user);
+            List<Permission> userPermissions = filterPermissions(permissionManager.getPermissions(user)).get(0);
             buildPermissionViewTreeForUser(permissionRoot, userPermissions, grantedPermissions, revokedPermissions);
         }
 

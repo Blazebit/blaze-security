@@ -17,8 +17,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.Serializable;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -27,15 +25,16 @@ import javax.persistence.PersistenceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityFieldFactory;
+import com.blazebit.security.EntityResourceFactory;
+import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
+import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.context.UserContextMock;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
-import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
@@ -58,18 +57,24 @@ import com.blazebit.security.impl.model.sample.Party;
 @RunWith(TestRunner.class)
 public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     @Inject
     protected Instance<T> self;
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     protected EntityManager entityManager;
     @Inject
     protected PermissionFactory permissionFactory;
     @Inject
     protected ActionFactory actionFactory;
     @Inject
-    protected EntityFieldFactory entityFieldFactory;
+    protected EntityResourceFactory entityFieldFactory;
     @Inject
-    private PermissionManager permissionManager;
+    protected ResourceFactory resourceFactory;
+    @Inject
+    protected PermissionManager permissionManager;
     @Inject
     private UserContextMock userContext;
 
@@ -83,12 +88,12 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
     protected UserGroup userGroupB;
     protected UserGroup userGroupC;
     // actions
-    protected EntityAction createAction;
-    protected EntityAction deleteAction;
-    protected EntityAction updateAction;
-    protected EntityAction grantAction;
-    protected EntityAction revokeAction;
-    protected EntityAction readAction;
+    protected Action createAction;
+    protected Action deleteAction;
+    protected Action updateAction;
+    protected Action grantAction;
+    protected Action revokeAction;
+    protected Action readAction;
     // entityfields and entityObjectFields
     protected EntityField userEntity;
     protected EntityField groupEntity;
@@ -153,54 +158,57 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         admin = new User("Admin");
         entityManager.persist(admin);
 
-        entityManager.persist(permissionFactory.create(admin, grantAction, userEntity));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, userEntity));
-        entityManager.persist(permissionFactory.create(admin, updateAction, userEntity));
+        permissionManager.save(permissionFactory.create(admin, grantAction, userEntity));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, userEntity));
+        permissionManager.save(permissionFactory.create(admin, updateAction, userEntity));
 
-        entityManager.persist(permissionFactory.create(admin, grantAction, groupEntity));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, groupEntity));
-        entityManager.persist(permissionFactory.create(admin, updateAction, groupEntity));
+        permissionManager.save(permissionFactory.create(admin, grantAction, groupEntity));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, groupEntity));
+        permissionManager.save(permissionFactory.create(admin, updateAction, groupEntity));
         // allow admin to create permissions, then activate interceptor <--- not needed now because only update interceptor is
         // activated
 
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserPermission.class)));
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        entityManager.persist(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
 
-        entityManager.persist(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserPermission.class)));
-        entityManager.persist(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        entityManager.persist(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        entityManager.persist(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserDataPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupPermission.class)));
+        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
 
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Party.class)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Contact.class)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Document.class)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Party.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Contact.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Document.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
 
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Contact.class)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Document.class)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Email.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Contact.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Document.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Email.class)));
 
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(grantAction)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(revokeAction)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(grantAction)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(revokeAction)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(grantAction)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(revokeAction)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(grantAction)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(revokeAction)));
 
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(deleteAction)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(createAction)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(updateAction)));
-        entityManager.persist(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(readAction)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(deleteAction)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(createAction)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(updateAction)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(readAction)));
 
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(deleteAction)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(createAction)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(updateAction)));
-        entityManager.persist(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(readAction)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(deleteAction)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(createAction)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(updateAction)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(readAction)));
+
+        permissionManager.save(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Carrier.class, 1)));
+        permissionManager.save(permissionFactory.create(userGroupA, readAction, entityFieldFactory.createResource(Carrier.class)));
 
         entityManager.flush();
     }
@@ -211,12 +219,17 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         assertNotNull(userContext.getUser());
         assertNotNull(userContext.getUser().getId());
     }
-  
+
     public void setUserContext(User user) {
         userContext.setUser(user);
     }
 
     protected void testPermissionSize(User user, int expectedSize) {
-        assertEquals(expectedSize, permissionManager.getAllPermissions(user).size());
+        if (expectedSize != permissionManager.getPermissions(user).size()) {
+            for (Permission p : permissionManager.getPermissions(user)) {
+                System.out.println("Permission: " + p);
+            }
+        }
+        assertEquals(expectedSize, permissionManager.getPermissions(user).size());
     }
 }

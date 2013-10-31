@@ -12,22 +12,27 @@
  */
 package com.blazebit.security.impl.model.sample;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.impl.model.ResourceName;
 import java.io.Serializable;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Transient;
+
+import com.blazebit.security.IdHolder;
+import com.blazebit.security.impl.model.ResourceName;
 
 /**
  * 
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Contact", module="Carrier")
+@ResourceName(name = "Contact", module = "Carrier")
 public class Contact implements Serializable, IdHolder {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private Integer id;
     private String contactField;
 

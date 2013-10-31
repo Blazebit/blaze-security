@@ -16,27 +16,18 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 
-import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionDataAccess;
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.PermissionService;
-import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.SecurityBaseBean;
-import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.bean.model.NodeModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
 import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
-import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.impl.UserGroupService;
-import com.blazebit.security.web.service.impl.UserService;
 
 /**
  * 
@@ -153,7 +144,7 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
         for (UserGroup group : parents) {
             groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
-            List<Permission> permissions = permissionManager.getAllPermissions(group);
+            List<Permission> permissions = permissionManager.getPermissions(group);
             getPermissionTree(permissions, groupNode);
         }
         ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);

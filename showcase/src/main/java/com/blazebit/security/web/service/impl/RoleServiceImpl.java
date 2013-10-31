@@ -12,7 +12,7 @@
  */
 package com.blazebit.security.web.service.impl;
 
-import java.util.List;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -20,11 +20,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityFieldFactory;
+import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.PermissionActionException;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionService;
-import com.blazebit.security.RoleManager;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.service.api.RoleService;
@@ -41,17 +40,15 @@ public class RoleServiceImpl implements RoleService {
     @Inject
     private PermissionDataAccess permissionDataAccess;
     @Inject
-    private EntityFieldFactory entityFieldFactory;
+    private EntityResourceFactory entityFieldFactory;
     @Inject
     private ActionFactory actionFactory;
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
-    @Inject
-    private RoleManager roleManager;
 
     @Override
     public void addGroupToGroup(UserGroup userGroup1, UserGroup userGroup2) {
-        if (!roleManager.getRoles(userGroup2).contains(userGroup1)) {
+        if (!userGroup2.getRoles().contains(userGroup1)) {
             userGroup1.setParent(userGroup2);
             entityManager.merge(userGroup1);
             entityManager.flush();
@@ -62,7 +59,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void removeGroupFromGroup(UserGroup userGroup1, UserGroup userGroup2) {
-        if (roleManager.getRoles(userGroup2).contains(userGroup1)) {
+        if (userGroup2.getRoles().contains(userGroup1)) {
             userGroup1.setParent(userGroup2);
             entityManager.merge(userGroup1);
             entityManager.flush();
@@ -73,7 +70,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public boolean canUserBeAddedToRole(User user, UserGroup group) {
-        List<UserGroup> groups = (List<UserGroup>) roleManager.getRoles(user);
+        Set<UserGroup> groups = user.getUserGroups();
         for (UserGroup currentGroup : groups) {
             // subject cannot be added to the same role where he already belongs
             if (currentGroup.equals(group)) {
@@ -95,7 +92,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public boolean canUserBeRemovedFromRole(User user, UserGroup group) {
         // subject can be removed from role if role contains subject
-        return roleManager.getSubjects(group).contains(user);
+        return group.getSubjects().contains(user);
     }
 
     @Override

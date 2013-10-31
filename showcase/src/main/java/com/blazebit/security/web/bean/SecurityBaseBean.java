@@ -3,7 +3,7 @@ package com.blazebit.security.web.bean;
 import javax.inject.Inject;
 
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityFieldFactory;
+import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.Resource;
@@ -12,7 +12,7 @@ import com.blazebit.security.constants.ActionConstants;
 public class SecurityBaseBean {
 
     @Inject
-    protected EntityFieldFactory entityFieldFactory;
+    protected EntityResourceFactory entityFieldFactory;
     @Inject
     protected ActionFactory actionFactory;
     @Inject

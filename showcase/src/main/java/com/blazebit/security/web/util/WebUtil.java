@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-
 /**
  * @author Christian Beikov
  * 
@@ -62,8 +61,8 @@ public final class WebUtil {
     }
 
     /**
-     * Answers the question if data is reloadable or not. If it is a sorting or
-     * filter request it will be considered as not reloadable.
+     * Answers the question if data is reloadable or not. If it is a sorting or filter request it will be considered as not
+     * reloadable.
      * 
      * @return true if the data is reloadable
      */
@@ -74,14 +73,10 @@ public final class WebUtil {
     /**
      * Redirects to the given URI via the given {@link FacesContext}.
      * 
-     * @param fc
-     *            the current FacesContext
-     * @param uri
-     *            the URI to be redirected to.
-     * @param invalidate
-     *            true if the session shall be invalidated
-     * @throws InternalErrorException
-     *             if the redirect fails
+     * @param fc the current FacesContext
+     * @param uri the URI to be redirected to.
+     * @param invalidate true if the session shall be invalidated
+     * @throws InternalErrorException if the redirect fails
      */
     public static void redirect(final FacesContext fc, final String uri, boolean invalidate) {
         try {
@@ -96,19 +91,14 @@ public final class WebUtil {
     }
 
     /**
-     * Redirects the current request to the given uri via the
-     * {@link RequestDispatcher} of the given {@link HttpServletRequest} if the
-     * current request is no ajax request. If it is an ajax request the redirect
-     * will be done via the JSF ajax response on the client side.
+     * Redirects the current request to the given uri via the {@link RequestDispatcher} of the given {@link HttpServletRequest}
+     * if the current request is no ajax request. If it is an ajax request the redirect will be done via the JSF ajax response
+     * on the client side.
      * 
-     * @param req
-     *            the {@link HttpServletRequest}
-     * @param res
-     *            the {@link HttpServletResponse}
-     * @param uri
-     *            the uri o be redirected
-     * @param invalidate
-     *            true if the session shall be invalidated
+     * @param req the {@link HttpServletRequest}
+     * @param res the {@link HttpServletResponse}
+     * @param uri the uri o be redirected
+     * @param invalidate true if the session shall be invalidated
      */
     public static void redirect(final HttpServletRequest request, final HttpServletResponse response, String uri, boolean invalidate) {
         if (invalidate) {
@@ -121,8 +111,12 @@ public final class WebUtil {
             response.setContentType("text/xml");
             response.setCharacterEncoding("UTF-8");
 
-          if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-                response.getWriter().append("<?xml version=\"1.0\" encoding=\"utf-8\"?><partial-response><changes><redirect url=\"").append(uri).append("\"/></changes></partial-response>");
+            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                response
+                    .getWriter()
+                    .append("<?xml version=\"1.0\" encoding=\"utf-8\"?><partial-response><changes><redirect url=\"")
+                    .append(uri)
+                    .append("\"/></changes></partial-response>");
                 response.getWriter().flush();
             } else {
                 // Seems no ContextRoot on redirect is necessary

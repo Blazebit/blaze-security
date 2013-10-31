@@ -12,11 +12,10 @@
  */
 package com.blazebit.security.impl.model.sample;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.impl.model.ResourceName;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -25,16 +24,22 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.Transient;
+
+import com.blazebit.security.IdHolder;
+import com.blazebit.security.impl.model.ResourceName;
 
 /**
  * 
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Carrier", module="Carrier")
+@ResourceName(name = "Carrier", module = "Carrier")
 public class Carrier implements Serializable, IdHolder {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private Integer id;
     private String field1;
     private String field2;

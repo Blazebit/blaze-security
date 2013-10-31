@@ -3,10 +3,10 @@
  */
 package com.blazebit.security.web.service.impl;
 
+import java.util.List;
+
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
-
-import java.util.List;
 
 /**
  * 

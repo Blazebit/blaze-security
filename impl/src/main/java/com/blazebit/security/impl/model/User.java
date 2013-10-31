@@ -36,8 +36,8 @@ import com.blazebit.security.Subject;
  */
 @Entity(name = "User_")
 @Table(name = "User_")
-@ResourceName(name = "User",module="Core")
-public class User implements Subject<UserGroup>, Serializable, IdHolder {
+@ResourceName(name = "User", module = "Core")
+public class User implements Subject, Serializable, IdHolder {
 
     private static final long serialVersionUID = 1L;
     private Integer id;
@@ -121,7 +121,7 @@ public class User implements Subject<UserGroup>, Serializable, IdHolder {
 
     @Override
     public String toString() {
-        return "User{" + "username=" + username + '}';
+        return "User [id=" + id + ", username=" + username + "]";
     }
 
     @Override

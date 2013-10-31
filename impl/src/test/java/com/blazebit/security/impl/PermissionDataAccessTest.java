@@ -52,6 +52,10 @@ import com.blazebit.security.impl.model.sample.Email;
 @Stateless
 public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest> {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     @Inject
     private PermissionDataAccess permissionDataAccess;
     private EntityField emailEntityWithSubject;
@@ -91,9 +95,8 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @throws Exception
      */
     private Permission createPermission(Subject subject, Action action, com.blazebit.security.Resource resource) {
-        Permission permission = permissionFactory.create(subject, action, resource);
-        self.get().persist(permission);
-        return permission;
+        return permissionManager.save(permissionFactory.create(subject, action, resource));
+
     }
 
     /**
@@ -105,9 +108,8 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @throws Exception
      */
     private Permission createPermission(Role role, Action action, com.blazebit.security.Resource resource) {
-        Permission permission = permissionFactory.create(role, action, resource);
-        self.get().persist(permission);
-        return permission;
+        return permissionManager.save(permissionFactory.create(role, action, resource));
+
     }
 
     // REVOKE
@@ -680,7 +682,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
             // add user to userGroup 3
             UserGroup parent = userGroup;
             while (parent != null) {
-                for (Permission p : permissionManager.getAllPermissions(parent)) {
+                for (Permission p : permissionManager.getPermissions(parent)) {
                     if (permissionDataAccess.isGrantable(user, p.getAction(), p.getResource())) {
                         actualToBeGranted.add(p);
                     }
@@ -693,5 +695,4 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         assertEquals(expectedToBeGranted, actualToBeGranted);
     }
 
- 
 }

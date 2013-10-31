@@ -21,12 +21,13 @@ import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityFieldFactory;
+import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
+import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
@@ -50,12 +51,14 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     @Inject
     protected PermissionManager permissionManager;
     @Inject
-    protected EntityFieldFactory entityFieldFactory;
+    protected EntityResourceFactory entityFieldFactory;
+    @Inject
+    protected ResourceFactory resourceFactory;
     @Inject
     protected ActionFactory actionFactory;
     @Inject
     protected PermissionService permissionService;
-    
+
     protected boolean contains(Collection<Permission> permissions, Permission permission) {
         return contains(permissions, permission, true);
     }
@@ -226,10 +229,11 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
                             ((NodeModel) fieldNode.getData()).setTooltip("Contains permissions for specific entity objects");
                             ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
                         }
-                    }
-                    if (permission.getResource() instanceof EntityObjectField) {
-                        ((NodeModel) actionNode.getData()).setTooltip("Contains permissions for specific entity objects");
-                        ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                    } else {
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            ((NodeModel) actionNode.getData()).setTooltip("Contains permissions for specific entity objects");
+                            ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                        }
                     }
                 }
             }
@@ -371,5 +375,22 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
             }
         }
         return ret;
+    }
+
+    protected List<List<Permission>> filterPermissions(List<Permission> permissions) {
+        List<List<Permission>> ret = new ArrayList<List<Permission>>();
+        List<Permission> entities = new ArrayList<Permission>();
+        List<Permission> objects = new ArrayList<Permission>();
+        for (Permission p : permissions) {
+            if (p.getResource() instanceof EntityObjectField) {
+                objects.add(p);
+            } else {
+                entities.add(p);
+            }
+        }
+        ret.add(entities);
+        ret.add(objects);
+        return ret;
+
     }
 }

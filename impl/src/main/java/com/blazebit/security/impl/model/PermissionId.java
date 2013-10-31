@@ -1,21 +1,19 @@
 /*
  * Copyright 2013 Blazebit.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
  */
 package com.blazebit.security.impl.model;
 
 import java.io.Serializable;
+
 import javax.persistence.Basic;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -84,7 +82,7 @@ public abstract class PermissionId<S> implements Serializable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final PermissionId<S> other = (PermissionId<S>) obj;
+        final PermissionId<?> other = (PermissionId<?>) obj;
         if ((this.actionName == null) ? (other.actionName != null) : !this.actionName.equals(other.actionName)) {
             return false;
         }
@@ -104,8 +102,5 @@ public abstract class PermissionId<S> implements Serializable {
     public String toString() {
         return "PermissionId{" + "actionName=" + actionName + ", entity=" + entity + ", field=" + field + ", subject=" + subject + '}';
     }
-    
-    
 
- 
 }

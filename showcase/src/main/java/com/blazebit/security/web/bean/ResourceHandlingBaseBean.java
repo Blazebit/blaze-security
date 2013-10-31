@@ -14,17 +14,15 @@ import org.primefaces.model.TreeNode;
 
 import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.Action;
-import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityFieldFactory;
+import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.Permission;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.web.bean.model.NodeModel;
 import com.blazebit.security.web.bean.model.NodeModel.Marking;
+import com.blazebit.security.web.service.api.ActionUtils;
 
 public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
 
@@ -32,10 +30,10 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
     private ResourceNameExtension resourceNameExtension;
 
     @Inject
-    protected EntityFieldFactory entityFieldFactory;
+    protected EntityResourceFactory entityFieldFactory;
 
     @Inject
-    protected ActionFactory actionFactory;
+    protected ActionUtils actionFactory;
 
     protected DefaultTreeNode getResourceTree() {
         return getResourceTree(new HashSet<Permission>(), null);
@@ -69,15 +67,8 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                         DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), moduleNode);
                         entityNode.setExpanded(true);
                         // action node comes under entity node
-                        List<Action> entityActionFields = actionFactory.getActionsForEntity();
-                        // if (ReflectionUtils.isSubtype(entityClass, Subject.class) || ReflectionUtils.isSubtype(entityClass,
-                        // Role.class)
-                        // || ReflectionUtils.isSubtype(entityClass, Permission.class)) {
-                        // if (ReflectionUtils.isSubtype(entityClass, Permission.class)) {
                         // every entity also permissions must have create, read, update, delete, grant and revoke actions
-                        entityActionFields.addAll(actionFactory.getSpecialActions());
-                        // }
-                        // }
+                        List<Action> entityActionFields = actionFactory.getActionsForEntity();
                         // fields for entity
                         Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
                         if (allFields.length > 0) {
@@ -99,7 +90,8 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
 
                                     if (foundWithField != null || foundWithoutField != null) {
                                         // entity object resources are blue
-                                        if ((foundWithField!=null && foundWithField.getResource() instanceof EntityObjectField) || (foundWithoutField!=null && foundWithoutField.getResource() instanceof EntityObjectField)) {
+                                        if ((foundWithField != null && foundWithField.getResource() instanceof EntityObjectField)
+                                            || (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField)) {
                                             ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
                                             ((NodeModel) fieldNode.getData()).setTooltip("Contains permissions for specific entity objects");
                                             if (dontSelectObjects) {

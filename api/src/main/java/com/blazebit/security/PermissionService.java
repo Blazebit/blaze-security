@@ -12,8 +12,6 @@
  */
 package com.blazebit.security;
 
-import java.util.Collection;
-
 /**
  * 
  * @author Christian Beikov
@@ -27,7 +25,7 @@ public interface PermissionService {
      * @param resource
      * @return true if subject has permission to perform action on resource
      */
-    public <R extends Role<R>> boolean isGranted(Subject<R> subject, Action action, Resource resource);
+    public boolean isGranted(Subject subject, Action action, Resource resource);
 
     /**
      * authorizer grants permission to subject to perform action on given resource
@@ -39,7 +37,7 @@ public interface PermissionService {
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public <R extends Role<R>> void grant(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
+    public void grant(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
 
     /**
      * authorizer revokes permission from subject to perform action on given resource
@@ -51,7 +49,7 @@ public interface PermissionService {
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public <R extends Role<R>> void revoke(Subject<R> authorizer, Subject<R> subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
+    public void revoke(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -72,7 +70,7 @@ public interface PermissionService {
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public <R extends Role<R>> void grant(Subject<R> authorizer, Role role, Action action, Resource resource) throws PermissionException, PermissionActionException;
+    public void grant(Subject authorizer, Role role, Action action, Resource resource) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -86,8 +84,7 @@ public interface PermissionService {
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public <R extends Role<R>> void grant(Subject<R> authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException,
-        PermissionActionException;
+    public void grant(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -100,7 +97,7 @@ public interface PermissionService {
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public <R extends Role<R>> void revoke(Subject<R> authorizer, Role subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
+    public void revoke(Subject authorizer, Role subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
 
     /**
      * authorizer revokes permission from role to perform action on given resource
@@ -113,38 +110,13 @@ public interface PermissionService {
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public <R extends Role<R>> void revoke(Subject<R> authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException,
-        PermissionActionException;
+    public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException;
 
-    /**
-     * 
-     * @param subject
-     * @return allowed actions for a subject and resource
-     */
-    public <R extends Role<R>> Collection<Action> getAllowedActions(Subject<R> subject, Resource resource);
-
-    /**
-     * 
-     * @return grant action
-     */
-    public Action getGrantAction();
-
-    /**
-     * 
-     * @return revoke action
-     */
-    public Action getRevokeAction();
-
-    /**
-     * 
-     * @return create action
-     */
-    public Action getCreateAction();
-
-    /**
-     * 
-     * @return delete action
-     */
-    public Action getDeleteAction();
+    // /**
+    // *
+    // * @param subject
+    // * @return allowed actions for a subject and resource
+    // */
+    // public Collection<Action> getAllowedActions(Subject subject, Resource resource);
 
 }

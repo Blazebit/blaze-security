@@ -24,7 +24,7 @@ import com.blazebit.security.web.service.api.RoleService;
 @Stateless
 public class UserServiceImpl implements UserService {
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
 
     @Inject
@@ -52,8 +52,7 @@ public class UserServiceImpl implements UserService {
         entityManager.remove(reloadedUser);
         entityManager.flush();
     }
-    
-  
+
     @Override
     public List<User> findUsers(Company company) {
         return entityManager

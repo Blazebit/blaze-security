@@ -12,35 +12,12 @@
  */
 package com.blazebit.security;
 
-
-
 /**
  * 
  * @author cuszk
  * 
  */
-public interface EntityFieldFactory {
-
-    /**
-     * 
-     * @param subject
-     * @return resource for the given subject
-     */
-    public Resource createResource(Subject subject);
-
-    /**
-     * 
-     * @param subject
-     * @return resource created for the given role
-     */
-    public Resource createResource(Role role);
-
-    /**
-     * 
-     * @param action
-     * @return resource created for the given action
-     */
-    public Resource createResource(Action action);
+public interface EntityResourceFactory {
 
     /**
      * 

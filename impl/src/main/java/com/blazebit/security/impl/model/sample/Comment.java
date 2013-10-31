@@ -29,9 +29,13 @@ import com.blazebit.security.impl.model.User;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Comment", module="Document management")
+@ResourceName(name = "Comment", module = "Document management")
 public class Comment implements IdHolder, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private Integer id;
     private String text;
     private User user;
@@ -43,7 +47,6 @@ public class Comment implements IdHolder, Serializable {
         return id;
     }
 
-    
     public void setId(Integer id) {
         this.id = id;
     }
@@ -57,7 +60,7 @@ public class Comment implements IdHolder, Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name="user", nullable=false)
+    @JoinColumn(name = "user", nullable = false)
     public User getUser() {
         return user;
     }
@@ -66,5 +69,4 @@ public class Comment implements IdHolder, Serializable {
         this.user = user;
     }
 
-    
 }

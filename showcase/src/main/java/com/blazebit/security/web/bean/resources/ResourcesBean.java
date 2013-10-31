@@ -24,6 +24,7 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Action;
+import com.blazebit.security.ActionFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.constants.ActionConstants;
@@ -65,6 +66,9 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     @Inject
     private PermissionService permissionService;
 
+    @Inject
+    private ActionFactory actionFactory1;
+
     private TreeNode resourceRoot;
     private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
     private TreeNode[] selectedUserPermissionNodes = new TreeNode[] {};
@@ -100,7 +104,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                     field = params.get("field");
                 }
                 if (params.containsKey("action")) {
-                    selectedPermissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.valueOf(params.get("action"))),
+                    selectedPermissions.add(permissionFactory.create(actionFactory1.createAction(ActionConstants.valueOf(params.get("action"))),
                                                                      entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
                                                                                                        Integer.valueOf(params.get("id")))));
                 } else {
@@ -199,12 +203,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         Set<Permission> revokablePermissions = null;
         if (nodeModel.getTarget() instanceof User) {
             User user = (User) nodeModel.getTarget();
-            permissions = permissionManager.getPermissions(user);
+            permissions = filterPermissions(permissionManager.getPermissions(user)).get(0);
             revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
         } else {
             if (nodeModel.getTarget() instanceof UserGroup) {
                 UserGroup group = (UserGroup) nodeModel.getTarget();
-                permissions = permissionManager.getAllPermissions(group);
+                permissions = permissionManager.getPermissions(group);
                 revokablePermissions = getReplaceablePermissions(group, permissions, selectedPermissions);
             }
         }
@@ -266,12 +270,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         Set<Permission> revokablePermissions = null;
         if (nodeModel.getTarget() instanceof User) {
             User user = (User) nodeModel.getTarget();
-            permissions = permissionManager.getPermissions(user);
+            permissions = filterPermissions(permissionManager.getPermissions(user)).get(0);
             revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
         } else {
             if (nodeModel.getTarget() instanceof UserGroup) {
                 UserGroup group = (UserGroup) nodeModel.getTarget();
-                permissions = permissionManager.getAllPermissions(group);
+                permissions = permissionManager.getPermissions(group);
                 revokablePermissions = getReplaceablePermissions(group, permissions, selectedPermissions);
             }
         }

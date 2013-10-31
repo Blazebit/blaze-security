@@ -12,10 +12,12 @@
  */
 package com.blazebit.security.impl.model;
 
-import com.blazebit.security.Permission;
 import java.io.Serializable;
+
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+
+import com.blazebit.security.Permission;
 
 @MappedSuperclass
 public abstract class AbstractPermission<S, P extends PermissionId<S>> implements Permission, Serializable {
@@ -25,7 +27,7 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
     private EntityAction entityAction;
     private EntityField entityField;
     private S subject;
-
+    
     public void setId(P id) {
         this.id = id;
         this.entityAction = new EntityAction(id);
@@ -94,7 +96,7 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
         if (obj == null) {
             return false;
         }
-        final AbstractPermission<S, P> other = (AbstractPermission<S, P>) obj;
+        final AbstractPermission<?, ?> other = (AbstractPermission<?, ?>) obj;
         if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
             return false;
         }
@@ -105,5 +107,5 @@ public abstract class AbstractPermission<S, P extends PermissionId<S>> implement
     public String toString() {
         return "Permission{" + "id=" + id + "}";
     }
-   
+
 }

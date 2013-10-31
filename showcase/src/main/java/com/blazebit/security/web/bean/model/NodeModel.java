@@ -3,8 +3,6 @@
  */
 package com.blazebit.security.web.bean.model;
 
-import com.blazebit.security.impl.model.UserGroup;
-
 /**
  * 
  * @author cuszk

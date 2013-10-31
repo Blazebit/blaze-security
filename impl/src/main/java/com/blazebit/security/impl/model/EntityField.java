@@ -12,8 +12,13 @@
  */
 package com.blazebit.security.impl.model;
 
-import com.blazebit.lang.StringUtils;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
+import com.blazebit.security.Action;
 import com.blazebit.security.Resource;
+import com.blazebit.security.constants.ActionConstants;
 
 /**
  * Class representing an Entity resource with an optional field attribute. If field attribute is empty the resource refers to
@@ -38,7 +43,7 @@ public class EntityField implements Resource {
 
     public EntityField(String entity) {
         this.entity = entity;
-        this.field = "";
+        this.field = EMPTY_FIELD;
     }
 
     public PermissionId<?> getPermissionId() {
@@ -147,9 +152,9 @@ public class EntityField implements Resource {
         if (obj == null) {
             return false;
         }
-         if (getClass() != obj.getClass()) {
-         return false;
-         }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
         final EntityField other = (EntityField) obj;
         if ((this.entity == null) ? (other.entity != null) : !this.entity.equals(other.entity)) {
             return false;
@@ -158,6 +163,25 @@ public class EntityField implements Resource {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public Collection<Resource> parents() {
+        if (!isEmptyField()) {
+            return Arrays.asList((Resource) this, (Resource) new EntityField(entity));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public boolean isApplicable(Action action) {
+        if (!isEmptyField()) {
+            return !action.implies(new EntityAction(ActionConstants.CREATE)) && !action.implies(new EntityAction(ActionConstants.DELETE))
+                && !action.implies(new EntityAction(ActionConstants.GRANT)) && !action.implies(new EntityAction(ActionConstants.REVOKE));
+        } else {
+            return true;
+        }
     }
 
 }

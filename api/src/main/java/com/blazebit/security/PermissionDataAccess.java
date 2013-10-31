@@ -29,7 +29,7 @@ public interface PermissionDataAccess {
      * @return true if subject permission to be revoked for the given action and resource can be revoked ( it exists or its
      *         "subset" exists)
      */
-    public boolean isRevokable(Subject<?> subject, Action action, Resource resource);
+    public boolean isRevokable(Subject subject, Action action, Resource resource);
 
     /**
      * 

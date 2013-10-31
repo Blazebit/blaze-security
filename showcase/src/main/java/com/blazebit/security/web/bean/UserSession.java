@@ -3,14 +3,14 @@
  */
 package com.blazebit.security.web.bean;
 
-import com.blazebit.security.impl.model.Company;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
-
 import java.io.Serializable;
 
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
+
+import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.UserGroup;
 
 /**
  * 
@@ -80,7 +80,5 @@ public class UserSession implements Serializable {
     public void setAdmin(User admin) {
         this.admin = admin;
     }
-    
-    
 
 }

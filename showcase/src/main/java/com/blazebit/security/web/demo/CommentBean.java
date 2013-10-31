@@ -25,7 +25,7 @@ import com.blazebit.security.web.util.WebUtil;
 @Stateless
 public class CommentBean extends SecurityBaseBean {
 
-    @PersistenceContext
+    @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;
 
     @Inject

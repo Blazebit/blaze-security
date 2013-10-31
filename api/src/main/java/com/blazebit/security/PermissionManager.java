@@ -29,56 +29,37 @@ public interface PermissionManager {
     public <P extends Permission> P save(P permission);
 
     /**
-     * flushes
-     */
-    public void flush();
-
-    /**
      * 
      * @param subject
      * @return list of all permissions for a given subject
      */
-    public <P extends Permission> List<P> getAllPermissions(Subject<?> subject);
+    public List<Permission> getPermissions(Subject subject);
 
     /**
      * 
      * @param role
      * @return list of all permissions for a given role
      */
-    public <P extends Permission> List<P> getAllPermissions(Role<?> role);
+    public List<Permission> getPermissions(Role role);
 
     /**
      * deletes a permission
      * 
      * @param permission
      */
-    public <P extends Permission> void remove(Collection<P> permissions);
+    public void remove(Collection<? extends Permission> permissions);
 
     /**
      * deletes a list of permissions
      * 
      * @param permissions
      */
-    public <P extends Permission> void remove(P permission);
+    public void remove(Permission permission);
 
     /**
      * 
      * @param subject
-     * @return reloaded subject with all the permissions
      */
-    public Subject reloadSubjectWithPermissions(Subject subject);
-
-    /**
-     * 
-     * @param role
-     * @return reloaded role with all the permissions
-     */
-    public Role reloadSubjectWithPermissions(Role role);
-
-    void removeAllPermissions(Subject<?> subject);
-
-    <P extends Permission> List<P> getPermissions(Subject<?> subject);
-
-    <P extends Permission> List<P> getDataPermissions(Subject<?> subject);
+    public void removeAllPermissions(Subject subject);
 
 }

@@ -1,13 +1,12 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * To change this template, choose Tools | Templates and open the template in the editor.
  */
 package com.blazebit.security.web.bean.model;
 
 import com.blazebit.security.impl.model.UserGroup;
 
 /**
- *
+ * 
  * @author cuszk
  */
 public class GroupModel {
@@ -46,6 +45,5 @@ public class GroupModel {
     public void setMarked(boolean marked) {
         this.marked = marked;
     }
-    
-    
+
 }

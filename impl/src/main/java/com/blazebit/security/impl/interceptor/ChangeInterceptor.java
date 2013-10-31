@@ -25,7 +25,7 @@ import org.hibernate.type.Type;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityFieldFactory;
+import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionException;
@@ -105,7 +105,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        EntityFieldFactory entityFieldFactory = BeanProvider.getContextualReference(EntityFieldFactory.class);
+        EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
         boolean isGranted = changedPropertyNames.isEmpty();
         Integer entityId = null;
         if (entity instanceof IdHolder) {
@@ -140,16 +140,23 @@ public class ChangeInterceptor extends EmptyInterceptor {
             String fieldName = coll.getRole().replace(owner.getClass().getName() + ".", "");
             UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
             ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-            EntityFieldFactory entityFieldFactory = BeanProvider.getContextualReference(EntityFieldFactory.class);
+            EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
             // find resource to check
             Integer entityId = null;
             if (owner instanceof IdHolder) {
                 entityId = ((IdHolder) owner).getId();
             }
-            boolean isGranted = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                                                       entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
+            // TODO comapre to snapshot
+            boolean isGrantedToAdd = BeanProvider
+                .getContextualReference(PermissionService.class)
+                .isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
 
-            if (!isGranted) {
+            boolean isGrantedToRemove = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(),
+                                                                                                               actionFactory.createAction(ActionConstants.UPDATE),
+                                                                                                               entityFieldFactory.createResource(owner.getClass(), fieldName,
+                                                                                                                                                 entityId));
+
+            if (!isGrantedToAdd || !isGrantedToRemove) {
                 throw new PermissionException("Entity " + owner + "'s collection " + fieldName + " is not permitted to be updated by " + userContext.getUser());
             } else {
                 super.onCollectionUpdate(collection, key);
@@ -183,7 +190,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        EntityFieldFactory entityFieldFactory = BeanProvider.getContextualReference(EntityFieldFactory.class);
+        EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
         // find resource to check
         boolean isGranted = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
                                                                                                    entityFieldFactory.createResource(entity.getClass(), EntityField.EMPTY_FIELD));
@@ -209,7 +216,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        EntityFieldFactory entityFieldFactory = BeanProvider.getContextualReference(EntityFieldFactory.class);
+        EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
         // find resource to check
         Integer entityId = null;
         if (entity instanceof IdHolder) {

@@ -10,29 +10,12 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package com.blazebit.security.impl.model;
-
-import javax.persistence.Embeddable;
+package com.blazebit.security;
 
 /**
  * 
- * @author cuszk
+ * @author Christian Beikov
  */
-@Embeddable
-public class UserGroupPermissionId extends PermissionId<UserGroup> {
+public interface SubjectPermission extends Permission {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
-
-    public UserGroupPermissionId() {
-    }
-
-    public UserGroupPermissionId(UserGroup subject, EntityField resource, EntityAction action) {
-        super.setSubject(subject);
-        super.setEntity(resource.getEntity());
-        super.setField(resource.getField());
-        super.setActionName(action.getActionName());
-    }
 }

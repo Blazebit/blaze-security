@@ -3,7 +3,6 @@ package com.blazebit.security.web.service.api;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 
-
 public interface RoleService {
 
     public void addGroupToGroup(UserGroup userGroup1, UserGroup userGroup2);
