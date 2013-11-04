@@ -22,5 +22,5 @@ public interface UserService {
 
     public User findUser(String username, Company company);
 
-    List<User> findUsers(Company company);
+    public List<User> findUsers(Company company);
 }

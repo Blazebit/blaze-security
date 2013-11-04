@@ -33,7 +33,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
     protected EntityResourceFactory entityFieldFactory;
 
     @Inject
-    protected ActionUtils actionFactory;
+    protected ActionUtils actionUtils;
 
     protected DefaultTreeNode getResourceTree() {
         return getResourceTree(new HashSet<Permission>(), null);
@@ -68,12 +68,12 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                         entityNode.setExpanded(true);
                         // action node comes under entity node
                         // every entity also permissions must have create, read, update, delete, grant and revoke actions
-                        List<Action> entityActionFields = actionFactory.getActionsForEntity();
+                        List<Action> entityActionFields = actionUtils.getActionsForEntity();
                         // fields for entity
                         Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
                         if (allFields.length > 0) {
                             // actions for fields
-                            for (Action action : actionFactory.getActionsForField()) {
+                            for (Action action : actionUtils.getActionsForField()) {
                                 EntityAction entityAction = (EntityAction) action;
                                 DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction),
                                     entityNode);

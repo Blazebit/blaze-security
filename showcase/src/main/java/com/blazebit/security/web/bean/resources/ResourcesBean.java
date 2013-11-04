@@ -66,9 +66,6 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     @Inject
     private PermissionService permissionService;
 
-    @Inject
-    private ActionFactory actionFactory1;
-
     private TreeNode resourceRoot;
     private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
     private TreeNode[] selectedUserPermissionNodes = new TreeNode[] {};
@@ -104,11 +101,11 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                     field = params.get("field");
                 }
                 if (params.containsKey("action")) {
-                    selectedPermissions.add(permissionFactory.create(actionFactory1.createAction(ActionConstants.valueOf(params.get("action"))),
+                    selectedPermissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.valueOf(params.get("action"))),
                                                                      entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
                                                                                                        Integer.valueOf(params.get("id")))));
                 } else {
-                    for (Action action : actionFactory.getActionsForEntityObject()) {
+                    for (Action action : actionUtils.getActionsForEntityObject()) {
                         selectedPermissions.add(permissionFactory.create(action,
                                                                          entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
                                                                                                            Integer.valueOf(params.get("id")))));

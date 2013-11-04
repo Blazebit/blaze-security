@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>Users</title>
+		</f:facet>
+		<style>
+.top {
+	vertical-align: top
+}
+</style>
+	</h:head>
+
+	<h:body>
+		<f:event listener="#{permissionManager.init}" type="preRenderView" />
+		<h:form id="form">
+			<h:panelGroup rendered="#{not empty userSession.user}">
+				<h3>
+					Logged in as #{userSession.user.username}. Login as a
+					<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
+				</h3>
+			</h:panelGroup>
+			<h:panelGroup rendered="#{empty userSession.user}">
+				<h:outputLink value="../index.xhtml">Login first!!</h:outputLink>
+			</h:panelGroup>
+
+
+			<p:menu rendered="#{not empty userSession.user}">
+				<p:submenu label="Menu">
+					<p:menuitem value="Start" url="index.xhtml" />
+					<p:menuitem value="Users" url="/user/users.xhtml" />
+					<p:menuitem value="Groups" url="/group/groups.xhtml" />
+				</p:submenu>
+			</p:menu>
+			
+			Selected subject : #{permissionManager.selectedSubject}
+
+			<p:tree value="#{permissionManager.root}" var="permission"
+				rendered="#{permissionManager.root.childCount ne 0}" selectionMode="checkbox" selection="#{permissionManager.selectedNodes}">
+				<p:treeNode>
+					<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+					<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
+						hideEffect="fade" style="#{permission.marking.style}" />
+				</p:treeNode>
+			</p:tree>
+			
+			<p:commandButton value="Confirm" action="#{permissionManager.confirm}"/>
+
+		</h:form>
+
+
+	</h:body>
+</f:view>
+</html>

@@ -14,6 +14,11 @@ public class ActionUtils {
     @Inject
     private ActionFactory actionFactory;
 
+    /**
+     * list of possible actions for an entity resource
+     * 
+     * @return
+     */
     public List<Action> getActionsForEntity() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.CREATE));
@@ -25,6 +30,11 @@ public class ActionUtils {
         return ret;
     }
 
+    /**
+     * list of possible actions for a field
+     * 
+     * @return
+     */
     public List<Action> getActionsForField() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.UPDATE));
@@ -34,11 +44,18 @@ public class ActionUtils {
         return ret;
     }
 
+    /**
+     * list of possible actions for an object
+     * 
+     * @return
+     */
     public List<Action> getActionsForEntityObject() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.UPDATE));
         ret.add(actionFactory.createAction(ActionConstants.DELETE));
         ret.add(actionFactory.createAction(ActionConstants.READ));
+        ret.add(actionFactory.createAction(ActionConstants.GRANT));
+        ret.add(actionFactory.createAction(ActionConstants.REVOKE));
         return ret;
     }
 

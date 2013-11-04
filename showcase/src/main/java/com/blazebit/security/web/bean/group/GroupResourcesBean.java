@@ -61,12 +61,6 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     @Inject
     private UserGroupService userGroupService;
 
-    @Inject
-    private UserService userService;
-
-    @Inject
-    private ActionFactory actionFactory1;
-
     private List<Permission> groupPermissions = new ArrayList<Permission>();
 
     private TreeNode[] selectedPermissionNodes;
@@ -120,16 +114,16 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             Class<?> entityClass = (Class<?>) type.getBaseType();
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
             // check if logged in user can grant these resources
-            if (permissionService.isGranted(userSession.getUser(), actionFactory1.createAction(ActionConstants.GRANT), entityField)) {
+            if (permissionService.isGranted(userSession.getUser(), actionFactory.createAction(ActionConstants.GRANT), entityField)) {
                 // entity
                 DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), resourceRoot);
                 entityNode.setExpanded(true);
-                List<Action> entityActionFields = actionFactory.getActionsForEntity();
+                List<Action> entityActionFields = actionUtils.getActionsForEntity();
                 // fields for entity
                 Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
                 if (allFields.length > 0) {
                     // actions for fields
-                    for (Action action : actionFactory.getActionsForField()) {
+                    for (Action action : actionUtils.getActionsForField()) {
                         EntityAction entityAction = (EntityAction) action;
                         DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
                         // actionNode.setExpanded(true);

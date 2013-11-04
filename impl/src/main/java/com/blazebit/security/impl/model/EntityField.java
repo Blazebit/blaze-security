@@ -12,9 +12,10 @@
  */
 package com.blazebit.security.impl.model;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.Resource;
@@ -167,11 +168,12 @@ public class EntityField implements Resource {
 
     @Override
     public Collection<Resource> parents() {
+        List<Resource> ret = new ArrayList<Resource>();
+        ret.add(this);
         if (!isEmptyField()) {
-            return Arrays.asList((Resource) this, (Resource) new EntityField(entity));
-        } else {
-            return Collections.emptyList();
+            ret.add((Resource) new EntityField(entity));
         }
+        return ret;
     }
 
     @Override

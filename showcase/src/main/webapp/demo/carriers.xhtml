@@ -23,71 +23,106 @@
 				Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
 				<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
 			</h3>
+
+
+			<h:panelGrid columns="3">
+
+				<p:selectOneMenu panelStyle="width:150px" effect="fade" var="p" style="width:160px" filter="true"
+					filterMatchMode="startsWith" valueChangeListener="#{carrierBean.selectSubject}">
+					<f:selectItem itemLabel="Select One" itemValue="" />
+					<f:selectItems value="#{carrierBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
+						itemDescription="#{subject.name}" />
+					<p:column>#{p.name}</p:column>
+				</p:selectOneMenu>
+
+				<p:selectCheckboxMenu label="Actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
+					panelStyle="width:220px" valueChangeListener="#{carrierBean.selectAction}">
+					<f:selectItems value="#{carrierBean.actions}" var="action" itemLabel="#{action.actionName}"
+						itemValue="#{action.actionName}" />
+				</p:selectCheckboxMenu>
+
+				<p:commandButton value="execute" action="#{carrierBean.goToPermissions()}" />
+
+
+			</h:panelGrid>
+
+
 			<p:tabView id="tabs" dynamic="true">
 				<p:ajax event="tabChange" listener="#{carrierBean.tabChange}" />
 				<p:tab title="Carrier">
 					<h:panelGroup id="carrierTab">
 						<h:panelGroup id="editCarrier">
-							<h:panelGroup rendered="#{not empty carrierBean.selectedCarrier}">
 
-								<c:set property="selectedCarrier" value="#{carrierBean.selectedCarrier}" var="selectedCarrier" />
 
-								<h:outputLabel value="Field1:" />
-								<h:inputText value="#{carrierBean.selectedCarrier.field1}"
-									rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field1')}" />
-								<h:outputText value="#{carrierBean.selectedCarrier.field1}"
-									rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field1') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field1')}" />
-								<p:commandButton action="#{carrierBean.grant(selectedCarrier, 'field1')}" value="Grant"/>
-								<p:commandButton action="#{carrierBean.revoke(selectedCarrier, 'field1')}" value="Revoke"/>
-						 		<br />
-								<h:outputLabel value="Field2:" />
-								<h:inputText value="#{carrierBean.selectedCarrier.field2}"
-									rendered="#{carrierBean.isAuthorizedResource('UPDATE',selectedCarrier,  'field2')}" />
-								<h:outputText value="#{carrierBean.selectedCarrier.field2}"
-									rendered="#{!carrierBean.isAuthorizedResource('UPDATE',selectedCarrier,  'field2') and carrierBean.isAuthorizedResource('READ', selectedCarrier,  'field2')}" />
-								<p:commandButton action="#{carrierBean.grant(selectedCarrier, 'field2')}" value="Grant"/>
-								<p:commandButton action="#{carrierBean.revoke(selectedCarrier, 'field2')}" value="Revoke"/>
-								<br />
-								<h:outputLabel value="Field3:" />
-								<h:inputText value="#{carrierBean.selectedCarrier.field3}"
-									rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field3')}" />
-								<h:outputText value="#{carrierBean.selectedCarrier.field3}"
-									rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field3') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field3')}" />
-								<p:commandButton action="#{carrierBean.grant(selectedCarrier, 'field3')}" value="Grant"/>
-								<p:commandButton action="#{carrierBean.revoke(selectedCarrier, 'field3')}" value="Revoke"/>
-								<br />
-								<h:outputLabel value="Field4:" />
-								<h:inputText value="#{carrierBean.selectedCarrier.field4}"
-									rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field4')}" />
-								<h:outputText value="#{carrierBean.selectedCarrier.field4}"
-									rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field4') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field4')}" />
-								<p:commandButton action="#{carrierBean.grant(selectedCarrier, 'field4')}" value="Grant"/>
-								<p:commandButton action="#{carrierBean.revoke(selectedCarrier, 'field4')}" value="Revoke"/>
-								<br />
-								<h:outputLabel value="Field5:" />
-								<h:inputText value="#{carrierBean.selectedCarrier.field5}"
-									rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field5')}" />
-								<h:outputText value="#{carrierBean.selectedCarrier.field5}"
-									rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field5') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field5')}" />
-								<p:commandButton action="#{carrierBean.grant(selectedCarrier, 'field5')}" value="Grant"/>
-								<p:commandButton action="#{carrierBean.revoke(selectedCarrier, 'field5')}" value="Revoke"/>
-								<br />
-								<p:commandButton value="Update" action="#{carrierBean.saveCarrier()}" update=":form:tabs"
-									rendered="#{not empty carrierBean.selectedCarrier and carrierBean.isAuthorizedResource('UPDATE', selectedCarrier)}" />
-								<br />
-								<p:commandButton action="#{carrierBean.grant(selectedCarrier)}" value="Grant"/>
-								<p:commandButton action="#{carrierBean.revoke(selectedCarrier)}" value="Revoke"/>
-							</h:panelGroup>
+							<c:set property="selectedCarrier" value="#{carrierBean.selectedCarrier}" var="selectedCarrier" />
+							
+							<c:set property="field1" value="#{carrierBean.selectedCarrierModel.getFields().get('field1')}" var="field1"/>
+							<c:set property="field2" value="#{carrierBean.selectedCarrierModel.getFields().get('field2')}" var="field2"/>
+							<c:set property="field3" value="#{carrierBean.selectedCarrierModel.getFields().get('field3')}" var="field3"/>
+							<c:set property="field4" value="#{carrierBean.selectedCarrierModel.getFields().get('field4')}" var="field4"/>
+							<c:set property="field5" value="#{carrierBean.selectedCarrierModel.getFields().get('field5')}" var="field5"/>
+							
+							<h:selectBooleanCheckbox value="#{field1.selected}" />
+							<h:outputLabel value="Field1:" />
+							<h:inputText value="#{carrierBean.selectedCarrier.field1}"
+								rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field1')}" />
+							<h:outputText value="#{carrierBean.selectedCarrier.field1}"
+								rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field1') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field1')}" />
+							<br />
+							<h:selectBooleanCheckbox value="#{field2.selected}" />
+							<h:outputLabel value="Field2:" />
+							<h:inputText value="#{carrierBean.selectedCarrier.field2}"
+								rendered="#{carrierBean.isAuthorizedResource('UPDATE',selectedCarrier,  'field2')}" />
+							<h:outputText value="#{carrierBean.selectedCarrier.field2}"
+								rendered="#{!carrierBean.isAuthorizedResource('UPDATE',selectedCarrier,  'field2') and carrierBean.isAuthorizedResource('READ', selectedCarrier,  'field2')}" />
+							<br />
+							<h:selectBooleanCheckbox value="#{field3.selected}" />
+							<h:outputLabel value="Field3:" />
+							<h:inputText value="#{carrierBean.selectedCarrier.field3}"
+								rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field3')}" />
+							<h:outputText value="#{carrierBean.selectedCarrier.field3}"
+								rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field3') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field3')}" />
+							<br />
+							<h:selectBooleanCheckbox value="#{field4.selected}" />
+							<h:outputLabel value="Field4:" />
+							<h:inputText value="#{carrierBean.selectedCarrier.field4}"
+								rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field4')}" />
+							<h:outputText value="#{carrierBean.selectedCarrier.field4}"
+								rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field4') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field4')}" />
+							<br />
+							<h:selectBooleanCheckbox value="#{field5.selected}" />
+							<h:outputLabel value="Field5:" />
+							<h:inputText value="#{carrierBean.selectedCarrier.field5}"
+								rendered="#{carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field5')}" />
+							<h:outputText value="#{carrierBean.selectedCarrier.field5}"
+								rendered="#{!carrierBean.isAuthorizedResource('UPDATE', selectedCarrier, 'field5') and carrierBean.isAuthorizedResource('READ', selectedCarrier, 'field5')}" />
+							<br />
+							<p:commandButton value="#{not empty carrierBean.selectedCarrier.id ? 'Update' : 'Save'}"
+								action="#{carrierBean.saveCarrier()}" update=":form:tabs"
+								rendered="#{not empty carrierBean.selectedCarrier and carrierBean.isAuthorizedResource('UPDATE', selectedCarrier)}" />
+							<br />
+
 						</h:panelGroup>
 
 						<h:panelGroup id="carriers">
 							<p:dataTable value="#{carrierBean.carriers}" var="carrier" rowIndexVar="ind">
 								<p:column>
 									<f:facet name="header">
+										<h:outputText value="Select" />
+									</f:facet>
+									<h:selectBooleanCheckbox value="#{carrier.selected}" />
+									<f:facet name="footer">
+										<h:selectBooleanCheckbox value="#{carrierBean.selectAll}">
+											<p:ajax update=":form:tabs:carriers" listener="#{carrierBean.selectAllCarriers}" />
+										</h:selectBooleanCheckbox>
+									</f:facet>
+								</p:column>
+								<p:column>
+									<f:facet name="header">
 										<h:outputText value="Field 1" />
 									</f:facet>
-									<h:outputText value="#{carrier.field1}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier, 'field1')}" />
+									<h:outputText value="#{carrier.entity.field1}"
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field1') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field1')}" />
 									<f:facet name="footer">
 										<h:inputText value="#{carrierBean.newCarrier.field1}" />
 									</f:facet>
@@ -96,8 +131,8 @@
 									<f:facet name="header">
 										<h:outputText value="Field 2" />
 									</f:facet>
-									<h:outputText value="#{carrier.field2}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier,  'field2')}" />
+									<h:outputText value="#{carrier.entity.field2}"
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field2') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field2')}" />
 									<f:facet name="footer">
 										<h:inputText value="#{carrierBean.newCarrier.field2}" />
 									</f:facet>
@@ -106,8 +141,8 @@
 									<f:facet name="header">
 										<h:outputText value="Field 3" />
 									</f:facet>
-									<h:outputText value="#{carrier.field3}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier, 'field3')}" />
+									<h:outputText value="#{carrier.entity.field3}"
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field3') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field3')}" />
 									<f:facet name="footer">
 										<h:inputText value="#{carrierBean.newCarrier.field3}" />
 									</f:facet>
@@ -116,8 +151,8 @@
 									<f:facet name="header">
 										<h:outputText value="Field 4" />
 									</f:facet>
-									<h:outputText value="#{carrier.field4}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier, 'field4')}" />
+									<h:outputText value="#{carrier.entity.field4}"
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field4') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field4')}" />
 									<f:facet name="footer">
 										<h:inputText value="#{carrierBean.newCarrier.field4}" />
 									</f:facet>
@@ -126,14 +161,14 @@
 									<f:facet name="header">
 										<h:outputText value="Field 5" />
 									</f:facet>
-									<h:outputText value="#{carrier.field5}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier, 'field5')}" />
+									<h:outputText value="#{carrier.entity.field5}"
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field5') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field5')}" />
 									<f:facet name="footer">
 										<h:inputText value="#{carrierBean.newCarrier.field5}" />
 									</f:facet>
 								</p:column>
 								<p:column>
-									<p:commandButton value="Select" action="#{carrierBean.selectCarrier(carrier)}" update=":form:tabs" />
+									<p:commandButton value="Select" action="#{carrierBean.selectCarrier(carrier.entity)}" update=":form:tabs" />
 									<p:commandButton value="Delete" action="#{carrierBean.deleteCarrier(carrier)}" update=":form:tabs"
 										rendered="#{carrierBean.isAuthorizedResource('DELETE', carrier)}" />
 									<f:facet name="footer">
@@ -244,6 +279,7 @@
 					</h:panelGroup>
 				</p:tab>
 			</p:tabView>
+
 		</h:form>
 	</h:body>
 </f:view>

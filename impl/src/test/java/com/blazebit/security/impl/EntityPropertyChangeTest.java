@@ -134,16 +134,6 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
         assertEquals(entityManager.find(Carrier.class, carrier.getId()).getParty().getPartyField1(), "party_field_1_changed");
     }
 
-    @Test(expected = PermissionException.class)
-    public void test_change_one_to_one_field_with_wrong_entity_permission() {
-        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(User.class, EntityField.EMPTY_FIELD));
-        setUserContext(user1);
-        carrier.getParty().setPartyField1("party_field_1_changed");
-        carrier = (Carrier) self.get().merge(carrier);
-
-        assertEquals(entityManager.find(Carrier.class, carrier.getId()).getParty().getPartyField1(), "party_field_1_changed");
-    }
-
     @Test
     public void test_change_one_to_one_field_with_entity_field_permission() {
         securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Party.class, "partyField1"));
@@ -184,10 +174,20 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
         assertEquals(entityManager.find(Carrier.class, carrier.getId()).getParty().getPartyField1(), "party_field_1_changed");
     }
 
+    @Test(expected = PermissionException.class)
+    public void test_change_one_to_one_field_with_wrong_entity_permission() {
+        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(User.class, EntityField.EMPTY_FIELD));
+        setUserContext(user1);
+        carrier.getParty().setPartyField1("party_field_1_changed");
+        carrier = (Carrier) self.get().merge(carrier);
+    
+        assertEquals(entityManager.find(Carrier.class, carrier.getId()).getParty().getPartyField1(), "party_field_1_changed");
+    }
+
     @Test
     public void test_change_one_to_one_field_reference_with_entity_permission() {
         securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
         setUserContext(user1);
         Party newParty = new Party();
         newParty.setPartyField1("party_field_1_changed");
@@ -201,7 +201,7 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
     @Test
     public void test_change_one_to_one_field_reference_with_entity_field_permission() {
         securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, "party"));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
         setUserContext(user1);
         Party newParty = new Party();
         newParty.setPartyField1("party_field_1_changed");
@@ -215,7 +215,7 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
     @Test
     public void test_change_one_to_one_field_reference_with_entity_object_field_permission() {
         securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrier.getId()));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
         setUserContext(user1);
 
         Party newParty = new Party();
@@ -311,27 +311,23 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
 
     @Test
     public void test_change_one_to_many_add_new_with_entity_field_permission() {
-        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, "contacts"));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, "contacts"));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
         setUserContext(user1);
         Contact newContact = new Contact();
         newContact.setContactField("new_contact_field");
         self.get().persist(newContact);
-        Contact newContact2 = new Contact();
-        newContact2.setContactField("new_contact_field");
-        self.get().persist(newContact2);
         carrier.getContacts().add(newContact);
-        carrier.getContacts().add(newContact2);
         carrier = (Carrier) self.get().merge(carrier);
 
-        assertEquals(3, carrier.getContacts().size());
+        assertEquals(2, carrier.getContacts().size());
 
     }
 
     @Test
     public void test_change_one_to_many_add_new_with_entity_permission() {
-        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
 
         setUserContext(user1);
         Contact newContact = new Contact();
@@ -345,8 +341,8 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
 
     @Test
     public void test_change_one_to_many_add_new_with_entity_object_permission() {
-        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrier.getId()));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrier.getId()));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
         setUserContext(user1);
         Contact newContact = new Contact();
         newContact.setContactField("new_contact_field");
@@ -360,7 +356,7 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
 
     @Test
     public void test_change_one_to_many_remove_with_entity_field_permission() {
-        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, "contacts"));
+        securityService.grant(admin, user1, getRemoveAction(), entityFieldFactory.createResource(Carrier.class, "contacts"));
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
         setUserContext(user1);
         carrier.getContacts().remove(carrier.getContacts().iterator().next());
@@ -392,8 +388,8 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
 
     @Test
     public void test_change_many_to_many_from_owner_add_new_with_entity_field_permission() {
-        securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.class, "groups"));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, "groups"));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
 
         setUserContext(user1);
         CarrierGroup g2 = new CarrierGroup();
@@ -408,7 +404,7 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
     @Test(expected = PermissionException.class)
     public void test_change_many_to_many_add_new_from_owner_not_permitted() {
         securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
 
         setUserContext(user1);
         CarrierGroup g2 = new CarrierGroup();
@@ -419,51 +415,21 @@ public class EntityPropertyChangeTest extends BaseTest<EntityPropertyChangeTest>
 
     }
 
-    // !!!! ---- saving from not owner side does not work and it shouldnt ---- !!!
-    // //one-to-many - not owner side
-    // @Test
-    // public void test_change_one_to_many_not_from_owner() {
-    // self.get().persist(carrier);
-    //
-    // Email email = new Email();
-    // email.setEmailField("email_field");
-    // email.setCarrier(carrier);
-    // self.get().persist(email);
-    //
-    // securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(EntityConstants.EMAIL,
-    // EntityField.EMPTY_FIELD));
-    //
-    // email.setEmailField("changed_email_field");
-    // carrier = (Carrier) self.get().merge(carrier);
-    //
-    // assertEquals("changed_email_field", entityManager.find(Email.class, email.getId()).getEmailField());
-    // }
-    //
-    // //many-to-many - not owner side
-    // @Test
-    // public void test_change_many_to_many_not_from_owner() {
-    // self.get().persist(carrier);
-    //
-    // CarrierTeam t1 = new CarrierTeam();
-    // t1.setName("t1");
-    // t1.getCarriers().add(carrier);
-    // self.get().persist(t1);
-    //
-    // securityService.grant(admin, user1, getUpdateAcion(), entityFieldFactory.createResource(Carrier.classTEAM,
-    // EntityField.EMPTY_FIELD));
-    //
-    // t1.setName("changed_name");
-    // carrier = (Carrier) self.get().merge(carrier);
-    //
-    // assertEquals("changed_name", entityManager.find(CarrierTeam.class, t1.getId()).getName());
-    // }
 
     public Action getUpdateAcion() {
         return actionFactory.createAction(ActionConstants.UPDATE);
     }
 
-    public Action getAddAction() {
+    public Action getCreateAction() {
         return actionFactory.createAction(ActionConstants.CREATE);
+    }
+
+    public Action getAddAction() {
+        return actionFactory.createAction(ActionConstants.ADD);
+    }
+
+    public Action getRemoveAction() {
+        return actionFactory.createAction(ActionConstants.REMOVE);
     }
 
     public Action getDeleteAction() {

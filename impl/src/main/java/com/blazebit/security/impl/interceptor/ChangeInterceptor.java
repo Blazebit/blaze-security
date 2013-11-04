@@ -14,7 +14,11 @@ package com.blazebit.security.impl.interceptor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.hibernate.CallbackException;
@@ -132,12 +136,13 @@ public class ChangeInterceptor extends EmptyInterceptor {
             return;
         }
         if (collection instanceof PersistentCollection) {
-            PersistentCollection coll = (PersistentCollection) collection;
-            Object owner = coll.getOwner();
+            PersistentCollection newValues = (PersistentCollection) collection;
+            Collection newValuesCollection =new HashSet((Collection) newValues.getValue());
+            Object owner = newValues.getOwner();
             if (AnnotationUtils.findAnnotation(owner.getClass(), ResourceName.class) == null) {
                 super.onCollectionUpdate(collection, key);
             }
-            String fieldName = coll.getRole().replace(owner.getClass().getName() + ".", "");
+            String fieldName = newValues.getRole().replace(owner.getClass().getName() + ".", "");
             UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
             ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
             EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
@@ -146,15 +151,25 @@ public class ChangeInterceptor extends EmptyInterceptor {
             if (owner instanceof IdHolder) {
                 entityId = ((IdHolder) owner).getId();
             }
-            // TODO comapre to snapshot
-            boolean isGrantedToAdd = BeanProvider
-                .getContextualReference(PermissionService.class)
-                .isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
+            Set<?> oldValues = ((Map<?, ?>) newValues.getStoredSnapshot()).keySet();
 
-            boolean isGrantedToRemove = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(),
-                                                                                                               actionFactory.createAction(ActionConstants.UPDATE),
+            // find all objects that were added
+            boolean isGrantedToAdd = true;
+            boolean isGrantedToRemove = true;
+
+            for (Object oldElement : oldValues) {
+                if (!newValuesCollection.contains(oldElement)) {
+                    isGrantedToRemove = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(),
+                                                                                                               actionFactory.createAction(ActionConstants.REMOVE),
                                                                                                                entityFieldFactory.createResource(owner.getClass(), fieldName,
                                                                                                                                                  entityId));
+                }
+            }
+            newValuesCollection.removeAll(oldValues);
+            for (Object addedValue : newValuesCollection) {
+                isGrantedToAdd = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                                                                        entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
+            }
 
             if (!isGrantedToAdd || !isGrantedToRemove) {
                 throw new PermissionException("Entity " + owner + "'s collection " + fieldName + " is not permitted to be updated by " + userContext.getUser());

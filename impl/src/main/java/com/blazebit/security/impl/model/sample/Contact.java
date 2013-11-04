@@ -54,4 +54,10 @@ public class Contact implements Serializable, IdHolder {
     public void setContactField(String contactField) {
         this.contactField = contactField;
     }
+
+    @Override
+    public String toString() {
+        return "Contact [id=" + id + ", contactField=" + contactField + "]";
+    }
+
 }

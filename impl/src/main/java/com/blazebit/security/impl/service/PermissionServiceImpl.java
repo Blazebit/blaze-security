@@ -224,7 +224,10 @@ public class PermissionServiceImpl implements PermissionService {
         for (Permission permission : removablePermissions) {
             permissionManager.remove(permission);
         }
-        propagateRevokeToSubjects(authorizer, role, action, resource);
+        // propagate changes to users
+        if (propagateToUsers) {
+            propagateRevokeToSubjects(authorizer, role, action, resource);
+        }
     }
 
     private void propagateRevokeToSubjects(Subject authorizer, Role root, Action action, Resource resource) {

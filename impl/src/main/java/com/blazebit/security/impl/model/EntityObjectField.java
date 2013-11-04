@@ -182,12 +182,13 @@ public class EntityObjectField extends EntityField {
 
     @Override
     public Collection<Resource> parents() {
-        List<Resource> l = new ArrayList<Resource>(2);
+        List<Resource> l = new ArrayList<Resource>();
         l.add(this);
         l.add(new EntityField(entity));
 
         if (!isEmptyField()) {
             l.add(new EntityObjectField(entity, entityId));
+            l.add(new EntityField(entity, field));
         }
 
         return l;

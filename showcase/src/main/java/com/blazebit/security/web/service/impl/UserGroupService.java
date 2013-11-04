@@ -23,12 +23,12 @@ public interface UserGroupService {
 
     public UserGroup saveGroup(UserGroup group);
 
-    UserGroup createUserGroup(Company company, String name);
+    public UserGroup createUserGroup(Company company, String name);
 
-    List<UserGroup> getAllParentGroups(Company company);
+    public List<UserGroup> getAllParentGroups(Company company);
 
-    void delete(UserGroup userGroup);
+    public void delete(UserGroup userGroup);
 
-    UserGroup loadUserGroup(UserGroup userGroup);
+    public UserGroup loadUserGroup(UserGroup userGroup);
 
 }

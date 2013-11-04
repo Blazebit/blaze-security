@@ -57,19 +57,7 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
-    @Override
-    public void removeGroupFromGroup(UserGroup userGroup1, UserGroup userGroup2) {
-        if (userGroup2.getRoles().contains(userGroup1)) {
-            userGroup1.setParent(userGroup2);
-            entityManager.merge(userGroup1);
-            entityManager.flush();
-        } else {
-            throw new PermissionActionException("UserGroup " + userGroup1 + " cannot be added to UserGroup " + userGroup2 + " because it is already added");
-        }
-    }
-
-    @Override
-    public boolean canUserBeAddedToRole(User user, UserGroup group) {
+    private boolean canUserBeAddedToRole(User user, UserGroup group) {
         Set<UserGroup> groups = user.getUserGroups();
         for (UserGroup currentGroup : groups) {
             // subject cannot be added to the same role where he already belongs
@@ -89,8 +77,7 @@ public class RoleServiceImpl implements RoleService {
         return true;
     }
 
-    @Override
-    public boolean canUserBeRemovedFromRole(User user, UserGroup group) {
+    private boolean canUserBeRemovedFromRole(User user, UserGroup group) {
         // subject can be removed from role if role contains subject
         return group.getSubjects().contains(user);
     }

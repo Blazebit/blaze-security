@@ -6,6 +6,10 @@ import com.blazebit.security.impl.model.Company;
 
 public interface CompanyService {
 
+    /**
+     * list of companies
+     * @return
+     */
     public List<Company> findCompanies();
 
 }
