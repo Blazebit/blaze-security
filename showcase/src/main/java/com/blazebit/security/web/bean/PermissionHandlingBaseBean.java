@@ -33,8 +33,10 @@ import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.NodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
+import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.service.api.ActionUtils;
+import com.blazebit.security.web.util.Constants;
 
 /**
  * 
@@ -58,6 +60,8 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     protected ActionFactory actionFactory;
     @Inject
     protected PermissionService permissionService;
+    @Inject
+    protected ActionUtils actionUtils;
 
     protected boolean contains(Collection<Permission> permissions, Permission permission) {
         return contains(permissions, permission, true);
@@ -73,7 +77,7 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
     protected boolean implies(Collection<Permission> permissions, Permission givenPermission) {
         for (Permission permission : permissions) {
-            if (givenPermission.getAction().implies(permission.getAction()) && givenPermission.getResource().implies(permission.getResource())) {
+            if (permission.getAction().implies(givenPermission.getAction()) && permission.getResource().implies(givenPermission.getResource())) {
                 return true;
             }
         }
@@ -145,20 +149,23 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
      *        the resources view all the fields are listed, while at the groups only the ones from the group
      * @return list of permissions
      */
-    protected Set<Permission> processSelectedPermissions(TreeNode[] selectedPermissionNodes, boolean allFieldsListed) {
+    protected Set<Permission> getSelectedPermissions(TreeNode[] selectedPermissionNodes, boolean allFieldsListed) {
         Set<Permission> ret = new HashSet<Permission>();
         List<TreeNode> sortedSelectedNodes = sortTreeNodesByType(selectedPermissionNodes);
         for (TreeNode permissionNode : sortedSelectedNodes) {
-            NodeModel permissionNodeData = (NodeModel) permissionNode.getData();
+            TreeNodeModel permissionNodeData = (TreeNodeModel) permissionNode.getData();
             switch (permissionNodeData.getType()) {
                 case ENTITY:
                     for (TreeNode actionNode : permissionNode.getChildren()) {
-                        NodeModel actionNodeData = (NodeModel) actionNode.getData();
-                        if (actionNode.getChildCount() == 0 || (allFieldsListed && allChildrenSelected(actionNode))) {
+                        TreeNodeModel actionNodeData = (TreeNodeModel) actionNode.getData();
+                        // if action node has no children or has all children selected -> merge into entity+action. if action is
+                        // collection field action -> keep permission with fields
+                        if (actionNode.getChildCount() == 0
+                            || (allFieldsListed && allChildrenSelected(actionNode) && !actionUtils.getActionsForCollectionField().contains(actionNodeData.getTarget()))) {
                             ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) permissionNodeData.getTarget()));
                         } else {
                             for (TreeNode fieldNode : actionNode.getChildren()) {
-                                NodeModel fieldNodeData = (NodeModel) fieldNode.getData();
+                                TreeNodeModel fieldNodeData = (TreeNodeModel) fieldNode.getData();
                                 ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) fieldNodeData.getTarget()));
                             }
                         }
@@ -166,9 +173,13 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
                     break;
                 case ACTION:
                     TreeNode entityNode = permissionNode.getParent();
-                    NodeModel entityNodeModel = (NodeModel) entityNode.getData();
+                    TreeNodeModel entityNodeModel = (TreeNodeModel) entityNode.getData();
+
                     Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget());
-                    if (permissionNode.getChildCount() == 0 || (allFieldsListed && allChildrenSelected(permissionNode))) {
+                    // if action node has no children or has all children selected -> merge into entity+action. if action is
+                    // collection field action -> keep permission with fields
+                    if (permissionNode.getChildCount() == 0
+                        || (allFieldsListed && allChildrenSelected(permissionNode) && !actionUtils.getActionsForCollectionField().contains(permissionNodeData.getTarget()))) {
                         if (!contains(ret, actionPermission)) {
                             ret.add(permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget()));
                         }
@@ -176,14 +187,13 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
                     break;
                 case FIELD:
                     TreeNode actionNode = permissionNode.getParent();
-                    NodeModel actionNodeData = (NodeModel) actionNode.getData();
+                    TreeNodeModel actionNodeData = (TreeNodeModel) actionNode.getData();
 
                     TreeNode actionEntityNode = actionNode.getParent();
-                    NodeModel actionEntityNodeModel = (NodeModel) actionEntityNode.getData();
-                    Permission fieldPermission = permissionFactory.create(userSession.getSelectedUser(), (EntityAction) actionNodeData.getTarget(),
-                                                                          (EntityField) actionEntityNodeModel.getTarget());
+                    TreeNodeModel actionEntityNodeModel = (TreeNodeModel) actionEntityNode.getData();
+                    Permission fieldPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) actionEntityNodeModel.getTarget());
                     if (!contains(ret, fieldPermission)) {
-                        ret.add(permissionFactory.create(userSession.getSelectedUser(), (EntityAction) actionNodeData.getTarget(), ((EntityField) permissionNodeData.getTarget())));
+                        ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), ((EntityField) permissionNodeData.getTarget())));
                     }
                     break;
             }
@@ -213,26 +223,26 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
             List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), permissionRoot);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), permissionRoot);
             entityNode.setExpanded(true);
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
                 for (Permission permission : permissionsByAction) {
                     if (!((EntityField) permission.getResource()).isEmptyField()) {
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
                             permission.getResource()), actionNode);
                         if (permission.getResource() instanceof EntityObjectField) {
-                            ((NodeModel) fieldNode.getData()).setTooltip("Contains permissions for specific entity objects");
-                            ((NodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
+                            ((TreeNodeModel) fieldNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
+                            ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
                         }
                     } else {
                         if (permission.getResource() instanceof EntityObjectField) {
-                            ((NodeModel) actionNode.getData()).setTooltip("Contains permissions for specific entity objects");
-                            ((NodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
+                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.BLUE);
                         }
                     }
                 }
@@ -377,6 +387,12 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         return ret;
     }
 
+    /**
+     * separates permissions and data permissions
+     * 
+     * @param permissions
+     * @return
+     */
     protected List<List<Permission>> filterPermissions(List<Permission> permissions) {
         List<List<Permission>> ret = new ArrayList<List<Permission>>();
         List<Permission> entities = new ArrayList<Permission>();

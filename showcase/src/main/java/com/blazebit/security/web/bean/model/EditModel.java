@@ -9,13 +9,13 @@ public class EditModel {
 
     private IdHolder entity;
     private Map<String, FieldModel> fields = new HashMap<String, FieldModel>();
+    private boolean selected;
 
     public EditModel(IdHolder selected) {
         this.entity = selected;
     }
 
     public EditModel() {
-        // TODO Auto-generated constructor stub
     }
 
     public IdHolder getEntity() {
@@ -32,6 +32,14 @@ public class EditModel {
 
     public void setFields(Map<String, FieldModel> fields) {
         this.fields = fields;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
 }

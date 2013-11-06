@@ -9,13 +9,13 @@ import com.blazebit.security.impl.model.UserGroup;
  * 
  * @author cuszk
  */
-public class GroupModel {
+public class UserGroupModel {
 
     private UserGroup userGroup;
     private boolean selected;
     private boolean marked;
 
-    public GroupModel(UserGroup userGroup, boolean marked, boolean selected) {
+    public UserGroupModel(UserGroup userGroup, boolean marked, boolean selected) {
         this.userGroup = userGroup;
         this.marked = marked;
         this.selected = selected;

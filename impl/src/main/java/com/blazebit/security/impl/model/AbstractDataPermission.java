@@ -80,25 +80,48 @@ public abstract class AbstractDataPermission<S, P extends DataPermissionId<S>> i
         id.setSubject(subject);
     }
 
+ 
+
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 41 * hash + (this.id != null ? this.id.hashCode() : 0);
-        return hash;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((entityAction == null) ? 0 : entityAction.hashCode());
+        result = prime * result + ((entityObjectField == null) ? 0 : entityObjectField.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (this == obj)
+            return true;
+        if (obj == null)
             return false;
-        }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != obj.getClass())
             return false;
-        }
-        final AbstractDataPermission<?, ?> other = (AbstractDataPermission<?, ?>) obj;
-        if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
+        AbstractDataPermission other = (AbstractDataPermission) obj;
+        if (entityAction == null) {
+            if (other.entityAction != null)
+                return false;
+        } else if (!entityAction.equals(other.entityAction))
             return false;
-        }
+        if (entityObjectField == null) {
+            if (other.entityObjectField != null)
+                return false;
+        } else if (!entityObjectField.equals(other.entityObjectField))
+            return false;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (subject == null) {
+            if (other.subject != null)
+                return false;
+        } else if (!subject.equals(other.subject))
+            return false;
         return true;
     }
 

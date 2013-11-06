@@ -24,10 +24,10 @@ import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.NodeModel.Marking;
-import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
-import com.blazebit.security.web.service.impl.UserGroupService;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
+import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
  * 
@@ -142,12 +142,12 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
         this.permissionRoot = new DefaultTreeNode("root", null);
         DefaultTreeNode groupNode = permissionRoot;
         for (UserGroup group : parents) {
-            groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
+            groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
             List<Permission> permissions = permissionManager.getPermissions(group);
             getPermissionTree(permissions, groupNode);
         }
-        ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);
+        ((TreeNodeModel) groupNode.getData()).setMarking(Marking.GREEN);
 
     }
 

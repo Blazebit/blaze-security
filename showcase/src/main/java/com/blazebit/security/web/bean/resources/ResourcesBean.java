@@ -14,9 +14,9 @@ import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.event.NodeUnselectEvent;
@@ -24,22 +24,22 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Action;
-import com.blazebit.security.ActionFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionService;
-import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.UserSession;
-import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.NodeModel.Marking;
-import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
+import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserModel;
-import com.blazebit.security.web.service.impl.UserGroupService;
-import com.blazebit.security.web.service.impl.UserService;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
+import com.blazebit.security.web.util.Constants;
 
 /**
  * 
@@ -77,48 +77,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     private TreeNode currentGroupRoot;
     private TreeNode newGroupRoot;
 
-    private Set<Permission> selectedPermissions;
+    private Set<Permission> selectedPermissions = new HashSet<Permission>();
     private DefaultTreeNode groupRoot;
     private TreeNode[] selectedGroupNodes;
 
     private Integer activeTabIndex = 0;
 
-    private boolean revokeSelectedPermissions;
-
-    private boolean receivedParameters;
-
     public void init() {
-        selectedPermissions = new HashSet<Permission>();
-        selectedPermissionNodes = new TreeNode[] {};
-        Map<String, String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-        if (params.containsKey("revoke")) {
-            setRevokeSelectedPermissions(Boolean.valueOf(params.get("revoke")));
-        }
-        if (params.containsKey("resource") && params.containsKey("id")) {
-            try {
-                String field = EntityField.EMPTY_FIELD;
-                if (params.containsKey("field")) {
-                    field = params.get("field");
-                }
-                if (params.containsKey("action")) {
-                    selectedPermissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.valueOf(params.get("action"))),
-                                                                     entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
-                                                                                                       Integer.valueOf(params.get("id")))));
-                } else {
-                    for (Action action : actionUtils.getActionsForEntityObject()) {
-                        selectedPermissions.add(permissionFactory.create(action,
-                                                                         entityFieldFactory.createResource(Class.forName(params.get("resource")), field,
-                                                                                                           Integer.valueOf(params.get("id")))));
-                    }
-                    receivedParameters = true;
-                }
-            } catch (NumberFormatException e) {
-                System.err.println("what");
-            } catch (ClassNotFoundException e) {
-                System.err.println("what");
-            }
-        }
-        resourceRoot = getResourceTree(selectedPermissions, selectedPermissionNodes);
+        resourceRoot = getResourceTree();
     }
 
     public String resourceWizardListener(FlowEvent event) {
@@ -162,7 +128,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     }
 
     private void createGroupNode(UserGroup userGroup) {
-        NodeModel groupNodeModel = new NodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
+        TreeNodeModel groupNodeModel = new TreeNodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
         currentGroupRoot = new DefaultTreeNode();
         DefaultTreeNode currentGroupNode = new DefaultTreeNode(groupNodeModel, currentGroupRoot);
         currentGroupNode.setExpanded(true);
@@ -184,7 +150,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     }
 
     private void createUserNode(User user) {
-        NodeModel userNodeModel = new NodeModel(user.getUsername(), ResourceType.USER, user);
+        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
         DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
         currentUserNode.setExpanded(true);
         DefaultTreeNode newUserNode = new DefaultTreeNode(userNodeModel, newUserRoot);
@@ -195,12 +161,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     }
 
     private void createNewPermissionNode(DefaultTreeNode userNode) {
-        NodeModel nodeModel = (NodeModel) userNode.getData();
+        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
         List<Permission> permissions = null;
         Set<Permission> revokablePermissions = null;
         if (nodeModel.getTarget() instanceof User) {
             User user = (User) nodeModel.getTarget();
-            permissions = filterPermissions(permissionManager.getPermissions(user)).get(0);
+            permissions = permissionManager.getPermissions(user);
             revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
         } else {
             if (nodeModel.getTarget() instanceof UserGroup) {
@@ -216,12 +182,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
             List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), userNode);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), userNode);
             entityNode.setExpanded(true);
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
                 for (Permission permission : permissionsByAction) {
@@ -231,12 +197,13 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                         if (!contains(permissions, permission) && contains(selectedPermissions, permission)) {
                             marking = Marking.GREEN;
                         }
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
-                            permission.getResource(), marking), actionNode);
+                        TreeNodeModel fieldNodeModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
+                            permission.getResource(), marking);
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
                         // fieldNode.setSelectable(Marking.GREEN.equals(marking));
                         // fieldNode.setSelected(Marking.GREEN.equals(marking));
-                        if (Marking.GREEN.equals(marking)) {
-                            selectedUserPermissionNodes = addNodeToSelectedNodes(fieldNode, selectedUserPermissionNodes);
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
                         }
                     } else {
                         // mark actionNode if needed
@@ -247,27 +214,25 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                         }
                         // actionNode.setSelectable(Marking.GREEN.equals(marking));
                         // actionNode.setSelected(Marking.GREEN.equals(marking));
-                        ((NodeModel) actionNode.getData()).setMarking(marking);
-                        if (Marking.GREEN.equals(marking)) {
-                            selectedUserPermissionNodes = addNodeToSelectedNodes(actionNode, selectedUserPermissionNodes);
+                        ((TreeNodeModel) actionNode.getData()).setMarking(marking);
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
                         }
-
                     }
                 }
-                selectedUserPermissionNodes = propagateSelectionAndMarkingUp(actionNode, selectedUserPermissionNodes);
+                selectedUserPermissionNodes = ArrayUtils.addAll(selectedUserPermissionNodes, propagateNodePropertiesUpwards(actionNode));
             }
-            selectedUserPermissionNodes = propagateSelectionAndMarkingUp(entityNode, selectedUserPermissionNodes);
+            selectedUserPermissionNodes = ArrayUtils.addAll(selectedUserPermissionNodes, propagateNodePropertiesUpwards(entityNode));
         }
-
     }
 
     private void createCurrentPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions) {
-        NodeModel nodeModel = (NodeModel) userNode.getData();
+        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
         List<Permission> permissions = null;
         Set<Permission> revokablePermissions = null;
         if (nodeModel.getTarget() instanceof User) {
             User user = (User) nodeModel.getTarget();
-            permissions = filterPermissions(permissionManager.getPermissions(user)).get(0);
+            permissions = permissionManager.getPermissions(user);
             revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
         } else {
             if (nodeModel.getTarget() instanceof UserGroup) {
@@ -282,31 +247,44 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
             List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), userNode);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), userNode);
             entityNode.setExpanded(true);
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
                 for (Permission permission : permissionsByAction) {
                     if (!((EntityField) permission.getResource()).isEmptyField()) {
                         // decide marking
                         Marking marking = contains(revokablePermissions, permission) ? Marking.RED : Marking.NONE;
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
-                            permission.getResource(), marking), actionNode);
+                        TreeNodeModel fieldNodeModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
+                            permission.getResource(), marking);
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                            if (Marking.NONE.equals(fieldNodeModel.getMarking())) {
+                                fieldNodeModel.setMarking(Marking.BLUE);
+                            }
+                        }
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
                     } else {
                         // mark actionNode if needed
                         Permission actionPermission = permissionFactory.create(entityAction, entityField);
                         Marking marking = contains(revokablePermissions, actionPermission) ? Marking.RED : Marking.NONE;
-                        ((NodeModel) actionNode.getData()).setMarking(marking);
-
+                        TreeNodeModel actionNodeModel = (TreeNodeModel) actionNode.getData();
+                        actionNodeModel.setMarking(marking);
+                        if (permission.getResource() instanceof EntityObjectField) {
+                            actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                            if (Marking.NONE.equals(actionNodeModel.getMarking())) {
+                                actionNodeModel.setMarking(Marking.BLUE);
+                            }
+                        }
                     }
                 }
-                propagateSelectionAndMarkingUp(actionNode, null);
+                propagateNodePropertiesUpwards(actionNode);
             }
-            propagateSelectionAndMarkingUp(entityNode, null);
+            propagateNodePropertiesUpwards(entityNode);
         }
     }
 
@@ -314,23 +292,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
      * wizard step 1
      */
     public void processSelectedPermissions() {
-        if (!receivedParameters) {
-            selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
-        } else {
-            Set<Permission> processedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
-            Set<Permission> finalSelectedPermissions = new HashSet<Permission>();
-            // check which has been unselected
-            for (Permission permission : selectedPermissions) {
-                for (Permission processedPermission : processedPermissions) {
-                    if (((EntityField) permission.getResource()).getEntity().equals(((EntityField) processedPermission.getResource()).getEntity())
-                        && ((EntityField) permission.getResource()).getField().equals(((EntityField) processedPermission.getResource()).getField())
-                        && permission.getAction().equals(processedPermission.getAction())) {
-                        finalSelectedPermissions.add(permission);
-                    }
-                }
-            }
-            selectedPermissions = finalSelectedPermissions;
-        }
+        selectedPermissions = getSelectedPermissions(selectedPermissionNodes, true);
         initUsers();
         initUserGroups();
     }
@@ -373,14 +335,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         for (UserModel userModel : userList) {
             if (userModel.isSelected()) {
                 for (Permission permission : selectedPermissions) {
-                    if (!revokeSelectedPermissions) {
-                        if (permissionDataAccess.isGrantable(userModel.getUser(), permission.getAction(), permission.getResource())) {
-                            permissionService.grant(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
-                        }
-                    } else {
-                        if (permissionDataAccess.isRevokable(userModel.getUser(), permission.getAction(), permission.getResource())) {
-                            permissionService.revoke(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
-                        }
+                    if (permissionDataAccess.isGrantable(userModel.getUser(), permission.getAction(), permission.getResource())) {
+                        permissionService.grant(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
                     }
                 }
             }
@@ -390,8 +346,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     public void confirmPropagatedUserPermissions() {
         for (TreeNode userNode : newUserRoot.getChildren()) {
-            User user = (User) ((NodeModel) userNode.getData()).getTarget();
-            Set<Permission> selectedPermissions = processSelectedPermissions(selectedUserPermissionNodes, false);
+            User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, false);
             for (Permission permission : selectedPermissions) {
                 if (permissionDataAccess.isGrantable(user, permission.getAction(), permission.getResource())) {
                     permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
@@ -457,10 +413,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         for (TreeNode groupNode : selectedGroupNodes) {
             UserGroup group = (UserGroup) groupNode.getData();
             for (User user : userGroupService.getUsersFor(group)) {
-                NodeModel userNodeModel = new NodeModel(user.getUsername(), ResourceType.USER, user);
+                TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
                 DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
                 currentUserNode.setExpanded(true);
-                createCurrentPermissionNode(currentUserNode, processSelectedPermissions(selectedUserPermissionNodes, false));
+                createCurrentPermissionNode(currentUserNode, getSelectedPermissions(selectedUserPermissionNodes, false));
             }
         }
     }
@@ -470,10 +426,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         for (TreeNode groupNode : selectedGroupNodes) {
             UserGroup group = (UserGroup) groupNode.getData();
             for (User user : userGroupService.getUsersFor(group)) {
-                NodeModel userNodeModel = new NodeModel(user.getUsername(), ResourceType.USER, user);
+                TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
                 DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
                 currentUserNode.setExpanded(true);
-                createCurrentPermissionNode(currentUserNode, processSelectedPermissions(selectedUserPermissionNodes, false));
+                createCurrentPermissionNode(currentUserNode, getSelectedPermissions(selectedUserPermissionNodes, false));
             }
         }
     }
@@ -536,14 +492,6 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     public void setSelectedUserPermissionNodes(TreeNode[] selectedUserPermissionNodes) {
         this.selectedUserPermissionNodes = selectedUserPermissionNodes;
-    }
-
-    public boolean isRevokeSelectedPermissions() {
-        return revokeSelectedPermissions;
-    }
-
-    public void setRevokeSelectedPermissions(boolean revokeSelectedPermissions) {
-        this.revokeSelectedPermissions = revokeSelectedPermissions;
     }
 
 }

@@ -18,6 +18,12 @@ public class RowModel {
         this.selected = selected;
     }
 
+    public RowModel(IdHolder entity, boolean selected, String fieldSummary) {
+        this.entity = entity;
+        this.selected = selected;
+        this.fieldSummary = fieldSummary;
+    }
+
     public RowModel(IdHolder entity, String fieldSummary) {
         this.entity = entity;
         this.fieldSummary = fieldSummary;

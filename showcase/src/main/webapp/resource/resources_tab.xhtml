@@ -13,7 +13,6 @@
 
 				<p:tab id="resources" title="Resources">
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
-					<p style="font-size:0.5em">Entries marked with BLUE refer to entity resources with an ID.</p> 
 					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 						selection="#{resourcesBean.selectedPermissionNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
 						<p:treeNode>
@@ -107,13 +106,15 @@
 					<h:outputText value="No users found" rendered="#{resourcesBean.currentUserRoot.childCount eq 0}"/>
 						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" rendered="#{resourcesBean.currentUserRoot.childCount ne 0}">
 							<p:treeNode>
-								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
+								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission"/>
+								<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 							</p:treeNode>
 						</p:tree>
 						<h:outputText value="No users found" rendered="#{resourcesBean.newUserRoot.childCount eq 0}"/>
 						<p:tree value="#{resourcesBean.newUserRoot}" var="newUserRoot" rendered="#{resourcesBean.newUserRoot.childCount ne 0}">
 							<p:treeNode>
-								<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" />
+								<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission"/>
+								<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 							</p:treeNode>
 						</p:tree>
 						<h:panelGroup layout="block" style="height:50px">

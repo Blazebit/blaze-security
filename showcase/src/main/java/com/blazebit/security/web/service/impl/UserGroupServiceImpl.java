@@ -15,6 +15,7 @@ import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
  * 

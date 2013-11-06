@@ -26,9 +26,9 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.GroupView;
 import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.model.GroupModel;
-import com.blazebit.security.web.service.impl.UserGroupService;
-import com.blazebit.security.web.service.impl.UserService;
+import com.blazebit.security.web.bean.model.UserGroupModel;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 
@@ -51,7 +51,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
     private PermissionManager permissionManager;
     private List<User> users = new ArrayList<User>();
     private User selectedUser;
-    private List<GroupModel> userGroups = new ArrayList<GroupModel>();
+    private List<UserGroupModel> userGroups = new ArrayList<UserGroupModel>();
     private TreeNode permissionRoot;
     private TreeNode groupRoot;
     private User newUser = new User();
@@ -94,7 +94,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
     private void initGroupList(List<UserGroup> userGroups) {
         this.userGroups.clear();
         for (UserGroup userGroup : userGroups) {
-            this.userGroups.add(new GroupModel(userGroup, false, false));
+            this.userGroups.add(new UserGroupModel(userGroup, false, false));
         }
     }
 
@@ -108,7 +108,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
     }
 
     private void createGroupNode(UserGroup group, List<UserGroup> allowedGroups, TreeNode node) {
-        DefaultTreeNode childNode = new DefaultTreeNode(new GroupModel(group, allowedGroups.contains(group), false), node);
+        DefaultTreeNode childNode = new DefaultTreeNode(new UserGroupModel(group, allowedGroups.contains(group), false), node);
         childNode.setExpanded(true);
         for (UserGroup ug : userGroupService.getGroupsForGroup(group)) {
             createGroupNode(ug, allowedGroups, childNode);

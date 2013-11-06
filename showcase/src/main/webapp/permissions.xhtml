@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>Security Web</title>
+		</f:facet>
+	</h:head>
+
+	<h:body>
+		<h:form id="form">
+			<f:event listener="#{permissionsBean.initPermissions}" type="preRenderView" />
+
+			<p:menu>
+				<p:submenu label="Menu">
+					<p:menuitem value="Users" url="/user/users.xhtml" />
+					<p:menuitem value="Groups" url="/group/groups.xhtml" />
+					<p:menuitem value="Resources" url="/resource/resources.xhtml" />
+					<p:menubar />
+					<p:menuitem value="Carriers" url="/demo/carriers.xhtml" />
+					<p:menubar />
+					<p:menuitem value="Comments" url="/demo/comments.xhtml" />
+				</p:submenu>
+			</p:menu>
+			<br />
+			<p:dataTable value="#{permissionsBean.permissions}" var="permission" style="width:100%">
+				<p:column sortBy="#{permission.entity.id.subject.company.name}"
+					filterBy="#{permission.entity.id.subject.company.name}">
+					<f:facet name="Company"></f:facet>
+						#{permission.entity.id.subject.company.name}
+					</p:column>
+				<p:column sortBy="#{permission.subjectName}" filterBy="#{permission.subjectName}">
+					<f:facet name="Subject"></f:facet>
+						#{permission.subjectName}
+					</p:column>
+				<p:column sortBy="#{permission.entity.id.actionName}" filterBy="#{permission.entity.id.actionName}">
+					<f:facet name="Action"></f:facet>
+						#{permission.entity.action.actionName}
+					</p:column>
+				<p:column sortBy="#{permission.resourceName}" filterBy="#{permission.resourceName}">
+					<f:facet name="Resource"></f:facet>
+						#{permission.resourceName}
+					</p:column>
+			</p:dataTable>
+
+
+
+		</h:form>
+	</h:body>
+
+</f:view>
+</html>
+

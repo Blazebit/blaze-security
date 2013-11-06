@@ -1,7 +1,7 @@
 /*
  * To change this template, choose Tools | Templates and open the template in the editor.
  */
-package com.blazebit.security.web.bean;
+package com.blazebit.security.web.bean.main;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -17,8 +17,9 @@ import javax.inject.Inject;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
-import com.blazebit.security.web.service.impl.UserService;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 

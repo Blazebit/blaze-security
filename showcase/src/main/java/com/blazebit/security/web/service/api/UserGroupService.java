@@ -1,7 +1,7 @@
 /*
  * To change this template, choose Tools | Templates and open the template in the editor.
  */
-package com.blazebit.security.web.service.impl;
+package com.blazebit.security.web.service.api;
 
 import java.util.List;
 

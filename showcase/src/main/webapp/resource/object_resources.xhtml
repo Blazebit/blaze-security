@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>Users</title>
+		</f:facet>
+		<style>
+.top {
+	vertical-align: top
+}
+</style>
+	</h:head>
+
+	<h:body>
+		<f:event listener="#{resourceObjectBean.init}" type="preRenderView" />
+		<h:form id="form">
+			<h:panelGroup rendered="#{not empty userSession.user}">
+				<h3>
+					Logged in as #{userSession.user.username}. Login as a
+					<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
+				</h3>
+			</h:panelGroup>
+			<h:panelGroup rendered="#{empty userSession.user}">
+				<h:outputLink value="../index.xhtml">Login first!!</h:outputLink>
+			</h:panelGroup>
+
+
+
+			<h4>Selected subject : #{resourceObjectBean.selectedSubject}</h4>
+
+			<p:wizard widgetVar="permissionWizard" showNavBar="false"
+				flowListener="#{resourceObjectBean.permissionWizardListener}">
+				<p:tab id="selectPermissions" title="Selected resources">
+					Selected resources are already granted to the selected subject. By unselecting them they will be revoked.
+					<p:tree value="#{resourceObjectBean.root}" var="permission" rendered="#{resourceObjectBean.root.childCount ne 0}"
+						selectionMode="checkbox" selection="#{resourceObjectBean.selectedNodes}">
+						<p:treeNode>
+							<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+							<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+								showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+						</p:treeNode>
+					</p:tree>
+
+					<p:commandButton value="Next" onclick="permissionWizard.next()" oncomplete="warningDialog.show()" update=":warningDialogId"/>
+				</p:tab>
+
+				<p:tab id="confirmPermissions" title="Confirm">
+					<h:panelGrid columns="2">
+						<h:panelGroup>
+						Current permissions<br />
+							<p:tree value="#{resourceObjectBean.currentRoot}" var="permission"
+								rendered="#{resourceObjectBean.currentRoot.childCount ne 0}">
+								<p:treeNode>
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+							</p:tree>
+							<h:outputText value="No permissions available" rendered="#{resourceObjectBean.currentRoot.childCount eq 0}" />
+						</h:panelGroup>
+
+						<h:panelGroup>
+						New permissions<br />
+							<p:tree value="#{resourceObjectBean.newRoot}" var="permission"
+								rendered="#{resourceObjectBean.newRoot.childCount ne 0}">
+								<p:treeNode>
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+							</p:tree>
+							<h:outputText value="No permissions available" rendered="#{resourceObjectBean.newRoot.childCount eq 0}" />
+						</h:panelGroup>
+					</h:panelGrid>
+					<p:commandButton value="Back" onclick="permissionWizard.back()" />
+					<p:commandButton value="Confirm" action="#{resourceObjectBean.confirmSelectedPermissions}"
+						oncomplete="permissionWizard.loadStep(permissionWizard.cfg.steps [0], true)" />
+				</p:tab>
+			</p:wizard>
+
+
+		</h:form>
+
+		<p:dialog id="warningDialogId" widgetVar="warningDialog">
+			<p:dataTable value="#{resourceObjectBean.notRevokable}" var="permission" paginator="true" rows="10">
+				<f:facet name="header">Permissions that cannot be revoked</f:facet>
+				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
+					<f:facet name="header">Resource</f:facet>
+                            #{permission.id.entity} #{permission.id.field}
+                    </p:column>
+				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
+					<f:facet name="header">Action</f:facet>
+                            #{permission.id.actionName}
+                    </p:column>
+			</p:dataTable>
+			<p:dataTable value="#{resourceObjectBean.notGrantable}" var="permission" paginator="true" rows="10">
+				<f:facet name="header">Permissions that cannot be granted</f:facet>
+				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
+					<f:facet name="header">Resource</f:facet>
+                            #{permission.id.entity} #{permission.id.field}
+                    </p:column>
+				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
+					<f:facet name="header">Action</f:facet>
+                            #{permission.id.actionName}
+                    </p:column>
+			</p:dataTable>
+		</p:dialog>
+
+
+
+	</h:body>
+</f:view>
+</html>

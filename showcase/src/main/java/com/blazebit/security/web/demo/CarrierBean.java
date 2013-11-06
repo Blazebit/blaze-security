@@ -6,32 +6,25 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.reflection.ReflectionUtils;
-import com.blazebit.security.Action;
+import org.primefaces.event.TabChangeEvent;
+
 import com.blazebit.security.IdHolder;
-import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.Role;
+import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityAction;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.sample.Carrier;
-import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.web.bean.PermissionManager;
 import com.blazebit.security.web.bean.SecurityBaseBean;
 import com.blazebit.security.web.bean.model.EditModel;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
-import com.blazebit.security.web.bean.model.SubjectModel;
-import com.blazebit.security.web.service.api.ActionUtils;
-import com.blazebit.security.web.service.impl.UserGroupService;
-import com.blazebit.security.web.service.impl.UserService;
+import com.blazebit.security.web.bean.resources.ResourceObjectBean;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
@@ -39,77 +32,52 @@ import com.blazebit.security.web.util.WebUtil;
 @Stateless
 public class CarrierBean extends SecurityBaseBean {
 
-    @Inject
-    private UserService userService;
-
-    @Inject
-    private UserGroupService userGroupService;
-
-    private List<RowModel> carriers = new ArrayList<RowModel>();
-
     @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;
 
     @Inject
-    private PermissionManager permissionManager;
+    private ResourceObjectBean resourceObjectBean;
 
-    @Inject
-    private ActionUtils actionUtils;
-
-    private Carrier newCarrier = new Carrier();
-    private Carrier selectedCarrier;
     private EditModel selectedCarrierModel;
 
-    private List<Contact> contacts = new ArrayList<Contact>();
-    private Contact newContact = new Contact();
-    private Contact selectedContact;
-
-    private List<CarrierGroup> groups = new ArrayList<CarrierGroup>();
-    private CarrierGroup newGroup = new CarrierGroup();
+    private List<RowModel> contacts = new ArrayList<RowModel>();
+    private EditModel selectedContactModel;
     private boolean selectAll;
     private List<FieldModel> fields = new ArrayList<FieldModel>();
 
-    private List<Object> subjects = new ArrayList<Object>();
-    private List<EntityAction> selectedActions = new ArrayList<EntityAction>();
-    private Object selectedSubject;
+    private List<RowModel> carriers = new ArrayList<RowModel>();
 
-    public Object getSelectedSubject() {
-        return selectedSubject;
-    }
+    private EditModel partyModel;
 
-    public void setSelectedSubject(Object selectedSubject) {
-        this.selectedSubject = selectedSubject;
-    }
-
-    public List<CarrierGroup> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(List<CarrierGroup> groups) {
-        this.groups = groups;
-    }
-
-    public CarrierGroup getNewGroup() {
-        return newGroup;
-    }
-
-    public void setNewGroup(CarrierGroup newGroup) {
-        this.newGroup = newGroup;
-    }
-
-    public CarrierGroup getSelectedGroup() {
-        return selectedGroup;
-    }
-
-    public void setSelectedGroup(CarrierGroup selectedGroup) {
-        this.selectedGroup = selectedGroup;
-    }
-
-    private CarrierGroup selectedGroup;
-
-    private Party party;
+    private String tabIndex;
 
     public void init() {
+        initCarriers();
+        fields.clear();
+        fields.add(new FieldModel("field1"));
+        fields.add(new FieldModel("field2"));
+        fields.add(new FieldModel("field3"));
+        fields.add(new FieldModel("field4"));
+        fields.add(new FieldModel("field5"));
+
+        selectedCarrierModel = new EditModel(new Carrier());
+        selectedCarrierModel.getFields().put("field1", new FieldModel("field1"));
+        selectedCarrierModel.getFields().put("field2", new FieldModel("field2"));
+        selectedCarrierModel.getFields().put("field3", new FieldModel("field3"));
+        selectedCarrierModel.getFields().put("field4", new FieldModel("field4"));
+        selectedCarrierModel.getFields().put("field5", new FieldModel("field5"));
+
+        partyModel = new EditModel(new Party());
+        partyModel.getFields().put("partyField1", new FieldModel("partyField1"));
+        partyModel.getFields().put("partyField2", new FieldModel("partyField2"));
+
+        selectedContactModel = new EditModel(new Contact());
+        selectedContactModel.getFields().put("contactField", new FieldModel("contactField"));
+        tabIndex = "carrierTab";
+
+    }
+
+    private void initCarriers() {
         carriers.clear();
         List<Carrier> existingCarriers = entityManager.createQuery("select carrier from " + Carrier.class.getCanonicalName() + " carrier", Carrier.class).getResultList();
         for (Carrier carrier : existingCarriers) {
@@ -127,51 +95,24 @@ public class CarrierBean extends SecurityBaseBean {
                 .append(carrier.getField5())
                 .toString()));
         }
-        selectedCarrier = new Carrier();
-        fields.clear();
-        fields.add(new FieldModel("field1"));
-        fields.add(new FieldModel("field2"));
-        fields.add(new FieldModel("field3"));
-        fields.add(new FieldModel("field4"));
-        fields.add(new FieldModel("field5"));
-
-        List<User> users = userService.findUsers(userSession.getSelectedCompany());
-        for (User user : users) {
-            subjects.add(new SubjectModel(user));
-        }
-        List<UserGroup> userGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
-        for (UserGroup ug : userGroups) {
-            addToList(ug);
-        }
-
-        selectedCarrierModel = new EditModel();
-        selectedCarrierModel.getFields().put("field1", new FieldModel("field1"));
-        selectedCarrierModel.getFields().put("field2", new FieldModel("field2"));
-        selectedCarrierModel.getFields().put("field3", new FieldModel("field3"));
-        selectedCarrierModel.getFields().put("field4", new FieldModel("field4"));
-        selectedCarrierModel.getFields().put("field5", new FieldModel("field5"));
-
     }
 
-    private void addToList(UserGroup ug) {
-        subjects.add(new SubjectModel(ug));
-        for (UserGroup child : ug.getUserGroups()) {
-            addToList(child);
+    public void tabChange(TabChangeEvent event) {
+        if (partyModel.getEntity() == null) {
+            partyModel.setEntity(new Party());
         }
-    }
-
-    public void tabChange() {
-        if (party == null) {
-            party = new Party();
-        }
+        tabIndex = event.getTab().getId();
     }
 
     public void selectCarrier(Carrier carrier) {
-        selectedCarrier = entityManager.find(Carrier.class, carrier.getId());
+        Carrier selectedCarrier = entityManager.find(Carrier.class, carrier.getId());
         selectedCarrierModel.setEntity(selectedCarrier);
-        party = selectedCarrier.getParty();
-        contacts = new ArrayList<Contact>(selectedCarrier.getContacts());
-        groups = new ArrayList<CarrierGroup>(selectedCarrier.getGroups());
+        partyModel.setEntity(selectedCarrier.getParty());
+        List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
+        contacts.clear();
+        for (Contact c : allContacts) {
+            contacts.add(new RowModel(c));
+        }
     }
 
     public EditModel getSelectedCarrierModel() {
@@ -183,145 +124,89 @@ public class CarrierBean extends SecurityBaseBean {
     }
 
     public void selectContact(Contact contact) {
-        setSelectedContact(contact);
-    }
-
-    public void selectGroup(CarrierGroup group) {
-        selectedGroup = group;
-    }
-
-    public void saveNewCarrier() {
-        entityManager.persist(newCarrier);
-        init();
-        newCarrier = new Carrier();
+        selectedContactModel.setEntity(contact);
     }
 
     public void saveCarrier() {
-        entityManager.merge(selectedCarrier);
-        init();
+        selectedCarrierModel.setEntity(entityManager.merge(selectedCarrierModel.getEntity()));
+        initCarriers();
+    }
 
+    public void saveNewCarrier() {
+        entityManager.persist(selectedCarrierModel.getEntity());
+        selectCarrier((Carrier) selectedCarrierModel.getEntity());
+        initCarriers();
+    }
+
+    public void newCarrier() {
+        selectedCarrierModel.setEntity(new Carrier());
+    }
+
+    public void newContact() {
+        selectedContactModel.setEntity(new Contact());
     }
 
     public void saveNewContact() {
-        entityManager.persist(newContact);
-        selectedCarrier.getContacts().add(newContact);
-        selectedCarrier = entityManager.merge(selectedCarrier);
-        contacts = new ArrayList<Contact>(selectedCarrier.getContacts());
-        newContact = new Contact();
-    }
+        entityManager.persist(selectedContactModel.getEntity());
+        ((Carrier) selectedCarrierModel.getEntity()).getContacts().add((Contact) selectedContactModel.getEntity());
+        Carrier selectedCarrier = entityManager.merge(((Carrier) selectedCarrierModel.getEntity()));
 
-    public void saveNewGroup() {
-        newGroup.getCarriers().add(selectedCarrier);
-        entityManager.persist(newGroup);
-        selectedCarrier = entityManager.find(Carrier.class, selectedCarrier.getId());
-        selectedCarrier.getGroups().add(newGroup);
-        selectedCarrier = entityManager.merge(selectedCarrier);
-        groups = new ArrayList<CarrierGroup>(selectedCarrier.getGroups());
-        newGroup = new CarrierGroup();
-    }
-
-    public void deleteGroup(CarrierGroup carrierGroup) {
-        if (carrierGroup.equals(selectedGroup)) {
-            selectedGroup = null;
+        List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
+        contacts.clear();
+        for (Contact c : allContacts) {
+            contacts.add(new RowModel(c));
         }
-        entityManager.remove(entityManager.find(CarrierGroup.class, carrierGroup.getId()));
-        selectedCarrier.getGroups().remove(carrierGroup);
-        selectedCarrier = entityManager.merge(selectedCarrier);
-        groups = new ArrayList<CarrierGroup>(selectedCarrier.getGroups());
+
     }
 
     public void deleteContact(Contact contact) {
-        if (contact.equals(selectedContact)) {
-            selectedContact = null;
+        if (contact.equals(selectedContactModel.getEntity())) {
+            selectedContactModel.setEntity(null);
         }
         entityManager.remove(entityManager.find(Contact.class, contact.getId()));
-        selectedCarrier.getContacts().remove(contact);
-        selectedCarrier = entityManager.merge(selectedCarrier);
-        contacts = new ArrayList<Contact>(selectedCarrier.getContacts());
+        ((Carrier) selectedCarrierModel.getEntity()).getContacts().remove(contact);
+        Carrier selectedCarrier = entityManager.merge(((Carrier) selectedCarrierModel.getEntity()));
+        List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
+        contacts.clear();
+        for (Contact c : allContacts) {
+            contacts.add(new RowModel(c));
+        }
+        selectedCarrierModel.setEntity(selectedCarrier);
 
     }
 
     public void deleteCarrier(Carrier carrier) {
-        if (carrier.equals(selectedCarrier)) {
-            selectedCarrier = null;
+        if (carrier.equals(((Carrier) selectedCarrierModel.getEntity()))) {
+            selectedCarrierModel.setEntity(null);
         }
         entityManager.remove(entityManager.find(Carrier.class, carrier.getId()));
         init();
     }
 
     public void saveParty() {
-        if (party.getId() == null) {
-            entityManager.persist(party);
-        } else {
-            entityManager.merge(party);
-        }
-        selectedCarrier.setParty(party);
-        entityManager.merge(selectedCarrier);
+        partyModel.setEntity(entityManager.merge(partyModel.getEntity()));
+        ((Carrier) selectedCarrierModel.getEntity()).setParty((Party) partyModel.getEntity());
+        entityManager.merge(((Carrier) selectedCarrierModel.getEntity()));
+        // selectedCarrier = entityManager.find(Carrier.class, selectedCarrier.getId());
+    }
+
+    public void saveNewParty() {
+        entityManager.persist(partyModel.getEntity());
+        ((Carrier) selectedCarrierModel.getEntity()).setParty((Party) partyModel.getEntity());
+        selectedCarrierModel.setEntity(entityManager.merge(((Carrier) selectedCarrierModel.getEntity())));
         // selectedCarrier = entityManager.find(Carrier.class, selectedCarrier.getId());
     }
 
     public void saveContact() {
-        entityManager.merge(selectedContact);
-        selectedCarrier = entityManager.find(Carrier.class, selectedCarrier.getId());
-        setContacts(new ArrayList<Contact>(selectedCarrier.getContacts()));
-    }
+        selectedContactModel.setEntity(entityManager.merge(selectedContactModel.getEntity()));
+        Carrier selectedCarrier = entityManager.find(Carrier.class, ((Carrier) selectedCarrierModel.getEntity()).getId());
+        selectedCarrierModel.setEntity(selectedCarrier);
+        List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
+        contacts.clear();
+        for (Contact c : allContacts) {
+            contacts.add(new RowModel(c));
+        }
 
-    public void saveGroup() {
-        entityManager.merge(selectedGroup);
-        selectedCarrier = entityManager.find(Carrier.class, selectedCarrier.getId());
-        groups = new ArrayList<CarrierGroup>(selectedCarrier.getGroups());
-    }
-
-    public Carrier getSelectedCarrier() {
-        return selectedCarrier;
-    }
-
-    public void setSelectedCarrier(Carrier selectedCarrier) {
-        this.selectedCarrier = selectedCarrier;
-    }
-
-    public List<RowModel> getCarriers() {
-        return carriers;
-    }
-
-    public Party getParty() {
-        return party;
-    }
-
-    public void setParty(Party party) {
-        this.party = party;
-    }
-
-    public Contact getSelectedContact() {
-        return selectedContact;
-    }
-
-    public void setSelectedContact(Contact selectedContact) {
-        this.selectedContact = selectedContact;
-    }
-
-    public List<Contact> getContacts() {
-        return contacts;
-    }
-
-    public void setContacts(List<Contact> contacts) {
-        this.contacts = contacts;
-    }
-
-    public Carrier getNewCarrier() {
-        return newCarrier;
-    }
-
-    public Contact getNewContact() {
-        return newContact;
-    }
-
-    public void setNewContact(Contact newContact) {
-        this.newContact = newContact;
-    }
-
-    public void setNewCarrier(Carrier newCarrier) {
-        this.newCarrier = newCarrier;
     }
 
     public void grant(Carrier carrier, String field) {
@@ -372,59 +257,70 @@ public class CarrierBean extends SecurityBaseBean {
     }
 
     public void goToPermissions() {
-        permissionManager.setSelectedSubject((IdHolder) selectedSubject);
-        permissionManager.setSelectedActions(selectedActions);
-        permissionManager.getSelectedFields().clear();
-        for (FieldModel fieldModel : selectedCarrierModel.getFields().values()) {
-            if (fieldModel.isSelected()) {
-                permissionManager.getSelectedFields().add(fieldModel.getFieldName());
+        if (selectedSubject != null && !selectedActions.isEmpty()) {
+            // check if user can grant to selectedsubject
+            boolean allowed = false;
+            if (selectedSubject instanceof Subject) {
+                allowed = isAuthorizedToGrantRevoke((Subject) selectedSubject);
+            } else {
+                allowed = isAuthorizedToGrantRevoke((Role) selectedSubject);
+            }
+            if (allowed) {
+                if (Carrier.class.equals(getTabEntityClass())) {
+                    if (isSelected(carriers)) {
+                        goToObjectResourceManagement((IdHolder) selectedSubject, selectedActions, selectedCarrierModel, carriers);
+                    } else {
+                        System.err.println("Select subject/action/carrier");
+                    }
+                } else {
+                    if (Party.class.equals(getTabEntityClass())) {
+                        if (partyModel.getEntity().getId() != null) {
+                            List<RowModel> ret = new ArrayList<RowModel>();
+                            ret.add(new RowModel(partyModel.getEntity(), partyModel.isSelected(), "Party-" + ((Party) partyModel.getEntity()).getPartyField1() + ", "
+                                + ((Party) partyModel.getEntity()).getPartyField2()));
+                            if (isSelected(ret)) {
+                                goToObjectResourceManagement((IdHolder) selectedSubject, selectedActions, partyModel, ret);
+                            } else {
+                                System.err.println("Select subject/action/party");
+                            }
+                        }
+                    } else {
+                        if (Contact.class.equals(getTabEntityClass())) {
+                            if (isSelected(contacts)) {
+                                goToObjectResourceManagement((IdHolder) selectedSubject, selectedActions, selectedContactModel, contacts);
+                            } else {
+                                System.err.println("Select subject/action/contact");
+                            }
+                        }
+                    }
+                }
+            } else {
+                System.err.println("User cannot grant or revoke");
             }
         }
-        permissionManager.getSelectedObjects().clear();
-        for (RowModel rowModel : carriers) {
-            if (rowModel.isSelected()) {
-                permissionManager.getSelectedObjects().add(rowModel);
-            }
-        }
-        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/permissionManager.xhtml", false);
-
     }
 
-    public List<Object> getSubjects() {
-        return subjects;
+    public void goToObjectResourceManagement(IdHolder selectedSubject, List<EntityAction> selectedActions, EditModel selectedEditModel, List<RowModel> rowModelList) {
+        resourceObjectBean.setSelectedSubject(selectedSubject);
+        resourceObjectBean.setSelectedActions(selectedActions);
+        resourceObjectBean.getSelectedFields().clear();
+        for (FieldModel fieldModel : selectedEditModel.getFields().values()) {
+            if (fieldModel.isSelected()) {
+                resourceObjectBean.getSelectedFields().add(fieldModel.getFieldName());
+            }
+        }
+        resourceObjectBean.getSelectedObjects().clear();
+        for (RowModel rowModel : rowModelList) {
+            if (rowModel.isSelected()) {
+                resourceObjectBean.getSelectedObjects().add(rowModel);
+            }
+        }
+        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
+
     }
 
     public void setSubjects(List<Object> subjects) {
         this.subjects = subjects;
-    }
-
-    public void selectSubject(ValueChangeEvent event) {
-        selectedSubject = null;
-        String subjectModel = (String) event.getNewValue();
-        String className = subjectModel.split("-")[0];
-        String id = subjectModel.split("-")[1];
-        if (subjectModel != null) {
-            try {
-                selectedSubject = entityManager.find(Class.forName(className), Integer.valueOf(id));
-            } catch (NumberFormatException e) {
-            } catch (ClassNotFoundException e) {
-            }
-        }
-    }
-
-    public void selectAction(ValueChangeEvent event) {
-        selectedActions.clear();
-        for (String action : (String[]) event.getNewValue()) {
-            selectedActions.add((EntityAction) actionFactory.createAction(ActionConstants.valueOf(action)));
-        }
-    }
-
-    public List<Action> getActions() {
-        return actionUtils.getActionsForEntityObject();
-    }
-
-    public List<EntityAction> getSelectedActions() {
-        return selectedActions;
     }
 
     public void selectField(String field) {
@@ -433,6 +329,54 @@ public class CarrierBean extends SecurityBaseBean {
                 model.setSelected(true);
             }
         }
+    }
+
+    public List<RowModel> getCarriers() {
+        return carriers;
+    }
+
+    public EditModel getPartyModel() {
+        return partyModel;
+    }
+
+    public void setPartyModel(EditModel party) {
+        this.partyModel = party;
+    }
+
+    public EditModel getSelectedContactModel() {
+        return selectedContactModel;
+    }
+
+    public void setSelectedContactModel(EditModel selectedContact) {
+        this.selectedContactModel = selectedContact;
+    }
+
+    public List<RowModel> getContacts() {
+        return contacts;
+    }
+
+    public Class<?> getTabEntityClass() {
+        if ("carrierTab".equals(tabIndex)) {
+            return Carrier.class;
+        } else {
+            if ("contactTab".equals(tabIndex)) {
+                return Contact.class;
+            } else {
+                if ("partyTab".equals(tabIndex)) {
+                    return Party.class;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isRelatedTabEntity() {
+        Class<?> entityClass = getTabEntityClass();
+        if (entityClass.equals(Contact.class)) {
+            return true;
+        }
+        return false;
     }
 
 }

@@ -28,13 +28,13 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.UserSession;
-import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.NodeModel.Marking;
-import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
+import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserModel;
 import com.blazebit.security.web.service.api.RoleService;
-import com.blazebit.security.web.service.impl.UserGroupService;
-import com.blazebit.security.web.service.impl.UserService;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 
@@ -89,13 +89,13 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
         this.permissionTreeViewRoot = new DefaultTreeNode("root", null);
         DefaultTreeNode groupNode = permissionTreeViewRoot;
         for (UserGroup group : parents) {
-            groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
+            groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
             List<Permission> permissions = permissionManager.getPermissions(group);
             selectedGroupParentPermissions.addAll(permissions);
             getPermissionTree(permissions, groupNode);
         }
-        ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);
+        ((TreeNodeModel) groupNode.getData()).setMarking(Marking.GREEN);
 
     }
 
@@ -133,21 +133,21 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
                 TreeNode userNode = createUserNode(userModel.getUser(), true);
                 // mark user as new -> green
                 if (!users.contains(userModel.getUser())) {
-                    ((NodeModel) userNode.getData()).setMarking(Marking.GREEN);
+                    ((TreeNodeModel) userNode.getData()).setMarking(Marking.GREEN);
                 }
 
             } else {
                 if (users.contains(userModel.getUser())) {
                     // user will be removed from group-> mark it red
                     TreeNode userNode = createUserNode(userModel.getUser(), false);
-                    ((NodeModel) userNode.getData()).setMarking(Marking.RED);
+                    ((TreeNodeModel) userNode.getData()).setMarking(Marking.RED);
                 }
             }
         }
     }
 
     private TreeNode createUserNode(User user, boolean addedUser) {
-        NodeModel userNodeModel = new NodeModel(user.getUsername(), ResourceType.USER, user);
+        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
         DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, permissionRoot);
         userNode.setExpanded(addedUser);
         userNode.setSelectable(false);
@@ -156,7 +156,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
     }
 
     private void createPermissionNode(DefaultTreeNode userNode, boolean addedUser) {
-        NodeModel userNodeModel = (NodeModel) userNode.getData();
+        TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
         List<Permission> userPermissions = filterPermissions(permissionManager.getPermissions((User) userNodeModel.getTarget())).get(0);
         Map<String, List<Permission>> permissionMapByEntity = addedUser ? groupPermissionsByEntity(userPermissions,
                                                                                                    filterOutGrantablePermissions((User) userNodeModel.getTarget(),
@@ -166,12 +166,12 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
 
             List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), userNode);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), userNode);
             entityNode.setExpanded(true);
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
                 for (Permission permission : permissionsByAction) {
@@ -185,7 +185,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
                                 marking = Marking.GREEN;
                             }
                         }
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
                             permission.getResource(), marking), actionNode);
                         fieldNode.setSelected(addedUser || (!addedUser && !contains(selectedGroupParentPermissions, permission)));
                         fieldNode.setSelectable(!contains(userPermissions, permission) || !addedUser);
@@ -200,14 +200,14 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
                                 marking = Marking.GREEN;
                             }
                         }
-                        ((NodeModel) actionNode.getData()).setMarking(marking);
+                        ((TreeNodeModel) actionNode.getData()).setMarking(marking);
                         actionNode.setSelected(addedUser || (!addedUser && !contains(selectedGroupParentPermissions, actionPermission)));
                         actionNode.setSelectable(!contains(userPermissions, actionPermission) || !addedUser);
                     }
                 }
-                propagateSelectionAndMarkingUp(actionNode, null);
+                propagateNodePropertiesUpwards(actionNode);
             }
-            propagateSelectionAndMarkingUp(entityNode, null);
+            propagateNodePropertiesUpwards(entityNode);
         }
     }
 
@@ -226,7 +226,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
      */
     public void confirm() {
         for (TreeNode userNode : permissionRoot.getChildren()) {
-            NodeModel userNodeModel = (NodeModel) userNode.getData();
+            TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
             if (!ResourceType.USER.equals(userNodeModel.getType())) {
                 throw new InternalError("Root node must be a user node!!!");
             }
@@ -245,22 +245,22 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
     }
 
     private void grantPermissions(TreeNode userNode) throws InternalError {
-        NodeModel userNodeModel = (NodeModel) userNode.getData();
+        TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
         for (TreeNode userNodeChild : userNode.getChildren()) {
             // find unselected permissions=> they have to be revoked
             if (userNodeChild.isSelected() && userNodeChild.isSelectable()) {
-                NodeModel userNodeChildModel = (NodeModel) userNodeChild.getData();
+                TreeNodeModel userNodeChildModel = (TreeNodeModel) userNodeChild.getData();
                 if (!ResourceType.ENTITY.equals(userNodeChildModel.getType())) {
                     throw new InternalError("User node must be followed by entity node!!!");
                 }
                 for (TreeNode actionNode : userNodeChild.getChildren()) {
-                    NodeModel actionNodeModel = (NodeModel) actionNode.getData();
+                    TreeNodeModel actionNodeModel = (TreeNodeModel) actionNode.getData();
                     if (actionNode.getChildCount() == 0) {
                         permissionService.grant(userSession.getUser(), (User) userNodeModel.getTarget(), (EntityAction) actionNodeModel.getTarget(),
                                                 (EntityField) userNodeChildModel.getTarget());
                     } else {
                         for (TreeNode fieldNode : actionNode.getChildren()) {
-                            NodeModel fieldNodeModel = (NodeModel) fieldNode.getData();
+                            TreeNodeModel fieldNodeModel = (TreeNodeModel) fieldNode.getData();
                             if (fieldNode.isSelected()) {
                                 // possible that user already has permission for the entity, check if
                                 // field permission is grantable
@@ -282,18 +282,18 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
     }
 
     private void revokePermissions(TreeNode userNode) throws InternalError {
-        NodeModel userNodeModel = (NodeModel) userNode.getData();
+        TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
         for (TreeNode userNodeChild : userNode.getChildren()) {
             // find unselected permissions=> they have to be revoked
             if (!userNodeChild.isSelected() && userNodeChild.isSelectable()) {
-                NodeModel userNodeChildModel = (NodeModel) userNodeChild.getData();
+                TreeNodeModel userNodeChildModel = (TreeNodeModel) userNodeChild.getData();
                 if (!ResourceType.ENTITY.equals(userNodeChildModel.getType())) {
                     throw new InternalError("User node must be followed by entity node!!!");
                 }
                 TreeNode entityNode = userNodeChild.getParent();
-                NodeModel entityNodeModel = (NodeModel) entityNode.getData();
+                TreeNodeModel entityNodeModel = (TreeNodeModel) entityNode.getData();
                 for (TreeNode actionNode : userNodeChild.getChildren()) {
-                    NodeModel actionNodeModel = (NodeModel) actionNode.getData();
+                    TreeNodeModel actionNodeModel = (TreeNodeModel) actionNode.getData();
                     if (!actionNode.isSelected() && actionNode.isSelectable()) {
                         // if no children-> revoke permission(action, resource)
                         if (actionNode.getChildCount() == 0) {
@@ -304,7 +304,7 @@ public class GroupUsersBean extends PermissionHandlingBaseBean implements Permis
                             }
                         } else {
                             for (TreeNode fieldNode : userNodeChild.getChildren()) {
-                                NodeModel fieldNodeModel = (NodeModel) fieldNode.getData();
+                                TreeNodeModel fieldNodeModel = (TreeNodeModel) fieldNode.getData();
                                 // fields -> revoke unselected fields
                                 if (!fieldNode.isSelected() && fieldNode.isSelectable()) {
                                     if (permissionDataAccess.isRevokable((User) userNodeModel.getTarget(), (EntityAction) actionNodeModel.getTarget(),

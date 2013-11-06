@@ -7,7 +7,7 @@ package com.blazebit.security.web.bean.model;
  * 
  * @author cuszk
  */
-public class NodeModel {
+public class TreeNodeModel {
 
     public enum ResourceType {
 
@@ -52,14 +52,14 @@ public class NodeModel {
     private Marking marking;
     private String tooltip;
 
-    public NodeModel(String name, ResourceType type, Object target) {
+    public TreeNodeModel(String name, ResourceType type, Object target) {
         this.name = name;
         this.type = type;
         this.target = target;
         this.marking = Marking.NONE;
     }
 
-    public NodeModel(String name, ResourceType type, Object target, Marking marking) {
+    public TreeNodeModel(String name, ResourceType type, Object target, Marking marking) {
         this.name = name;
         this.type = type;
         this.target = target;

@@ -4,7 +4,6 @@
 package com.blazebit.security.web.bean.group;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,19 +12,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.enterprise.inject.spi.AnnotatedType;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.Action;
-import com.blazebit.security.ActionFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.AbstractPermission;
@@ -36,11 +33,10 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.ResourceNameExtension;
-import com.blazebit.security.web.bean.model.NodeModel;
-import com.blazebit.security.web.bean.model.NodeModel.Marking;
-import com.blazebit.security.web.bean.model.NodeModel.ResourceType;
-import com.blazebit.security.web.service.impl.UserGroupService;
-import com.blazebit.security.web.service.impl.UserService;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
+import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
  * 
@@ -82,7 +78,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         // buildResourceTree();
         initPermissions();
         selectedPermissionNodes = new TreeNode[] {};
-        resourceRoot = getResourceTree(groupPermissions, selectedPermissionNodes);
+        resourceRoot = getResourceTree(groupPermissions);
 
     }
 
@@ -98,62 +94,14 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         TreeNode groupNode = permissionViewRoot;
         List<Permission> permissions = null;
         for (UserGroup group : parents) {
-            groupNode = new DefaultTreeNode(new NodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
+            groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
             permissions = permissionManager.getPermissions(group);
             getPermissionTree(permissions, groupNode);
         }
         groupPermissions = permissions;
-        ((NodeModel) groupNode.getData()).setMarking(Marking.GREEN);
+        ((TreeNodeModel) groupNode.getData()).setMarking(Marking.GREEN);
 
-    }
-
-    private void buildResourceTree() {
-        resourceRoot = new DefaultTreeNode("root", null);
-        for (AnnotatedType<?> type : resourceNameExtension.getResourceNames()) {
-            Class<?> entityClass = (Class<?>) type.getBaseType();
-            EntityField entityField = (EntityField) entityFieldFactory.createResource(entityClass);
-            // check if logged in user can grant these resources
-            if (permissionService.isGranted(userSession.getUser(), actionFactory.createAction(ActionConstants.GRANT), entityField)) {
-                // entity
-                DefaultTreeNode entityNode = new DefaultTreeNode("root", new NodeModel(entityField.getEntity(), NodeModel.ResourceType.ENTITY, entityField), resourceRoot);
-                entityNode.setExpanded(true);
-                List<Action> entityActionFields = actionUtils.getActionsForEntity();
-                // fields for entity
-                Field[] allFields = ReflectionUtils.getInstanceFields(entityClass);
-                if (allFields.length > 0) {
-                    // actions for fields
-                    for (Action action : actionUtils.getActionsForField()) {
-                        EntityAction entityAction = (EntityAction) action;
-                        DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
-                        // actionNode.setExpanded(true);
-                        // fields for entity
-                        for (Field field : allFields) {
-                            EntityField entityFieldWithField = (EntityField) entityFieldFactory.createResource(entityClass, field.getName());
-                            DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(field.getName(), NodeModel.ResourceType.FIELD, entityFieldWithField), actionNode);
-                            fieldNode.setExpanded(true);
-                            // check if user has exact permission for this field or the whole entity
-                            if (permissionDataAccess.findPermission(getSelectedUserGroup(), entityAction, entityFieldWithField) != null
-                                || permissionDataAccess.findPermission(getSelectedUserGroup(), entityAction, entityField) != null) {
-                                fieldNode.setSelected(true);
-                            }
-                        }
-                        markParentAsSelectedIfChildrenAreSelected(actionNode);
-                        entityActionFields.remove(action);
-                    }
-                }
-                // remaining action fields for entity
-                for (Action action : entityActionFields) {
-                    EntityAction entityAction = (EntityAction) action;
-                    DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
-                    if (permissionDataAccess.findPermission(getSelectedUserGroup(), entityAction, entityField) != null) {
-                        actionNode.setSelected(true);
-                    }
-                }
-                // fix selections -> propagate "checked" to entity if every child checked
-                markParentAsSelectedIfChildrenAreSelected(entityNode);
-            }
-        }
     }
 
     /**
@@ -191,10 +139,10 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
      * wizard step 1
      */
     public void processSelectedPermissions() {
-        Set<Permission> selectedPermissions = processSelectedPermissions(selectedPermissionNodes, true);
+        Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes, true);
         List<Permission> currentPermissions = new ArrayList<Permission>(groupPermissions);
         for (Permission permission : currentPermissions) {
-            if (!isAuthorized(ActionConstants.GRANT, permission.getResource())) {
+            if (!isGranted(ActionConstants.GRANT, permission.getResource())) {
                 selectedPermissions.add(permission);
             }
         }
@@ -243,22 +191,22 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         // go through resource actions and build tree + mark new ones
         for (String entity : mergedPermissionMap.keySet()) {
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), newPermissionTreeRoot);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), newPermissionTreeRoot);
             entityNode.setExpanded(true);
             List<Permission> permissionsByEntity = mergedPermissionMap.get(entity);
             Map<Action, List<Permission>> resourceActionMapByAction = groupPermissionsByAction(permissionsByEntity);
 
             for (Action action : resourceActionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
 
                 List<Permission> permissionsByAction = resourceActionMapByAction.get(action);
                 for (Permission permission : permissionsByAction) {
                     if (!((EntityField) permission.getResource()).isEmptyField()) {
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(((EntityField) permission.getResource()).getField(), NodeModel.ResourceType.FIELD,
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
                             permission.getResource(), contains(selectedPermissions, permission) ? Marking.GREEN : Marking.NONE), actionNode);
                     } else {
-                        ((NodeModel) actionNode.getData())
+                        ((TreeNodeModel) actionNode.getData())
                             .setMarking(contains(selectedPermissions, permissionFactory.create(entityAction, entityField)) ? Marking.GREEN : Marking.NONE);
                     }
                 }
@@ -278,16 +226,16 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     private void markParentIfChildrenAreMarked(TreeNode node) {
         if (node.getChildCount() > 0) {
             boolean foundOneUnMarked = false;
-            Marking firstMarking = ((NodeModel) node.getChildren().get(0).getData()).getMarking();
+            Marking firstMarking = ((TreeNodeModel) node.getChildren().get(0).getData()).getMarking();
             for (TreeNode child : node.getChildren()) {
-                NodeModel childNodeData = (NodeModel) child.getData();
+                TreeNodeModel childNodeData = (TreeNodeModel) child.getData();
                 if (!childNodeData.getMarking().equals(firstMarking)) {
                     foundOneUnMarked = true;
                     break;
                 }
             }
             if (!foundOneUnMarked) {
-                ((NodeModel) node.getData()).setMarking(firstMarking);
+                ((TreeNodeModel) node.getData()).setMarking(firstMarking);
             }
         }
     }
@@ -300,35 +248,35 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
             List<Permission> permissionGroup = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), currentPermissionTreeRoot);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), currentPermissionTreeRoot);
             entityNode.setExpanded(true);
 
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionGroup);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction), entityNode);
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> resoucesByAction = permissionMapByAction.get(action);
                 for (Permission _permissionByAction : resoucesByAction) {
                     AbstractPermission permissionByAction = (AbstractPermission) _permissionByAction;
                     if (!StringUtils.isEmpty(permissionByAction.getResource().getField())) {
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new NodeModel(permissionByAction.getResource().getField(), NodeModel.ResourceType.FIELD,
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(permissionByAction.getResource().getField(), TreeNodeModel.ResourceType.FIELD,
                             permissionByAction.getResource(),
                             contains(permissionsToRevoke, permissionByAction) || !contains(selectedPermissions, permissionByAction) ? Marking.RED : Marking.NONE), actionNode);
                     } else {
                         // entity and action.
                         if (contains(permissionsToRevoke, permissionByAction) || !contains(selectedPermissions, permissionByAction)) {
-                            ((NodeModel) actionNode.getData()).setMarking(Marking.RED);
+                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.RED);
                         }
                     }
                     boolean foundOneNotMarked = false;
                     for (TreeNode childNode : actionNode.getChildren()) {
-                        if (!((NodeModel) childNode.getData()).isMarked()) {
+                        if (!((TreeNodeModel) childNode.getData()).isMarked()) {
                             foundOneNotMarked = true;
                             break;
                         }
                         if (!foundOneNotMarked) {
-                            ((NodeModel) actionNode.getData()).setMarking(Marking.RED);
+                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.RED);
                         }
                     }
 
@@ -336,12 +284,12 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             }
             boolean foundOneNotMarked = false;
             for (TreeNode childNode : entityNode.getChildren()) {
-                if (!((NodeModel) childNode.getData()).isMarked()) {
+                if (!((TreeNodeModel) childNode.getData()).isMarked()) {
                     foundOneNotMarked = true;
                     break;
                 }
                 if (!foundOneNotMarked) {
-                    ((NodeModel) entityNode.getData()).setMarking(Marking.RED);
+                    ((TreeNodeModel) entityNode.getData()).setMarking(Marking.RED);
                 }
             }
         }
@@ -380,7 +328,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
         });
         for (User user : sortedUsers) {
-            DefaultTreeNode permissionRoot = new DefaultTreeNode(new NodeModel(user.getUsername(), ResourceType.USER, user), userPermissionTreeRoot);
+            DefaultTreeNode permissionRoot = new DefaultTreeNode(new TreeNodeModel(user.getUsername(), ResourceType.USER, user), userPermissionTreeRoot);
             permissionRoot.setExpanded(true);
             List<Permission> userPermissions = filterPermissions(permissionManager.getPermissions(user)).get(0);
             buildPermissionViewTreeForUser(permissionRoot, userPermissions, grantedPermissions, revokedPermissions);
@@ -395,19 +343,19 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
             List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
             EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new NodeModel(entity, NodeModel.ResourceType.ENTITY, entityField), root);
+            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), root);
             entityNode.setExpanded(true);
             Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
             for (Action action : permissionMapByAction.keySet()) {
                 EntityAction entityAction = (EntityAction) action;
-                NodeModel actionNodeModel = new NodeModel(entityAction.getActionName(), NodeModel.ResourceType.ACTION, entityAction);
+                TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
                 DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
                 actionNode.setExpanded(true);
                 List<Permission> permissionsByAction = permissionMapByAction.get(action);
                 for (Permission _permission : permissionsByAction) {
                     AbstractPermission permission = (AbstractPermission) _permission;
                     if (!permission.getResource().isEmptyField()) {
-                        NodeModel fieldNodeModel = new NodeModel(permission.getResource().getField(), NodeModel.ResourceType.FIELD, permission.getResource());
+                        TreeNodeModel fieldNodeModel = new TreeNodeModel(permission.getResource().getField(), TreeNodeModel.ResourceType.FIELD, permission.getResource());
                         DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
                         // entity-action-field node
                         Marking marking = Marking.NONE;
@@ -441,9 +389,9 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
                         actionNodeModel.setMarking(marking);
                     }
                 }
-                propagateSelectionAndMarkingUp(actionNode, selectedUserNodes);
+                selectedUserNodes = ArrayUtils.addAll(selectedUserNodes, propagateNodePropertiesUpwards(actionNode));
             }
-            propagateSelectionAndMarkingUp(entityNode, selectedUserNodes);
+            selectedUserNodes = ArrayUtils.addAll(selectedUserNodes, propagateNodePropertiesUpwards(entityNode));
         }
 
     }
@@ -461,14 +409,14 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
      */
     public void confirmUsers() {
         for (TreeNode userNode : userPermissionTreeRoot.getChildren()) {
-            NodeModel userNodeModel = (NodeModel) userNode.getData();
+            TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
             if (ResourceType.USER.equals(userNodeModel.getType())) {
                 for (TreeNode entityNode : userNode.getChildren()) {
-                    NodeModel entityNodeModel = (NodeModel) entityNode.getData();
+                    TreeNodeModel entityNodeModel = (TreeNodeModel) entityNode.getData();
                     if (entityNode.isSelectable()) {
                         // process only action and field nodes!
                         for (TreeNode actionNode : entityNode.getChildren()) {
-                            NodeModel actionNodeModel = (NodeModel) actionNode.getData();
+                            TreeNodeModel actionNodeModel = (TreeNodeModel) actionNode.getData();
                             if (actionNode.isSelected()) {
                                 if (actionNode.getChildCount() == 0) {
                                     if (Marking.GREEN.equals(actionNodeModel.getMarking())) {
@@ -478,7 +426,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
                                     }
                                 } else {
                                     for (TreeNode fieldNode : actionNode.getChildren()) {
-                                        NodeModel fieldNodeModel = (NodeModel) fieldNode.getData();
+                                        TreeNodeModel fieldNodeModel = (TreeNodeModel) fieldNode.getData();
                                         if (fieldNode.isSelected()) {
                                             // selected+green=grant field+action
                                             if (Marking.GREEN.equals(fieldNodeModel.getMarking())) {

@@ -58,7 +58,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     private boolean canUserBeAddedToRole(User user, UserGroup group) {
-        Set<UserGroup> groups = user.getUserGroups();
+        User reloadedUser = entityManager.find(User.class, user.getId());
+        Set<UserGroup> groups = reloadedUser.getUserGroups();
         for (UserGroup currentGroup : groups) {
             // subject cannot be added to the same role where he already belongs
             if (currentGroup.equals(group)) {
@@ -79,7 +80,8 @@ public class RoleServiceImpl implements RoleService {
 
     private boolean canUserBeRemovedFromRole(User user, UserGroup group) {
         // subject can be removed from role if role contains subject
-        return group.getSubjects().contains(user);
+        UserGroup reloadedgroup = entityManager.find(UserGroup.class, group.getId());
+        return reloadedgroup.getSubjects().contains(user);
     }
 
     @Override

@@ -18,6 +18,9 @@ import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.web.bean.SecurityBaseBean;
+import com.blazebit.security.web.bean.model.FieldModel;
+import com.blazebit.security.web.bean.model.RowModel;
+import com.blazebit.security.web.bean.resources.ResourceObjectBean;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
@@ -31,21 +34,21 @@ public class CommentBean extends SecurityBaseBean {
     @Inject
     private PermissionDataAccess permissionDataAccess;
 
-    private List<Comment> comments = new ArrayList<Comment>();
+    private List<RowModel> comments = new ArrayList<RowModel>();
     private Comment newComment = new Comment();
 
     public void init() {
-        setComments(entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                  + userSession.getSelectedCompany().getId()).getResultList());
+        List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
+                                                             + userSession.getSelectedCompany().getId()).getResultList();
+        comments.clear();
+        for (Comment c : result) {
+            comments.add(new RowModel(c, "Comment-" + c.getText()));
+        }
         newComment = new Comment();
     }
 
-    public List<Comment> getComments() {
+    public List<RowModel> getComments() {
         return comments;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
     }
 
     public Comment getNewComment() {
@@ -60,7 +63,8 @@ public class CommentBean extends SecurityBaseBean {
         User subject = userSession.getUser();
         newComment.setUser(subject);
         entityManager.persist(newComment);
-        setComments(entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment").getResultList());
+        init();
+
         Resource resource = entityFieldFactory.createResource(newComment.getClass(), newComment.getId());
         Action readAction = actionFactory.createAction(ActionConstants.READ);
         if (permissionDataAccess.isGrantable(subject, readAction, resource)) {
@@ -80,12 +84,12 @@ public class CommentBean extends SecurityBaseBean {
 
     public void saveComment(Comment comment) {
         entityManager.merge(comment);
-        setComments(entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment").getResultList());
+        init();
     }
 
     public void deleteComment(Comment comment) {
         entityManager.remove(entityManager.find(Comment.class, comment.getId()));
-        setComments(entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment").getResultList());
+        init();
     }
 
     public void grant(Comment comment) {
@@ -97,4 +101,30 @@ public class CommentBean extends SecurityBaseBean {
         WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/resources.xhtml?id=" + comment.getId() + "&resource=" + comment.getClass().getName()
             + "&revoke=true", false);
     }
+
+    public Class<?> getEntityClass() {
+        return Comment.class;
+    }
+
+    @Inject
+    ResourceObjectBean resourceObjectBean;
+
+    public void goToPermissions() {
+        if (selectedSubject != null && selectedActions != null && isSelected(comments)) {
+            resourceObjectBean.setSelectedSubject(selectedSubject);
+            resourceObjectBean.setSelectedActions(selectedActions);
+            resourceObjectBean.getSelectedFields().clear();
+
+            resourceObjectBean.getSelectedObjects().clear();
+            for (RowModel rowModel : comments) {
+                if (rowModel.isSelected()) {
+                    resourceObjectBean.getSelectedObjects().add(rowModel);
+                }
+            }
+            WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
+        } else {
+            System.err.println("Must select subject/action/comment");
+        }
+    }
+
 }

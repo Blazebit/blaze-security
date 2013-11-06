@@ -23,25 +23,37 @@
 				Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
 				<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
 			</h3>
+
+			<h:panelGroup id="subjects">
+				Current entity: #{commentBean.entityClass.name}<br />
+				<p:selectOneMenu effect="fade" var="p" style="width:160px" filter="true" filterMatchMode="startsWith"
+					valueChangeListener="#{commentBean.selectSubject}"
+					rendered="#{commentBean.isAuthorized('GRANT', commentBean.entityClass.name) or commentBean.isAuthorized('REVOKE', commentBean.entityClass.name)}">
+					<f:event listener="#{commentBean.initSubjects}" type="preRenderComponent"/>
+					<f:selectItem itemLabel="Select subject" itemValue="" />
+					<f:selectItems value="#{commentBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
+						itemDescription="#{subject.name}" />
+					<p:column>#{p.name}</p:column>
+				</p:selectOneMenu>
+			</h:panelGroup>
+
 			<h:panelGroup id="comments">
 				<h:panelGroup rendered="#{commentBean.comments.size() gt 0}">
 					<ui:repeat value="#{commentBean.comments}" var="comment">
 						<br />
-						<h:outputText value="#{comment.text}"
-							rendered="#{commentBean.isAuthorizedResource('READ', comment) and !commentBean.isAuthorizedResource('UPDATE', comment)}" />
-						<h:outputText value="  Comment by #{comment.user.username} "
-							rendered="#{!commentBean.isAuthorizedResource('READ', comment) and !commentBean.isAuthorizedResource('UPDATE', comment)}" />
-						<p:commandButton value="grant" action="#{commentBean.grant(comment)}"
-							rendered="#{commentBean.isAuthorizedResource('GRANT', comment)}" />
-						<p:commandButton value="revoke" action="#{commentBean.revoke(comment)}"
-							rendered="#{commentBean.isAuthorizedResource('REVOKE', comment)}" />
-						<h:inputTextarea value="#{comment.text}" rendered="#{commentBean.isAuthorizedResource('UPDATE',comment)}" />
+						<h:outputText value="#{comment.entity.text}"
+							rendered="#{commentBean.isAuthorizedResource('READ', comment.entity) and !commentBean.isAuthorizedResource('UPDATE', comment.entity)}" />
+						<h:outputText value="  Comment by #{comment.entity.user.username} "
+							rendered="#{!commentBean.isAuthorizedResource('READ', comment.entity) and !commentBean.isAuthorizedResource('UPDATE', comment.entity)}" />
+						<p:selectBooleanCheckbox value="#{comment.selected}" rendered="#{commentBean.isAuthorizedResource('GRANT', comment.entity)}"/>
+
+						<h:inputTextarea value="#{comment.entity.text}" rendered="#{commentBean.isAuthorizedResource('UPDATE',comment.entity)}" />
 						<br />
 						<h:panelGrid columns="2">
-							<p:commandButton value="Delete" action="#{commentBean.deleteComment(comment)}"
-								rendered="#{commentBean.isAuthorizedResource('DELETE', comment)}" update=":form:comments" />
-							<p:commandButton value="Update" action="#{commentBean.saveComment(comment)}"
-								rendered="#{commentBean.isAuthorizedResource('UPDATE', comment)}" update=":form:comments" />
+							<p:commandButton value="Delete" action="#{commentBean.deleteComment(comment.entity)}"
+								rendered="#{commentBean.isAuthorizedResource('DELETE', comment.entity)}" update=":form:comments" />
+							<p:commandButton value="Update" action="#{commentBean.saveComment(comment.entity)}"
+								rendered="#{commentBean.isAuthorizedResource('UPDATE', comment.entity)}" update=":form:comments" />
 						</h:panelGrid>
 						<h:outputText value="-------------------------------------------------------------" />
 						<br />
@@ -51,14 +63,28 @@
 			<h:panelGroup id="new">
 				<c:set var="newComment" value="#{commentBean.newComment}" />
 				<h:inputTextarea value="#{commentBean.newComment.text}"
-					rendered="#{commentBean.isAuthorizedResource('CREATE',newComment)}" />
+					rendered="#{commentBean.isAuthorized('CREATE',newComment.class.name)}" />
 				<br />
 				<p:commandButton value="Create" action="#{commentBean.saveNewComment()}"
-					rendered="#{commentBean.isAuthorizedResource('CREATE', newComment)}" update=":form:comments, :form:new" />
+					rendered="#{commentBean.isAuthorized('CREATE', newComment.class.name)}" update=":form:comments, :form:new" />
 				<br />
 				<h:outputText value="-------------------------------------------------------------" />
 			</h:panelGroup>
 			<br />
+			<h:panelGroup id="actions">
+				<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
+					panelStyle="width:220px" valueChangeListener="#{commentBean.selectAction}"
+					rendered="#{commentBean.isAuthorized('GRANT', commentBean.entityClass.name) or commentBean.isAuthorized('REVOKE', commentBean.entityClass.name)}">
+					<f:selectItems value="#{commentBean.actions}" var="action" itemLabel="#{action.actionName}"
+						itemValue="#{action.actionName}" />
+				</p:selectCheckboxMenu>
+
+				<br />
+
+				<p:commandButton value="execute" action="#{commentBean.goToPermissions()}"
+					rendered="#{securityBaseBean.isAuthorized('GRANT', commentBean.entityClass.name) or securityBaseBean.isAuthorized('REVOKE', commentBean.entityClass.name)}" />
+			</h:panelGroup>
+
 		</h:form>
 	</h:body>
 </f:view>

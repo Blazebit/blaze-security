@@ -22,9 +22,7 @@ public class ActionUtils {
     public List<Action> getActionsForEntity() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.CREATE));
-        ret.add(actionFactory.createAction(ActionConstants.UPDATE));
         ret.add(actionFactory.createAction(ActionConstants.DELETE));
-        ret.add(actionFactory.createAction(ActionConstants.READ));
         ret.add(actionFactory.createAction(ActionConstants.GRANT));
         ret.add(actionFactory.createAction(ActionConstants.REVOKE));
         return ret;
@@ -35,12 +33,22 @@ public class ActionUtils {
      * 
      * @return
      */
-    public List<Action> getActionsForField() {
+    public List<Action> getActionsForPrimitiveField() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.UPDATE));
-        ret.add(actionFactory.createAction(ActionConstants.READ));
+        return ret;
+    }
+    
+    public List<Action> getActionsForCollectionField() {
+        List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.ADD));
         ret.add(actionFactory.createAction(ActionConstants.REMOVE));
+        return ret;
+    }
+    
+    public List<Action> getActionsForGeneralField() {
+        List<Action> ret = new ArrayList<Action>();
+        ret.add(actionFactory.createAction(ActionConstants.READ));
         return ret;
     }
 

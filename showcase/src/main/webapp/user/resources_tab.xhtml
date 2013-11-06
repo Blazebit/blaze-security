@@ -23,7 +23,7 @@
 							propagateSelectionUp="true">
 							<p:treeNode>
 								<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission"/>
-								<p:tooltip for="permission">#{_resource.tooltip}</p:tooltip>
+								<p:tooltip for="permission" rendered="#{not empty _resource.tooltip}">#{_resource.tooltip}</p:tooltip>
 							</p:treeNode>
 						</p:tree>
 
