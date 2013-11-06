@@ -15,7 +15,6 @@ package com.blazebit.security.impl.interceptor;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -137,7 +136,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         if (collection instanceof PersistentCollection) {
             PersistentCollection newValues = (PersistentCollection) collection;
-            Collection newValuesCollection =new HashSet((Collection) newValues.getValue());
+            Collection<?> newValuesCollection = (Collection<?>) newValues.getValue();
             Object owner = newValues.getOwner();
             if (AnnotationUtils.findAnnotation(owner.getClass(), ResourceName.class) == null) {
                 super.onCollectionUpdate(collection, key);
@@ -166,7 +165,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
                 }
             }
             newValuesCollection.removeAll(oldValues);
-            for (Object addedValue : newValuesCollection) {
+            if (!newValuesCollection.isEmpty()) {
                 isGrantedToAdd = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
                                                                                                         entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
             }

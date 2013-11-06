@@ -199,9 +199,17 @@ public class EntityObjectField extends EntityField {
         return !action.implies(new EntityAction(ActionConstants.CREATE));
     }
 
-    public EntityField getParent() {
+    public EntityObjectField getParent() {
         if (!isEmptyField()) {
             return new EntityObjectField(entity, entityId);
+        } else {
+            return null;
+        }
+    }
+    
+    public EntityObjectField getChild(String field) {
+        if (isEmptyField()) {
+            return new EntityObjectField(entity, field, entityId);
         } else {
             return null;
         }
