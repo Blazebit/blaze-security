@@ -167,7 +167,7 @@ public class EntityField implements Resource {
     }
 
     @Override
-    public Collection<Resource> parents() {
+    public Collection<Resource> connectedResources() {
         List<Resource> ret = new ArrayList<Resource>();
         ret.add(this);
         if (!isEmptyField()) {
@@ -183,6 +183,22 @@ public class EntityField implements Resource {
                 && !action.implies(new EntityAction(ActionConstants.GRANT)) && !action.implies(new EntityAction(ActionConstants.REVOKE));
         } else {
             return true;
+        }
+    }
+
+    public EntityField getParent() {
+        if (!isEmptyField()) {
+            return new EntityField(entity);
+        } else {
+            return null;
+        }
+    }
+
+    public EntityField getChild(String field) {
+        if (isEmptyField()) {
+            return new EntityField(entity, field);
+        } else {
+            return null;
         }
     }
 

@@ -29,8 +29,6 @@ import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Resource;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
-import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.EntityObjectField;
 
 /**
  * 
@@ -106,14 +104,13 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     @Override
     public boolean isGrantable(List<Permission> permissions, Subject subject, Action action, Resource resource) {
-        // check whether action is exceptional. if it is then resource cannot have a field specified
         if (!resource.isApplicable(action)) {
             LOG.warning("Action " + action + " cannot be applied to " + resource);
             return false;
         }
-        Collection<Resource> parents = resource.parents();
-        for (Resource r : parents) {
-            if (findPermission(permissions, subject, action, r) != null) {
+        Collection<Resource> connectedResources = resource.connectedResources();
+        for (Resource connectedResource : connectedResources) {
+            if (findPermission(permissions, subject, action, connectedResource) != null) {
                 LOG.warning("Overriding permission already exists");
                 return false;
             }
@@ -129,49 +126,19 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
     }
 
     @Override
-    public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource _resource) {
-        // first lookup the exact permission. if it already exists granting is not allowed
-        Permission itself = findPermission(permissions, role, action, _resource);
-        if (itself != null) {
-            LOG.warning("Same permission found");
+    public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource resource) {
+        if (!resource.isApplicable(action)) {
+            LOG.warning("Action " + action + " cannot be applied to " + resource);
             return false;
-        } else {
-            // cast to entity resource to access fields
-            EntityField resource = (EntityField) _resource;
-            // check whether action is exceptional. if it is then resource cannot have a field specified
-            if (!_resource.isApplicable(action)) {
-                LOG.warning("Action " + action + " cannot be applied to " + resource);
-            }
-
-            // if field is specified -> find permission for entity with no field specified (means that there exists already a
-            // permission for all entities with all fields and ids)
-            // for Afi-> find A or for Af-> find A.
-            if (!resource.isEmptyField()) {
-                EntityField resourceWithoutField = new EntityField(resource.getEntity(), EntityField.EMPTY_FIELD);
-                if (findPermission(permissions, role, action, resourceWithoutField) != null) {
-                    LOG.warning(new StringBuilder().append("Permission already exists for ").append(resourceWithoutField).append(" and ").append(action).toString());
-                    return false;
-                }
-            }
-            // if resource has id
-            if (_resource instanceof EntityObjectField) {
-                EntityObjectField objectResource = (EntityObjectField) _resource;
-                // if (!StringUtils.isEmpty(resource.getField())) {
-                EntityField resourceWithField = new EntityField(resource.getEntity(), resource.getField());
-                // if field and id is specified -> look for permission for entity with given field
-                if (findPermission(permissions, role, action, resourceWithField) != null) {
-                    LOG.warning(new StringBuilder().append("Permission already exists for ").append(resourceWithField).append(" and ").append(action).toString());
-                    return false;
-                }
-                // if field and id is specified -> look for permission for entity with given id
-                EntityObjectField resourceObjectWithoutField = new EntityObjectField(objectResource.getEntity(), EntityField.EMPTY_FIELD, objectResource.getEntityId());
-                if (findPermission(permissions, role, action, resourceObjectWithoutField) != null) {
-                    LOG.warning(new StringBuilder().append("Permission already exists for ").append(resourceObjectWithoutField).append(" and ").append(action).toString());
-                    return false;
-                }
-            }
-            return true;
         }
+        Collection<Resource> parents = resource.connectedResources();
+        for (Resource connectedResource : parents) {
+            if (findPermission(permissions, role, action, connectedResource) != null) {
+                LOG.warning("Overriding permission already exists");
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

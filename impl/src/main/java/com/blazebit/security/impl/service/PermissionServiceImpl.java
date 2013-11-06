@@ -113,6 +113,10 @@ public class PermissionServiceImpl implements PermissionService {
         if (!isGranted(authorizer, getRevokeAction(), resourceFactory.createResource(subject))) {
             throw new PermissionException(authorizer + " is not allowed to revoke from " + subject);
         }
+        // TODO currently revoke action to action not checked
+        // if (!isGranted(authorizer, getRevokeAction(), entityFieldFactory.createResource(getRevokeAction()))) {
+        // throw new PermissionException(authorizer + " is not allowed to " + getRevokeAction() + " to " + getRevokeAction());
+        // }
         if (!isGranted(authorizer, getRevokeAction(), resource)) {
             throw new PermissionException(authorizer + " is not allowed to revoke " + resource);
         }
@@ -128,9 +132,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserPermission.class))) {
             throw new PermissionException(authorizer + " is not allowed to grant " + resource);
         }
-        // if (!isGranted(authorizer, getRevokeAction(), entityFieldFactory.createResource(getRevokeAction()))) {
-        // throw new PermissionException(authorizer + " is not allowed to " + getRevokeAction() + " to " + getRevokeAction());
-        // }
+
         if (!permissionDataAccess.isRevokable(subject, action, resource)) {
             throw new PermissionActionException("Permission : " + subject + ", " + action + ", " + resource + " cannot be revoked");
         }
@@ -158,7 +160,7 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public void grant(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException {
         if (!isGranted(authorizer, getGrantAction(), resourceFactory.createResource(role))) {
-            throw new PermissionException(authorizer + " is not allowed to " + action + " to " + resource);
+            throw new PermissionException(authorizer + " is not allowed to " + getGrantAction() + " to " + resource);
         }
         if (!permissionDataAccess.isGrantable(role, action, resource)) {
             throw new PermissionActionException("Permission for " + role + ", " + action + "," + resource + " cannot be granted");

@@ -54,14 +54,33 @@ public interface EntityResourceFactory {
     /**
      * 
      * @param entity
-     * @return
+     * @return resource created from the given entity name
      */
     public Resource createResource(String entity);
 
+    /**
+     * 
+     * @param entity
+     * @param field
+     * @return resource created from the given entity name and field
+     */
     public Resource createResource(String entity, String field);
 
+    /**
+     * 
+     * @param entity
+     * @param id
+     * @return resource created from the given entity name and id
+     */
     public Resource createResource(String entity, Integer id);
 
+    /**
+     * 
+     * @param entity
+     * @param field
+     * @param id
+     * @return resource from the given entity name field and id
+     */
     public Resource createResource(String entity, String field, Integer id);
 
 }

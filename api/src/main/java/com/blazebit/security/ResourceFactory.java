@@ -2,10 +2,28 @@ package com.blazebit.security;
 
 public interface ResourceFactory {
 
-    Resource createResource(Subject subject);
+    /**
+     * resource of a subject
+     * 
+     * @param subject
+     * @return
+     */
+    public Resource createResource(Subject subject);
 
-    Resource createResource(Role role);
+    /**
+     * resource of a role
+     * 
+     * @param role
+     * @return
+     */
+    public Resource createResource(Role role);
 
-    Resource createResource(Action action);
+    /**
+     * resource of an action
+     * 
+     * @param action
+     * @return
+     */
+    public Resource createResource(Action action);
 
 }

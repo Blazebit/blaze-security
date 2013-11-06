@@ -34,7 +34,18 @@ public interface Resource {
      */
     public boolean isReplaceableBy(Resource resource);
 
-    public Collection<Resource> parents();
+    /**
+     * collection of connected resources
+     * 
+     * @return
+     */
+    public Collection<Resource> connectedResources();
 
+    /**
+     * decides whether the given action is applicable to this resource
+     * 
+     * @param action
+     * @return
+     */
     public boolean isApplicable(Action action);
 }

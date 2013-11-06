@@ -40,6 +40,12 @@ public interface PermissionFactory {
      */
     public Permission create(Role role, Action action, Resource resource);
 
+    /**
+     * 
+     * @param action
+     * @param resource
+     * @return creates a permission without a subject reference
+     */
     public Permission create(Action action, Resource resource);
 
 }

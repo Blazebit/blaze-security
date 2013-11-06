@@ -22,6 +22,7 @@ import java.util.List;
 public interface PermissionManager {
 
     /**
+     * saves a permission
      * 
      * @param permission
      * @return saved permission
@@ -30,12 +31,16 @@ public interface PermissionManager {
 
     /**
      * 
+     * list of all permissions of a subject
+     * 
      * @param subject
      * @return list of all permissions for a given subject
      */
     public List<Permission> getPermissions(Subject subject);
 
     /**
+     * 
+     * list of all permissions of a role
      * 
      * @param role
      * @return list of all permissions for a given role
@@ -57,6 +62,7 @@ public interface PermissionManager {
     public void remove(Permission permission);
 
     /**
+     * deletes all permissions of a subject
      * 
      * @param subject
      */

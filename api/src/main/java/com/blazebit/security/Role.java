@@ -28,13 +28,13 @@ public interface Role {
 
     /**
      * 
-     * @return
+     * @return subjects of a role
      */
     public Collection<Subject> getSubjects();
 
     /**
      * 
-     * @return
+     * @return children roles
      */
     public Collection<Role> getRoles();
 

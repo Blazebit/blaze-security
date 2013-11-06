@@ -181,7 +181,7 @@ public class EntityObjectField extends EntityField {
     }
 
     @Override
-    public Collection<Resource> parents() {
+    public Collection<Resource> connectedResources() {
         List<Resource> l = new ArrayList<Resource>();
         l.add(this);
         l.add(new EntityField(entity));
@@ -197,5 +197,13 @@ public class EntityObjectField extends EntityField {
     @Override
     public boolean isApplicable(Action action) {
         return !action.implies(new EntityAction(ActionConstants.CREATE));
+    }
+
+    public EntityField getParent() {
+        if (!isEmptyField()) {
+            return new EntityObjectField(entity, entityId);
+        } else {
+            return null;
+        }
     }
 }
