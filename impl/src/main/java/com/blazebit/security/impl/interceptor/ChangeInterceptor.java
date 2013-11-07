@@ -48,22 +48,29 @@ public class ChangeInterceptor extends EmptyInterceptor {
      * 
      */
     private static final long serialVersionUID = 1L;
+    //@TODO: combine with others to single active flag
     private static volatile boolean activeUpdate = false;
+    //@TODO: combine with others to single active flag
     private static volatile boolean activeDelete = false;
+    //@TODO: combine with others to single active flag
     private static volatile boolean activePersist = false;
 
+    //@TODO: remove
     public static void activateUpdate() {
         ChangeInterceptor.activeUpdate = true;
     }
 
+    //@TODO: remove
     public static void activatePersist() {
         ChangeInterceptor.activePersist = true;
     }
 
+    //@TODO: remove
     public static void activateDelete() {
         ChangeInterceptor.activeDelete = true;
     }
 
+    //@TODO: remove
     public static void deactivate() {
         ChangeInterceptor.activeUpdate = false;
         ChangeInterceptor.activePersist = false;
@@ -138,6 +145,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
             PersistentCollection newValues = (PersistentCollection) collection;
             Collection<?> newValuesCollection = (Collection<?>) newValues.getValue();
             Object owner = newValues.getOwner();
+            // TODO: Shouldn't this be done before newValuesCollection? Also return is missing?
             if (AnnotationUtils.findAnnotation(owner.getClass(), ResourceName.class) == null) {
                 super.onCollectionUpdate(collection, key);
             }
@@ -164,12 +172,14 @@ public class ChangeInterceptor extends EmptyInterceptor {
                                                                                                                                                  entityId));
                 }
             }
+            // TODO: Shouldn't you make a copy before? Maybe there is also a better check for doing this
             newValuesCollection.removeAll(oldValues);
             if (!newValuesCollection.isEmpty()) {
                 isGrantedToAdd = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
                                                                                                         entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
             }
 
+            // TODO: Maybe separate exceptions with their messages
             if (!isGrantedToAdd || !isGrantedToRemove) {
                 throw new PermissionException("Entity " + owner + "'s collection " + fieldName + " is not permitted to be updated by " + userContext.getUser());
             } else {
@@ -199,6 +209,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
             return super.onSave(entity, id, state, propertyNames, types);
         }
+        // TODO: Why are we skipping permissions here? => Permission should not be allowed to be created/updated at all in the PU which has the interceptor activated
         if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
             return super.onSave(entity, id, state, propertyNames, types);
         }
@@ -225,6 +236,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
             super.onDelete(entity, id, state, propertyNames, types);
         }
+        // TODO: Why are we skipping permissions here? => Permission should not be allowed to be created/updated at all in the PU which has the interceptor activated
         if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
             super.onDelete(entity, id, state, propertyNames, types);
         }

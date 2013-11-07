@@ -185,6 +185,7 @@ public class EntityField implements Resource {
         }
     }
 
+    // TODO: Check if this is necessary
     public EntityField getParent() {
         if (!isEmptyField()) {
             return new EntityField(entity);
@@ -193,6 +194,7 @@ public class EntityField implements Resource {
         }
     }
 
+    // TODO: Check if this is necessary
     public EntityField getChild(String field) {
         if (isEmptyField()) {
             return new EntityField(entity, field);

@@ -31,6 +31,7 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
 
     @Override
     public EntityField createResource(String entity, String field) {
+        // TODO: Bug?
         return new EntityField(entity, EntityField.EMPTY_FIELD);
     }
 
@@ -41,6 +42,7 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
 
     @Override
     public EntityField createResource(String entity, String field, Integer id) {
+        // TODO: Bug?
         return new EntityField(entity, EntityField.EMPTY_FIELD);
     }
 

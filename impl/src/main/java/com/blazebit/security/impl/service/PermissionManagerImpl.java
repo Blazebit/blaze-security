@@ -42,6 +42,7 @@ public class PermissionManagerImpl implements PermissionManager {
     @Override
     public <P extends Permission> P save(P permission) {
         entityManager.persist(permission);
+        // TODO: Performance?
         entityManager.flush();
         return permission;
     }
@@ -49,6 +50,7 @@ public class PermissionManagerImpl implements PermissionManager {
     @Override
     public void remove(Permission permission) {
         entityManager.remove(permission);
+        // TODO: Performance?
         entityManager.flush();
     }
 

@@ -33,6 +33,7 @@ import com.blazebit.security.Subject;
 /**
  * 
  * @author cuszk
+ * @TODO Add null checks etc
  */
 @Stateless
 public class PermissionDataAccessImpl implements PermissionDataAccess {

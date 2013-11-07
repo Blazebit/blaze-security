@@ -101,7 +101,7 @@ public abstract class AbstractDataPermission<S, P extends DataPermissionId<S>> i
             return false;
         if (getClass() != obj.getClass())
             return false;
-        AbstractDataPermission other = (AbstractDataPermission) obj;
+        AbstractDataPermission<?, ?> other = (AbstractDataPermission<?, ?>) obj;
         if (entityAction == null) {
             if (other.entityAction != null)
                 return false;

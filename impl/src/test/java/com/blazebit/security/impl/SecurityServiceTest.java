@@ -132,6 +132,7 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
     public void test_admin_grants_A_f_to_A_different_actions() {
         securityService.grant(admin, user1, createAction, documentEntity);
         securityService.grant(admin, user1, readAction, documentEntityTitleField);
+        //TODO: assertions?
     }
 
     @Test
@@ -145,6 +146,7 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
     public void test_admin_grants_A_f_to_A_different_subjects() {
         securityService.grant(admin, user1, readAction, documentEntity);
         securityService.grant(admin, user2, readAction, documentEntityTitleField);
+        //TODO: assertions?
     }
 
     // grant checks with error

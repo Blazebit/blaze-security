@@ -45,6 +45,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     private PermissionService securityService;
     private Carrier carrier;
 
+    // TODO: Add- and Remove-Action tests? Should a collection add/remove need add and remove permission?
     @Before
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void init() {

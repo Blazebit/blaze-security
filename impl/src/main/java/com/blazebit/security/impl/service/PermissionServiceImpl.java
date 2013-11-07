@@ -162,6 +162,10 @@ public class PermissionServiceImpl implements PermissionService {
         if (!isGranted(authorizer, getGrantAction(), resourceFactory.createResource(role))) {
             throw new PermissionException(authorizer + " is not allowed to " + getGrantAction() + " to " + resource);
         }
+        // TODO currently grant action to action not checked
+        // if (!isGranted(authorizer, getGrantAction(), resourceFactory.createResource(getGrantAction()))) {
+        // throw new PermissionException(authorizer + " is not allowed to grant " + action + " to " + resource);
+        // }
         if (!permissionDataAccess.isGrantable(role, action, resource)) {
             throw new PermissionActionException("Permission for " + role + ", " + action + "," + resource + " cannot be granted");
         }
@@ -213,6 +217,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (!isGranted(authorizer, getRevokeAction(), resourceFactory.createResource(role))) {
             throw new PermissionException(authorizer + " is not allowed to " + action + " to " + resource);
         }
+        // TODO currently revoke action to action not checked
         // if (!isGranted(authorizer, getRevokeAction(), resourceFactory.createResource(getRevokeAction()))) {
         // throw new PermissionException(authorizer + " is not allowed to " + action + " to " + resource);
         // }
@@ -259,19 +264,19 @@ public class PermissionServiceImpl implements PermissionService {
     // return actions;
     // }
 
-    public Action getGrantAction() {
+    private Action getGrantAction() {
         return actionFactory.createAction(ActionConstants.GRANT);
     }
 
-    public Action getCreateAction() {
+    private Action getCreateAction() {
         return actionFactory.createAction(ActionConstants.CREATE);
     }
 
-    public Action getDeleteAction() {
+    private Action getDeleteAction() {
         return actionFactory.createAction(ActionConstants.DELETE);
     }
 
-    public Action getRevokeAction() {
+    private Action getRevokeAction() {
         return actionFactory.createAction(ActionConstants.REVOKE);
     }
 
