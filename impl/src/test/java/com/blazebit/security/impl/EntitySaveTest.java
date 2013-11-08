@@ -24,13 +24,14 @@ import org.junit.Test;
 
 import com.blazebit.security.PermissionException;
 import com.blazebit.security.PermissionService;
-import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
-import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
+import com.blazebit.security.impl.model.sample.CarrierTeam;
 import com.blazebit.security.impl.model.sample.Contact;
+import com.blazebit.security.impl.model.sample.Document;
+import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
+import com.blazebit.security.impl.model.sample.TestCarrier;
 
 /**
  * 
@@ -42,22 +43,17 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     private static final long serialVersionUID = 1L;
     @Inject
-    private PermissionService securityService;
-    private Carrier carrier;
+    private PermissionService permissionService;
+    private TestCarrier carrier;
 
-    // TODO: Add- and Remove-Action tests? Should a collection add/remove need add and remove permission?
     @Before
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void init() {
         super.initData();
-        carrier = new Carrier();
-        carrier.setField1("field1");
-        carrier.setField2("field2");
-        carrier.setField3("field3");
-        carrier.setField4("field4");
-        carrier.setField5(null);
+        carrier = new TestCarrier();
+        carrier.setField("field1");
         setUserContext(admin);
-        ChangeInterceptor.activatePersist();
+        ChangeInterceptor.activate();
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -79,72 +75,355 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test
     public void test_create_entity_with_primitive_field() {
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         setUserContext(user1);
         self.get().persist(carrier);
         assertNotNull(carrier.getId());
     }
 
+    // One2One
     @Test
     public void test_create_entity_with_one_to_one_field() {
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "party"));
         setUserContext(user1);
+        
         Party party = new Party();
-        party.setPartyField1("party_field_1");
         self.get().persist(party);
         carrier.setParty(party);
         self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+
+    // One2One+Cascade.ALL
+    @Test
+    public void test_create_entity_with_one_to_one_field_with_cascade() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "partyWithCascade"));
+        setUserContext(user1);
+
+        Party party = new Party();
+        carrier.setPartyWithCascade(party);
+        self.get().persist(carrier);
+        
         assertNotNull(carrier.getId());
     }
 
     @Test(expected = PermissionException.class)
-    public void test_create_entity_with_one_to_one_field_not_permitted() {
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+    public void test_create_entity_with_one_to_one_field_not_permitted_field_update_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class));
         setUserContext(user1);
+        
         Party party = new Party();
-        party.setPartyField1("party_field_1");
         self.get().persist(party);
         carrier.setParty(party);
         self.get().persist(carrier);
-
+        
+        assertNotNull(carrier.getId());
     }
 
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_one_to_one_field_not_permitted_related_entity_create_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        setUserContext(user1);
+        
+        Party party = new Party();
+        self.get().persist(party);
+        carrier.setParty(party);
+        
+        self.get().persist(carrier);
+    }
+
+    // One2One+Cascade.ALL
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_one_to_one_field_with_cascade_not_permitted_entity_create_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "partyWithCascade"));
+        setUserContext(user1);
+
+        Party party = new Party();
+        carrier.setPartyWithCascade(party);
+        self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+
+    // One2Many
     @Test
     public void test_create_entity_with_one_to_many_field() {
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
         setUserContext(user1);
+
         Contact contact = new Contact();
         contact.setContactField("contact_field");
         self.get().persist(contact);
         carrier.getContacts().add(contact);
         self.get().persist(carrier);
+
         assertNotNull(carrier.getId());
     }
 
     @Test
-    public void test_create_entity_with_many_to_many_field() {
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
+    public void test_create_entity_with_one_to_many_field_with_cascade() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "documents"));
         setUserContext(user1);
-        CarrierGroup group = new CarrierGroup();
-        group.setName("group");
-        self.get().persist(group);
-        carrier.getGroups().add(group);
+
+        Document document = new Document();
+        carrier.getDocuments().add(document);
         self.get().persist(carrier);
+        
         assertNotNull(carrier.getId());
     }
 
     @Test(expected = PermissionException.class)
-    public void test_create_entity_with_many_to_many_field_not_permitted() {
-        securityService.grant(admin, user1, actionFactory.createAction(ActionConstants.CREATE), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+    public void test_create_entity_with_one_to_many_field_not_permitted_add_field_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
         setUserContext(user1);
+
+        Contact contact = new Contact();
+        contact.setContactField("contact_field");
+        self.get().persist(contact);
+        carrier.getContacts().add(contact);
+
+        self.get().persist(carrier);
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_one_to_many_field_with_cascade_not_permitted_add_field_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
+        setUserContext(user1);
+
+        Document document = new Document();
+        carrier.getDocuments().add(document);
+        self.get().persist(carrier);
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_one_to_many_field_not_permitted_create_entity_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
+        setUserContext(user1);
+        
+        Contact contact = new Contact();
+        self.get().persist(contact);
+        carrier.getContacts().add(contact);
+        self.get().persist(carrier);
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_one_to_many_field_with_cascade_not_permitted_create_entity_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "documents"));
+        setUserContext(user1);
+
+        Document document = new Document();
+        carrier.getDocuments().add(document);
+        self.get().persist(carrier);
+    }
+
+    @Test
+    public void test_create_entity_with_one_to_many_field_more_entries() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
+        setUserContext(user1);
+        
+        Contact contact = new Contact();
+        self.get().persist(contact);
+        
+        Contact contact1 = new Contact();
+        self.get().persist(contact1);
+        
+        carrier.getContacts().add(contact);
+        carrier.getContacts().add(contact1);
+        carrier.getContacts().remove(contact);
+        
+        Contact contact2 = new Contact();
+        self.get().persist(contact2);
+        
+        carrier.getContacts().add(contact2);
+        self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+
+    // Many2Many
+    @Test
+    public void test_create_entity_with_many_to_many_field() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "groups"));
+        setUserContext(user1);
+        
         CarrierGroup group = new CarrierGroup();
-        group.setName("group");
         self.get().persist(group);
         carrier.getGroups().add(group);
         self.get().persist(carrier);
+        
         assertNotNull(carrier.getId());
     }
+
+    @Test
+    public void test_create_entity_with_many_to_many_field_with_cascade() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierTeam.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "teams"));
+        setUserContext(user1);
+
+        CarrierTeam team = new CarrierTeam();
+        carrier.getTeams().add(team);
+        self.get().persist(carrier);
+
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_many_field_not_permitted_update_field_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class));
+        setUserContext(user1);
+        
+        CarrierGroup group = new CarrierGroup();
+        self.get().persist(group);
+        carrier.getGroups().add(group);
+        self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_many_field_with_cascade_not_permitted_update_field_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierTeam.class));
+        setUserContext(user1);
+        
+        CarrierTeam team = new CarrierTeam();
+        carrier.getTeams().add(team);
+        self.get().persist(carrier);
+
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_many_field_not_permitted_create_entity_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "groups"));
+        setUserContext(user1);
+        
+        CarrierGroup group = new CarrierGroup();
+        self.get().persist(group);
+        carrier.getGroups().add(group);
+        self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+    
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_many_field_with_cascade_not_permitted_create_entity_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "teams"));
+        setUserContext(user1);
+        
+        CarrierTeam team = new CarrierTeam();
+        carrier.getTeams().add(team);
+        self.get().persist(carrier);
+
+        
+        assertNotNull(carrier.getId());
+    }
+
+    // Many2One
+    @Test
+    public void test_create_entity_with_many_to_one_field() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "email"));
+        setUserContext(user1);
+        
+        Email email = new Email();
+        self.get().persist(email);
+        carrier.setEmail(email);
+        self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+
+    @Test
+    public void test_create_entity_with_many_to_one_field_with_cascade() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "emailWithCascade"));
+        setUserContext(user1);
+
+        Email email = new Email();
+        carrier.setEmailWithCascade(email);
+        self.get().persist(carrier);
+
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_one_field_not_permitted_entity_create_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "email"));
+        setUserContext(user1);
+
+        Email email = new Email();
+        self.get().persist(email);
+        carrier.setEmail(email);
+        self.get().persist(carrier);
+
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_one_field_with_cascade_not_permitted_entity_create_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "emailWithCascade"));
+        setUserContext(user1);
+
+        Email email = new Email();
+        carrier.setEmailWithCascade(email);
+        self.get().persist(carrier);
+
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_one_field_not_permitted_field_update_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
+        setUserContext(user1);
+        
+        Email email = new Email();
+        self.get().persist(email);
+        carrier.setEmail(email);
+        self.get().persist(carrier);
+        
+        assertNotNull(carrier.getId());
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_create_entity_with_many_to_one_field_with_cascade_not_permitted_field_update_missing() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
+        setUserContext(user1);
+
+        Email email = new Email();
+        carrier.setEmailWithCascade(email);
+        self.get().persist(carrier);
+
+        assertNotNull(carrier.getId());
+    }
+
 }

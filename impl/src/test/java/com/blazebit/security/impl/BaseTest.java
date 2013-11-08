@@ -43,12 +43,14 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.UserGroupDataPermission;
 import com.blazebit.security.impl.model.UserGroupPermission;
 import com.blazebit.security.impl.model.UserPermission;
-import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
+import com.blazebit.security.impl.model.sample.CarrierTeam;
+import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
+import com.blazebit.security.impl.model.sample.TestCarrier;
 
 /**
  * 
@@ -140,7 +142,7 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         grantAction = actionFactory.createAction(ActionConstants.GRANT);
         revokeAction = actionFactory.createAction(ActionConstants.REVOKE);
         readAction = actionFactory.createAction(ActionConstants.READ);
-        // create entities
+        // create some resources
         userEntity = (EntityField) entityFieldFactory.createResource(User.class);
         groupEntity = (EntityField) entityFieldFactory.createResource(UserGroup.class);
         documentEntity = (EntityField) entityFieldFactory.createResource(Document.class);
@@ -154,61 +156,70 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         document2Entity = (EntityObjectField) entityFieldFactory.createResource(Document.class, 2);
         document1EntityTitleField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Title_Field, 1);
         document1EntityContentField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Content_Field, 1);
-
+        // create admin
         admin = new User("Admin");
         entityManager.persist(admin);
-
+        // add permissions to admin
+        // admin can grant to users and usergroups
         permissionManager.save(permissionFactory.create(admin, grantAction, userEntity));
         permissionManager.save(permissionFactory.create(admin, revokeAction, userEntity));
+        // admin can change user properties
         permissionManager.save(permissionFactory.create(admin, updateAction, userEntity));
 
         permissionManager.save(permissionFactory.create(admin, grantAction, groupEntity));
         permissionManager.save(permissionFactory.create(admin, revokeAction, groupEntity));
+        // admin can change group properties
         permissionManager.save(permissionFactory.create(admin, updateAction, groupEntity));
-        // allow admin to create permissions, then activate interceptor <--- not needed now because only update interceptor is
-        // activated
-
+        // TODO not needed anymore because Permissions are not checked against authorization
         permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserPermission.class)));
         permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
         permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupPermission.class)));
         permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
+        //
+        // permissionManager.save(permissionFactory.create(admin, deleteAction,
+        // entityFieldFactory.createResource(UserPermission.class)));
+        // permissionManager.save(permissionFactory.create(admin, deleteAction,
+        // entityFieldFactory.createResource(UserDataPermission.class)));
+        // permissionManager.save(permissionFactory.create(admin, deleteAction,
+        // entityFieldFactory.createResource(UserGroupPermission.class)));
+        // permissionManager.save(permissionFactory.create(admin, deleteAction,
+        // entityFieldFactory.createResource(UserGroupDataPermission.class)));
 
-        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserPermission.class)));
-        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        permissionManager.save(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
+        // TODO not needed anymore because isGranted service method does not check action resource
+        // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(grantAction)));
+        // permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(revokeAction)));
+        // permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(grantAction)));
+        // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(revokeAction)));
+        //
+        // permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(deleteAction)));
+        // permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(createAction)));
+        // permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(updateAction)));
+        // permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(readAction)));
+        //
+        // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(deleteAction)));
+        // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(createAction)));
+        // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(updateAction)));
+        // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(readAction)));
 
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
+        // admin can grant the sample entities
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(TestCarrier.class)));
+        //permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Party.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Contact.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierTeam.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Document.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
-
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Comment.class)));
+        // admin can revoke the sample entities
+        //permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Contact.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierTeam.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Document.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Email.class)));
-
-        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(grantAction)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(revokeAction)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(grantAction)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(revokeAction)));
-
-        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(deleteAction)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(createAction)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(updateAction)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(readAction)));
-
-        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(deleteAction)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(createAction)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(updateAction)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(readAction)));
-
-        permissionManager.save(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Carrier.class, 1)));
-        permissionManager.save(permissionFactory.create(userGroupA, readAction, entityFieldFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Comment.class)));
 
         entityManager.flush();
     }
@@ -231,5 +242,25 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
             }
         }
         assertEquals(expectedSize, permissionManager.getPermissions(user).size());
+    }
+
+    public Action getUpdateAction() {
+        return actionFactory.createAction(ActionConstants.UPDATE);
+    }
+
+    public Action getCreateAction() {
+        return actionFactory.createAction(ActionConstants.CREATE);
+    }
+
+    public Action getAddAction() {
+        return actionFactory.createAction(ActionConstants.ADD);
+    }
+
+    public Action getRemoveAction() {
+        return actionFactory.createAction(ActionConstants.REMOVE);
+    }
+
+    public Action getDeleteAction() {
+        return actionFactory.createAction(ActionConstants.DELETE);
     }
 }

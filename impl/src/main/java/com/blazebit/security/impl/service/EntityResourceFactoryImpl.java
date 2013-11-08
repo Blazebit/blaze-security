@@ -14,6 +14,7 @@ package com.blazebit.security.impl.service;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.security.EntityResourceFactory;
+import com.blazebit.security.IdHolder;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.ResourceName;
@@ -31,8 +32,7 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
 
     @Override
     public EntityField createResource(String entity, String field) {
-        // TODO: Bug?
-        return new EntityField(entity, EntityField.EMPTY_FIELD);
+        return new EntityField(entity, field);
     }
 
     @Override
@@ -42,8 +42,7 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
 
     @Override
     public EntityField createResource(String entity, String field, Integer id) {
-        // TODO: Bug?
-        return new EntityField(entity, EntityField.EMPTY_FIELD);
+        return new EntityField(entity, field);
     }
 
     @Override
@@ -79,6 +78,18 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
     @Override
     public EntityField createResource(Class<?> clazz, Integer id) {
         return createResource(clazz, EntityField.EMPTY_FIELD, id);
+
+    }
+
+    @Override
+    public EntityField createResource(IdHolder entityObject) {
+        return createResource(entityObject.getClass(), EntityField.EMPTY_FIELD, entityObject.getId());
+
+    }
+
+    @Override
+    public EntityField createResource(IdHolder entityObject, String field) {
+        return createResource(entityObject.getClass(), field, entityObject.getId());
 
     }
 

@@ -15,10 +15,12 @@ package com.blazebit.security.impl.interceptor;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
@@ -44,43 +46,16 @@ import com.blazebit.security.impl.model.ResourceName;
  */
 public class ChangeInterceptor extends EmptyInterceptor {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
-    //@TODO: combine with others to single active flag
-    private static volatile boolean activeUpdate = false;
-    //@TODO: combine with others to single active flag
-    private static volatile boolean activeDelete = false;
-    //@TODO: combine with others to single active flag
-    private static volatile boolean activePersist = false;
-
-    //@TODO: remove
-    public static void activateUpdate() {
-        ChangeInterceptor.activeUpdate = true;
-    }
-
-    //@TODO: remove
-    public static void activatePersist() {
-        ChangeInterceptor.activePersist = true;
-    }
-
-    //@TODO: remove
-    public static void activateDelete() {
-        ChangeInterceptor.activeDelete = true;
-    }
-
-    //@TODO: remove
-    public static void deactivate() {
-        ChangeInterceptor.activeUpdate = false;
-        ChangeInterceptor.activePersist = false;
-        ChangeInterceptor.activeDelete = false;
-    }
+    private static volatile boolean active = false;
 
     public static void activate() {
-        ChangeInterceptor.activeUpdate = true;
-        ChangeInterceptor.activePersist = true;
-        ChangeInterceptor.activeDelete = true;
+        ChangeInterceptor.active = true;
+    }
+
+    public static void deactivate() {
+        ChangeInterceptor.active = false;
+
     }
 
     /**
@@ -92,11 +67,11 @@ public class ChangeInterceptor extends EmptyInterceptor {
      * @param previousState
      * @param propertyNames
      * @param types
-     * @return
+     * @return true if given entity is permitted to be flushed
      */
     @Override
     public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
-        if (!ChangeInterceptor.activeUpdate) {
+        if (!ChangeInterceptor.active) {
             return super.onFlushDirty(entity, id, currentState, previousState, propertyNames, types);
         }
         if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
@@ -105,7 +80,9 @@ public class ChangeInterceptor extends EmptyInterceptor {
         List<String> changedPropertyNames = new ArrayList<String>();
         if (previousState != null) {
             for (int i = 0; i < currentState.length; i++) {
-                // we dont check collections here, there is a separate method for it
+
+                // we dont check collections here, there is a separate method for it See: {@link #onCollectionUpdate(collection,
+                // key) onCollectionUpdate}
                 if (!types[i].isCollectionType()) {
                     if ((currentState[i] != null && !currentState[i].equals(previousState[i])) || (currentState[i] == null && previousState[i] != null)) {
                         changedPropertyNames.add(propertyNames[i]);
@@ -116,14 +93,11 @@ public class ChangeInterceptor extends EmptyInterceptor {
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
         EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
         boolean isGranted = changedPropertyNames.isEmpty();
-        Integer entityId = null;
-        if (entity instanceof IdHolder) {
-            entityId = ((IdHolder) entity).getId();
-        }
         for (String propertyName : changedPropertyNames) {
-            isGranted = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                                               entityFieldFactory.createResource(entity.getClass(), propertyName, entityId));
+            isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
+                                                    entityFieldFactory.createResource((IdHolder) entity, propertyName));
             if (!isGranted) {
                 break;
             }
@@ -135,64 +109,109 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
     }
 
+    /**
+    * 
+    */
     @Override
     public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
-        if (!ChangeInterceptor.activeUpdate) {
+        if (!ChangeInterceptor.active) {
             super.onCollectionUpdate(collection, key);
             return;
         }
         if (collection instanceof PersistentCollection) {
-            PersistentCollection newValues = (PersistentCollection) collection;
-            Collection<?> newValuesCollection = (Collection<?>) newValues.getValue();
-            Object owner = newValues.getOwner();
-            // TODO: Shouldn't this be done before newValuesCollection? Also return is missing?
-            if (AnnotationUtils.findAnnotation(owner.getClass(), ResourceName.class) == null) {
+            PersistentCollection newValuesCollection = (PersistentCollection) collection;
+            Object entity = newValuesCollection.getOwner();
+            if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
                 super.onCollectionUpdate(collection, key);
+                return;
             }
-            String fieldName = newValues.getRole().replace(owner.getClass().getName() + ".", "");
+            // copy new values and old values
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Collection<?> newValues = new HashSet((Collection<?>) newValuesCollection.getValue());
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Set<?> oldValues = new HashSet(((Map<?, ?>) newValuesCollection.getStoredSnapshot()).keySet());
+
+            String fieldName = StringUtils.replace(newValuesCollection.getRole(), entity.getClass().getName() + ".", "");
             UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
             ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
             EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
-            // find resource to check
-            Integer entityId = null;
-            if (owner instanceof IdHolder) {
-                entityId = ((IdHolder) owner).getId();
-            }
-            Set<?> oldValues = ((Map<?, ?>) newValues.getStoredSnapshot()).keySet();
+            PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
 
             // find all objects that were added
             boolean isGrantedToAdd = true;
             boolean isGrantedToRemove = true;
 
-            for (Object oldElement : oldValues) {
-                if (!newValuesCollection.contains(oldElement)) {
-                    isGrantedToRemove = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(),
-                                                                                                               actionFactory.createAction(ActionConstants.REMOVE),
-                                                                                                               entityFieldFactory.createResource(owner.getClass(), fieldName,
-                                                                                                                                                 entityId));
-                }
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Set<?> retained = new HashSet(oldValues);
+            retained.retainAll(newValues);
+
+            oldValues.removeAll(retained);
+            // if there is a difference between oldValues and newValues
+            if (!oldValues.isEmpty()) {
+                // if something remained
+                isGrantedToRemove = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
+                                                                entityFieldFactory.createResource((IdHolder) entity, fieldName));
             }
-            // TODO: Shouldn't you make a copy before? Maybe there is also a better check for doing this
-            newValuesCollection.removeAll(oldValues);
-            if (!newValuesCollection.isEmpty()) {
-                isGrantedToAdd = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                                                                        entityFieldFactory.createResource(owner.getClass(), fieldName, entityId));
+            newValues.removeAll(retained);
+            if (!newValues.isEmpty()) {
+                isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                             entityFieldFactory.createResource((IdHolder) entity, fieldName));
             }
 
-            // TODO: Maybe separate exceptions with their messages
-            if (!isGrantedToAdd || !isGrantedToRemove) {
-                throw new PermissionException("Entity " + owner + "'s collection " + fieldName + " is not permitted to be updated by " + userContext.getUser());
+            if (!isGrantedToAdd) {
+                throw new PermissionException("Element cannot be added from entity " + entity + "'s collection " + fieldName + " by " + userContext.getUser());
             } else {
-                super.onCollectionUpdate(collection, key);
+                if (!isGrantedToRemove) {
+                    throw new PermissionException("Element cannot be removed to entity " + entity + "'s collection " + fieldName + " by " + userContext.getUser());
+                } else {
+                    super.onCollectionUpdate(collection, key);
+                    return;
+                }
             }
         } else {
             // not a persistent collection?
         }
     }
 
+    /**
+ * 
+ */
     @Override
     public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
-        super.onCollectionRecreate(collection, key); // To change body of generated methods, choose Tools | Templates.
+        // TODO newly created entities with collections should be checked here for permission but collection cannot give back
+        // its
+        // role in the parent entity. BUG? Workaround: it can be checked in the #onSave(...) method
+        // if (!ChangeInterceptor.active) {
+        // super.onCollectionRecreate(collection, key);
+        // }
+        // if (collection instanceof PersistentCollection) {
+        // PersistentCollection newValuesCollection = (PersistentCollection) collection;
+        // Object entity = newValuesCollection.getOwner();
+        // if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
+        // super.onCollectionRecreate(collection, key);
+        // }
+        // if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
+        // throw new IllegalArgumentException("Permission cannot be persisted by this persistence unit!");
+        // }
+        // @SuppressWarnings({ "unchecked", "rawtypes" })
+        // Collection<?> newValues = new HashSet((Collection<?>) newValuesCollection.getValue());
+        // String fieldName = StringUtils.replace(newValuesCollection.getRole(), entity.getClass().getName() + ".", "");
+        // if (!newValues.isEmpty()) {
+        // // element has been added to the collection - check Add permission
+        // UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
+        // ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
+        // EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        // PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
+        // boolean isGranted = permissionService.isGranted(userContext.getUser(),
+        // actionFactory.createAction(ActionConstants.ADD),
+        // entityFieldFactory.createResource((IdHolder) entity, fieldName));
+        // if (!isGranted) {
+        // // throw new PermissionException("Element cannot be added to Entity " + entity + "'s collection " +
+        // // fieldName + " by " + userContext.getUser());
+        // }
+        // }
+        // }
+        super.onCollectionRecreate(collection, key);
     }
 
     @Override
@@ -203,59 +222,83 @@ public class ChangeInterceptor extends EmptyInterceptor {
     // add
     @Override
     public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
-        if (!ChangeInterceptor.activePersist) {
+        if (!ChangeInterceptor.active) {
             return super.onSave(entity, id, state, propertyNames, types);
         }
         if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
             return super.onSave(entity, id, state, propertyNames, types);
         }
-        // TODO: Why are we skipping permissions here? => Permission should not be allowed to be created/updated at all in the PU which has the interceptor activated
         if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
-            return super.onSave(entity, id, state, propertyNames, types);
+            throw new IllegalArgumentException("Permission cannot be persisted by this persistence unit!");
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
         EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
-        // find resource to check
-        boolean isGranted = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
-                                                                                                   entityFieldFactory.createResource(entity.getClass(), EntityField.EMPTY_FIELD));
+        PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
+        boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
+                                                        entityFieldFactory.createResource(entity.getClass(), EntityField.EMPTY_FIELD));
         if (!isGranted) {
             throw new PermissionException("Entity " + entity + " is not permitted to be persisted by " + userContext.getUser());
-        } else {
-            return super.onSave(entity, id, state, propertyNames, types);
         }
+        // check if collection relations have permission
+        boolean isGrantedAddEntity = true;
+        boolean isGrantedUpdateRelatedEntity = true;
+        for (int i = 0; i < state.length; i++) {
+            String fieldName = propertyNames[i];
+            // check only relations but dont check collection type @link #onCollectionRecreate)
+            if (types[i].isCollectionType()) {
+                Collection<?> collection = (Collection<?>) state[i];
+                if (!collection.isEmpty()) {
+                    // elements have been added
+                    isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                                     entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                    if (!isGrantedAddEntity) {
+                        throw new PermissionException("Element to Entity " + entity + "'s collection " + fieldName + " cannot be added by " + userContext.getUser());
+                    }
+                }
+            } else {
+                if (types[i].isAssociationType()) {
+                    // if value has been changed
+                    if (state[i] != null) {
+                        isGrantedUpdateRelatedEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
+                                                                                   entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                        if (!isGrantedUpdateRelatedEntity) {
+                            throw new PermissionException("Entity " + entity + "'s field " + fieldName + " cannot be updated by " + userContext.getUser());
+                        }
+                    }
+                }
+            }
+        }
+        return super.onSave(entity, id, state, propertyNames, types);
+
     }
 
     // delete
 
     @Override
     public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
-        if (!ChangeInterceptor.activeDelete) {
+        if (!ChangeInterceptor.active) {
             super.onDelete(entity, id, state, propertyNames, types);
         }
         if (AnnotationUtils.findAnnotation(entity.getClass(), ResourceName.class) == null) {
             super.onDelete(entity, id, state, propertyNames, types);
         }
-        // TODO: Why are we skipping permissions here? => Permission should not be allowed to be created/updated at all in the PU which has the interceptor activated
         if (ReflectionUtils.isSubtype(entity.getClass(), Permission.class)) {
-            super.onDelete(entity, id, state, propertyNames, types);
+            throw new IllegalArgumentException("Permission cannot be deleted by this persistence unit!");
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
         EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
-        // find resource to check
-        Integer entityId = null;
-        if (entity instanceof IdHolder) {
-            entityId = ((IdHolder) entity).getId();
-        }
-        boolean isGranted = BeanProvider.getContextualReference(PermissionService.class).isGranted(userContext.getUser(),
-                                                                                                   actionFactory.createAction(ActionConstants.DELETE),
-                                                                                                   entityFieldFactory.createResource(entity.getClass(), EntityField.EMPTY_FIELD,
-                                                                                                                                     entityId));
+        PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
+        boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.DELETE),
+                                                        entityFieldFactory.createResource((IdHolder) entity));
         if (!isGranted) {
             throw new PermissionException("Entity " + entity + " is not permitted to be deleted by " + userContext.getUser());
-        } else {
-            super.onDelete(entity, id, state, propertyNames, types);
         }
+
+        // TODO decide if collection remove should be checked
+
+        super.onDelete(entity, id, state, propertyNames, types);
     }
+
 }

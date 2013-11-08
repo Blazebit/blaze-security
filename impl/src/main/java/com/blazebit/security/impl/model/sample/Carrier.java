@@ -21,7 +21,9 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
@@ -49,9 +51,20 @@ public class Carrier implements Serializable, IdHolder {
     private Party party;
     private Set<Contact> contacts = new HashSet<Contact>();
     private Set<CarrierGroup> groups = new HashSet<CarrierGroup>();
+    private Email email;
+    private Comment comment;
 
-    // private Set<Email> emails = new HashSet<Email>();
     // private Set<CarrierTeam> teams = new HashSet<CarrierTeam>();
+
+    @ManyToOne
+    @JoinColumn(name = "comment")
+    public Comment getComment() {
+        return comment;
+    }
+
+    public void setComment(Comment comment) {
+        this.comment = comment;
+    }
 
     @Id
     @GeneratedValue
@@ -109,7 +122,7 @@ public class Carrier implements Serializable, IdHolder {
         this.field5 = field5;
     }
 
-    @OneToOne(cascade = { CascadeType.MERGE, CascadeType.REMOVE })
+    @OneToOne
     public Party getParty() {
         return party;
     }
@@ -118,7 +131,7 @@ public class Carrier implements Serializable, IdHolder {
         this.party = party;
     }
 
-    @OneToMany(cascade = { CascadeType.MERGE, CascadeType.REMOVE })
+    @OneToMany
     public Set<Contact> getContacts() {
         return contacts;
     }
@@ -135,7 +148,7 @@ public class Carrier implements Serializable, IdHolder {
     // public void setEmails(Set<Email> emails) {
     // this.emails = emails;
     // }
-    @ManyToMany(cascade = { CascadeType.MERGE, CascadeType.REMOVE })
+    @ManyToMany
     public Set<CarrierGroup> getGroups() {
         return this.groups;
     }
@@ -154,5 +167,15 @@ public class Carrier implements Serializable, IdHolder {
     @Override
     public String toString() {
         return "Carrier{" + "id=" + id + '}';
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "email")
+    public Email getEmail() {
+        return email;
+    }
+
+    public void setEmail(Email email) {
+        this.email = email;
     }
 }

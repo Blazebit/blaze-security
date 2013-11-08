@@ -12,6 +12,7 @@
  */
 package com.blazebit.security;
 
+
 /**
  * 
  * @author cuszk
@@ -82,5 +83,20 @@ public interface EntityResourceFactory {
      * @return resource from the given entity name field and id
      */
     public Resource createResource(String entity, String field, Integer id);
+
+    /**
+     * 
+     * @param entityObject
+     * @return resource of an instance of an entity
+     */
+    public Resource createResource(IdHolder entityObject);
+
+    /**
+     * 
+     * @param entityObject
+     * @param field
+     * @return resource of an instance of an entity with a field
+     */
+    public Resource createResource(IdHolder entityObject, String field);
 
 }

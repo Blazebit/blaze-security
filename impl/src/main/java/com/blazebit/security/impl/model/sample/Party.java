@@ -27,7 +27,7 @@ import com.blazebit.security.impl.model.ResourceName;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Party", module = { "Carrier", "Core" })
+@ResourceName(name = "Party", module = "Core")
 public class Party implements Serializable, IdHolder {
 
     /**

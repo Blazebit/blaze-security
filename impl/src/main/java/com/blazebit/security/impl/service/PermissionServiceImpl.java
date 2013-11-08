@@ -21,7 +21,6 @@ import javax.inject.Inject;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionActionException;
 import com.blazebit.security.PermissionDataAccess;
@@ -34,10 +33,6 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.model.UserDataPermission;
-import com.blazebit.security.impl.model.UserGroupDataPermission;
-import com.blazebit.security.impl.model.UserGroupPermission;
-import com.blazebit.security.impl.model.UserPermission;
 
 /**
  * 
@@ -48,8 +43,6 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Inject
     private PermissionFactory permissionFactory;
-    @Inject
-    private EntityResourceFactory entityResourceFactory;
 
     @Inject
     private ResourceFactory resourceFactory;
@@ -82,18 +75,6 @@ public class PermissionServiceImpl implements PermissionService {
         // if (!isGranted(authorizer, getGrantAction(), entityFieldFactory.createResource(action))) {
         // throw new PermissionException(authorizer + " is not allowed to grant " + getGrantAction() + " to " + action);
         // }
-        if (!isGranted(authorizer, getCreateAction(), entityResourceFactory.createResource(UserPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getCreateAction(), entityResourceFactory.createResource(UserDataPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserDataPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
         if (!isGranted(authorizer, getGrantAction(), resource)) {
             throw new PermissionException(authorizer + " is not allowed to grant " + resource);
         }
@@ -117,21 +98,6 @@ public class PermissionServiceImpl implements PermissionService {
         // if (!isGranted(authorizer, getRevokeAction(), entityFieldFactory.createResource(getRevokeAction()))) {
         // throw new PermissionException(authorizer + " is not allowed to " + getRevokeAction() + " to " + getRevokeAction());
         // }
-        if (!isGranted(authorizer, getRevokeAction(), resource)) {
-            throw new PermissionException(authorizer + " is not allowed to revoke " + resource);
-        }
-        if (!isGranted(authorizer, getCreateAction(), entityResourceFactory.createResource(UserPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserDataPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getCreateAction(), entityResourceFactory.createResource(UserDataPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
 
         if (!permissionDataAccess.isRevokable(subject, action, resource)) {
             throw new PermissionActionException("Permission : " + subject + ", " + action + ", " + resource + " cannot be revoked");
@@ -169,18 +135,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (!permissionDataAccess.isGrantable(role, action, resource)) {
             throw new PermissionActionException("Permission for " + role + ", " + action + "," + resource + " cannot be granted");
         }
-        if (!isGranted(authorizer, getCreateAction(), entityResourceFactory.createResource(UserGroupPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserGroupPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getCreateAction(), entityResourceFactory.createResource(UserGroupDataPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
-        if (!isGranted(authorizer, getDeleteAction(), entityResourceFactory.createResource(UserGroupDataPermission.class))) {
-            throw new PermissionException(authorizer + " is not allowed to grant " + resource);
-        }
+
         Set<Permission> removablePermissions = permissionDataAccess.getRevokablePermissionsWhenGranting(role, action, resource);
         for (Permission existingPermission : removablePermissions) {
             permissionManager.remove(existingPermission);
@@ -266,14 +221,6 @@ public class PermissionServiceImpl implements PermissionService {
 
     private Action getGrantAction() {
         return actionFactory.createAction(ActionConstants.GRANT);
-    }
-
-    private Action getCreateAction() {
-        return actionFactory.createAction(ActionConstants.CREATE);
-    }
-
-    private Action getDeleteAction() {
-        return actionFactory.createAction(ActionConstants.DELETE);
     }
 
     private Action getRevokeAction() {

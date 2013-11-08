@@ -22,17 +22,17 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.Action;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.PermissionException;
 import com.blazebit.security.PermissionService;
-import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
-import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
+import com.blazebit.security.impl.model.sample.CarrierTeam;
 import com.blazebit.security.impl.model.sample.Contact;
+import com.blazebit.security.impl.model.sample.Document;
+import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
+import com.blazebit.security.impl.model.sample.TestCarrier;
 
 /**
  * 
@@ -48,45 +48,80 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
     private static final long serialVersionUID = 1L;
     @Inject
     private PermissionService securityService;
-    private Carrier carrier;
-    private Carrier carrierWithParty;
-    private Carrier carrierWithContacts;
-    private Carrier carrierWithGroups;
+    private TestCarrier carrier;
+    // one2one
+    private TestCarrier carrierWithParty;
+    // +cascade
+    private TestCarrier carrierWithPartyCascade;
+    // many2one
+    private TestCarrier carrierWithEmail;
+    // +cascade
+    private TestCarrier carrierWithEmailCascade;
+    // one2many
+    private TestCarrier carrierWithContacts;
+    // +cascade
+    private TestCarrier carrierWithDocuments;
+    // many2many
+    private TestCarrier carrierWithGroups;
+    // +cascade
+    private TestCarrier carrierWithTeams;
 
     @Before
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void init() {
         super.initData();
 
-        carrier = new Carrier();
-        carrier.setField1("field1");
-        carrier.setField2("field2");
-        carrier.setField3("field3");
-        carrier.setField4("field4");
-        carrier.setField5(null);
+        carrier = new TestCarrier();
+        carrier.setField("field1");
         entityManager.persist(carrier);
-
+        // one2one
         Party party = new Party();
         entityManager.persist(party);
-        carrierWithParty = new Carrier();
+        carrierWithParty = new TestCarrier();
         carrierWithParty.setParty(party);
         entityManager.persist(carrierWithParty);
 
+        Party party2 = new Party();
+        carrierWithPartyCascade = new TestCarrier();
+        carrierWithPartyCascade.setPartyWithCascade(party2);
+        entityManager.persist(carrierWithPartyCascade);
+        // one2many
         Contact contact = new Contact();
         entityManager.persist(contact);
-        carrierWithContacts = new Carrier();
+        carrierWithContacts = new TestCarrier();
         carrierWithContacts.getContacts().add(contact);
         entityManager.persist(carrierWithContacts);
 
+        Document document = new Document();
+        carrierWithDocuments = new TestCarrier();
+        carrierWithDocuments.getDocuments().add(document);
+        entityManager.persist(carrierWithDocuments);
+        // many2many
         CarrierGroup group = new CarrierGroup();
         entityManager.persist(group);
-        carrierWithGroups = new Carrier();
+        carrierWithGroups = new TestCarrier();
         carrierWithGroups.getGroups().add(group);
         entityManager.persist(carrierWithGroups);
 
+        CarrierTeam team = new CarrierTeam();
+        carrierWithTeams = new TestCarrier();
+        carrierWithTeams.getTeams().add(team);
+        entityManager.persist(carrierWithTeams);
+        // many2one
+        Email email = new Email();
+        entityManager.persist(email);
+        carrierWithEmail = new TestCarrier();
+        carrierWithEmail.setEmail(email);
+        entityManager.persist(carrierWithEmail);
+
+        Email email2 = new Email();
+        carrierWithEmailCascade = new TestCarrier();
+        carrierWithEmailCascade.setEmailWithCascade(email2);
+        entityManager.persist(carrierWithEmailCascade);
+
         entityManager.flush();
         setUserContext(user1);
-        ChangeInterceptor.activateDelete();
+        ChangeInterceptor.activate();
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -109,84 +144,288 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
     @Test
     public void test_delete_entity_with_primitive_field() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
         self.get().remove(carrier);
-        assertNull(entityManager.find(Carrier.class, carrier.getId()));
+
+        assertNull(entityManager.find(TestCarrier.class, carrier.getId()));
+    }
+
+    // one2one
+    @Test
+    public void test_delete_entity_with_one_to_one_field_no_cascade() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithParty);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithParty.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_one_field_not_permitted() {
+
+        self.get().remove(carrierWithParty);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithParty.getId()));
     }
 
     @Test
-    public void test_delete_entity_with_one_to_one_field() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD));
-        self.get().remove(carrierWithParty);
-        assertNull(entityManager.find(Carrier.class, carrierWithParty.getId()));
+    public void test_delete_entity_with_one_to_one_field_cascade() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Party.class));
+
+        self.get().remove(carrierWithPartyCascade);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithPartyCascade.getId()));
     }
 
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_one_field_cascade_not_permitted() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithPartyCascade);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithPartyCascade.getId()));
+    }
+
+    // one2many
     @Test
     public void test_delete_entity_with_one_to_many_field() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
         self.get().remove(carrierWithContacts);
-        assertNull(entityManager.find(Carrier.class, carrierWithContacts.getId()));
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithContacts.getId()));
     }
 
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_many_field_not_permitted() {
+
+        self.get().remove(carrierWithContacts);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithContacts.getId()));
+    }
+
+    @Test
+    public void test_delete_entity_with_one_to_many_field_cascade() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Document.class));
+
+        self.get().remove(carrierWithDocuments);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithDocuments.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_many_field_cascade_not_permitted() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithDocuments);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithDocuments.getId()));
+    }
+
+    // many2many
     @Test
     public void test_delete_entity_with_many_to_many_field() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD));
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
         self.get().remove(carrierWithGroups);
-        assertNull(entityManager.find(Carrier.class, carrierWithGroups.getId()));
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithGroups.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_many_to_many_field_not_permitted() {
+
+        self.get().remove(carrierWithGroups);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithGroups.getId()));
     }
 
     @Test
+    public void test_delete_entity_with_many_to_many_field_cascade() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(CarrierTeam.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithTeams);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithTeams.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_many_to_many_field_cascade_not_permitted() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithTeams);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithTeams.getId()));
+    }
+
+    // many2one
+    @Test
+    public void test_delete_entity_with_many_to_one_field() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithEmail);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithEmail.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_many_to_one_field_not_permitted() {
+
+        self.get().remove(carrierWithEmail);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithEmail.getId()));
+    }
+
+    @Test
+    public void test_delete_entity_with_many_to_one_field_cascade() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Email.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithEmailCascade);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithEmailCascade.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_many_to_one_field_cascade_not_permitted() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+
+        self.get().remove(carrierWithEmailCascade);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithEmailCascade.getId()));
+    }
+
+    // again with object permissions
+    @Test
     public void test_delete_entity_with_primitive_field_with_entity_object_permission() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrier.getId()));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrier));
         self.get().remove(carrier);
-        assertNull(entityManager.find(Carrier.class, carrier.getId()));
+        assertNull(entityManager.find(TestCarrier.class, carrier.getId()));
     }
 
     @Test
     public void test_delete_entity_with_one_to_one_field_with_entity_object_permission() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrierWithParty.getId()));
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD, carrierWithParty.getParty().getId()));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithParty));
         self.get().remove(carrierWithParty);
-        assertNull(entityManager.find(Carrier.class, carrierWithParty.getId()));
+        assertNull(entityManager.find(TestCarrier.class, carrierWithParty.getId()));
+    }
+
+    @Test
+    public void test_delete_entity_with_one_to_one_field_cascade_with_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithPartyCascade));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithPartyCascade.getPartyWithCascade()));
+        self.get().remove(carrierWithPartyCascade);
+        assertNull(entityManager.find(TestCarrier.class, carrierWithPartyCascade.getId()));
     }
 
     @Test(expected = PermissionException.class)
-    public void test_delete_entity_with_one_to_one_field_with_missing_party_permission() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrierWithParty.getId()));
-        self.get().remove(carrierWithParty);
-        assertNull(entityManager.find(Carrier.class, carrierWithParty.getId()));
+    public void test_delete_entity_with_one_to_one_field_cascade_with_missing_party_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithPartyCascade));
+        self.get().remove(carrierWithPartyCascade);
     }
 
     @Test(expected = PermissionException.class)
     public void test_delete_entity_with_one_to_one_field_with_wrong_entity_object_permission() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, -1));
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Party.class, EntityField.EMPTY_FIELD, carrierWithParty.getParty().getId()));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class, -1));
         self.get().remove(carrierWithParty);
-        assertNull(entityManager.find(Carrier.class, carrierWithParty.getId()));
+        assertNull(entityManager.find(TestCarrier.class, carrierWithParty.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_one_field_cascade_with_wrong_party_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithPartyCascade));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Party.class, -1));
+        self.get().remove(carrierWithPartyCascade);
     }
 
     @Test
     public void test_delete_entity_with_one_to_many_field_with_entity_object_permission() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrierWithContacts.getId()));
-        securityService.grant(admin, user1, getDeleteAction(),
-                              entityFieldFactory.createResource(Contact.class, EntityField.EMPTY_FIELD, carrierWithContacts.getContacts().iterator().next().getId()));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithContacts));
         self.get().remove(carrierWithContacts);
-        assertNull(entityManager.find(Carrier.class, carrierWithContacts.getId()));
+        assertNull(entityManager.find(TestCarrier.class, carrierWithContacts.getId()));
+    }
+
+    @Test
+    public void test_delete_entity_with_one_to_many_field_cascade_with_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithDocuments));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithDocuments.getDocuments().iterator().next()));
+
+        self.get().remove(carrierWithDocuments);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithDocuments.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_many_field_cascade_with_missing_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithDocuments));
+
+        self.get().remove(carrierWithDocuments);
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_one_to_many_field_cascade_with_wrong_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithDocuments));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Document.class, -1));
+
+        self.get().remove(carrierWithDocuments);
     }
 
     @Test
     public void test_delete_entity_with_many_to_many_field_with_entity_object_permission() {
-        securityService.grant(admin, user1, getDeleteAction(),
-                              entityFieldFactory.createResource(CarrierGroup.class, EntityField.EMPTY_FIELD, carrierWithGroups.getGroups().iterator().next().getId()));
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Carrier.class, EntityField.EMPTY_FIELD, carrierWithGroups.getId()));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithGroups));
+
         self.get().remove(carrierWithGroups);
-        assertNull(entityManager.find(Carrier.class, carrierWithGroups.getId()));
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithGroups.getId()));
     }
 
-    private Action getDeleteAction() {
-        return actionFactory.createAction(ActionConstants.DELETE);
+    @Test
+    public void test_delete_entity_with_many_to_many_field_cascade_with_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithTeams));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithTeams.getTeams().iterator().next()));
+
+        self.get().remove(carrierWithTeams);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithTeams.getId()));
     }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_many_to_many_field_cascade_with_wrong_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithTeams));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(CarrierTeam.class, -1));
+
+        self.get().remove(carrierWithTeams);
+    }
+
+    @Test
+    public void test_delete_entity_with_many_to_one_field_with_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithEmail));
+
+        self.get().remove(carrierWithEmail);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithEmail.getId()));
+    }
+
+    @Test
+    public void test_delete_entity_with_many_to_one_field_cascade_with_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithEmailCascade));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithEmailCascade.getEmailWithCascade()));
+
+        self.get().remove(carrierWithEmailCascade);
+
+        assertNull(entityManager.find(TestCarrier.class, carrierWithEmailCascade.getId()));
+    }
+
+    @Test(expected = PermissionException.class)
+    public void test_delete_entity_with_many_to_one_field_cascade_with_wrong_entity_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithEmailCascade));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Email.class, -1));
+
+        self.get().remove(carrierWithEmailCascade);
+    }
+
 }

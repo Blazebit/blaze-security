@@ -27,5 +27,7 @@ public @interface ResourceName {
 
     String name() default "";
 
-    String[] module() default {};
+    String module() default "";
+    
+    String test() default "";
 }

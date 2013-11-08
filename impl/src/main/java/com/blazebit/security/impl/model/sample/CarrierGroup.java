@@ -13,14 +13,11 @@
 package com.blazebit.security.impl.model.sample;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.impl.model.ResourceName;
@@ -39,7 +36,6 @@ public class CarrierGroup implements IdHolder, Serializable {
     private static final long serialVersionUID = 1L;
     private Integer id;
     private String name;
-    private Set<Carrier> carriers = new HashSet<Carrier>();
 
     @Override
     @Id
@@ -57,16 +53,8 @@ public class CarrierGroup implements IdHolder, Serializable {
         this.name = name;
     }
 
-    @ManyToMany(mappedBy = "groups")
-    public Set<Carrier> getCarriers() {
-        return this.carriers;
-    }
-
     public void setId(Integer id) {
         this.id = id;
     }
 
-    public void setCarriers(Set<Carrier> carriers) {
-        this.carriers = carriers;
-    }
 }
