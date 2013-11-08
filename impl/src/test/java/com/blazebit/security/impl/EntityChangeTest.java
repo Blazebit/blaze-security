@@ -26,7 +26,6 @@ import com.blazebit.security.PermissionException;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.CarrierTeam;
 import com.blazebit.security.impl.model.sample.Contact;
@@ -183,8 +182,6 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         setUserContext(user1);
         carrier.getPartyWithCascade().setPartyField1("party_field_1_changed");
         carrier = (TestCarrier) self.get().merge(carrier);
-
-        assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getPartyWithCascade().getPartyField1(), "party_field_1_changed");
     }
 
     @Test
@@ -203,8 +200,6 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         setUserContext(user1);
         carrier.getPartyWithCascade().setPartyField1("party_field_1_changed");
         carrier = (TestCarrier) self.get().merge(carrier);
-
-        assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getPartyWithCascade().getPartyField1(), "party_field_1_changed");
     }
 
     @Test(expected = PermissionException.class)
@@ -454,8 +449,6 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
         carrier.getContacts().remove(carrier.getContacts().iterator().next());
         carrier = (TestCarrier) self.get().merge(carrier);
-
-        assertEquals(0, carrier.getContacts().size());
     }
 
     // many-to-many - does not change many to many related entity property when not cascaded

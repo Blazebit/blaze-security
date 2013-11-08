@@ -184,8 +184,6 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
 
         self.get().remove(carrierWithPartyCascade);
-
-        assertNull(entityManager.find(TestCarrier.class, carrierWithPartyCascade.getId()));
     }
 
     // one2many
@@ -200,10 +198,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
     @Test(expected = PermissionException.class)
     public void test_delete_entity_with_one_to_many_field_not_permitted() {
-
         self.get().remove(carrierWithContacts);
-
-        assertNull(entityManager.find(TestCarrier.class, carrierWithContacts.getId()));
     }
 
     @Test
@@ -222,7 +217,6 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
         self.get().remove(carrierWithDocuments);
 
-        assertNull(entityManager.find(TestCarrier.class, carrierWithDocuments.getId()));
     }
 
     // many2many
@@ -237,10 +231,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
     @Test(expected = PermissionException.class)
     public void test_delete_entity_with_many_to_many_field_not_permitted() {
-
         self.get().remove(carrierWithGroups);
-
-        assertNull(entityManager.find(TestCarrier.class, carrierWithGroups.getId()));
     }
 
     @Test
@@ -258,8 +249,6 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
 
         self.get().remove(carrierWithTeams);
-
-        assertNull(entityManager.find(TestCarrier.class, carrierWithTeams.getId()));
     }
 
     // many2one
@@ -277,7 +266,6 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
         self.get().remove(carrierWithEmail);
 
-        assertNull(entityManager.find(TestCarrier.class, carrierWithEmail.getId()));
     }
 
     @Test
@@ -295,8 +283,6 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
 
         self.get().remove(carrierWithEmailCascade);
-
-        assertNull(entityManager.find(TestCarrier.class, carrierWithEmailCascade.getId()));
     }
 
     // again with object permissions
@@ -332,7 +318,6 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
     public void test_delete_entity_with_one_to_one_field_with_wrong_entity_object_permission() {
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class, -1));
         self.get().remove(carrierWithParty);
-        assertNull(entityManager.find(TestCarrier.class, carrierWithParty.getId()));
     }
 
     @Test(expected = PermissionException.class)

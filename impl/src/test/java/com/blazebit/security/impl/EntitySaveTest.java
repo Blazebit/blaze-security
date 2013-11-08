@@ -148,8 +148,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         Party party = new Party();
         carrier.setPartyWithCascade(party);
         self.get().persist(carrier);
-        
-        assertNotNull(carrier.getId());
     }
 
     // One2Many
@@ -297,8 +295,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         self.get().persist(group);
         carrier.getGroups().add(group);
         self.get().persist(carrier);
-        
-        assertNotNull(carrier.getId());
     }
 
     @Test(expected = PermissionException.class)
@@ -310,8 +306,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         CarrierTeam team = new CarrierTeam();
         carrier.getTeams().add(team);
         self.get().persist(carrier);
-
-        assertNotNull(carrier.getId());
     }
 
     @Test(expected = PermissionException.class)
@@ -324,8 +318,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         self.get().persist(group);
         carrier.getGroups().add(group);
         self.get().persist(carrier);
-        
-        assertNotNull(carrier.getId());
     }
     
     @Test(expected = PermissionException.class)
@@ -337,9 +329,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         CarrierTeam team = new CarrierTeam();
         carrier.getTeams().add(team);
         self.get().persist(carrier);
-
-        
-        assertNotNull(carrier.getId());
     }
 
     // Many2One
@@ -382,8 +371,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         self.get().persist(email);
         carrier.setEmail(email);
         self.get().persist(carrier);
-
-        assertNotNull(carrier.getId());
     }
 
     @Test(expected = PermissionException.class)
@@ -396,7 +383,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         carrier.setEmailWithCascade(email);
         self.get().persist(carrier);
 
-        assertNotNull(carrier.getId());
     }
 
     @Test(expected = PermissionException.class)
@@ -409,8 +395,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         self.get().persist(email);
         carrier.setEmail(email);
         self.get().persist(carrier);
-        
-        assertNotNull(carrier.getId());
+
     }
 
     @Test(expected = PermissionException.class)
@@ -423,7 +408,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         carrier.setEmailWithCascade(email);
         self.get().persist(carrier);
 
-        assertNotNull(carrier.getId());
     }
 
 }
