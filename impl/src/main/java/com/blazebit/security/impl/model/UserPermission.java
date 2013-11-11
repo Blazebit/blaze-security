@@ -18,7 +18,6 @@ import javax.persistence.Entity;
 import com.blazebit.security.SubjectPermission;
 
 @Entity
-@ResourceName(name = "User permission", module = "Core")
 public class UserPermission extends AbstractPermission<User, UserPermissionId> implements SubjectPermission {
 
     private static final long serialVersionUID = 1L;

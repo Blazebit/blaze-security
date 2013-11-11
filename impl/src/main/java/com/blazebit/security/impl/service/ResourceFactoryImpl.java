@@ -19,17 +19,26 @@ public class ResourceFactoryImpl implements ResourceFactory {
 
     @Override
     public Resource createResource(Subject subject) {
-        return entityResourceFactory.createResource(subject.getClass(), EntityField.EMPTY_FIELD, ((IdHolder) subject).getId());
+        if (subject == null) {
+            throw new IllegalArgumentException("Subject cannot be null");
+        }
+        return entityResourceFactory.createResource(subject.getClass(), ((IdHolder) subject).getId());
 
     }
 
     @Override
     public Resource createResource(Role role) {
-        return entityResourceFactory.createResource(role.getClass(), EntityField.EMPTY_FIELD, ((IdHolder) role).getId());
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        return entityResourceFactory.createResource(role.getClass(), ((IdHolder) role).getId());
     }
 
     @Override
     public Resource createResource(Action action) {
+        if (action == null) {
+            throw new IllegalArgumentException("Subject cannot be null");
+        }
         return new EntityField(action.getClass().getSimpleName(), ((EntityAction) action).getActionName());
     }
 }

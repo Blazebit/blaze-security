@@ -170,20 +170,6 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         permissionManager.save(permissionFactory.create(admin, revokeAction, groupEntity));
         // admin can change group properties
         permissionManager.save(permissionFactory.create(admin, updateAction, groupEntity));
-        // TODO not needed anymore because Permissions are not checked against authorization
-        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserPermission.class)));
-        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        permissionManager.save(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
-        //
-        // permissionManager.save(permissionFactory.create(admin, deleteAction,
-        // entityFieldFactory.createResource(UserPermission.class)));
-        // permissionManager.save(permissionFactory.create(admin, deleteAction,
-        // entityFieldFactory.createResource(UserDataPermission.class)));
-        // permissionManager.save(permissionFactory.create(admin, deleteAction,
-        // entityFieldFactory.createResource(UserGroupPermission.class)));
-        // permissionManager.save(permissionFactory.create(admin, deleteAction,
-        // entityFieldFactory.createResource(UserGroupDataPermission.class)));
 
         // TODO not needed anymore because isGranted service method does not check action resource
         // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(grantAction)));
@@ -262,5 +248,17 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
 
     public Action getDeleteAction() {
         return actionFactory.createAction(ActionConstants.DELETE);
+    }
+    
+    public Action getReadAction() {
+        return actionFactory.createAction(ActionConstants.READ);
+    }
+    
+    public Action getGrantAction() {
+        return actionFactory.createAction(ActionConstants.GRANT);
+    }
+    
+    public Action getRevokeAction() {
+        return actionFactory.createAction(ActionConstants.REVOKE);
     }
 }

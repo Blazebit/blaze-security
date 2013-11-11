@@ -69,51 +69,6 @@ public class EntityField implements Resource {
         }
     }
 
-    @Override
-    public boolean implies(Resource resource) {
-        if (resource instanceof EntityField) {
-            EntityField _resource = (EntityField) resource;
-            if (permissionId == null) {
-                return this.getEntity().equals(_resource.getEntity()) && (this.isEmptyField() || this.getField().equals(_resource.getField()));
-            } else {
-                return permissionId.getEntity().equals(_resource.getEntity())
-                    && (permissionId.getField().equals(EMPTY_FIELD) || permissionId.getField().equals(_resource.getField()));
-            }
-        } else {
-            throw new IllegalArgumentException("Not supported resource type");
-        }
-    }
-
-    @Override
-    public boolean isReplaceableBy(Resource resource) {
-        if (resource instanceof EntityObjectField) {
-            return false;
-        } else {
-            if (resource instanceof EntityField) {
-                EntityField _resource = (EntityField) resource;
-                // EntityField can replace other EntityFields if the existing EntityField has specific field and the new
-                // EntityField
-                // has EMPTY_FIELD
-                if (permissionId == null) {
-                    return this.getEntity().equals(_resource.getEntity()) && (_resource.isEmptyField() && !this.isEmptyField());
-                } else {
-                    return permissionId.getEntity().equals(_resource.getEntity()) && (_resource.isEmptyField() && !permissionId.getField().equals(EMPTY_FIELD));
-                }
-            } else {
-                throw new IllegalArgumentException("Not supported resource type");
-
-            }
-        }
-    }
-
-    public boolean isEmptyField() {
-        return this.getField().equals(EMPTY_FIELD);
-    }
-
-    public boolean isObject() {
-        return this instanceof EntityObjectField;
-    }
-
     public String getEntity() {
         return permissionId == null ? entity : permissionId.getEntity();
     }
@@ -165,12 +120,54 @@ public class EntityField implements Resource {
         return true;
     }
 
+    public boolean isEmptyField() {
+        return this.getField().equals(EMPTY_FIELD);
+    }
+
+    @Override
+    public boolean implies(Resource resource) {
+        if (resource instanceof EntityField) {
+            EntityField _resource = (EntityField) resource;
+            if (permissionId == null) {
+                return this.getEntity().equals(_resource.getEntity()) && (this.isEmptyField() || this.getField().equals(_resource.getField()));
+            } else {
+                return permissionId.getEntity().equals(_resource.getEntity())
+                    && (permissionId.getField().equals(EMPTY_FIELD) || permissionId.getField().equals(_resource.getField()));
+            }
+        } else {
+            throw new IllegalArgumentException("Not supported resource type");
+        }
+    }
+
+    @Override
+    public boolean isReplaceableBy(Resource resource) {
+        if (resource instanceof EntityObjectField) {
+            return false;
+        } else {
+            if (resource instanceof EntityField) {
+                EntityField _resource = (EntityField) resource;
+                // EntityField can replace other EntityFields if the existing EntityField has specific field and the new
+                // EntityField
+                // has EMPTY_FIELD
+                if (permissionId == null) {
+                    return this.getEntity().equals(_resource.getEntity()) && (_resource.isEmptyField() && !this.isEmptyField());
+                } else {
+                    return permissionId.getEntity().equals(_resource.getEntity()) && (_resource.isEmptyField() && !permissionId.getField().equals(EMPTY_FIELD));
+                }
+            } else {
+                throw new IllegalArgumentException("Not supported resource type");
+
+            }
+        }
+    }
+
     @Override
     public Collection<Resource> connectedResources() {
         List<Resource> ret = new ArrayList<Resource>();
         ret.add(this);
-        if (!isEmptyField()) {
-            ret.add((Resource) new EntityField(entity));
+        EntityField parent = getParent();
+        if (parent != null) {
+            ret.add(parent);
         }
         return ret;
     }
@@ -178,14 +175,12 @@ public class EntityField implements Resource {
     @Override
     public boolean isApplicable(Action action) {
         if (!isEmptyField()) {
-            return !action.implies(new EntityAction(ActionConstants.CREATE)) && !action.implies(new EntityAction(ActionConstants.DELETE))
-                && !action.implies(new EntityAction(ActionConstants.GRANT)) && !action.implies(new EntityAction(ActionConstants.REVOKE));
+            return !action.implies(new EntityAction(ActionConstants.CREATE)) && !action.implies(new EntityAction(ActionConstants.DELETE));
         } else {
-            return true;
+            return !action.implies(new EntityAction(ActionConstants.ADD)) && !action.implies(new EntityAction(ActionConstants.REMOVE));
         }
     }
 
-    // TODO: Check if this is necessary
     public EntityField getParent() {
         if (!isEmptyField()) {
             return new EntityField(entity);
@@ -194,7 +189,6 @@ public class EntityField implements Resource {
         }
     }
 
-    // TODO: Check if this is necessary
     public EntityField getChild(String field) {
         if (isEmptyField()) {
             return new EntityField(entity, field);

@@ -95,7 +95,9 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @throws Exception
      */
     private Permission createPermission(Subject subject, Action action, com.blazebit.security.Resource resource) {
-        return permissionManager.save(permissionFactory.create(subject, action, resource));
+        Permission permission = permissionManager.save(permissionFactory.create(subject, action, resource));
+        permissionManager.flush();
+        return permission;
 
     }
 
@@ -108,7 +110,9 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @throws Exception
      */
     private Permission createPermission(Role role, Action action, com.blazebit.security.Resource resource) {
-        return permissionManager.save(permissionFactory.create(role, action, resource));
+        Permission permission = permissionManager.save(permissionFactory.create(role, action, resource));
+        permissionManager.flush();
+        return permission;
 
     }
 

@@ -21,7 +21,6 @@ import com.blazebit.security.RolePermission;
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "User group data permission", module = "Core")
 public class UserGroupDataPermission extends AbstractDataPermission<UserGroup, UserGroupDataPermissionId> implements RolePermission {
 
     /**

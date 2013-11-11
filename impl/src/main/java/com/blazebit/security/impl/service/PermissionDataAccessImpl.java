@@ -36,20 +36,23 @@ import com.blazebit.security.Subject;
  * @TODO Add null checks etc
  */
 @Stateless
-public class PermissionDataAccessImpl implements PermissionDataAccess {
+public class PermissionDataAccessImpl extends PermissionCheckBase implements PermissionDataAccess {
 
     private static final Logger LOG = Logger.getLogger(PermissionDataAccessImpl.class.getName());
 
     @Inject
     private PermissionManager permissionManager;
 
+
     @Override
     public boolean isRevokable(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         return !getRevokablePermissionsWhenRevoking(subject, action, resource).isEmpty();
     }
 
     @Override
     public Set<Permission> getRevokablePermissionsWhenRevoking(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         // look up itself
         Permission permission = findPermission(subject, action, resource);
         if (permission != null) {
@@ -71,12 +74,14 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
     }
 
     @Override
-    public boolean isRevokable(Role actor, Action action, Resource resource) {
-        return !getRevokablePermissionsWhenRevoking(actor, action, resource).isEmpty();
+    public boolean isRevokable(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
+        return !getRevokablePermissionsWhenRevoking(role, action, resource).isEmpty();
     }
 
     @Override
     public Set<Permission> getRevokablePermissionsWhenRevoking(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         // look up itself
         Permission permission = findPermission(role, action, resource);
         if (permission != null) {
@@ -99,12 +104,14 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     @Override
     public boolean isGrantable(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(subject);
         return isGrantable(permissions, subject, action, resource);
     }
 
     @Override
     public boolean isGrantable(List<Permission> permissions, Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         if (!resource.isApplicable(action)) {
             LOG.warning("Action " + action + " cannot be applied to " + resource);
             return false;
@@ -122,12 +129,14 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
     // TODO rename
     @Override
     public Set<Permission> getRevokablePermissionsWhenGranting(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         return getReplaceablePermissions(subject, action, resource);
 
     }
 
     @Override
     public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         if (!resource.isApplicable(action)) {
             LOG.warning("Action " + action + " cannot be applied to " + resource);
             return false;
@@ -144,6 +153,7 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     @Override
     public boolean isGrantable(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(role);
         return isGrantable(permissions, role, action, resource);
 
@@ -151,18 +161,21 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     @Override
     public Set<Permission> getRevokablePermissionsWhenGranting(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         return getReplaceablePermissions(role, action, resource);
 
     }
 
     @Override
     public Permission findPermission(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(subject);
         return findPermission(permissions, subject, action, resource);
     }
 
     @Override
     public Permission findPermission(List<Permission> permissions, Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         for (Permission permission : permissions) {
             if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
                 return permission;
@@ -173,6 +186,7 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     @Override
     public Permission findPermission(List<Permission> permissions, Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         for (Permission permission : permissions) {
             if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
                 return permission;
@@ -183,6 +197,7 @@ public class PermissionDataAccessImpl implements PermissionDataAccess {
 
     @Override
     public Permission findPermission(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(role);
         return findPermission(permissions, role, action, resource);
     }

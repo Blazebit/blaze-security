@@ -13,6 +13,7 @@
 package com.blazebit.security;
 
 
+
 /**
  * 
  * @author cuszk
@@ -98,5 +99,6 @@ public interface EntityResourceFactory {
      * @return resource of an instance of an entity with a field
      */
     public Resource createResource(IdHolder entityObject, String field);
+
 
 }

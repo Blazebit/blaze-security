@@ -68,4 +68,9 @@ public interface PermissionManager {
      */
     public void removeAllPermissions(Subject subject);
 
+    /**
+     * flushes
+     */
+    public void flush();
+
 }

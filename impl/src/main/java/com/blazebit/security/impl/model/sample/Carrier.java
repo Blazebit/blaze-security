@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -51,7 +50,6 @@ public class Carrier implements Serializable, IdHolder {
     private Party party;
     private Set<Contact> contacts = new HashSet<Contact>();
     private Set<CarrierGroup> groups = new HashSet<CarrierGroup>();
-    private Email email;
     private Comment comment;
 
     // private Set<CarrierTeam> teams = new HashSet<CarrierTeam>();
@@ -140,42 +138,17 @@ public class Carrier implements Serializable, IdHolder {
         this.contacts = contacts;
     }
 
-    // @OneToMany(
-    // mappedBy = "carrier")
-    // public Set<Email> getEmails() {
-    // return emails;
-    // }
-    // public void setEmails(Set<Email> emails) {
-    // this.emails = emails;
-    // }
     @ManyToMany
     public Set<CarrierGroup> getGroups() {
         return this.groups;
     }
 
-    // @ManyToMany(mappedBy = "carriers")
-    // public Set<CarrierTeam> getTeams() {
-    // return this.teams;
-    // }
     public void setGroups(Set<CarrierGroup> groups) {
         this.groups = groups;
     }
-
-    // public void setTeams(Set<CarrierTeam> teams) {
-    // this.teams = teams;
-    // }
+    
     @Override
     public String toString() {
         return "Carrier{" + "id=" + id + '}';
-    }
-
-    @ManyToOne
-    @JoinColumn(name = "email")
-    public Email getEmail() {
-        return email;
-    }
-
-    public void setEmail(Email email) {
-        this.email = email;
     }
 }

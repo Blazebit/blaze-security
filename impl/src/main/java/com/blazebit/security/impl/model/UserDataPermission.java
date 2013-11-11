@@ -21,7 +21,6 @@ import com.blazebit.security.SubjectPermission;
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "User data permission", module = "Core")
 public class UserDataPermission extends AbstractDataPermission<User, UserDataPermissionId> implements SubjectPermission {
 
     /**

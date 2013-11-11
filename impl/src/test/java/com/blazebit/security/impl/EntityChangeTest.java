@@ -417,8 +417,9 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     @Test
     public void test_change_one_to_many_add_new_with_entity_object_permission() {
-        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, carrier.getId()));
+        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, carrier.getId()));
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
         setUserContext(user1);
 
         Contact newContact = new Contact();
@@ -533,14 +534,14 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
         assertEquals("A", carrier.getEmailWithCascade().getSubject());
     }
-    
+
     @Test
     public void test_change_many_to_one_no_cascade_with_entity_change() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "email"));
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
         setUserContext(user1);
 
-        Email newEmail=new Email();
+        Email newEmail = new Email();
         newEmail.setSubject("Changed_Email_Subject");
         carrier.setEmail(newEmail);
         self.get().persist(newEmail);
@@ -548,14 +549,14 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
         assertEquals("Changed_Email_Subject", carrier.getEmail().getSubject());
     }
-    
+
     @Test
     public void test_change_many_to_one_cascade_with_entity_change() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "emailWithCascade"));
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
         setUserContext(user1);
 
-        Email newEmail=new Email();
+        Email newEmail = new Email();
         newEmail.setSubject("Changed_Email_Subject");
         carrier.setEmailWithCascade(newEmail);
         carrier = (TestCarrier) self.get().merge(carrier);

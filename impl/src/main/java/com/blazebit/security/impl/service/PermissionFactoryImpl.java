@@ -39,10 +39,11 @@ import com.blazebit.security.impl.model.UserPermissionId;
  * @author cuszk
  */
 @Stateless
-public class PermissionFactoryImpl implements PermissionFactory {
+public class PermissionFactoryImpl extends PermissionCheckBase implements PermissionFactory {
 
     @Override
     public Permission create(Action action, Resource resource) {
+        checkParameters(action, resource);
         if (resource instanceof EntityObjectField) {
             UserDataPermission permission = new UserDataPermission();
             permission.setId(new UserDataPermissionId(null, (EntityObjectField) resource, (EntityAction) action));
@@ -61,6 +62,7 @@ public class PermissionFactoryImpl implements PermissionFactory {
 
     @Override
     public Permission create(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         if (resource instanceof EntityObjectField) {
             UserDataPermission permission = new UserDataPermission();
             permission.setId(new UserDataPermissionId((User) subject, (EntityObjectField) resource, (EntityAction) action));
@@ -79,6 +81,7 @@ public class PermissionFactoryImpl implements PermissionFactory {
 
     @Override
     public Permission create(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         if (resource instanceof EntityObjectField) {
             UserGroupDataPermission permission = new UserGroupDataPermission();
             permission.setId(new UserGroupDataPermissionId((UserGroup) role, (EntityObjectField) resource, (EntityAction) action));

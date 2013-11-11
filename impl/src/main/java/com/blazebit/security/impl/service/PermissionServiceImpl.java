@@ -39,7 +39,7 @@ import com.blazebit.security.constants.ActionConstants;
  * @author cuszk
  */
 @Stateless
-public class PermissionServiceImpl implements PermissionService {
+public class PermissionServiceImpl extends PermissionCheckBase implements PermissionService {
 
     @Inject
     private PermissionFactory permissionFactory;
@@ -57,6 +57,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public boolean isGranted(Subject subject, Action action, Resource resource) {
+        checkParameters(subject, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(subject);
         for (Permission permission : permissions) {
             if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
@@ -68,6 +69,10 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void grant(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        checkParameters(subject, action, resource);
         if (!isGranted(authorizer, getGrantAction(), resourceFactory.createResource(subject))) {
             throw new PermissionException(authorizer + " is not allowed to grant " + action + " to " + subject);
         }
@@ -87,10 +92,15 @@ public class PermissionServiceImpl implements PermissionService {
         }
         Permission permission = permissionFactory.create(subject, action, resource);
         permissionManager.save(permission);
+        permissionManager.flush();
     }
 
     @Override
     public void revoke(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        checkParameters(subject, action, resource);
         if (!isGranted(authorizer, getRevokeAction(), resourceFactory.createResource(subject))) {
             throw new PermissionException(authorizer + " is not allowed to revoke from " + subject);
         }
@@ -106,10 +116,12 @@ public class PermissionServiceImpl implements PermissionService {
         for (Permission permission : removablePermissions) {
             permissionManager.remove(permission);
         }
+        permissionManager.flush();
     }
 
     @Override
     public boolean isGranted(Role role, Action action, Resource resource) {
+        checkParameters(role, action, resource);
         for (Permission permission : permissionManager.getPermissions(role)) {
             if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
                 return true;
@@ -120,11 +132,19 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void grant(Subject authorizer, Role role, Action action, Resource resource) throws PermissionException, PermissionActionException {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        checkParameters(role, action, resource);
         grant(authorizer, role, action, resource, false);
     }
 
     @Override
     public void grant(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        checkParameters(role, action, resource);
         if (!isGranted(authorizer, getGrantAction(), resourceFactory.createResource(role))) {
             throw new PermissionException(authorizer + " is not allowed to " + getGrantAction() + " to " + resource);
         }
@@ -146,6 +166,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (propagateToUsers) {
             propagateGrantToSubjects(authorizer, role, action, resource);
         }
+        permissionManager.flush();
     }
 
     private void propagateGrantToSubjects(Subject authorizer, Role root, Action action, Resource resource) {
@@ -164,11 +185,19 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void revoke(Subject authorizer, Role role, Action action, Resource resource) throws PermissionException, PermissionActionException {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        checkParameters(role, action, resource);
         revoke(authorizer, role, action, resource, false);
     }
 
     @Override
     public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        checkParameters(role, action, resource);
         if (!isGranted(authorizer, getRevokeAction(), resourceFactory.createResource(role))) {
             throw new PermissionException(authorizer + " is not allowed to " + action + " to " + resource);
         }
@@ -190,6 +219,7 @@ public class PermissionServiceImpl implements PermissionService {
         if (propagateToUsers) {
             propagateRevokeToSubjects(authorizer, role, action, resource);
         }
+        permissionManager.flush();
     }
 
     private void propagateRevokeToSubjects(Subject authorizer, Role root, Action action, Resource resource) {

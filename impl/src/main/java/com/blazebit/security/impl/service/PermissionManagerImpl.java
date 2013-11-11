@@ -42,16 +42,12 @@ public class PermissionManagerImpl implements PermissionManager {
     @Override
     public <P extends Permission> P save(P permission) {
         entityManager.persist(permission);
-        // TODO: Performance?
-        entityManager.flush();
         return permission;
     }
 
     @Override
     public void remove(Permission permission) {
         entityManager.remove(permission);
-        // TODO: Performance?
-        entityManager.flush();
     }
 
     @Override
@@ -64,6 +60,9 @@ public class PermissionManagerImpl implements PermissionManager {
     @SuppressWarnings("unchecked")
     @Override
     public List<Permission> getPermissions(Subject subject) {
+        if (subject == null) {
+            throw new IllegalArgumentException("Subject cannot be null");
+        }
         return entityManager
             .createQuery("SELECT permission FROM " + SubjectPermission.class.getName()
                              + " permission WHERE permission.id.subject = :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
@@ -74,6 +73,9 @@ public class PermissionManagerImpl implements PermissionManager {
     @SuppressWarnings("unchecked")
     @Override
     public List<Permission> getPermissions(Role role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
         return entityManager
             .createQuery("SELECT permission FROM " + RolePermission.class.getName()
                              + " permission WHERE permission.id.subject= :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
@@ -83,10 +85,19 @@ public class PermissionManagerImpl implements PermissionManager {
 
     @Override
     public void removeAllPermissions(Subject subject) {
+        if (subject == null) {
+            throw new IllegalArgumentException("Subject cannot be null");
+        }
         entityManager
             .createQuery("DELETE FROM " + SubjectPermission.class.getName() + " permission WHERE permission.id.subject=:subject")
             .setParameter("subject", subject)
             .executeUpdate();
+
+    }
+
+    @Override
+    public void flush() {
+        entityManager.flush();
 
     }
 

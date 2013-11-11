@@ -187,7 +187,7 @@ public class EntityObjectField extends EntityField {
         l.add(new EntityField(entity));
 
         if (!isEmptyField()) {
-            l.add(new EntityObjectField(entity, entityId));
+            l.add(getParent());
             l.add(new EntityField(entity, field));
         }
 
@@ -196,7 +196,13 @@ public class EntityObjectField extends EntityField {
 
     @Override
     public boolean isApplicable(Action action) {
-        return !action.implies(new EntityAction(ActionConstants.CREATE));
+        if (!isEmptyField()) {
+            return !action.implies(new EntityAction(ActionConstants.CREATE));
+        } else {
+            return !action.implies(new EntityAction(ActionConstants.CREATE)) && !action.implies(new EntityAction(ActionConstants.ADD))
+                && !action.implies(new EntityAction(ActionConstants.REMOVE));
+        }
+
     }
 
     // TODO: Check if this is necessary

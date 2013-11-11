@@ -21,7 +21,6 @@ import com.blazebit.security.RolePermission;
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "User group permission", module = "Core")
 public class UserGroupPermission extends AbstractPermission<UserGroup, UserGroupPermissionId> implements RolePermission {
 
     private static final long serialVersionUID = 1L;
