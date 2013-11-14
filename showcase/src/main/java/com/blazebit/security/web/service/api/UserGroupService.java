@@ -31,4 +31,6 @@ public interface UserGroupService {
 
     public UserGroup loadUserGroup(UserGroup userGroup);
 
+    public List<UserGroup> getAllGroups(Company company);
+
 }

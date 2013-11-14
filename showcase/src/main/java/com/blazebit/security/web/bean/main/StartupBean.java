@@ -23,11 +23,7 @@ import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserDataPermission;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.model.UserGroupDataPermission;
-import com.blazebit.security.impl.model.UserGroupPermission;
-import com.blazebit.security.impl.model.UserPermission;
 import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.Comment;
@@ -35,7 +31,6 @@ import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.web.service.api.ActionUtils;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.api.UserGroupService;
@@ -65,8 +60,6 @@ public class StartupBean {
 
     @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
-    @Inject
-    private ActionUtils actionUtils;
     @Inject
     private ActionFactory actionFactory;
     @Inject
@@ -204,25 +197,23 @@ public class StartupBean {
             permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Party.class)));
             permissionManager.save(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Party.class)));
             permissionManager.save(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Party.class)));
-            
+
             permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Carrier.class)));
-            
+
             permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource(Contact.class)));
             permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Contact.class)));
             permissionManager.save(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(Contact.class)));
             permissionManager.save(permissionFactory.create(group, readAction, entityFieldFactory.createResource(Contact.class)));
-            
+
             permissionManager.save(permissionFactory.create(group, addAction, entityFieldFactory.createResource(Carrier.class, "contacts")));
             permissionManager.save(permissionFactory.create(group, removeAction, entityFieldFactory.createResource(Carrier.class, "contacts")));
-            
+
             group = groups.get(13);
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(User.class)));
-
-            permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource(UserPermission.class)));
-            permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
+            permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(UserGroup.class)));
 
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(Party.class)));
@@ -232,10 +223,8 @@ public class StartupBean {
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
 
             group = groups.get(14);
-            permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(User.class)));
-
-            permissionManager.save(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(UserPermission.class)));
-            permissionManager.save(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(UserDataPermission.class)));
+            permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(User.class)));
+            permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(UserGroup.class)));
 
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Party.class)));
@@ -243,7 +232,7 @@ public class StartupBean {
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Document.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Email.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));
-
+            permissionManager.flush();
         }
         ChangeInterceptor.activate();
     }
@@ -271,47 +260,34 @@ public class StartupBean {
         ret.add(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroup.class)));
         ret.add(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroup.class)));
         
+        ret.add(permissionFactory.create(admin, updateAction, entityFieldFactory.createResource(Company.class)));
+
         ret.add(permissionFactory.create(admin, addAction, entityFieldFactory.createResource(UserGroup.class, "users")));
         ret.add(permissionFactory.create(admin, removeAction, entityFieldFactory.createResource(UserGroup.class, "users")));
-        ret.add(permissionFactory.create(admin, addAction, entityFieldFactory.createResource(User.class,"userGroups")));
-        ret.add(permissionFactory.create(admin, removeAction, entityFieldFactory.createResource(User.class,"userGroups")));
-
-        ret.add(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserPermission.class)));
-        ret.add(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        ret.add(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        ret.add(permissionFactory.create(admin, createAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
-
-        ret.add(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserPermission.class)));
-        ret.add(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        ret.add(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        ret.add(permissionFactory.create(admin, deleteAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
-
-        ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(UserPermission.class)));
-        ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
-
-        ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(UserPermission.class)));
-        ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(UserDataPermission.class)));
-        ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(UserGroupPermission.class)));
-        ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(UserGroupDataPermission.class)));
+        ret.add(permissionFactory.create(admin, addAction, entityFieldFactory.createResource(User.class, "userGroups")));
+        ret.add(permissionFactory.create(admin, removeAction, entityFieldFactory.createResource(User.class, "userGroups")));
 
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
+        ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource("Carrier_Party")));
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Party.class)));
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Contact.class)));
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Document.class)));
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
         ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Comment.class)));
+        ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Company.class)));
 
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
+        //TODO safer?
+        ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource("Carrier_Party")));
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Contact.class)));
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Document.class)));
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Email.class)));
         ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Comment.class)));
-        
+        ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Company.class)));
+
         ret.add(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Carrier.class)));
         ret.add(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Party.class)));
         ret.add(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Contact.class)));
@@ -319,21 +295,6 @@ public class StartupBean {
         ret.add(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Document.class)));
         ret.add(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Email.class)));
         ret.add(permissionFactory.create(admin, readAction, entityFieldFactory.createResource(Comment.class)));
-
-        // ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(grantAction)));
-        // ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(revokeAction)));
-        // ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(grantAction)));
-        // ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(revokeAction)));
-        //
-        // ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(deleteAction)));
-        // ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(createAction)));
-        // ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(updateAction)));
-        // ret.add(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(readAction)));
-        //
-        // ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(deleteAction)));
-        // ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(createAction)));
-        // ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(updateAction)));
-        // ret.add(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(readAction)));
 
         return ret;
     }

@@ -47,7 +47,7 @@ public class PermissionManagerImpl implements PermissionManager {
 
     @Override
     public void remove(Permission permission) {
-        entityManager.remove(permission);
+        entityManager.remove(entityManager.merge(permission));
     }
 
     @Override

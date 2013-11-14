@@ -51,12 +51,9 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
     private PermissionManager permissionManager;
     private List<User> users = new ArrayList<User>();
     private User selectedUser;
-    private List<UserGroupModel> userGroups = new ArrayList<UserGroupModel>();
     private TreeNode permissionRoot;
     private TreeNode groupRoot;
     private User newUser = new User();
-
-    // private String newUserName = "new_user";
 
     // redirects to start page
     public void backToIndex() throws IOException {
@@ -84,35 +81,10 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         List<Permission> permissions = permissionManager.getPermissions(selectedUser);
 
         this.permissionRoot = new DefaultTreeNode("root", null);
-        getPermissionTree(permissions, permissionRoot);
+        permissionRoot = getPermissionTree(permissions);
 
         List<UserGroup> groups = userGroupService.getGroupsForUser(selectedUser);
-        initGroupList(groups);
         this.groupRoot = buildGroupTree(groups);
-    }
-
-    private void initGroupList(List<UserGroup> userGroups) {
-        this.userGroups.clear();
-        for (UserGroup userGroup : userGroups) {
-            this.userGroups.add(new UserGroupModel(userGroup, false, false));
-        }
-    }
-
-    private DefaultTreeNode buildGroupTree(List<UserGroup> userGroups) {
-        DefaultTreeNode root = new DefaultTreeNode("root", null);
-        List<UserGroup> parentGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
-        for (UserGroup parent : parentGroups) {
-            createGroupNode(parent, userGroups, root);
-        }
-        return root;
-    }
-
-    private void createGroupNode(UserGroup group, List<UserGroup> allowedGroups, TreeNode node) {
-        DefaultTreeNode childNode = new DefaultTreeNode(new UserGroupModel(group, allowedGroups.contains(group), false), node);
-        childNode.setExpanded(true);
-        for (UserGroup ug : userGroupService.getGroupsForGroup(group)) {
-            createGroupNode(ug, allowedGroups, childNode);
-        }
     }
 
     // saves new user
@@ -126,7 +98,6 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         if (user.equals(getSelectedUser())) {
             userSession.setUser(null);
         }
-
     }
 
     public void deleteUser(User user) {

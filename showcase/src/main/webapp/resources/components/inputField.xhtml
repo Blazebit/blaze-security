@@ -17,7 +17,7 @@
 		rendered="#{securityBaseBean.isAuthorizedResource('GRANT', cc.attrs.selectedModel.entity, cc.attrs.fieldName) or securityBaseBean.isAuthorizedResource('REVOKE', cc.attrs.selectedModel.entity, cc.attrs.fieldName)}" />
 	<h:outputLabel value="#{cc.attrs.fieldLabel}" />
 	<h:inputText value="#{cc.attrs.fieldValue}"
-		rendered="#{securityBaseBean.isAuthorizedResource('UPDATE', cc.attrs.selectedModel.entity, cc.attrs.fieldName)}" />
+		rendered="#{not empty cc.attrs.selectedModel.entity.id ? securityBaseBean.isAuthorizedResource('UPDATE', cc.attrs.selectedModel.entity, cc.attrs.fieldName) : securityBaseBean.isAuthorized('CREATE', cc.attrs.selectedModel.entity.class.name)}" />
 	<h:outputText value="    #{cc.attrs.fieldValue}" style="padding-left:10px"
 		rendered="#{securityBaseBean.isAuthorizedResource('READ', cc.attrs.selectedModel.entity, cc.attrs.fieldName) and !securityBaseBean.isAuthorizedResource('UPDATE', cc.attrs.selectedModel.entity, cc.attrs.fieldName)}" />
 </cc:implementation>

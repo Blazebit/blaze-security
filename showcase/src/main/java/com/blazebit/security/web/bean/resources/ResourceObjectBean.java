@@ -1,5 +1,6 @@
 package com.blazebit.security.web.bean.resources;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,17 +28,19 @@ import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
-import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
+import com.blazebit.security.web.bean.PermissionTreeHandlingBaseBean;
+import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.util.Constants;
+import com.blazebit.security.web.util.FieldUtils;
 
 @Named
 @ViewScoped
 @Stateless
-public class ResourceObjectBean extends PermissionHandlingBaseBean {
+public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
     @Inject
     private PermissionDataAccess permissionDataAccess;
@@ -47,7 +50,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
     private IdHolder selectedSubject;
     private List<RowModel> selectedObjects = new ArrayList<RowModel>();
-    private List<String> selectedFields = new ArrayList<String>();
+    private List<FieldModel> selectedFields = new ArrayList<FieldModel>();
     private List<EntityAction> selectedActions = new ArrayList<EntityAction>();
 
     private TreeNode root;
@@ -62,7 +65,16 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
     private Set<Permission> notRevokable = new HashSet<Permission>();
     private Set<Permission> notGrantable = new HashSet<Permission>();
 
+    private String action;
+
+    public String getAction() {
+        return action;
+    }
+
     public void init() {
+        if (this.action == null) {
+            action = "grant";
+        }
         root = new DefaultTreeNode();
         initialPermissions = new HashSet<Permission>();
         for (RowModel selectedObject : selectedObjects) {
@@ -76,21 +88,44 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
                 actionNode.setExpanded(true);
                 // fields
                 if (!selectedFields.isEmpty()) {
-                    for (String field : selectedFields) {
-                        EntityObjectField entityObjectFieldResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), field,
+                    // selectedFields
+                    List<Field> fields = FieldUtils.getPrimitiveFields(selectedObject.getEntity().getClass());
+                    for (Field field : fields) {
+                        EntityObjectField entityObjectFieldResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), field.getName(),
                                                                                                                             selectedObject.getEntity().getId());
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(field, ResourceType.FIELD, entityObjectFieldResource), actionNode);
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(field.getName(), ResourceType.FIELD, entityObjectFieldResource), actionNode);
 
                         Permission permission = permissionFactory.create(action, entityObjectFieldResource);
                         initialPermissions.add(permission);
                         if (contains(getCurrentPermissions(), permission)) {
                             fieldNode.setSelected(true);
+                            // if revoke->mark it red
+                            if (this.action.equals("revoke")) {
+                                if (selectedFields.contains(new FieldModel(field.getName()))) {
+                                    fieldNode.setSelected(false);
+                                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.REMOVED);
+                                }
+                            }
+                        } else {
+                            // new field
+                            if (selectedFields.contains(new FieldModel(field.getName()))) {
+                                fieldNode.setSelected(true);
+                                ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.NEW);
+                            }
                         }
                         // check for parent permission (only in case of fields)
                         Permission parentPermission = permissionFactory.create(action, entityObjectFieldResource.getParent());
                         if (contains(getCurrentPermissions(), parentPermission)) {
                             fieldNode.setSelected(true);
+
+                            if (this.action.equals("revoke")) {
+                                if (selectedFields.contains(new FieldModel(field.getName()))) {
+                                    fieldNode.setSelected(false);
+                                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.REMOVED);
+                                }
+                            }
                         }
+
                     }
                 } else {
                     // no fields, only action
@@ -98,17 +133,104 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
                     initialPermissions.add(permission);
                     if (contains(getCurrentPermissions(), permission)) {
                         actionNode.setSelected(true);
+                        if (this.action.equals("revoke")) {
+                            if (selectedActions.contains(action)) {
+                                actionNode.setSelected(false);
+                                ((TreeNodeModel) actionNode.getData()).setMarking(Marking.REMOVED);
+                            }
+                        }
+                    } else {
+                        if (this.action.equals("grant")) {
+                            if (selectedActions.contains(action)) {
+                                actionNode.setSelected(true);
+                                ((TreeNodeModel) actionNode.getData()).setMarking(Marking.NEW);
+                            }
+                        }
                     }
                 }
+
                 selectedNodes = ArrayUtils.addAll(selectedNodes, propagateSelectionUpwards(actionNode));
             }
-            selectedNodes = ArrayUtils.addAll(selectedNodes, propagateSelectionUpwards(entityNode));
+
+            for (EntityAction action : selectedCollectionActions) {
+                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(action.getActionName(), ResourceType.ACTION, action), entityNode);
+                actionNode.setExpanded(true);
+                // fields
+                if (!selectedFields.isEmpty()) {
+                    List<Field> fields = FieldUtils.getCollectionFields(selectedObject.getEntity().getClass());
+                    for (Field field : fields) {
+                        EntityObjectField entityObjectFieldResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), field.getName(),
+                                                                                                                            selectedObject.getEntity().getId());
+                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(field.getName(), ResourceType.FIELD, entityObjectFieldResource), actionNode);
+
+                        Permission permission = permissionFactory.create(action, entityObjectFieldResource);
+                        initialPermissions.add(permission);
+                        // current permission->select
+                        if (contains(getCurrentPermissions(), permission)) {
+                            fieldNode.setSelected(true);
+                            // if revoke->mark it red
+                            if (action.equals("revoke")) {
+                                if (selectedFields.contains(new FieldModel(field.getName()))) {
+                                    fieldNode.setSelected(false);
+                                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.REMOVED);
+                                }
+                            }
+                        } else {
+                            // new field -> select and mark it green
+                            if (this.action.equals("grant")) {
+                                if (selectedFields.contains(new FieldModel(field.getName()))) {
+                                    fieldNode.setSelected(true);
+                                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.NEW);
+                                }
+                            }
+                        }
+
+                        // check for parent permission (only in case of fields)
+                        Permission parentPermission = permissionFactory.create(action, entityObjectFieldResource.getParent());
+                        if (contains(getCurrentPermissions(), parentPermission)) {
+                            fieldNode.setSelected(true);
+
+                            if (this.action.equals("revoke")) {
+                                if (selectedFields.contains(new FieldModel(field.getName()))) {
+                                    fieldNode.setSelected(false);
+                                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.REMOVED);
+                                }
+                            }
+                        }
+
+                    }
+                } else {
+                    // no fields, only action
+                    Permission permission = permissionFactory.create(action, entityObjectResource);
+                    initialPermissions.add(permission);
+                    if (contains(getCurrentPermissions(), permission)) {
+                        actionNode.setSelected(true);
+                        if (this.action.equals("revoke")) {
+                            if (selectedActions.contains(action)) {
+                                actionNode.setSelected(false);
+                                ((TreeNodeModel) actionNode.getData()).setMarking(Marking.REMOVED);
+                            }
+                        }
+                    } else {
+                        if (this.action.equals("grant")) {
+                            if (selectedActions.contains(action)) {
+                                actionNode.setSelected(true);
+                                ((TreeNodeModel) actionNode.getData()).setMarking(Marking.NEW);
+                            }
+                        }
+                    }
+                }
+
+                propagateNodePropertiesTo(actionNode);
+            }
+
+            propagateNodePropertiesTo(entityNode);
         }
     }
 
     public void processSelectedPermissions() {
 
-        Set<Permission> selectedPermissions = getSelectedPermissions(selectedNodes, false);
+        Set<Permission> selectedPermissions = getSelectedPermissions(selectedNodes);
         Set<Permission> deSelectedPermissions = new HashSet<Permission>();
         List<Permission> currentPermissions = getCurrentPermissions();
         notRevokable.clear();
@@ -116,9 +238,10 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
             if (!contains(selectedPermissions, initialPermission)) {
                 // not selected
                 if (implies(currentPermissions, initialPermission)) {
+                    // TODO change here that if update object is granted -> and update field has to be revoked-> grant rest of
+                    // the fields, revoke field
                     if (isRevokable(initialPermission)) {
                         deSelectedPermissions.add(initialPermission);
-                        // TODO notify user that this cannot be revoked
                     } else {
                         notRevokable.add(initialPermission);
                     }
@@ -137,7 +260,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         }
 
         // build current tree
-        currentRoot = buildPermissionTree(currentPermissions, revokedPermissions, Marking.RED);
+        currentRoot = buildPermissionTree(currentPermissions, revokedPermissions, Marking.REMOVED);
         // build new tree
         List<Permission> newCurrentPermissions = new ArrayList<Permission>(currentPermissions);
         grantedPermissions = new HashSet<Permission>();
@@ -152,7 +275,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         }
         newCurrentPermissions = (List<Permission>) removeAll(newCurrentPermissions, revokedPermissions);
         newCurrentPermissions.addAll(grantedPermissions);
-        newRoot = buildPermissionTree(newCurrentPermissions, grantedPermissions, Marking.GREEN);
+        newRoot = buildPermissionTree(newCurrentPermissions, grantedPermissions, Marking.NEW);
 
     }
 
@@ -169,12 +292,21 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
     private boolean isRevokable(Permission initialPermission) {
         if (selectedSubject instanceof Subject) {
+            // TODO uncomment when it is handled that parent permission is removed and rest o fthe fields are granted
+            // EntityField parent = ((EntityField) initialPermission.getResource()).getParent();
+            // if (parent != null) {
+            // if (permissionDataAccess.findPermission((Subject) selectedSubject, initialPermission.getAction(), parent) !=
+            // null) {
+            // return true;
+            // }
+            // }
             return permissionDataAccess.isRevokable((Subject) selectedSubject, initialPermission.getAction(), initialPermission.getResource());
         } else {
             if (selectedSubject instanceof Role) {
                 return permissionDataAccess.isRevokable((Role) selectedSubject, initialPermission.getAction(), initialPermission.getResource());
             }
         }
+
         throw new IllegalArgumentException();
     }
 
@@ -220,7 +352,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
                         // set marking
                         if (permission.getResource() instanceof EntityObjectField) {
-                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.OBJECT);
                             ((TreeNodeModel) fieldNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
                         }
                         if (contains(markedPermissions, permission)) {
@@ -228,7 +360,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
                         }
                     } else {
                         if (permission.getResource() instanceof EntityObjectField) {
-                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.OBJECT);
                             ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
                         }
                         // TODO override blue marking with given marking????
@@ -261,6 +393,10 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
             grant(permission);
         }
         init();
+        selectedFields.clear();
+        selectedActions.clear();
+        selectedCollectionActions.clear();
+        selectedObjects.clear();
     }
 
     private void grant(Permission p) {
@@ -300,11 +436,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         this.selectedObjects = selectedObjects;
     }
 
-    public List<String> getSelectedFields() {
+    public List<FieldModel> getSelectedFields() {
         return selectedFields;
     }
 
-    public void setSelectedFields(List<String> selectedFields) {
+    public void setSelectedFields(List<FieldModel> selectedFields) {
         this.selectedFields = selectedFields;
     }
 
@@ -322,6 +458,10 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
     public void setSelectedActions(List<EntityAction> selectedActions) {
         this.selectedActions = selectedActions;
+    }
+
+    public void setSelectedCollectionActions(List<EntityAction> selectedCollectionActions) {
+        this.selectedCollectionActions = selectedCollectionActions;
     }
 
     public TreeNode getRoot() {
@@ -362,6 +502,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
     public List<Permission> getNotGrantable() {
         return new ArrayList<Permission>();
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+
     }
 
 }

@@ -12,20 +12,20 @@
 
 	<h:body>
 		<h:form id="form">
-			<h:panelGrid columns="3" columnClasses="top,top">
+			<h:panelGrid columns="4" columnClasses="top,top">
+				
 				<p:menu>
-					<p:submenu label="Menu">
+					<p:submenu label="Menu" >
 						<p:menuitem value="Users" url="/user/users.xhtml" />
 						<p:menuitem value="Groups" url="/group/groups.xhtml" />
 						<p:menuitem value="Resources" url="/resource/resources.xhtml" />
-						<p:menubar/>
+						<p:menubar>Demo</p:menubar>
 						<p:menuitem value="Carriers" url="/demo/carriers.xhtml" />
-						<p:menubar />
 						<p:menuitem value="Comments" url="/demo/comments.xhtml" />
-						<p:menubar />
 						<p:menuitem value="Permissions" url="/permissions.xhtml" />
 					</p:submenu>
 				</p:menu>
+				
 				<p:dataTable value="#{indexBean.companies}" var="company" style="width:20%">
 					<p:column>
 						<f:facet name="header">Name</f:facet>
@@ -33,6 +33,25 @@
 						<h:outputText value="( selected )" rendered="#{company eq userSession.selectedCompany}" />
 					</p:column>
 				</p:dataTable>
+				
+				<h:panelGroup>
+					Selected company: #{userSession.selectedCompany.name}<br/>
+					<h:outputLabel value="Field level" for="fieldLevel" />
+					<p:selectBooleanCheckbox id="fieldLevel" value="#{userSession.selectedCompany.fieldLevelEnabled}" />
+					<br />
+					<h:outputLabel value="Object level" for="objectLevel" />
+					<p:selectBooleanCheckbox id="objectLevel" value="#{userSession.selectedCompany.objectLevelEnabled}" />
+					<br />
+					<h:outputLabel value="User level" for="objectLevel" />
+					<p:selectBooleanCheckbox id="userLevel" value="#{userSession.selectedCompany.userLevelEnabled}" />
+					<br />
+					<h:outputLabel value="Group hierarchy" for="groupHierarchyLevel" />
+					<p:selectBooleanCheckbox id="groupHierarchyLevel" value="#{userSession.selectedCompany.groupHierarchyEnabled}" />
+					<br />
+					
+					<p:commandButton value="Save configuration" action="#{indexBean.saveCompanyConfiguration()}" update=":form" />
+				</h:panelGroup>
+
 
 				<h:panelGroup id="users">
 					<p:dataTable value="#{indexBean.users}" var="user" style="width:20%">
@@ -42,7 +61,7 @@
                     </p:column>
 						<p:column>
 							<p:commandLink value="login" action="#{indexBean.logInAs(user)}" rendered="#{userSession.loggedInUser ne user}"
-								process="@this" update="@form" />
+								process="@this" update=":form" />
 							<h:outputText value="logged in" rendered="#{userSession.loggedInUser eq user}" />
 						</p:column>
 						<p:column>

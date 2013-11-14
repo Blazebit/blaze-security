@@ -8,7 +8,8 @@
 		<f:event listener="#{groupUsersBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
 		<h4>Selected group: #{userSession.selectedUserGroup.name}</h4>
 
-		<p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false" widgetVar="uwiz" step="#{groupUsersBean.wizardStep}" >
+		<p:wizard id="userWizard" flowListener="#{groupUsersBean.userWizardListener}" showNavBar="false"
+			widgetVar="groupUserWizard">
 			<p:tab id="users" title="Users">
 
 				<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
@@ -25,23 +26,40 @@
 
 					<my:permissionTree id="groupPermissionsTree" bean="#{groupUsersBean}" tableId="groups_userPermissions" />
 				</h:panelGrid>
+
 				<h:panelGroup layout="block">
-					<p:commandButton value="Back" onclick="uwiz.back();" style="float:left" />
-					<p:commandButton value="Next" onclick="uwiz.next();" style="float:left" />
+					<p:commandButton value="Back" onclick="groupUserWizard.back();" style="float:left" />
+					<p:commandButton value="Next" onclick="groupUserWizard.next();" style="float:left" />
 				</h:panelGroup>
+
 			</p:tab>
 
 			<p:tab id="groupPermissions" title="Permissions">
 
-				<p:tree value="#{groupUsersBean.permissionRoot}" var="permissionModel" selectionMode="checkbox">
-					<p:treeNode>
-						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" />
-					</p:treeNode>
-				</p:tree>
+				<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
+					<p:tree value="#{groupUsersBean.currentPermissionRoot}" var="permissionModel" id="currentUserPermissionTree"
+						selectionMode="checkbox">
+						<p:treeNode>
+							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" />
+						</p:treeNode>
+					</p:tree>
+
+					<p:tree value="#{groupUsersBean.newPermissionRoot}" var="permissionModel" selectionMode="checkbox"
+						selection="#{groupUsersBean.selectedUserNodes}">
+						<p:ajax event="select" update=":form:tab:currentUserPermissionTree"
+							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
+						<p:ajax event="unselect" update=":form:tab:currentUserPermissionTree"
+							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
+						<p:treeNode>
+							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" />
+						</p:treeNode>
+					</p:tree>
+				</h:panelGrid>
+
 				<h:panelGroup layout="block">
-					<p:commandButton value="Back" onclick="uwiz.back();" style="float:left" />
-					<p:commandButton value="Confirm" style="float:left" action="#{groupUsersBean.confirm}" process="@this"
-						oncomplete="uwiz.loadStep (uwiz.cfg.steps [0], true)" />
+					<p:commandButton value="Back" onclick="groupUserWizard.back();" style="float:left" />
+					<p:commandButton value="Confirm" style="float:left" action="#{groupUsersBean.confirmPermissions}"
+						oncomplete="groupUserWizard.loadStep (groupUserWizard.cfg.steps [0], true)" />
 				</h:panelGroup>
 			</p:tab>
 

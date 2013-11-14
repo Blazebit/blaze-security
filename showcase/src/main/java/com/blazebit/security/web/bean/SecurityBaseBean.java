@@ -52,6 +52,7 @@ public class SecurityBaseBean {
 
     protected List<Object> subjects = new ArrayList<Object>();
     protected List<EntityAction> selectedActions = new ArrayList<EntityAction>();
+    protected List<EntityAction> selectedCollectionActions = new ArrayList<EntityAction>();
     protected IdHolder selectedSubject;
 
     @Inject
@@ -101,9 +102,23 @@ public class SecurityBaseBean {
      */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject) {
         switch (actionConstant) {
-        // if action is to read or update at least one field has to be readable or updatable
-            case UPDATE:
             case READ:
+                if (isGranted(ActionConstants.READ, entityFieldFactory.createResource(entityObject.getClass(), ((IdHolder) entityObject).getId()))) {
+                    return true;
+                } else {
+                    List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
+                    boolean foundOneUpdateableField = false;
+                    for (Field field : primitives) {
+                        if (isAuthorizedResource(ActionConstants.READ, entityObject, field.getName())) {
+                            foundOneUpdateableField = true;
+                        }
+                    }
+                    if (foundOneUpdateableField) {
+                        return true;
+                    }
+                }
+                // if action is to read or update at least one field has to be readable or updatable
+            case UPDATE:
                 List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
                 boolean foundOneUpdateableField = false;
                 for (Field field : primitives) {
@@ -114,6 +129,13 @@ public class SecurityBaseBean {
                 if (foundOneUpdateableField) {
                     return true;
                 }
+                break;
+            case ADD:
+            case REMOVE:
+                if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
+                    isAuthorizedResource(ActionConstants.UPDATE, entityObject);
+                }
+
         }
 
         if (entityObject != null && entityObject instanceof IdHolder) {
@@ -136,35 +158,11 @@ public class SecurityBaseBean {
             return false;
         }
 
-        if (!isGranted(ActionConstants.CREATE, entityFieldFactory.createResource(UserPermission.class))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.DELETE, entityFieldFactory.createResource(UserPermission.class))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.CREATE, entityFieldFactory.createResource(UserDataPermission.class))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.DELETE, entityFieldFactory.createResource(UserDataPermission.class))) {
-            return false;
-        }
         return true;
     }
 
     protected boolean isAuthorizedToGrantRevoke(Role role) {
         if (!isGranted(ActionConstants.GRANT, resourceFactory.createResource(role)) && !isGranted(ActionConstants.REVOKE, resourceFactory.createResource(role))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.CREATE, entityFieldFactory.createResource(UserGroupPermission.class))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.DELETE, entityFieldFactory.createResource(UserGroupPermission.class))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.CREATE, entityFieldFactory.createResource(UserGroupDataPermission.class))) {
-            return false;
-        }
-        if (!isGranted(ActionConstants.DELETE, entityFieldFactory.createResource(UserGroupDataPermission.class))) {
             return false;
         }
         return true;
@@ -219,14 +217,31 @@ public class SecurityBaseBean {
         }
     }
 
+    public void selectCollectionAction(ValueChangeEvent event) {
+        selectedCollectionActions.clear();
+        for (String action : (String[]) event.getNewValue()) {
+            selectedCollectionActions.add((EntityAction) actionFactory.createAction(ActionConstants.valueOf(action)));
+        }
+    }
+
     public List<Action> getActions() {
         List<Action> ret = new ArrayList<Action>();
         ret.addAll(actionUtils.getActionsForEntityObject());
         return ret;
     }
 
+    public List<Action> getCollectionActions() {
+        List<Action> ret = new ArrayList<Action>();
+        ret.addAll(actionUtils.getActionsForCollectionField());
+        return ret;
+    }
+
     public List<EntityAction> getSelectedActions() {
         return selectedActions;
+    }
+
+    public List<EntityAction> getSelectedCollectionActions() {
+        return selectedCollectionActions;
     }
 
     public List<Object> getSubjects() {

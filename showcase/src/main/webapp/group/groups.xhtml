@@ -39,7 +39,7 @@
 
 			<p:tabView id="tab" rendered="#{not empty userSession.user}" style="width:100%;height:100%;" dynamic="true"
 				cache="false">
-				<c:set var="sessionGroup" value="#{userSession.selectedUserGroup}"/>
+				<c:set var="sessionGroup" value="#{userSession.selectedUserGroup}" />
 				<ui:include src="/group/groups_tab.xhtml" />
 				<ui:include src="/group/users_tab.xhtml" />
 				<ui:include src="/group/resources_tab.xhtml" />
@@ -47,7 +47,7 @@
 
 		</h:form>
 
-
+		<ui:include src="/dialogs.xhtml" />
 	</h:body>
 </f:view>
 </html>

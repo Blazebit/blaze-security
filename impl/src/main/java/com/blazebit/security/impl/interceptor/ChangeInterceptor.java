@@ -154,15 +154,20 @@ public class ChangeInterceptor extends EmptyInterceptor {
             }
             newValues.removeAll(retained);
             if (!newValues.isEmpty()) {
-                isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                             entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                if (userContext.getUser().getCompany().isFieldLevelEnabled()) {
+                    isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                                 entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                } else {
+                    isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
+                                                                 entityFieldFactory.createResource((IdHolder) entity));
+                }
             }
 
             if (!isGrantedToAdd) {
-                throw new PermissionException("Element cannot be added from entity " + entity + "'s collection " + fieldName + " by " + userContext.getUser());
+                throw new PermissionException("Element cannot be added to entity " + entity + "'s collection " + fieldName + " by " + userContext.getUser());
             } else {
                 if (!isGrantedToRemove) {
-                    throw new PermissionException("Element cannot be removed to entity " + entity + "'s collection " + fieldName + " by " + userContext.getUser());
+                    throw new PermissionException("Element cannot be removed from entity " + entity + "'s collection " + fieldName + " by " + userContext.getUser());
                 } else {
                     super.onCollectionUpdate(collection, key);
                     return;
@@ -250,8 +255,14 @@ public class ChangeInterceptor extends EmptyInterceptor {
                 Collection<?> collection = (Collection<?>) state[i];
                 if (!collection.isEmpty()) {
                     // elements have been added
-                    isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                                     entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                    if (userContext.getUser().getCompany().isFieldLevelEnabled()) {
+                        isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                                         entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                    } else {
+                        isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
+                                                                         entityFieldFactory.createResource((IdHolder) entity));
+                    }
+
                     if (!isGrantedAddEntity) {
                         throw new PermissionException("Element to Entity " + entity + "'s collection " + fieldName + " cannot be added by " + userContext.getUser());
                     }

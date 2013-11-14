@@ -5,14 +5,22 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.service.api.ActionUtils;
 
 public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
+
+    @Inject
+    ActionUtils actionUtils;
 
     /**
      * helper to mark parent nodes when child nodes are marked
@@ -76,8 +84,7 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
      * 
      * @param node
      */
-    protected TreeNode[] propagateNodePropertiesUpwards(DefaultTreeNode node) {
-        TreeNode[] selectedNodes = new TreeNode[] {};
+    protected void propagateNodePropertiesTo(DefaultTreeNode node) {
         if (node.getChildCount() > 0) {
             TreeNodeModel firstChild = ((TreeNodeModel) node.getChildren().get(0).getData());
             boolean foundDifferentMarking = false;
@@ -105,14 +112,24 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
                 nodeModel.setMarking(Marking.NONE);
             }
             if (!foundUnSelected) {
-                if (!ArrayUtils.contains(selectedNodes, node)) {
-                    selectedNodes = ArrayUtils.add(selectedNodes, node);
-                }
                 node.setSelected(true);
             }
 
+        } else {
+            // if entityNode has no children remove it
+            TreeNodeModel treeNodeModel = (TreeNodeModel) node.getData();
+            if (ResourceType.ENTITY.equals(treeNodeModel.getType()) || ResourceType.MODULE.equals(treeNodeModel.getType())) {
+                node.setParent(null);
+            } else {
+                if (ResourceType.ACTION.equals(treeNodeModel.getType())) {
+                    // if it a collection field action
+                    if (actionUtils.getActionsForCollectionField().contains((EntityAction) treeNodeModel.getTarget())) {
+                        node.setParent(null);
+                    }
+                }
+
+            }
         }
-        return selectedNodes;
     }
 
     protected List<TreeNode> sortTreeNodesByType(TreeNode[] selectedTreeNodes) {

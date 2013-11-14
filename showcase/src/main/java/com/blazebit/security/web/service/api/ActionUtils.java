@@ -27,6 +27,18 @@ public class ActionUtils {
         ret.add(actionFactory.createAction(ActionConstants.REVOKE));
         return ret;
     }
+    
+    /**
+     * list of possible actions for an entity resource
+     * 
+     * @return
+     */
+    public List<Action> getCommonActionsForEntity() {
+        List<Action> ret = new ArrayList<Action>();
+        ret.add(actionFactory.createAction(ActionConstants.UPDATE));
+        ret.add(actionFactory.createAction(ActionConstants.READ));
+        return ret;
+    }
 
     /**
      * list of possible actions for a field
@@ -36,6 +48,7 @@ public class ActionUtils {
     public List<Action> getActionsForPrimitiveField() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.UPDATE));
+        ret.add(actionFactory.createAction(ActionConstants.READ));
         return ret;
     }
     
@@ -48,7 +61,7 @@ public class ActionUtils {
     
     public List<Action> getActionsForGeneralField() {
         List<Action> ret = new ArrayList<Action>();
-        ret.add(actionFactory.createAction(ActionConstants.READ));
+        //ret.add(actionFactory.createAction(ActionConstants.READ));
         return ret;
     }
 

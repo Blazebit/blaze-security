@@ -22,7 +22,7 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
+import com.blazebit.security.web.bean.PermissionTreeHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
@@ -35,7 +35,7 @@ import com.blazebit.security.web.service.api.UserGroupService;
  */
 @ManagedBean(name = "groupBean")
 @ViewScoped
-public class GroupBean extends PermissionHandlingBaseBean implements PermissionView, Serializable {
+public class GroupBean extends PermissionTreeHandlingBaseBean implements PermissionView, Serializable {
 
     /**
      * 
@@ -91,9 +91,11 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
 
     public void saveGroup() {
         UserGroup ug = userGroupService.createUserGroup(userSession.getSelectedCompany(), newGroup.getName());
-        if (getSelectedGroup() != null) {
-            ug.setParent(getSelectedGroup());
-            userGroupService.saveGroup(ug);
+        if (userSession.getSelectedCompany().isGroupHierarchyEnabled()) {
+            if (getSelectedGroup() != null) {
+                ug.setParent(getSelectedGroup());
+                userGroupService.saveGroup(ug);
+            }
         }
 
         initUserGroups();
@@ -140,15 +142,16 @@ public class GroupBean extends PermissionHandlingBaseBean implements PermissionV
             parent = parent.getParent();
         }
         this.permissionRoot = new DefaultTreeNode("root", null);
-        DefaultTreeNode groupNode = permissionRoot;
+        TreeNode groupNode = permissionRoot;
         for (UserGroup group : parents) {
             groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
             List<Permission> permissions = permissionManager.getPermissions(group);
-            getPermissionTree(permissions, groupNode);
+            getPermissionTree(groupNode, permissions);
+            if (getSelectedGroup().equals(group)) {
+                ((TreeNodeModel) groupNode.getData()).setMarking(Marking.SELECTED);
+            }
         }
-        ((TreeNodeModel) groupNode.getData()).setMarking(Marking.GREEN);
-
     }
 
     public void deleteGroup(UserGroup group) {

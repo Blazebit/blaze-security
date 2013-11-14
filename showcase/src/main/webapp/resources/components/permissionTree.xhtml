@@ -5,15 +5,16 @@
 
 <cc:interface>
 	<cc:attribute name="bean" required="true" type="com.blazebit.security.web.bean.PermissionView" />
+	<cc:attribute name="label" />
 </cc:interface>
 
 <cc:implementation>
 	<h:panelGroup id="permissionPanelGroup" layout="block">
+		
 		<h4>
-			Permissions of
-			<h:outputText value="#{userSession.selectedUser.username}" rendered="#{not empty userSession.selectedUser}" />
-			<h:outputText value="#{userSession.selectedUserGroup.name}" rendered="#{not empty userSession.selectedUserGroup}" />
+			#{cc.attrs.label}
 		</h4>
+		
 		<p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission"
 			rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}">
 			<p:treeNode>

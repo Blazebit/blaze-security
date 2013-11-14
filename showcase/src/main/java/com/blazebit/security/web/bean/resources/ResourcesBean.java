@@ -9,37 +9,28 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.event.NodeUnselectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionService;
-import com.blazebit.security.impl.model.EntityAction;
-import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
-import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserModel;
 import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.service.api.UserService;
-import com.blazebit.security.web.util.Constants;
 
 /**
  * 
@@ -49,9 +40,6 @@ import com.blazebit.security.web.util.Constants;
 @ManagedBean(name = "resourcesBean")
 public class ResourcesBean extends ResourceHandlingBaseBean implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     @Inject
@@ -60,49 +48,57 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     @Inject
     private UserService userService;
 
-    @Inject
-    private UserSession userSession;
-
-    @Inject
-    private PermissionService permissionService;
-
     private TreeNode resourceRoot;
-    private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
+    private TreeNode[] selectedResourceNodes = new TreeNode[] {};
     private TreeNode[] selectedUserPermissionNodes = new TreeNode[] {};
+    private TreeNode[] selectedGroupPermissionNodes = new TreeNode[] {};
 
     private List<UserModel> userList = new ArrayList<UserModel>();
 
     private TreeNode currentUserRoot;
     private TreeNode newUserRoot;
+
     private TreeNode currentGroupRoot;
     private TreeNode newGroupRoot;
+    // selected permissions after the selected resources
+    private Set<Permission> selectedResourcePermissions = new HashSet<Permission>();
 
-    private Set<Permission> selectedPermissions = new HashSet<Permission>();
     private DefaultTreeNode groupRoot;
     private TreeNode[] selectedGroupNodes;
 
     private Integer activeTabIndex = 0;
 
     public void init() {
-        resourceRoot = getResourceTree();
+        try {
+            resourceRoot = getResourceTree();
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error in resource name provider!");
+        }
     }
 
     public String resourceWizardListener(FlowEvent event) {
         if (event.getOldStep().equals("resources")) {
-            processSelectedPermissions();
+            processSelectedResources();
         } else {
-            if (event.getOldStep().equals("permissions")) {
+            if (event.getOldStep().equals("subject")) {
                 if (event.getNewStep().equals("resources")) {
                     return "resources";
                 }
                 if (Integer.valueOf(0).equals(activeTabIndex)) {
-                    processPermissionsForUsers();
-
-                    return "userPermissions";
+                    if (processResourcesForUsers()) {
+                        return "userPermissions";
+                    } else {
+                        // if there is no selected user stay
+                        return "subject";
+                    }
                 } else {
                     if (Integer.valueOf(1).equals(activeTabIndex)) {
-                        processPermissionsForGroups();
-                        return "groupPermissions";
+                        if (processResourcesForGroups()) {
+                            return "groupPermissions";
+                        } else {
+                            // if there is no selected group stay
+                            return "subject";
+                        }
                     }
                 }
             } else {
@@ -111,7 +107,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                     // return "resources";
                     // }
                     if (event.getNewStep().equals("")) {
-                        return "permissions";
+                        return "subject";
                     }
                     confirmGroupPermissions();
                     return "groupUserPermissions";
@@ -121,194 +117,24 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         return event.getNewStep();
     }
 
-    private void processPermissionsForGroups() {
-        for (TreeNode node : selectedGroupNodes) {
-            createGroupNode((UserGroup) node.getData());
-        }
-    }
-
-    private void createGroupNode(UserGroup userGroup) {
-        TreeNodeModel groupNodeModel = new TreeNodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
-        currentGroupRoot = new DefaultTreeNode();
-        DefaultTreeNode currentGroupNode = new DefaultTreeNode(groupNodeModel, currentGroupRoot);
-        currentGroupNode.setExpanded(true);
-        newGroupRoot = new DefaultTreeNode();
-        DefaultTreeNode newGroupNode = new DefaultTreeNode(groupNodeModel, newGroupRoot);
-        newGroupNode.setExpanded(true);
-        createCurrentPermissionNode(currentGroupNode, selectedPermissions);
-        createNewPermissionNode(newGroupNode);
-    }
-
-    private void processPermissionsForUsers() {
-        currentUserRoot = new DefaultTreeNode();
-        newUserRoot = new DefaultTreeNode();
-        for (UserModel userModel : userList) {
-            if (userModel.isSelected()) {
-                createUserNode(userModel.getUser());
-            }
-        }
-    }
-
-    private void createUserNode(User user) {
-        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
-        DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
-        currentUserNode.setExpanded(true);
-        DefaultTreeNode newUserNode = new DefaultTreeNode(userNodeModel, newUserRoot);
-        newUserNode.setSelectable(false);
-        newUserNode.setExpanded(true);
-        createCurrentPermissionNode(currentUserNode, selectedPermissions);
-        createNewPermissionNode(newUserNode);
-    }
-
-    private void createNewPermissionNode(DefaultTreeNode userNode) {
-        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
-        List<Permission> permissions = null;
-        Set<Permission> revokablePermissions = null;
-        if (nodeModel.getTarget() instanceof User) {
-            User user = (User) nodeModel.getTarget();
-            permissions = permissionManager.getPermissions(user);
-            revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
-        } else {
-            if (nodeModel.getTarget() instanceof UserGroup) {
-                UserGroup group = (UserGroup) nodeModel.getTarget();
-                permissions = permissionManager.getPermissions(group);
-                revokablePermissions = getReplaceablePermissions(group, permissions, selectedPermissions);
-            }
-        }
-        permissions = (List<Permission>) removeAll(permissions, revokablePermissions);
-        Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(permissions, selectedPermissions);
-
-        for (String entity : permissionMapByEntity.keySet()) {
-
-            List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
-            EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), userNode);
-            entityNode.setExpanded(true);
-            Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
-            for (Action action : permissionMapByAction.keySet()) {
-                EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
-                actionNode.setExpanded(true);
-                List<Permission> permissionsByAction = permissionMapByAction.get(action);
-                for (Permission permission : permissionsByAction) {
-                    if (!((EntityField) permission.getResource()).isEmptyField()) {
-                        // decide marking
-                        Marking marking = Marking.NONE;
-                        if (!contains(permissions, permission) && contains(selectedPermissions, permission)) {
-                            marking = Marking.GREEN;
-                        }
-                        TreeNodeModel fieldNodeModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
-                            permission.getResource(), marking);
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
-                        // fieldNode.setSelectable(Marking.GREEN.equals(marking));
-                        // fieldNode.setSelected(Marking.GREEN.equals(marking));
-                        if (permission.getResource() instanceof EntityObjectField) {
-                            fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-                        }
-                    } else {
-                        // mark actionNode if needed
-                        Permission actionPermission = permissionFactory.create(entityAction, entityField);
-                        Marking marking = Marking.NONE;
-                        if (!contains(permissions, actionPermission) && contains(selectedPermissions, actionPermission)) {
-                            marking = Marking.GREEN;
-                        }
-                        // actionNode.setSelectable(Marking.GREEN.equals(marking));
-                        // actionNode.setSelected(Marking.GREEN.equals(marking));
-                        ((TreeNodeModel) actionNode.getData()).setMarking(marking);
-                        if (permission.getResource() instanceof EntityObjectField) {
-                            ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
-                        }
-                    }
-                }
-                selectedUserPermissionNodes = ArrayUtils.addAll(selectedUserPermissionNodes, propagateNodePropertiesUpwards(actionNode));
-            }
-            selectedUserPermissionNodes = ArrayUtils.addAll(selectedUserPermissionNodes, propagateNodePropertiesUpwards(entityNode));
-        }
-    }
-
-    private void createCurrentPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions) {
-        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
-        List<Permission> permissions = null;
-        Set<Permission> revokablePermissions = null;
-        if (nodeModel.getTarget() instanceof User) {
-            User user = (User) nodeModel.getTarget();
-            permissions = permissionManager.getPermissions(user);
-            revokablePermissions = getReplaceablePermissions(user, permissions, selectedPermissions);
-        } else {
-            if (nodeModel.getTarget() instanceof UserGroup) {
-                UserGroup group = (UserGroup) nodeModel.getTarget();
-                permissions = permissionManager.getPermissions(group);
-                revokablePermissions = getReplaceablePermissions(group, permissions, selectedPermissions);
-            }
-        }
-        Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(permissions);
-
-        for (String entity : permissionMapByEntity.keySet()) {
-
-            List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
-            EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), userNode);
-            entityNode.setExpanded(true);
-            Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
-            for (Action action : permissionMapByAction.keySet()) {
-                EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
-                actionNode.setExpanded(true);
-                List<Permission> permissionsByAction = permissionMapByAction.get(action);
-                for (Permission permission : permissionsByAction) {
-                    if (!((EntityField) permission.getResource()).isEmptyField()) {
-                        // decide marking
-                        Marking marking = contains(revokablePermissions, permission) ? Marking.RED : Marking.NONE;
-                        TreeNodeModel fieldNodeModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
-                            permission.getResource(), marking);
-                        if (permission.getResource() instanceof EntityObjectField) {
-                            fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-                            if (Marking.NONE.equals(fieldNodeModel.getMarking())) {
-                                fieldNodeModel.setMarking(Marking.BLUE);
-                            }
-                        }
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
-                    } else {
-                        // mark actionNode if needed
-                        Permission actionPermission = permissionFactory.create(entityAction, entityField);
-                        Marking marking = contains(revokablePermissions, actionPermission) ? Marking.RED : Marking.NONE;
-                        TreeNodeModel actionNodeModel = (TreeNodeModel) actionNode.getData();
-                        actionNodeModel.setMarking(marking);
-                        if (permission.getResource() instanceof EntityObjectField) {
-                            actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-                            if (Marking.NONE.equals(actionNodeModel.getMarking())) {
-                                actionNodeModel.setMarking(Marking.BLUE);
-                            }
-                        }
-                    }
-                }
-                propagateNodePropertiesUpwards(actionNode);
-            }
-            propagateNodePropertiesUpwards(entityNode);
-        }
-    }
-
     /**
      * wizard step 1
      */
-    public void processSelectedPermissions() {
-        selectedPermissions = getSelectedPermissions(selectedPermissionNodes, true);
+    public void processSelectedResources() {
+        selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
         initUsers();
         initUserGroups();
     }
 
     private void initUsers() {
         List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
-        // if (!revokeSelectedPermissions) {
         userList.clear();
         for (User user : allUsers) {
             userList.add(new UserModel(user, false));
         }
-        // }
     }
 
     private void initUserGroups() {
-        // init groups tree
         List<UserGroup> availableGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
         this.groupRoot = new DefaultTreeNode("", null);
         groupRoot.setExpanded(true);
@@ -331,45 +157,233 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         }
     }
 
-    public void confirmUserPermissions() {
+    private List<User> getSelectedUsers() {
+        List<User> ret = new ArrayList<User>();
         for (UserModel userModel : userList) {
             if (userModel.isSelected()) {
-                for (Permission permission : selectedPermissions) {
-                    if (permissionDataAccess.isGrantable(userModel.getUser(), permission.getAction(), permission.getResource())) {
-                        permissionService.grant(userSession.getUser(), userModel.getUser(), permission.getAction(), permission.getResource());
-                    }
-                }
+                ret.add(userModel.getUser());
+            }
+        }
+        return ret;
+    }
+
+    // resources for users
+    private boolean processResourcesForUsers() {
+        List<User> selectedUsers = getSelectedUsers();
+        if (selectedUsers.isEmpty()) {
+            return false;
+        }
+        createUserPermissionTrees(selectedUsers, true);
+        return true;
+    }
+
+    private void createUserPermissionTrees(List<User> selectedUsers, boolean selectable) {
+        currentUserRoot = new DefaultTreeNode();
+        newUserRoot = new DefaultTreeNode();
+        for (User user : selectedUsers) {
+            createCurrentUserNode(user, currentUserRoot);
+            createNewUserNode(user, newUserRoot, selectable);
+        }
+    }
+
+    private void createCurrentUserNode(User user, TreeNode root) {
+        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
+
+        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, root);
+        userNode.setExpanded(true);
+        userNode.setSelectable(false);
+
+        createCurrentUserPermissionNode(userNode, selectedResourcePermissions);
+
+    }
+
+    private void createCurrentUserPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions) {
+        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
+        User user = (User) nodeModel.getTarget();
+        List<Permission> userPermissions = permissionManager.getPermissions(user);
+
+        List<Set<Permission>> grant = getGrantedPermission(userPermissions, selectedPermissions);
+        Set<Permission> granted = grant.get(0);
+        super.setNotGranted(grant.get(1));
+        Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+        // current permission tree
+        if (!userPermissions.isEmpty()) {
+            getPermissionTree(userNode, userPermissions, replaced, Marking.REMOVED);
+        } else {
+            new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode).setSelectable(false);
+        }
+
+    }
+
+    private void createNewUserNode(User user, TreeNode root, boolean selectable) {
+        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
+
+        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, root);
+        userNode.setExpanded(true);
+        userNode.setSelectable(false);
+
+        createNewUserPermissionNode(userNode, selectedResourcePermissions, selectable);
+    }
+
+    private void createNewUserPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions, boolean selectable) {
+        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
+        User user = (User) nodeModel.getTarget();
+        List<Permission> userPermissions = permissionManager.getPermissions(user);
+
+        List<Set<Permission>> grant = getGrantedPermission(userPermissions, selectedPermissions);
+        Set<Permission> granted = grant.get(0);
+        super.setNotGranted(grant.get(1));
+        Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+        // modify current user permissions based on resource selection
+        List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
+        // new permission tree without the replaced but with the granted + revoked ones, marked properly
+        currentUserPermissions.removeAll(replaced);
+        currentUserPermissions.addAll(granted);
+        if (selectable) {
+            getSelectablePermissionTree(userNode, currentUserPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+        } else {
+            getPermissionTree(userNode, currentUserPermissions, granted, Marking.NEW);
+        }
+    }
+
+    public void confirmUserPermissions() {
+        for (TreeNode userNode : newUserRoot.getChildren()) {
+            User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
+            List<Permission> userPermissions = permissionManager.getPermissions(user);
+            Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+
+            for (Permission permission : replaced) {
+                permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
+            }
+            for (Permission permission : granted) {
+                permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
             }
         }
         init();
     }
 
-    public void confirmPropagatedUserPermissions() {
-        for (TreeNode userNode : newUserRoot.getChildren()) {
-            User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
-            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, false);
-            for (Permission permission : selectedPermissions) {
-                if (permissionDataAccess.isGrantable(user, permission.getAction(), permission.getResource())) {
-                    permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
-                }
-            }
+    // resources for groups
+    private boolean processResourcesForGroups() {
+        if (selectedGroupNodes.length == 0) {
+            return false;
         }
-        init();
+        currentGroupRoot = new DefaultTreeNode();
+        newGroupRoot = new DefaultTreeNode();
+
+        for (TreeNode node : selectedGroupNodes) {
+            createCurrentGroupNode(currentGroupRoot, (UserGroup) node.getData());
+            createNewGroupNode(newGroupRoot, (UserGroup) node.getData());
+        }
+        return true;
+    }
+
+    private void createCurrentGroupNode(TreeNode root, UserGroup userGroup) {
+        TreeNodeModel groupNodeModel = new TreeNodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
+
+        DefaultTreeNode currentGroupNode = new DefaultTreeNode(groupNodeModel, currentGroupRoot);
+        currentGroupNode.setExpanded(true);
+        currentGroupNode.setSelectable(false);
+
+        createCurrentGroupPermissionNode(currentGroupNode, selectedResourcePermissions);
+
+    }
+
+    private void createNewGroupNode(TreeNode root, UserGroup userGroup) {
+        TreeNodeModel groupNodeModel = new TreeNodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
+
+        DefaultTreeNode newGroupNode = new DefaultTreeNode(groupNodeModel, newGroupRoot);
+        newGroupNode.setExpanded(true);
+        newGroupNode.setSelectable(false);
+
+        createNewGroupPermissionNode(newGroupNode, selectedResourcePermissions);
+    }
+
+    private void createNewGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions) {
+        TreeNodeModel nodeModel = (TreeNodeModel) groupNode.getData();
+        UserGroup userGroup = (UserGroup) nodeModel.getTarget();
+        List<Permission> userGroupPermissions = permissionManager.getPermissions(userGroup);
+
+        List<Set<Permission>> grant = getGrantedPermission(userGroupPermissions, selectedPermissions);
+        Set<Permission> granted = grant.get(0);
+        super.setNotGranted(grant.get(1));
+        Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
+        // modify current user permissions based on resource selection
+        List<Permission> currentGroupPermissions = new ArrayList<Permission>(userGroupPermissions);
+        // new permission tree without the replaced but with the granted + revoked ones, marked properly
+        currentGroupPermissions.removeAll(replaced);
+        currentGroupPermissions.addAll(granted);
+        getSelectablePermissionTree(groupNode, currentGroupPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+    }
+
+    private void createCurrentGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions) {
+        TreeNodeModel nodeModel = (TreeNodeModel) groupNode.getData();
+        UserGroup userGroup = (UserGroup) nodeModel.getTarget();
+        List<Permission> groupPermissions = permissionManager.getPermissions(userGroup);
+
+        List<Set<Permission>> grant = getGrantedPermission(groupPermissions, selectedPermissions);
+        Set<Permission> granted = grant.get(0);
+        super.setNotGranted(grant.get(1));
+        Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
+
+        if (!groupPermissions.isEmpty()) {
+            getPermissionTree(groupNode, groupPermissions, replaced, Marking.REMOVED);
+        } else {
+            new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), groupNode).setSelectable(false);
+        }
+
+    }
+
+    public void rebuildCurrentUserPermissionTree() {
+        for (TreeNode userNode : currentUserRoot.getChildren()) {
+            User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
+            List<Permission> userPermissions = permissionManager.getPermissions(user);
+            // current selected permissions
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes);
+
+            Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+            userNode.getChildren().clear();
+            // current permission tree
+            getPermissionTree(userNode, userPermissions, replaced, Marking.REMOVED);
+        }
+    }
+
+    public void rebuildCurrentGroupPermissionTree() {
+        for (TreeNode groupNode : currentGroupRoot.getChildren()) {
+            UserGroup userGroup = (UserGroup) ((TreeNodeModel) groupNode.getData()).getTarget();
+            List<Permission> groupPermissions = permissionManager.getPermissions(userGroup);
+            // current selected permissions
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes);
+
+            Set<Permission> granted = getGrantedPermission(groupPermissions, selectedPermissions).get(0);
+            Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
+            groupNode.getChildren().clear();
+            // current permission tree
+            getPermissionTree(groupNode, groupPermissions, replaced, Marking.REMOVED);
+        }
     }
 
     public void confirmGroupPermissions() {
         Set<UserGroup> selectedGroups = new HashSet<UserGroup>();
-        for (TreeNode node : selectedGroupNodes) {
-            UserGroup userGroup = (UserGroup) node.getData();
+        for (TreeNode groupNode : newGroupRoot.getChildren()) {
+            UserGroup userGroup = (UserGroup) ((TreeNodeModel) groupNode.getData()).getTarget();
             selectedGroups.add(userGroup);
-            for (Permission permission : selectedPermissions) {
-                if (permissionDataAccess.isGrantable((UserGroup) userGroup, permission.getAction(), permission.getResource())) {
-                    permissionService.grant(userSession.getUser(), userGroup, permission.getAction(), permission.getResource());
-                }
+
+            List<Permission> groupPermissions = permissionManager.getPermissions(userGroup);
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
+
+            Set<Permission> granted = getGrantedPermission(groupPermissions, selectedPermissions).get(0);
+            Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
+
+            for (Permission permission : replaced) {
+                permissionService.revoke(userSession.getUser(), userGroup, permission.getAction(), permission.getResource());
+            }
+            for (Permission permission : granted) {
+                permissionService.grant(userSession.getUser(), userGroup, permission.getAction(), permission.getResource());
             }
         }
-        currentUserRoot = new DefaultTreeNode();
-        newUserRoot = new DefaultTreeNode();
         Set<User> users = new HashSet<User>();
         for (UserGroup group : selectedGroups) {
             collectUsers(group, users);
@@ -383,8 +397,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             }
 
         });
-        for (User user : sortedUsers) {
-            createUserNode(user);
+        createUserPermissionTrees(sortedUsers, userSession.getSelectedCompany().isUserLevelEnabled());
+        // if user level is not enabled confirm user permissions immediately
+        if (!userSession.getSelectedCompany().isUserLevelEnabled()) {
+            confirmUserPermissions();
         }
     }
 
@@ -395,7 +411,6 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         for (UserGroup child : userGroupService.getGroupsForGroup(group)) {
             collectUsers(child, users);
         }
-
     }
 
     public void userGroupTabChange() {
@@ -416,7 +431,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
                 DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
                 currentUserNode.setExpanded(true);
-                createCurrentPermissionNode(currentUserNode, getSelectedPermissions(selectedUserPermissionNodes, false));
+                createCurrentUserPermissionNode(currentUserNode, getSelectedPermissions(selectedUserPermissionNodes));
             }
         }
     }
@@ -429,7 +444,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
                 DefaultTreeNode currentUserNode = new DefaultTreeNode(userNodeModel, currentUserRoot);
                 currentUserNode.setExpanded(true);
-                createCurrentPermissionNode(currentUserNode, getSelectedPermissions(selectedUserPermissionNodes, false));
+                createCurrentGroupPermissionNode(currentUserNode, getSelectedPermissions(selectedUserPermissionNodes));
             }
         }
     }
@@ -438,12 +453,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         return resourceRoot;
     }
 
-    public TreeNode[] getSelectedPermissionNodes() {
-        return selectedPermissionNodes;
+    public TreeNode[] getSelectedResourceNodes() {
+        return selectedResourceNodes;
     }
 
-    public void setSelectedPermissionNodes(TreeNode[] selectedPermissionNodes) {
-        this.selectedPermissionNodes = selectedPermissionNodes;
+    public void setSelectedResourceNodes(TreeNode[] selectedPermissionNodes) {
+        this.selectedResourceNodes = selectedPermissionNodes;
     }
 
     public Integer getActiveTabIndex() {
@@ -492,6 +507,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     public void setSelectedUserPermissionNodes(TreeNode[] selectedUserPermissionNodes) {
         this.selectedUserPermissionNodes = selectedUserPermissionNodes;
+    }
+
+    public TreeNode[] getSelectedGroupPermissionNodes() {
+        return selectedGroupPermissionNodes;
+    }
+
+    public void setSelectedGroupPermissionNodes(TreeNode[] selectedGroupPermissionNodes) {
+        this.selectedGroupPermissionNodes = selectedGroupPermissionNodes;
     }
 
 }

@@ -19,6 +19,10 @@ public class Company implements Serializable, IdHolder {
     private static final long serialVersionUID = 1L;
     private Integer id;
     private String name;
+    private boolean fieldLevelEnabled = true;
+    private boolean objectLevelEnabled = true;
+    private boolean userLevelEnabled = true;
+    private boolean groupHierarchyEnabled = true;
 
     public Company(String name) {
         this.name = name;
@@ -45,6 +49,38 @@ public class Company implements Serializable, IdHolder {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isGroupHierarchyEnabled() {
+        return groupHierarchyEnabled;
+    }
+
+    public void setGroupHierarchyEnabled(boolean groupHierarchyEnabled) {
+        this.groupHierarchyEnabled = groupHierarchyEnabled;
+    }
+
+    public boolean isFieldLevelEnabled() {
+        return fieldLevelEnabled;
+    }
+
+    public void setFieldLevelEnabled(boolean fieldLevelEnabled) {
+        this.fieldLevelEnabled = fieldLevelEnabled;
+    }
+
+    public boolean isObjectLevelEnabled() {
+        return objectLevelEnabled;
+    }
+
+    public void setObjectLevelEnabled(boolean objectLevelEnabled) {
+        this.objectLevelEnabled = objectLevelEnabled;
+    }
+
+    public boolean isUserLevelEnabled() {
+        return userLevelEnabled;
+    }
+
+    public void setUserLevelEnabled(boolean userLevelEnabled) {
+        this.userLevelEnabled = userLevelEnabled;
     }
 
 }

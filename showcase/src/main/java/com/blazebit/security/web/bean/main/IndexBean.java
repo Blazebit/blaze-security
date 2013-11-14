@@ -14,11 +14,15 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 
+import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
+import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.service.api.UserService;
 
 /**
@@ -35,6 +39,8 @@ public class IndexBean implements Serializable {
     private static final long serialVersionUID = 1L;
     @Inject
     private UserService userService;
+    @Inject
+    private UserGroupService userGroupService;
     @Inject
     private UserSession userSession;
     @Inject
@@ -98,5 +104,49 @@ public class IndexBean implements Serializable {
     public void changeCompany(ValueChangeEvent event) {
         Company newCompany = (Company) event.getNewValue();
         setSelectedCompany(newCompany);
+    }
+
+    public void saveCompanyConfiguration() {
+        Company company = companyService.saveCompany(userSession.getSelectedCompany());
+        userSession.setSelectedCompany(company);
+        userSession.getUser().setCompany(company);
+        // TODO fix existing permissions
+        if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
+            List<User> users = userService.findUsers(userSession.getSelectedCompany());
+            for (User user : users) {
+                List<Permission> permissions = permissionManager.getPermissions(user);
+                for (Permission permission : permissions) {
+                    if (!((EntityField) permission.getResource()).isEmptyField()) {
+                        permissionManager.remove(permission);
+                    }
+                }
+            }
+            List<UserGroup> groups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
+            for (UserGroup parent : groups) {
+                removeGroupPermissions(parent);
+            }
+
+        }
+        if (!userSession.getSelectedCompany().isGroupHierarchyEnabled()) {
+            List<UserGroup> groups = userGroupService.getAllGroups(userSession.getSelectedCompany());
+            for (UserGroup group : groups) {
+                group.setParent(null);
+                userGroupService.saveGroup(group);
+            }
+
+        }
+    }
+
+    private void removeGroupPermissions(UserGroup parent) {
+        List<Permission> permissions = permissionManager.getPermissions(parent);
+        for (Permission permission : permissions) {
+            if (!((EntityField) permission.getResource()).isEmptyField()) {
+                permissionManager.remove(permission);
+            }
+        }
+        for (UserGroup child : userGroupService.getGroupsForGroup(parent)) {
+            removeGroupPermissions(child);
+        }
+
     }
 }

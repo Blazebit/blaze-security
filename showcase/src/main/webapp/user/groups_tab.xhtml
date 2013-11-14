@@ -11,14 +11,20 @@
 
 			<p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="groupWizard" showNavBar="false"
 				step="#{userGroupsBean.groupWizardStep}">
-
+				<script>
+					groupWizard.loadStep (groupWizard.cfg.steps [0], true)
+				</script>
 				<p:tab id="groups" title="Groups">
+					<p style="font-size: 0.8em">
+						Select groups to add selected user to groups<br /> Selected groups mean that the selected user is already in the
+						group.<br /> To remove the selected user from the group unselect the group.<br />
+					</p>
+
+
 					<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
-						<h:panelGroup>
-							<p style="font-size: 0.8em">
-								Select groups to add selected user to groups<br /> Selected groups mean that the selected user is already in
-								the group.<br /> To remove the selected user from the group unselect the group.<br />
-							</p>
+
+						<h:panelGroup layout="block">
+
 							<p:tree value="#{userGroupsBean.groupRoot}" propagateSelectionDown="false" propagateSelectionUp="false"
 								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group">
 								<p:treeNode type="default">
@@ -29,41 +35,46 @@
 									</p:commandLink>
 								</p:treeNode>
 							</p:tree>
+							<br />
+							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" />
 						</h:panelGroup>
+
 						<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
 					</h:panelGrid>
-
-					<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left"
-						oncomplete="permissionWarningDialog.show()" update=":dialogs" />
 				</p:tab>
 
 				<p:tab id="groupPermissions" title="Permissions">
 					<h:panelGrid columns="2" columnClasses="top, top" style="width:80%">
 						<h:panelGroup>
-					    Current permissions<br />
-							<p style="font-size: 0.8em">
-								Permissions marked with red will be revoked when granting the selected green permissions on the right side.<br />
-								Permissions marked with blue reference an object with id.
-							</p>
+					    Current permissions<p:commandButton value="" icon="ui-icon-info" oncomplete="notRevokedDialog.show()"
+								update=":dialogs" />
+							<br />
+							RED entries will be revoked after confirmation
 							<h:outputText value="No permissions available"
 								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount eq 0}" />
 							<p:tree value="#{userGroupsBean.currentPermissionTreeRoot}" var="currentPermission" id="currentPermissionTree"
-								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount ne 0}" style="width:50%;height:400px;">
+								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount ne 0}" selectionMode="checkbox">
 								<p:treeNode>
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty currentPermission.tooltip}">#{currentPermission.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
+
+							<h:panelGroup layout="block" style="height:50px">
+								<p:commandButton value="Back" onclick="groupWizard.back();" style="float:left" />
+								<p:commandButton value="Confirm" style="float:left" action="#{userGroupsBean.confirm}" process="@this"
+									update=":form:tab:groupPermissionsTree:permissionPanelGroup"
+									oncomplete="groupWizard.loadStep (groupWizard.cfg.steps [0], true)" />
+							</h:panelGroup>
 						</h:panelGroup>
 
 						<h:panelGroup>
-					    New permissions<br />
-							<p style="font-size: 0.8em">
-								Permissions marked with green will be granted.
-							</p>
-
+					    New permissions<p:commandButton value="" icon="ui-icon-info" oncomplete="notGrantedDialog.show()"
+								update=":dialogs" />
+							<br />
+						GREEN and SELECTED entries will be granted after confirmation
 							<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree"
-								selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox" style="width:50%;height:400px;">
+								selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox">
 								<p:ajax event="select" update=":form:tab:currentPermissionTree"
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
@@ -77,12 +88,7 @@
 
 					</h:panelGrid>
 
-					<h:panelGroup id="groupsPermissionsActions" layout="block" style="height:50px">
-						<p:commandButton value="Back" onclick="groupWizard.back();" style="float:left" />
-						<p:commandButton value="Confirm" style="float:left" action="#{userGroupsBean.confirm}" process="@this"
-							update=":form:tab:groupPermissionsTree:permissionPanelGroup"
-							oncomplete="groupWizard.loadStep (groupWizard.cfg.steps [0], true)" />
-					</h:panelGroup>
+
 				</p:tab>
 			</p:wizard>
 

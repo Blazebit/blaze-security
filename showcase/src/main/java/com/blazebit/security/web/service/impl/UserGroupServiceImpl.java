@@ -59,13 +59,21 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     @Override
     public List<UserGroup> getGroupsForUser(User user) {
-        User reloadedUser = entityManager.find(User.class, user.getId());
-        return new ArrayList<UserGroup>(reloadedUser.getUserGroups());
+        return entityManager
+            .createQuery("select groups from " + User.class.getCanonicalName() + " user JOIN user.userGroups groups where user.id= :userId order by groups.name", UserGroup.class)
+            .setParameter("userId", user.getId())
+            .getResultList();
     }
 
     @Override
     public List<UserGroup> getAllParentGroups(Company company) {
         return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.parent is null and ug.company.id='" + company.getId()
+                                             + "' order by ug.name", UserGroup.class).getResultList();
+    }
+    
+    @Override
+    public List<UserGroup> getAllGroups(Company company) {
+        return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.company.id='" + company.getId()
                                              + "' order by ug.name", UserGroup.class).getResultList();
     }
 

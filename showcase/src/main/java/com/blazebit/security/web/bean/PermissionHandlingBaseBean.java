@@ -3,6 +3,7 @@
  */
 package com.blazebit.security.web.bean;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,9 +15,11 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Action;
@@ -28,21 +31,25 @@ import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.ResourceFactory;
+import com.blazebit.security.Role;
+import com.blazebit.security.Subject;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.bean.model.TreeNodeModel;
-import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.ResourceNameExtension.EntityResource;
 import com.blazebit.security.web.service.api.ActionUtils;
-import com.blazebit.security.web.util.Constants;
+import com.blazebit.security.web.util.FieldUtils;
 
 /**
  * 
  * @author cuszk
  */
-public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
+@ViewScoped
+@ManagedBean(name = "permissionHandlingBaseBean")
+@Named
+public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
     @Inject
     protected PermissionFactory permissionFactory;
@@ -62,17 +69,33 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     protected PermissionService permissionService;
     @Inject
     protected ActionUtils actionUtils;
+    @Inject
+    protected ResourceNameExtension resourceNameExtension;
 
+    private List<Permission> notGranted = new ArrayList<Permission>();
+    private List<Permission> notRevoked = new ArrayList<Permission>();
+
+    /**
+     * special 'contains' method for permissions. subject check eliminated, concentrates on action and resource comparison.
+     * 
+     * @param permissions
+     * @param permission
+     * @return
+     */
     protected boolean contains(Collection<Permission> permissions, Permission permission) {
         return contains(permissions, permission, true);
     }
 
-    protected boolean contains(Collection<Permission> permissions, Permission permission, boolean differentiateObjectResources) {
-        if (differentiateObjectResources) {
-            return find(permissions, permission) != null;
-        } else {
-            return findWithoutIdDifferentiation(permissions, permission) != null;
-        }
+    /**
+     * special 'contains' method for permissions. subject check eliminated, concentrates on action and resource comparison.
+     * 
+     * @param permissions
+     * @param permission
+     * @param resourceTypeMatch
+     * @return
+     */
+    protected boolean contains(Collection<Permission> permissions, Permission permission, boolean resourceTypeMatch) {
+        return findActionAndResourceMatch(permissions, permission, resourceTypeMatch) != null;
     }
 
     protected boolean implies(Collection<Permission> permissions, Permission givenPermission) {
@@ -84,31 +107,28 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         return false;
     }
 
-    protected Permission find(Collection<Permission> permissions, Permission givenPermission) {
+    protected Permission findActionAndResourceMatch(Collection<Permission> permissions, Permission givenPermission, boolean resourceTypeMatch) {
         for (Permission permission : permissions) {
-            if (givenPermission.getAction().equals(permission.getAction()) && givenPermission.getResource().equals(permission.getResource())) {
-                return permission;
-            }
-        }
-        return null;
-    }
-
-    protected Permission findWithoutIdDifferentiation(Collection<Permission> permissions, Permission givenPermission) {
-        for (Permission permission : permissions) {
-            if (givenPermission.getAction().equals(permission.getAction())) {
-                if (givenPermission.getResource().getClass().equals(permission.getResource().getClass())) {
-                    if (givenPermission.getResource().equals(permission.getResource())) {
-                        return permission;
-                    }
-                } else {
-                    if ((permission.getResource() instanceof EntityObjectField) && !(givenPermission.getResource() instanceof EntityObjectField)) {
-                        if (((EntityField) permission.getResource()).getEntity().equals(((EntityField) givenPermission.getResource()).getEntity())
-                            && ((EntityField) permission.getResource()).getField().equals(((EntityField) givenPermission.getResource()).getField())) {
+            if (resourceTypeMatch) {
+                if (givenPermission.getAction().equals(permission.getAction()) && givenPermission.getResource().equals(permission.getResource())) {
+                    return permission;
+                }
+            } else {
+                if (givenPermission.getAction().equals(permission.getAction())) {
+                    if (givenPermission.getResource().getClass().equals(permission.getResource().getClass())) {
+                        if (givenPermission.getResource().equals(permission.getResource())) {
                             return permission;
                         }
+                    } else {
+                        if ((permission.getResource() instanceof EntityObjectField) && !(givenPermission.getResource() instanceof EntityObjectField)) {
+                            if (((EntityField) permission.getResource()).getEntity().equals(((EntityField) givenPermission.getResource()).getEntity())
+                                && ((EntityField) permission.getResource()).getField().equals(((EntityField) givenPermission.getResource()).getField())) {
+                                return permission;
+                            }
+                        }
                     }
-                }
 
+                }
             }
         }
         return null;
@@ -122,7 +142,7 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
      * @return
      */
     protected List<Permission> remove(List<Permission> permissions, Permission permission) {
-        Permission found = find(permissions, permission);
+        Permission found = findActionAndResourceMatch(permissions, permission, true);
         permissions.remove(found);
         return permissions;
     }
@@ -136,118 +156,101 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
      */
     protected Collection<Permission> removeAll(Collection<Permission> permissions, Collection<Permission> permissionsToRemove) {
         for (Permission permission : permissionsToRemove) {
-            Permission found = find(permissions, permission);
+            Permission found = findActionAndResourceMatch(permissions, permission, true);
             permissions.remove(found);
         }
         return permissions;
     }
 
-    /**
-     * 
-     * @param selectedPermissionNodes - selected tree nodes
-     * @param allFieldsListed - decides whether the permissions are selected from the resources view or from the group view. in
-     *        the resources view all the fields are listed, while at the groups only the ones from the group
-     * @return list of permissions
-     */
-    protected Set<Permission> getSelectedPermissions(TreeNode[] selectedPermissionNodes, boolean allFieldsListed) {
-        Set<Permission> ret = new HashSet<Permission>();
-        List<TreeNode> sortedSelectedNodes = sortTreeNodesByType(selectedPermissionNodes);
-        for (TreeNode permissionNode : sortedSelectedNodes) {
-            TreeNodeModel permissionNodeData = (TreeNodeModel) permissionNode.getData();
-            switch (permissionNodeData.getType()) {
-                case ENTITY:
-                    for (TreeNode actionNode : permissionNode.getChildren()) {
-                        TreeNodeModel actionNodeData = (TreeNodeModel) actionNode.getData();
-                        // if action node has no children or has all children selected -> merge into entity+action. if action is
-                        // collection field action -> keep permission with fields
-                        if (actionNode.getChildCount() == 0
-                            || (allFieldsListed && allChildrenSelected(actionNode) && !actionUtils.getActionsForCollectionField().contains(actionNodeData.getTarget()))) {
-                            ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) permissionNodeData.getTarget()));
-                        } else {
-                            for (TreeNode fieldNode : actionNode.getChildren()) {
-                                TreeNodeModel fieldNodeData = (TreeNodeModel) fieldNode.getData();
-                                ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) fieldNodeData.getTarget()));
-                            }
-                        }
-                    }
-                    break;
-                case ACTION:
-                    TreeNode entityNode = permissionNode.getParent();
-                    TreeNodeModel entityNodeModel = (TreeNodeModel) entityNode.getData();
-
-                    Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget());
-                    // if action node has no children or has all children selected -> merge into entity+action. if action is
-                    // collection field action -> keep permission with fields
-                    if (permissionNode.getChildCount() == 0
-                        || (allFieldsListed && allChildrenSelected(permissionNode) && !actionUtils.getActionsForCollectionField().contains(permissionNodeData.getTarget()))) {
-                        if (!contains(ret, actionPermission)) {
-                            ret.add(permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget()));
-                        }
-                    }
-                    break;
-                case FIELD:
-                    TreeNode actionNode = permissionNode.getParent();
-                    TreeNodeModel actionNodeData = (TreeNodeModel) actionNode.getData();
-
-                    TreeNode actionEntityNode = actionNode.getParent();
-                    TreeNodeModel actionEntityNodeModel = (TreeNodeModel) actionEntityNode.getData();
-                    Permission fieldPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) actionEntityNodeModel.getTarget());
-                    if (!contains(ret, fieldPermission)) {
-                        ret.add(permissionFactory.create((EntityAction) actionNodeData.getTarget(), ((EntityField) permissionNodeData.getTarget())));
-                    }
-                    break;
-            }
+    // TODO enough size check?
+    protected boolean allChildFieldsListed(TreeNode actionNode, String entityName) {
+        if (actionNode.getChildCount() == 0) {
+            return true;
         }
-        return ret;
-    }
-
-    private boolean allChildrenSelected(TreeNode actionNode) {
-        for (TreeNode fieldNode : actionNode.getChildren()) {
-            if (!fieldNode.isSelected()) {
-                return false;
-            }
+        List<String> fields;
+        try {
+            fields = FieldUtils.getPrimitiveFieldNames(Class.forName(resourceNameExtension.getEntityResourceByResourceName(entityName).getEntityClassName()));
+            return actionNode.getChildCount() == fields.size();
+        } catch (ClassNotFoundException e) {
         }
-        return true;
+        return false;
+
     }
 
     /**
-     * builds the simplest permission tree from the given permission list with the given root
+     * eliminates permissions that imply one another
      * 
      * @param permissions
-     * @param permissionRoot
+     * @return set of non redundant permissions
      */
-    protected void getPermissionTree(List<Permission> permissions, TreeNode permissionRoot) {
-        Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(permissions);
+    protected Set<Permission> mergePermissions(Set<Permission> permissions) {
 
-        for (String entity : permissionMapByEntity.keySet()) {
+        Set<Permission> remove = new HashSet<Permission>();
+        Set<Permission> add = new HashSet<Permission>();
 
-            List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
-            EntityField entityField = new EntityField(entity, "");
-            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), permissionRoot);
-            entityNode.setExpanded(true);
-            Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
-            for (Action action : permissionMapByAction.keySet()) {
-                EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
-                actionNode.setExpanded(true);
-                List<Permission> permissionsByAction = permissionMapByAction.get(action);
-                for (Permission permission : permissionsByAction) {
-                    if (!((EntityField) permission.getResource()).isEmptyField()) {
-                        DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
-                            permission.getResource()), actionNode);
-                        if (permission.getResource() instanceof EntityObjectField) {
-                            ((TreeNodeModel) fieldNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
-                            ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.BLUE);
+        Set<Permission> ret = new HashSet<Permission>(permissions);
+        Map<String, List<Permission>> permissionsByEntity = groupPermissionsByEntity(permissions);
+        for (String entity : permissionsByEntity.keySet()) {
+            Map<Action, List<Permission>> permissionsByAction = groupPermissionsByAction(permissionsByEntity.get(entity));
+            for (Action action : permissionsByAction.keySet()) {
+                List<Permission> entityResource = filterPermissionsByEntityField(permissionsByAction.get(action)).get(0);
+                List<Permission> entityFieldResource = filterPermissionsByEntityField(permissionsByAction.get(action)).get(1);
+                if (!entityResource.isEmpty()) {
+                    // both entity resource and some or all entity fields exist -> merge into entity resource permission
+                    remove.addAll(entityFieldResource);
+                } else {
+                    // all entity fields are listed -> merge into entity resource permission
+                    try {
+                        boolean foundMissingField = false;
+                        List<Field> fields = FieldUtils.getPrimitiveFields(Class.forName(resourceNameExtension.getEntityResourceByResourceName(entity).getEntityClassName()));
+                        for (Field field : fields) {
+                            if (!findEntityWithFieldName(entityFieldResource, field.getName())) {
+                                foundMissingField = true;
+                                break;
+                            }
                         }
-                    } else {
-                        if (permission.getResource() instanceof EntityObjectField) {
-                            ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_OBJECTS);
-                            ((TreeNodeModel) actionNode.getData()).setMarking(Marking.BLUE);
+                        if (!foundMissingField) {
+                            remove.addAll(entityFieldResource);
+                            add.add(permissionFactory.create(action, entityFieldFactory.createResource(entity)));
                         }
+                    } catch (ClassNotFoundException e) {
+                        // cannot merge permissions
                     }
+
                 }
             }
         }
+        ret.removeAll(remove);
+        ret.addAll(add);
+        return ret;
+    }
+
+    protected List<List<Permission>> filterPermissionsByEntityField(List<Permission> permissions) {
+        List<List<Permission>> ret = new ArrayList<List<Permission>>();
+        List<Permission> entityResorce = new ArrayList<Permission>();
+        List<Permission> entityFieldResorce = new ArrayList<Permission>();
+        for (Permission permission : permissions) {
+            EntityField resource = (EntityField) permission.getResource();
+            if (resource.isEmptyField()) {
+                entityResorce.add(permission);
+            } else {
+                entityFieldResorce.add(permission);
+            }
+        }
+        ret.add(entityResorce);
+        ret.add(entityFieldResorce);
+        return ret;
+    }
+
+    protected boolean findEntityWithFieldName(List<Permission> permissions, String fieldName) {
+        for (Permission permission : permissions) {
+            EntityField resource = (EntityField) permission.getResource();
+            if (fieldName.equals(resource.getField())) {
+                return true;
+            }
+
+        }
+        return false;
     }
 
     protected SortedMap<String, List<Permission>> groupPermissionsByEntity(Collection<Permission> permissions) {
@@ -320,72 +323,35 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         return ret;
     }
 
-    /**
-     * TODO created permissions dont have a subject/role now. take care when granting!
-     * 
-     * @param currentPermissions
-     * @param selectedPermissions
-     * @return
-     */
-    protected Map<String, List<Permission>> groupPermissionsByEntity(Collection<Permission> currentPermissions, Collection<Permission> selectedPermissions) {
-        Map<String, List<Permission>> currentPermissionMap = groupPermissionsByEntity(currentPermissions);
-        // selected permissions (existing + new - revoked)
-        Map<String, List<Permission>> mergedPermissionMap = groupPermissionsByEntity(new ArrayList<Permission>(selectedPermissions));
-        // merge into resource actions map
-        for (String entity : currentPermissionMap.keySet()) {
-            List<Permission> permissionGroup = new ArrayList<Permission>(currentPermissionMap.get(entity));
-            for (Permission permission : permissionGroup) {
-                List<Permission> temp = new ArrayList<Permission>();
-                if (mergedPermissionMap.containsKey(((EntityField) permission.getResource()).getEntity())) {
-                    temp = mergedPermissionMap.get(((EntityField) permission.getResource()).getEntity());
-                } else {
-                    temp = new ArrayList<Permission>();
-                }
-                if (((EntityField) permission.getResource()).isEmptyField()) {
-                    if (!contains(temp, permissionFactory.create(permission.getAction(), permission.getResource()))) {
-                        temp.add(permissionFactory.create(permission.getAction(), permission.getResource()));
-                        mergedPermissionMap.put(((EntityField) permission.getResource()).getEntity(), temp);
-                    }
-                } else {
-                    // check if entity is there
-                    if (!contains(temp, permission)
-                        && !contains(temp,
-                                     permissionFactory.create(permission.getAction(),
-                                                              (EntityField) entityFieldFactory.createResource(((EntityField) permission.getResource()).getEntity())))) {
-                        temp.add(permissionFactory.create(permission.getAction(), permission.getResource()));
-                        mergedPermissionMap.put(((EntityField) permission.getResource()).getEntity(), temp);
-                    }
-                }
-            }
-        }
-        return mergedPermissionMap;
-    }
+    // protected Set<Permission> getReplaceablePermissions(User user, List<Permission> permissions, Set<Permission>
+    // selectedPermissions) {
+    // Set<Permission> ret = new HashSet<Permission>();
+    // for (Permission permission : selectedPermissions) {
+    // Set<Permission> revokable = permissionDataAccess.getRevokablePermissionsWhenGranting(user, permission.getAction(),
+    // permission.getResource());
+    // for (Permission currentPermission : permissions) {
+    // if (contains(revokable, currentPermission)) {
+    // ret.add(currentPermission);
+    // }
+    // }
+    // }
+    // return ret;
+    // }
 
-    protected Set<Permission> getReplaceablePermissions(User user, List<Permission> permissions, Set<Permission> selectedPermissions) {
-        Set<Permission> ret = new HashSet<Permission>();
-        for (Permission permission : selectedPermissions) {
-            Set<Permission> revokable = permissionDataAccess.getRevokablePermissionsWhenGranting(user, permission.getAction(), permission.getResource());
-            for (Permission currentPermission : permissions) {
-                if (contains(revokable, currentPermission)) {
-                    ret.add(currentPermission);
-                }
-            }
-        }
-        return ret;
-    }
-
-    protected Set<Permission> getReplaceablePermissions(UserGroup group, List<Permission> permissions, Set<Permission> selectedPermissions) {
-        Set<Permission> ret = new HashSet<Permission>();
-        for (Permission permission : selectedPermissions) {
-            Set<Permission> revokable = permissionDataAccess.getRevokablePermissionsWhenGranting(group, permission.getAction(), permission.getResource());
-            for (Permission currentPermission : permissions) {
-                if (contains(revokable, currentPermission)) {
-                    ret.add(currentPermission);
-                }
-            }
-        }
-        return ret;
-    }
+    // protected Set<Permission> getReplaceablePermissions(UserGroup group, List<Permission> permissions, Set<Permission>
+    // selectedPermissions) {
+    // Set<Permission> ret = new HashSet<Permission>();
+    // for (Permission permission : selectedPermissions) {
+    // Set<Permission> revokable = permissionDataAccess.getRevokablePermissionsWhenGranting(group, permission.getAction(),
+    // permission.getResource());
+    // for (Permission currentPermission : permissions) {
+    // if (contains(revokable, currentPermission)) {
+    // ret.add(currentPermission);
+    // }
+    // }
+    // }
+    // return ret;
+    // }
 
     /**
      * separates permissions and data permissions
@@ -407,6 +373,228 @@ public abstract class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         ret.add(entities);
         ret.add(objects);
         return ret;
+    }
 
+    /**
+     * revoked permissions
+     * 
+     * @param user
+     * @param userPermissions
+     * @param selectedPermissions
+     * @return
+     */
+    protected List<Set<Permission>> getRevokedPermissions(Collection<Permission> userPermissions, Collection<Permission> selectedPermissions) {
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
+        Set<Permission> revoked = new HashSet<Permission>();
+        Set<Permission> notRevoked = new HashSet<Permission>();
+        Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
+        for (Permission currentPermission : currentPermissions) {
+            // if the existing permission cannot be found among the selected ones and user has permission to grant it -> it has
+            // been revoked
+            if (!implies(selectedPermissions, currentPermission) && isGranted(ActionConstants.GRANT, currentPermission.getResource())) {
+                if (permissionDataAccess.isRevokable(new ArrayList<Permission>(userPermissions), currentPermission.getAction(), currentPermission.getResource())) {
+                    revoked.add(currentPermission);
+                } else {
+                    notRevoked.add(currentPermission);
+                }
+
+            }
+        }
+        ret.add(revoked);
+        ret.add(notRevoked);
+        return ret;
+    }
+
+    /**
+     * replaceable permissions
+     * 
+     * @param user
+     * @param userPermissions
+     * @param selectedPermissions
+     * @return
+     */
+    protected Set<Permission> getReplacedPermissions(Collection<Permission> userPermissions, Collection<Permission> grantedPermissions) {
+        Set<Permission> replaceable = new HashSet<Permission>();
+        for (Permission grantedPermission : grantedPermissions) {
+            replaceable.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(new ArrayList<Permission>(userPermissions), grantedPermission.getAction(),
+                                                                                        grantedPermission.getResource()));
+        }
+        return replaceable;
+    }
+
+    /**
+     * replaceable permissions
+     * 
+     * @param user
+     * @param userPermissions
+     * @param selectedPermissions
+     * @return
+     */
+    protected Set<Permission> getReplacedPermissions(Role role, Collection<Permission> grantedPermissions) {
+        Set<Permission> replaceable = new HashSet<Permission>();
+        for (Permission grantedPermission : grantedPermissions) {
+            replaceable.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(role, grantedPermission.getAction(), grantedPermission.getResource()));
+        }
+        return replaceable;
+    }
+
+    /**
+     * newly granted permissions. the newly granted permissions are selected as if the revoked ones are already revoked.
+     * 
+     * @param user
+     * @param userPermissions
+     * @param selectedPermissions
+     * @return
+     */
+    protected List<Set<Permission>> getGrantedPermission(Collection<Permission> userPermissions, Collection<Permission> selectedPermissions) {
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
+        Set<Permission> granted = new HashSet<Permission>();
+        Set<Permission> notGranted = new HashSet<Permission>();
+        Set<Permission> revokedPermissions = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
+        Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
+        currentPermissions.removeAll(revokedPermissions);
+        for (Permission selectedPermission : selectedPermissions) {
+            if (!contains(currentPermissions, selectedPermission)) {
+                if (permissionDataAccess.isGrantable(new ArrayList<Permission>(currentPermissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+                    granted.add(selectedPermission);
+                } else {
+                    notGranted.add(selectedPermission);
+                }
+            }
+        }
+        ret.add(granted);
+        ret.add(notGranted);
+        return ret;
+    }
+
+    public List<Permission> getNotGranted() {
+        return this.notGranted;
+    }
+
+    public void setNotGranted(Set<Permission> notGranted) {
+        List<Permission> ret = new ArrayList<Permission>(notGranted);
+        Collections.sort(ret, new Comparator<Permission>() {
+
+            @Override
+            public int compare(Permission o1, Permission o2) {
+                return ((EntityField) o1.getResource()).getEntity().compareToIgnoreCase(((EntityField) o1.getResource()).getEntity());
+            }
+
+        });
+        this.notGranted = ret;
+
+    }
+
+    public List<Permission> getNotRevoked() {
+        return notRevoked;
+    }
+
+    public void setNotRevoked(Set<Permission> notRevoked) {
+        List<Permission> ret = new ArrayList<Permission>(notRevoked);
+        Collections.sort(ret, new Comparator<Permission>() {
+
+            @Override
+            public int compare(Permission o1, Permission o2) {
+                return ((EntityField) o1.getResource()).getEntity().compareToIgnoreCase(((EntityField) o1.getResource()).getEntity());
+            }
+
+        });
+        this.notRevoked = ret;
+    }
+
+    protected Set<Permission> getRedundantPermissions(Set<Permission> permissions) {
+        Set<Permission> redundantPermissions = new HashSet<Permission>();
+        Set<Permission> currentPermissions = new HashSet<Permission>(permissions);
+        for (Permission permission : currentPermissions) {
+            // remove current one
+            currentPermissions = new HashSet<Permission>(permissions);
+            currentPermissions.remove(permission);
+            // check if any other permission is implied by this permission
+            if (implies(currentPermissions, permission)) {
+                redundantPermissions.add(permission);
+            }
+        }
+        return redundantPermissions;
+    }
+
+    protected Set<Permission> getGrantablePermissions(Collection<Permission> currentPermissions, User user, Collection<Permission> toGrant) {
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Permission permission : toGrant) {
+            if (permissionDataAccess.isGrantable(new ArrayList<Permission>(currentPermissions), permission.getAction(), permission.getResource())) {
+                ret.add(permission);
+            }
+        }
+        return ret;
+    }
+
+    protected List<Set<Permission>> getRevokedAndGrantedPermissionsWhenRevoking(List<Permission> userPermissions, User user, Set<Permission> revokedPermissions) {
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
+        Set<Permission> revokeOK = new HashSet<Permission>();
+        Set<Permission> revoked = new HashSet<Permission>();
+        Set<Permission> granted = new HashSet<Permission>();
+        for (Permission permissionToRevoke : revokedPermissions) {
+            if (permissionDataAccess.isRevokable(user, permissionToRevoke.getAction(), permissionToRevoke.getResource())) {
+                revokeOK.addAll(permissionDataAccess.getRevokablePermissionsWhenRevoking(user, permissionToRevoke.getAction(), permissionToRevoke.getResource()));
+            } else {
+                // if entity with field needs to be revoked check for entity
+                EntityField resource = (EntityField) permissionToRevoke.getResource();
+                if (!resource.isEmptyField()) {
+                    Permission entityPermission = permissionDataAccess.findPermission(user, permissionToRevoke.getAction(), resource.getParent());
+                    if (entityPermission != null) {
+                        revoked.add(entityPermission);
+                        EntityResource entityResource = resourceNameExtension.getEntityResourceByResourceName(resource.getEntity());
+                        List<Field> primitiveFields;
+                        try {
+                            primitiveFields = FieldUtils.getPrimitiveFields(Class.forName(entityResource.getEntityClassName()));
+                            for (Field field : primitiveFields) {
+                                Permission permission = permissionFactory.create(permissionToRevoke.getAction(), resource.getChild(field.getName()));
+                                granted.add(permission);
+                            }
+                        } catch (ClassNotFoundException e) {
+                            // TODO what now?
+                        }
+                    }
+                }
+            }
+        }
+        ret.add(revokeOK);
+        ret.add(revoked);
+        ret.add(granted);
+        return ret;
+
+    }
+
+    protected Set<Permission> getPermissionsWithImpliedActionsToGrant(List<Permission> currentPermissions, Set<Permission> grantedPermissions) {
+        Set<Permission> ret = new HashSet<Permission>(grantedPermissions);
+        for (Permission permission : grantedPermissions) {
+            List<Action> impliedActions = resourceNameExtension.getImpliedActions(permission.getAction());
+            if (!impliedActions.isEmpty()) {
+                for (Action impliedAction : impliedActions) {
+                    Permission impliedPermission = permissionFactory.create(impliedAction, permission.getResource());
+                    if (!implies(currentPermissions, impliedPermission) && !implies(grantedPermissions, impliedPermission)) {
+                        ret.add(impliedPermission);
+                    }
+                }
+
+            }
+        }
+        return ret;
+    }
+
+    protected Set<Permission> getPermissionsWithImpliedActionsToRevoke(List<Permission> currentPermissions, Set<Permission> revokedPermissions) {
+        Set<Permission> ret = new HashSet<Permission>(revokedPermissions);
+        for (Permission permission : revokedPermissions) {
+            List<Action> impliedActions = resourceNameExtension.getImpliedActions(permission.getAction());
+            if (!impliedActions.isEmpty()) {
+                for (Action impliedAction : impliedActions) {
+                    Permission impliedPermission = permissionFactory.create(impliedAction, permission.getResource());
+                    if (implies(currentPermissions, impliedPermission)) {
+                        ret.add(impliedPermission);
+                    }
+                }
+
+            }
+        }
+        return ret;
     }
 }

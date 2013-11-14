@@ -35,14 +35,6 @@ import com.blazebit.security.web.service.api.RoleService;
 @Stateless
 public class RoleServiceImpl implements RoleService {
 
-    @Inject
-    private PermissionService securityService;
-    @Inject
-    private PermissionDataAccess permissionDataAccess;
-    @Inject
-    private EntityResourceFactory entityFieldFactory;
-    @Inject
-    private ActionFactory actionFactory;
     @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
 
@@ -90,7 +82,7 @@ public class RoleServiceImpl implements RoleService {
             UserGroup group = entityManager.find(UserGroup.class, userGroup.getId());
             group.getUsers().add(selectedUser);
             entityManager.merge(group);
-            // entityManager.flush();
+            entityManager.flush();
         }
 
     }

@@ -81,7 +81,7 @@
 
 				<br />
 
-				<p:commandButton value="execute" action="#{commentBean.goToPermissions()}"
+				<p:commandButton value="grant" action="#{commentBean.goToPermissions()}"
 					rendered="#{securityBaseBean.isAuthorized('GRANT', commentBean.entityClass.name) or securityBaseBean.isAuthorized('REVOKE', commentBean.entityClass.name)}" />
 			</h:panelGroup>
 

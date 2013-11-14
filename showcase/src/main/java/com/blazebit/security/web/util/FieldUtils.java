@@ -13,6 +13,15 @@ public class FieldUtils {
         return filterFields(entityClass).get(0);
     }
 
+    public static List<String> getPrimitiveFieldNames(Class<?> entityClass) {
+        List<String> ret = new ArrayList<String>();
+        List<Field> fields = filterFields(entityClass).get(0);
+        for (Field field : fields) {
+            ret.add(field.getName());
+        }
+        return ret;
+    }
+
     public static List<Field> getCollectionFields(Class<?> entityClass) {
         return filterFields(entityClass).get(1);
     }

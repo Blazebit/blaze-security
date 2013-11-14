@@ -22,10 +22,11 @@ public class TreeNodeModel {
 
     public enum Marking {
         NONE,
-        BLUE("color:blue"),
-        RED("color:red"),
-        GREEN("color:green");
-
+        OBJECT("color:blue"),
+        REMOVED("color:red"),
+        NEW("color:green"),
+        SELECTED("color:gray");
+        
         private String style;
 
         Marking() {
@@ -100,11 +101,11 @@ public class TreeNodeModel {
 
     @Override
     public String toString() {
-        return "ResourceModel [name=" + name + ", type=" + type + ", target=" + target + ", marking=" + marking + "]";
+        return "TreeNodeModel [name=" + name + ", type=" + type + ", target=" + target + ", marking=" + marking + "]";
     }
 
     public boolean isMarked() {
-        return Marking.RED.equals(this.getMarking()) || Marking.GREEN.equals(this.getMarking());
+        return Marking.REMOVED.equals(this.getMarking()) || Marking.NEW.equals(this.getMarking());
     }
 
     public String getTooltip() {
@@ -114,5 +115,50 @@ public class TreeNodeModel {
     public void setTooltip(String tooltip) {
         this.tooltip = tooltip;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((marking == null) ? 0 : marking.hashCode());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((target == null) ? 0 : target.hashCode());
+        result = prime * result + ((tooltip == null) ? 0 : tooltip.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TreeNodeModel other = (TreeNodeModel) obj;
+        if (marking != other.marking)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (target == null) {
+            if (other.target != null)
+                return false;
+        } else if (!target.equals(other.target))
+            return false;
+        if (tooltip == null) {
+            if (other.tooltip != null)
+                return false;
+        } else if (!tooltip.equals(other.tooltip))
+            return false;
+        if (type != other.type)
+            return false;
+        return true;
+    }
+    
+    
 
 }

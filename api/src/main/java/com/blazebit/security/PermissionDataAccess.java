@@ -43,6 +43,16 @@ public interface PermissionDataAccess {
 
     /**
      * 
+     * @param permissions
+     * @param action
+     * @param resource
+     * @return true if permission to be revoked for the given action and resource can be revoked ( it exists or its "subset"
+     *         exists)
+     */
+    public boolean isRevokable(List<Permission> permissions, Action action, Resource resource);
+
+    /**
+     * 
      * @param _subject
      * @param _action
      * @param _resource
@@ -58,6 +68,15 @@ public interface PermissionDataAccess {
      * @return permission to be removed when revoking given permission parameters (removing itself if found or its "subset")
      */
     public Set<Permission> getRevokablePermissionsWhenRevoking(Role role, Action action, Resource resource);
+
+    /**
+     * 
+     * @param permissions
+     * @param action
+     * @param resource
+     * @return permission to be removed when revoking given permission parameters (removing itself if found or its "subset")
+     */
+    public Set<Permission> getRevokablePermissionsWhenRevoking(List<Permission> permissions, Action action, Resource resource);
 
     /**
      * 
@@ -77,7 +96,7 @@ public interface PermissionDataAccess {
      * @return true if permission to be created from the given action and resource can be granted to the subject with the given
      *         permissions
      */
-    boolean isGrantable(List<Permission> permissions, Subject subject, Action action, Resource _resource);
+    boolean isGrantable(List<Permission> permissions, Action action, Resource _resource);
 
     /**
      * 
@@ -88,16 +107,7 @@ public interface PermissionDataAccess {
      */
     public boolean isGrantable(Role role, Action action, Resource resource);
 
-    /**
-     * 
-     * @param permissions
-     * @param role
-     * @param action
-     * @param _resource
-     * @return
-     */
-    public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource _resource);
-
+    
     /**
      * 
      * @param _subject
@@ -115,6 +125,15 @@ public interface PermissionDataAccess {
      * @return set of permissions to be revoked when granting the given action and resource to the role
      */
     public Set<Permission> getRevokablePermissionsWhenGranting(Role role, Action _action, Resource _resource);
+    
+    /**
+     * 
+     * @param permissions
+     * @param action
+     * @param resource
+     * @return set of permissions to be revoked when granting the given action and resource
+     */
+    public Set<Permission> getRevokablePermissionsWhenGranting(List<Permission> permissions, Action action, Resource resource);
 
     /**
      * 
@@ -142,16 +161,10 @@ public interface PermissionDataAccess {
      * @param resource
      * @return
      */
-    public Permission findPermission(List<Permission> permissions, Subject subject, Action action, Resource resource);
+    public Permission findPermission(List<Permission> permissions, Action action, Resource resource);
 
-    /**
-     * 
-     * @param permissions
-     * @param role
-     * @param action
-     * @param resource
-     * @return
-     */
-    public Permission findPermission(List<Permission> permissions, Role role, Action action, Resource resource);
+    
+
+    
 
 }

@@ -43,11 +43,16 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
     @Inject
     private PermissionManager permissionManager;
 
-
     @Override
     public boolean isRevokable(Subject subject, Action action, Resource resource) {
         checkParameters(subject, action, resource);
         return !getRevokablePermissionsWhenRevoking(subject, action, resource).isEmpty();
+    }
+
+    @Override
+    public boolean isRevokable(List<Permission> permissions, Action action, Resource resource) {
+        checkParameters(action, resource);
+        return !getRevokablePermissionsWhenRevoking(permissions, action, resource).isEmpty();
     }
 
     @Override
@@ -63,11 +68,28 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
         }
     }
 
+    @Override
+    public Set<Permission> getRevokablePermissionsWhenRevoking(List<Permission> permissions, Action action, Resource resource) {
+        checkParameters(action, resource);
+        // look up itself
+        Permission permission = findPermission(permissions, action, resource);
+        if (permission != null) {
+            // if exact permission found -> revoke that
+            return new HashSet<Permission>(Arrays.asList(permission));
+        } else {
+            return getReplaceablePermissions(permissions, action, resource);
+        }
+    }
+
     private Set<Permission> getReplaceablePermissions(Subject subject, Action action, Resource resource) {
+        return getReplaceablePermissions(permissionManager.getPermissions(subject), action, resource);
+    }
+
+    private Set<Permission> getReplaceablePermissions(List<Permission> permissions, Action action, Resource resource) {
         Set<Permission> ret = new HashSet<Permission>();
-        for (Permission rolePermission : permissionManager.getPermissions(subject)) {
-            if (rolePermission.getResource().isReplaceableBy(resource) && rolePermission.getAction().implies(action)) {
-                ret.add(rolePermission);
+        for (Permission permission : permissions) {
+            if (permission.getResource().isReplaceableBy(resource) && permission.getAction().implies(action)) {
+                ret.add(permission);
             }
         }
         return ret;
@@ -106,24 +128,31 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
     public boolean isGrantable(Subject subject, Action action, Resource resource) {
         checkParameters(subject, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(subject);
-        return isGrantable(permissions, subject, action, resource);
+        return isGrantable(permissions, action, resource);
     }
 
     @Override
-    public boolean isGrantable(List<Permission> permissions, Subject subject, Action action, Resource resource) {
-        checkParameters(subject, action, resource);
+    public boolean isGrantable(List<Permission> permissions, Action action, Resource resource) {
+        checkParameters(action, resource);
         if (!resource.isApplicable(action)) {
             LOG.warning("Action " + action + " cannot be applied to " + resource);
             return false;
         }
         Collection<Resource> connectedResources = resource.connectedResources();
         for (Resource connectedResource : connectedResources) {
-            if (findPermission(permissions, subject, action, connectedResource) != null) {
+            if (findPermission(permissions, action, connectedResource) != null) {
                 LOG.warning("Overriding permission already exists");
                 return false;
             }
         }
         return true;
+    }
+
+    @Override
+    public Set<Permission> getRevokablePermissionsWhenGranting(List<Permission> permissions, Action action, Resource resource) {
+        checkParameters(action, resource);
+        return getReplaceablePermissions(permissions, action, resource);
+
     }
 
     // TODO rename
@@ -135,27 +164,10 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
     }
 
     @Override
-    public boolean isGrantable(List<Permission> permissions, Role role, Action action, Resource resource) {
-        checkParameters(role, action, resource);
-        if (!resource.isApplicable(action)) {
-            LOG.warning("Action " + action + " cannot be applied to " + resource);
-            return false;
-        }
-        Collection<Resource> parents = resource.connectedResources();
-        for (Resource connectedResource : parents) {
-            if (findPermission(permissions, role, action, connectedResource) != null) {
-                LOG.warning("Overriding permission already exists");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
     public boolean isGrantable(Role role, Action action, Resource resource) {
         checkParameters(role, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(role);
-        return isGrantable(permissions, role, action, resource);
+        return isGrantable(permissions, action, resource);
 
     }
 
@@ -170,23 +182,12 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
     public Permission findPermission(Subject subject, Action action, Resource resource) {
         checkParameters(subject, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(subject);
-        return findPermission(permissions, subject, action, resource);
+        return findPermission(permissions, action, resource);
     }
 
     @Override
-    public Permission findPermission(List<Permission> permissions, Subject subject, Action action, Resource resource) {
-        checkParameters(subject, action, resource);
-        for (Permission permission : permissions) {
-            if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
-                return permission;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Permission findPermission(List<Permission> permissions, Role role, Action action, Resource resource) {
-        checkParameters(role, action, resource);
+    public Permission findPermission(List<Permission> permissions, Action action, Resource resource) {
+        checkParameters(action, resource);
         for (Permission permission : permissions) {
             if (permission.getResource().equals(resource) && permission.getAction().equals(action)) {
                 return permission;
@@ -199,6 +200,6 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
     public Permission findPermission(Role role, Action action, Resource resource) {
         checkParameters(role, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(role);
-        return findPermission(permissions, role, action, resource);
+        return findPermission(permissions, action, resource);
     }
 }
