@@ -86,7 +86,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         List<Set<Permission>> grant = getGrantedPermission(getCurrentPermissions(), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
-        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), granted);
+        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), selectedPermissions);
         // modify current user permissions based on resource selection
         List<Permission> currentUserPermissions = new ArrayList<Permission>(getCurrentPermissions());
         // current permission tree

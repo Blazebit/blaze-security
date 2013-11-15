@@ -15,11 +15,14 @@ import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 
 import com.blazebit.security.Permission;
+import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.UserGroupService;
@@ -31,7 +34,7 @@ import com.blazebit.security.web.service.api.UserService;
  */
 @ManagedBean(name = "indexBean")
 @ViewScoped
-public class IndexBean implements Serializable {
+public class IndexBean extends PermissionHandlingBaseBean implements Serializable {
 
     /**
      * 
@@ -110,13 +113,34 @@ public class IndexBean implements Serializable {
         Company company = companyService.saveCompany(userSession.getSelectedCompany());
         userSession.setSelectedCompany(company);
         userSession.getUser().setCompany(company);
-        // TODO fix existing permissions
+        // fix existing permissions
         if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
             List<User> users = userService.findUsers(userSession.getSelectedCompany());
             for (User user : users) {
                 List<Permission> permissions = permissionManager.getPermissions(user);
                 for (Permission permission : permissions) {
-                    if (!((EntityField) permission.getResource()).isEmptyField()) {
+                    EntityField entityField = (EntityField) permission.getResource();
+                    if (!entityField.isEmptyField()) {
+                        if (permissionDataAccess.isGrantable(user, permission.getAction(), entityField.getParent())) {
+                            permissionService.grant(userSession.getUser(), user, permission.getAction(), entityField.getParent());
+                        }
+                    }
+                }
+            }
+            List<UserGroup> groups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
+            for (UserGroup parent : groups) {
+                replaceGroupPermissions(parent);
+            }
+
+        }
+        // fix object level permissions
+        if (!userSession.getSelectedCompany().isObjectLevelEnabled()) {
+            List<User> users = userService.findUsers(userSession.getSelectedCompany());
+            for (User user : users) {
+                List<Permission> permissions = permissionManager.getPermissions(user);
+                for (Permission permission : permissions) {
+                    EntityField entityField = (EntityField) permission.getResource();
+                    if (entityField instanceof EntityObjectField) {
                         permissionManager.remove(permission);
                     }
                 }
@@ -127,6 +151,7 @@ public class IndexBean implements Serializable {
             }
 
         }
+        // fix group hierarchy
         if (!userSession.getSelectedCompany().isGroupHierarchyEnabled()) {
             List<UserGroup> groups = userGroupService.getAllGroups(userSession.getSelectedCompany());
             for (UserGroup group : groups) {
@@ -135,12 +160,31 @@ public class IndexBean implements Serializable {
             }
 
         }
+        // fix user level permissions
+        // TODO adjust current user permissions to the groups the user belongs to?
+    }
+
+    private void replaceGroupPermissions(UserGroup parent) {
+        List<Permission> permissions = permissionManager.getPermissions(parent);
+        for (Permission permission : permissions) {
+            EntityField entityField = (EntityField) permission.getResource();
+            if (!entityField.isEmptyField()) {
+                if (permissionDataAccess.isGrantable(parent, permission.getAction(), entityField.getParent())) {
+                    permissionService.grant(userSession.getUser(), parent, permission.getAction(), entityField.getParent());
+                }
+            }
+        }
+        for (UserGroup child : userGroupService.getGroupsForGroup(parent)) {
+            removeGroupPermissions(child);
+        }
+
     }
 
     private void removeGroupPermissions(UserGroup parent) {
         List<Permission> permissions = permissionManager.getPermissions(parent);
         for (Permission permission : permissions) {
-            if (!((EntityField) permission.getResource()).isEmptyField()) {
+            EntityField entityField = (EntityField) permission.getResource();
+            if (entityField instanceof EntityObjectField) {
                 permissionManager.remove(permission);
             }
         }

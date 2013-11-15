@@ -106,6 +106,15 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         }
         return false;
     }
+    
+    protected boolean revokes(Collection<Permission> permissions, Permission givenPermission) {
+        for (Permission permission : permissions) {
+            if (permission.getAction().equals(givenPermission.getAction()) && permission.getResource().isReplaceableBy(givenPermission.getResource())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     protected Permission findActionAndResourceMatch(Collection<Permission> permissions, Permission givenPermission, boolean resourceTypeMatch) {
         for (Permission permission : permissions) {
@@ -413,7 +422,8 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
      * @param selectedPermissions
      * @return
      */
-    protected Set<Permission> getReplacedPermissions(Collection<Permission> userPermissions, Collection<Permission> grantedPermissions) {
+    protected Set<Permission> getReplacedPermissions(Collection<Permission> userPermissions, Collection<Permission> selectedPermissions) {
+        Set<Permission> grantedPermissions = getGrantedPermission(userPermissions, selectedPermissions).get(0);
         Set<Permission> replaceable = new HashSet<Permission>();
         for (Permission grantedPermission : grantedPermissions) {
             replaceable.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(new ArrayList<Permission>(userPermissions), grantedPermission.getAction(),
@@ -454,7 +464,34 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
         currentPermissions.removeAll(revokedPermissions);
         for (Permission selectedPermission : selectedPermissions) {
-            if (!contains(currentPermissions, selectedPermission)) {
+            if (!implies(currentPermissions, selectedPermission)) {
+                if (permissionDataAccess.isGrantable(new ArrayList<Permission>(currentPermissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+                    granted.add(selectedPermission);
+                } else {
+                    notGranted.add(selectedPermission);
+                }
+            }
+        }
+        ret.add(granted);
+        ret.add(notGranted);
+        return ret;
+    }
+    
+    /**
+     * newly granted permissions. the newly granted permissions are selected as if the revoked ones are already revoked. USE THIS WHEN ONLY GRANTING WITHOUT REVOKING
+     * 
+     * @param user
+     * @param userPermissions
+     * @param selectedPermissions
+     * @return
+     */
+    protected List<Set<Permission>> getGrantablePermissions(Collection<Permission> userPermissions, Collection<Permission> selectedPermissions) {
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
+        Set<Permission> granted = new HashSet<Permission>();
+        Set<Permission> notGranted = new HashSet<Permission>();
+        Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
+        for (Permission selectedPermission : selectedPermissions) {
+            if (!implies(currentPermissions, selectedPermission)) {
                 if (permissionDataAccess.isGrantable(new ArrayList<Permission>(currentPermissions), selectedPermission.getAction(), selectedPermission.getResource())) {
                     granted.add(selectedPermission);
                 } else {
@@ -589,7 +626,8 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
                 for (Action impliedAction : impliedActions) {
                     Permission impliedPermission = permissionFactory.create(impliedAction, permission.getResource());
                     if (implies(currentPermissions, impliedPermission)) {
-                        ret.add(impliedPermission);
+                        ret.addAll(permissionDataAccess.getRevokablePermissionsWhenRevoking(currentPermissions, impliedPermission.getAction(), impliedPermission.getResource()));
+                        //ret.add(impliedPermission);
                     }
                 }
 

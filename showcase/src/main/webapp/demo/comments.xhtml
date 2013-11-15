@@ -28,7 +28,7 @@
 				Current entity: #{commentBean.entityClass.name}<br />
 				<p:selectOneMenu effect="fade" var="p" style="width:160px" filter="true" filterMatchMode="startsWith"
 					valueChangeListener="#{commentBean.selectSubject}"
-					rendered="#{commentBean.isAuthorized('GRANT', commentBean.entityClass.name) or commentBean.isAuthorized('REVOKE', commentBean.entityClass.name)}">
+					rendered="#{userSession.selectedCompany.objectLevelEnabled and (commentBean.isAuthorized('GRANT', commentBean.entityClass.name) or commentBean.isAuthorized('REVOKE', commentBean.entityClass.name))}">
 					<f:event listener="#{commentBean.initSubjects}" type="preRenderComponent"/>
 					<f:selectItem itemLabel="Select subject" itemValue="" />
 					<f:selectItems value="#{commentBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
@@ -74,15 +74,17 @@
 			<h:panelGroup id="actions">
 				<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 					panelStyle="width:220px" valueChangeListener="#{commentBean.selectAction}"
-					rendered="#{commentBean.isAuthorized('GRANT', commentBean.entityClass.name) or commentBean.isAuthorized('REVOKE', commentBean.entityClass.name)}">
-					<f:selectItems value="#{commentBean.actions}" var="action" itemLabel="#{action.actionName}"
+					rendered="#{userSession.selectedCompany.objectLevelEnabled  and (commentBean.isAuthorized('GRANT', commentBean.entityClass.name) or commentBean.isAuthorized('REVOKE', commentBean.entityClass.name))}">
+					<f:selectItems value="#{commentBean.entityActions}" var="action" itemLabel="#{action.actionName}"
 						itemValue="#{action.actionName}" />
 				</p:selectCheckboxMenu>
 
 				<br />
 
-				<p:commandButton value="grant" action="#{commentBean.goToPermissions()}"
-					rendered="#{securityBaseBean.isAuthorized('GRANT', commentBean.entityClass.name) or securityBaseBean.isAuthorized('REVOKE', commentBean.entityClass.name)}" />
+				<p:commandButton value="grant" action="#{commentBean.goToPermissions('grant')}"
+					rendered="#{userSession.selectedCompany.objectLevelEnabled and securityBaseBean.isAuthorized('GRANT', commentBean.entityClass.name)}" />
+				<p:commandButton value="revoke" action="#{commentBean.goToPermissions('revoke')}"
+					rendered="#{userSession.selectedCompany.objectLevelEnabled and securityBaseBean.isAuthorized('REVOKE', commentBean.entityClass.name)}" />
 			</h:panelGroup>
 
 		</h:form>

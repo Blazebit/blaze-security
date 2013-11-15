@@ -23,12 +23,9 @@ import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
+import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserDataPermission;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.model.UserGroupDataPermission;
-import com.blazebit.security.impl.model.UserGroupPermission;
-import com.blazebit.security.impl.model.UserPermission;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
 import com.blazebit.security.web.service.api.ActionUtils;
@@ -101,53 +98,7 @@ public class SecurityBaseBean {
      * @return
      */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject) {
-        switch (actionConstant) {
-            case READ:
-                if (isGranted(ActionConstants.READ, entityFieldFactory.createResource(entityObject.getClass(), ((IdHolder) entityObject).getId()))) {
-                    return true;
-                } else {
-                    List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
-                    boolean foundOneUpdateableField = false;
-                    for (Field field : primitives) {
-                        if (isAuthorizedResource(ActionConstants.READ, entityObject, field.getName())) {
-                            foundOneUpdateableField = true;
-                        }
-                    }
-                    if (foundOneUpdateableField) {
-                        return true;
-                    }
-                }
-                // if action is to read or update at least one field has to be readable or updatable
-            case UPDATE:
-                List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
-                boolean foundOneUpdateableField = false;
-                for (Field field : primitives) {
-                    if (isAuthorizedResource(ActionConstants.UPDATE, entityObject, field.getName())) {
-                        foundOneUpdateableField = true;
-                    }
-                }
-                if (foundOneUpdateableField) {
-                    return true;
-                }
-                break;
-            case ADD:
-            case REMOVE:
-                if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
-                    isAuthorizedResource(ActionConstants.UPDATE, entityObject);
-                }
-
-        }
-
-        if (entityObject != null && entityObject instanceof IdHolder) {
-            Integer id = null;
-            if (((IdHolder) entityObject).getId() != null) {
-                id = ((IdHolder) entityObject).getId();
-            }
-            return isGranted(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), id));
-        } else {
-            return false;
-            // throw new IllegalArgumentException("entityobject empty for " + actionConstant);
-        }
+        return isAuthorizedResource(actionConstant, entityObject, EntityField.EMPTY_FIELD);
     }
 
     @Inject
@@ -175,12 +126,68 @@ public class SecurityBaseBean {
      * @param entityObject
      * @return
      */
-    public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String field) {
+    public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String fieldName) {
+        switch (actionConstant) {
+        // object permission can only be granted if object level is enabled
+            case GRANT:
+            case REVOKE:
+                if (!userSession.getSelectedCompany().isObjectLevelEnabled() && (!(entityObject instanceof Subject) && !(entityObject instanceof Role))) {
+                    return false;
+                }
+                break;
+            case READ:
+                if (isGranted(ActionConstants.READ, entityFieldFactory.createResource(entityObject.getClass(), fieldName, ((IdHolder) entityObject).getId()))) {
+                    return true;
+                } else {
+                    if (fieldName.equals(EntityField.EMPTY_FIELD)) {
+                        List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
+                        boolean foundOneUpdateableField = false;
+                        for (Field field : primitives) {
+                            if (isAuthorizedResource(ActionConstants.READ, entityObject, field.getName())) {
+                                foundOneUpdateableField = true;
+                            }
+                        }
+                        if (foundOneUpdateableField) {
+                            return true;
+                        }
+                    }
+                }
+                break;
+            case UPDATE:
+                if (isGranted(ActionConstants.UPDATE, entityFieldFactory.createResource(entityObject.getClass(), fieldName, ((IdHolder) entityObject).getId()))) {
+                    return true;
+                } else {
+                    if (fieldName.equals(EntityField.EMPTY_FIELD)) {
+                        List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
+                        boolean foundOneUpdateableField = false;
+                        for (Field field : primitives) {
+                            if (isAuthorizedResource(ActionConstants.UPDATE, entityObject, field.getName())) {
+                                foundOneUpdateableField = true;
+                            }
+                        }
+                        if (foundOneUpdateableField) {
+                            return true;
+                        }
+                    }
+                }
+                break;
+            case ADD:
+            case REMOVE:
+                if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
+                    isAuthorizedResource(ActionConstants.UPDATE, entityObject);
+                }
+
+        }
+
         if (entityObject != null && entityObject instanceof IdHolder) {
-            return isGranted(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), field, ((IdHolder) entityObject).getId()));
+            Integer id = null;
+            if (((IdHolder) entityObject).getId() != null) {
+                id = ((IdHolder) entityObject).getId();
+            }
+            return isGranted(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), fieldName, id));
         } else {
-            // throw new IllegalArgumentException("entityobject empty for " + actionConstant + "field: " + field);
             return false;
+            // throw new IllegalArgumentException("entityobject empty for " + actionConstant);
         }
     }
 
@@ -224,12 +231,14 @@ public class SecurityBaseBean {
         }
     }
 
-    public List<Action> getActions() {
+    //to grant object permissions
+    public List<Action> getEntityActions() {
         List<Action> ret = new ArrayList<Action>();
         ret.addAll(actionUtils.getActionsForEntityObject());
         return ret;
     }
 
+    //to grant object permissions
     public List<Action> getCollectionActions() {
         List<Action> ret = new ArrayList<Action>();
         ret.addAll(actionUtils.getActionsForCollectionField());

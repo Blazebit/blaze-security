@@ -201,7 +201,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             Set<Permission> revokedWhenRevoked = revokedAndGranted.get(1);
 
             Set<Permission> granted = getGrantablePermissions(userPermissions, user, grantedPermissions);
-            Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, grantedPermissions);
             userPermissions.removeAll(replaced);
 
             Set<Permission> revoked = new HashSet<Permission>(replaced);
@@ -233,7 +233,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         currentUserPermissions.addAll(grantedWhenRevoked);
 
         Set<Permission> grantedWhenGranted = getGrantablePermissions(currentUserPermissions, user, grantedPermissions);
-        Set<Permission> revokedWhenGranted = getReplacedPermissions(currentUserPermissions, grantedWhenGranted);
+        Set<Permission> revokedWhenGranted = getReplacedPermissions(currentUserPermissions, grantedPermissions);
         currentUserPermissions.removeAll(revokedWhenGranted);
 
         currentUserPermissions.addAll(grantedWhenGranted);
@@ -278,7 +278,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             }
             Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
             Set<Permission> revoked = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
-            Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
             for (Permission permission : revoked) {
                 permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
             }
@@ -301,7 +301,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         selectedPermissions.addAll(previouslyReplaced);
 
         Set<Permission> granted = getGrantedPermission(getCurrentPermissions(), selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), granted);
+        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), selectedPermissions);
         Set<Permission> revoked = getRevokedPermissions(getCurrentPermissions(), selectedPermissions).get(0);
 
         Set<Permission> removedPermissions = new HashSet<Permission>(revoked);

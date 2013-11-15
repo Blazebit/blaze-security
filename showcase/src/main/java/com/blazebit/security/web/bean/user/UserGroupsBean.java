@@ -270,7 +270,8 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         Set<Permission> granted = getGrantedPermission(getCurrentPermissions(), selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), granted);
+        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), selectedPermissions);
+        
         for (Permission permission : replaced) {
             permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }

@@ -30,7 +30,7 @@
 				Current entity: #{carrierBean.tabEntityClass.name}<br />
 				<p:selectOneMenu effect="fade" var="p" style="width:160px" filter="true" filterMatchMode="startsWith"
 					valueChangeListener="#{carrierBean.selectSubject}"
-					rendered="#{securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name)}">
+					rendered="#{userSession.selectedCompany.objectLevelEnabled and (securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name))}">
 					<f:event listener="#{carrierBean.initSubjects}" type="preRenderComponent" />
 					<f:selectItem itemLabel="Select subject" itemValue="" />
 					<f:selectItems value="#{carrierBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
@@ -89,8 +89,8 @@
 
 						<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 							panelStyle="width:220px" valueChangeListener="#{carrierBean.selectAction}"
-							rendered="#{securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name)}">
-							<f:selectItems value="#{carrierBean.actions}" var="action" itemLabel="#{action.actionName}"
+							rendered="#{userSession.selectedCompany.objectLevelEnabled and (securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name))}">
+							<f:selectItems value="#{securityBaseBean.entityActions}" var="action" itemLabel="#{action.actionName}"
 								itemValue="#{action.actionName}" />
 						</p:selectCheckboxMenu>
 
@@ -107,7 +107,7 @@
 
 						<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 							panelStyle="width:220px" valueChangeListener="#{carrierBean.selectCollectionAction}"
-							rendered="#{securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name)}">
+							rendered="#{userSession.selectedCompany.objectLevelEnabled and (securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name))}">
 							<f:selectItems value="#{carrierBean.collectionActions}" var="action" itemLabel="#{action.actionName}"
 								itemValue="#{action.actionName}" />
 						</p:selectCheckboxMenu>
@@ -270,9 +270,9 @@
 				<br />
 
 				<p:commandButton value="grant" action="#{carrierBean.goToPermissions('grant')}"
-					rendered="#{securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name)}" />
+					rendered="#{userSession.selectedCompany.objectLevelEnabled and  securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name)}" />
 				<p:commandButton value="revoke" action="#{carrierBean.goToPermissions('revoke')}"
-					rendered="#{securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name)}" />
+					rendered="#{userSession.selectedCompany.objectLevelEnabled and securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name)}" />
 			</h:panelGroup>
 
 		</h:form>

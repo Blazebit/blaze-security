@@ -202,10 +202,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         User user = (User) nodeModel.getTarget();
         List<Permission> userPermissions = permissionManager.getPermissions(user);
 
-        List<Set<Permission>> grant = getGrantedPermission(userPermissions, selectedPermissions);
+        List<Set<Permission>> grant = getGrantablePermissions(userPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
-        Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+        Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
         // current permission tree
         if (!userPermissions.isEmpty()) {
             getPermissionTree(userNode, userPermissions, replaced, Marking.REMOVED);
@@ -230,10 +230,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         User user = (User) nodeModel.getTarget();
         List<Permission> userPermissions = permissionManager.getPermissions(user);
 
-        List<Set<Permission>> grant = getGrantedPermission(userPermissions, selectedPermissions);
+        List<Set<Permission>> grant = getGrantablePermissions(userPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
-        Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+        Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
         // modify current user permissions based on resource selection
         List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
@@ -251,8 +251,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> userPermissions = permissionManager.getPermissions(user);
-            Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
-            Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+            Set<Permission> granted = getGrantablePermissions(userPermissions, selectedPermissions).get(0);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
 
             for (Permission permission : replaced) {
                 permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
@@ -305,7 +305,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         UserGroup userGroup = (UserGroup) nodeModel.getTarget();
         List<Permission> userGroupPermissions = permissionManager.getPermissions(userGroup);
 
-        List<Set<Permission>> grant = getGrantedPermission(userGroupPermissions, selectedPermissions);
+        List<Set<Permission>> grant = getGrantablePermissions(userGroupPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
         Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
@@ -322,7 +322,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         UserGroup userGroup = (UserGroup) nodeModel.getTarget();
         List<Permission> groupPermissions = permissionManager.getPermissions(userGroup);
 
-        List<Set<Permission>> grant = getGrantedPermission(groupPermissions, selectedPermissions);
+        List<Set<Permission>> grant = getGrantablePermissions(groupPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
         Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
@@ -342,8 +342,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             // current selected permissions
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes);
 
-            Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
-            Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
             userNode.getChildren().clear();
             // current permission tree
             getPermissionTree(userNode, userPermissions, replaced, Marking.REMOVED);
@@ -357,7 +356,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             // current selected permissions
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes);
 
-            Set<Permission> granted = getGrantedPermission(groupPermissions, selectedPermissions).get(0);
+            Set<Permission> granted = getGrantablePermissions(groupPermissions, selectedPermissions).get(0);
             Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
             groupNode.getChildren().clear();
             // current permission tree
@@ -374,7 +373,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             List<Permission> groupPermissions = permissionManager.getPermissions(userGroup);
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
 
-            Set<Permission> granted = getGrantedPermission(groupPermissions, selectedPermissions).get(0);
+            Set<Permission> granted = getGrantablePermissions(groupPermissions, selectedPermissions).get(0);
             Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
 
             for (Permission permission : replaced) {

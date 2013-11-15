@@ -250,7 +250,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
 
                     Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserNodes, userNode);
                     Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
-                    Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+                    Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
 
                     userNode.getChildren().clear();
 
@@ -286,7 +286,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
                 Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserNodes, userNode);
 
                 Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
-                Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+                Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
                 for (Permission permission : replaced) {
                     permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
                 }

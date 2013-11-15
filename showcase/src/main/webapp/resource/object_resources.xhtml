@@ -35,83 +35,96 @@
 
 			<p:wizard widgetVar="permissionWizard" showNavBar="false"
 				flowListener="#{resourceObjectBean.permissionWizardListener}">
+
 				<p:tab id="selectPermissions" title="Selected resources">
 					Selected resources are already granted to the selected subject. By unselecting them they will be revoked.
-					<p:tree value="#{resourceObjectBean.root}" var="permission" rendered="#{resourceObjectBean.root.childCount ne 0}"
-						selectionMode="checkbox" selection="#{resourceObjectBean.selectedNodes}">
+					<p:tree value="#{resourceObjectBean.resourceRoot}" var="resourceEntry"
+						rendered="#{resourceObjectBean.resourceRoot.childCount ne 0}" selectionMode="checkbox"
+						selection="#{resourceObjectBean.selectedResourceNodes}">
 						<p:treeNode>
-							<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
-							<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
-								showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+							<h:outputText value="#{resourceEntry.name}" style="#{resourceEntry.marking.style}" id="resourceEntry" />
+							<p:tooltip for="resourceEntry" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
+								showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
 						</p:treeNode>
 					</p:tree>
 
-					<p:commandButton value="Next" onclick="permissionWizard.next()" oncomplete="warningDialog.show()" update=":warningDialogId"/>
+					<p:commandButton value="Next" onclick="permissionWizard.next()" />
 				</p:tab>
 
 				<p:tab id="confirmPermissions" title="Confirm">
 					<h:panelGrid columns="2">
+
 						<h:panelGroup>
-						Current permissions<br />
-							<p:tree value="#{resourceObjectBean.currentRoot}" var="permission"
-								rendered="#{resourceObjectBean.currentRoot.childCount ne 0}">
+						Current permissions<p:commandButton value="" icon="ui-icon-info" oncomplete="notRevokedDialog.show()"
+								update=":dialogs" />
+							<br />
+							<p:tree value="#{resourceObjectBean.currentPermissionRoot}" var="permission"
+								rendered="#{resourceObjectBean.currentPermissionRoot.childCount ne 0}" id="currentPermissionTree" selectionMode="checkbox">
 								<p:treeNode>
 									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
-							<h:outputText value="No permissions available" rendered="#{resourceObjectBean.currentRoot.childCount eq 0}" />
+							<h:outputText value="No permissions available"
+								rendered="#{resourceObjectBean.currentPermissionRoot.childCount eq 0}" />
 						</h:panelGroup>
 
 						<h:panelGroup>
-						New permissions<br />
-							<p:tree value="#{resourceObjectBean.newRoot}" var="permission"
-								rendered="#{resourceObjectBean.newRoot.childCount ne 0}">
+						New permissions<p:commandButton value="" icon="ui-icon-info" oncomplete="notGrantedDialog.show()"
+								update=":dialogs" />
+							<br />
+							<p:tree value="#{resourceObjectBean.newPermissionRoot}" var="permission"
+								rendered="#{resourceObjectBean.newPermissionRoot.childCount ne 0}" selectionMode="checkbox">
+								
 								<p:treeNode>
 									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
-							<h:outputText value="No permissions available" rendered="#{resourceObjectBean.newRoot.childCount eq 0}" />
+							<h:outputText value="No permissions available" rendered="#{resourceObjectBean.newPermissionRoot.childCount eq 0}" />
 						</h:panelGroup>
 					</h:panelGrid>
+
 					<p:commandButton value="Back" onclick="permissionWizard.back()" />
 					<p:commandButton value="Confirm" action="#{resourceObjectBean.confirmSelectedPermissions}"
-						oncomplete="permissionWizard.loadStep(permissionWizard.cfg.steps [0], true)" />
+						update=":form" onclick="permissionWizard.next()"
+						rendered="#{!resourceObjectBean.confirmed}" />
 				</p:tab>
 			</p:wizard>
 
-
 		</h:form>
 
-		<p:dialog id="warningDialogId" widgetVar="warningDialog">
-			<p:dataTable value="#{resourceObjectBean.notRevokable}" var="permission" paginator="true" rows="10">
-				<f:facet name="header">Permissions that cannot be revoked</f:facet>
-				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
-					<f:facet name="header">Resource</f:facet>
+		<h:panelGroup id="dialogs">
+			<p:dialog id="notRevokableDialogId" widgetVar="notRevokedDialog">
+				<p:dataTable value="#{permissionHandlingBaseBean.notRevoked}" var="permission" paginator="true" rows="10">
+					<f:facet name="header">Permissions that cannot be revoked</f:facet>
+					<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
+						<f:facet name="header">Resource</f:facet>
                             #{permission.id.entity} #{permission.id.field}
                     </p:column>
-				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
-					<f:facet name="header">Action</f:facet>
+					<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
+						<f:facet name="header">Action</f:facet>
                             #{permission.id.actionName}
                     </p:column>
-			</p:dataTable>
-			<p:dataTable value="#{resourceObjectBean.notGrantable}" var="permission" paginator="true" rows="10">
-				<f:facet name="header">Permissions that cannot be granted</f:facet>
-				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
-					<f:facet name="header">Resource</f:facet>
+				</p:dataTable>
+			</p:dialog>
+
+			<p:dialog id="notGrantableDialogId" widgetVar="notGrantedDialog">
+				<p:dataTable value="#{permissionHandlingBaseBean.notGranted}" var="permission" paginator="true" rows="10">
+					<f:facet name="header">Permissions that cannot be granted</f:facet>
+					<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
+						<f:facet name="header">Resource</f:facet>
                             #{permission.id.entity} #{permission.id.field}
                     </p:column>
-				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
-					<f:facet name="header">Action</f:facet>
+					<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
+						<f:facet name="header">Action</f:facet>
                             #{permission.id.actionName}
                     </p:column>
-			</p:dataTable>
-		</p:dialog>
-
-
+				</p:dataTable>
+			</p:dialog>
+		</h:panelGroup>
 
 	</h:body>
 </f:view>
