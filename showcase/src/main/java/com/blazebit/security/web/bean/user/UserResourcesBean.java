@@ -43,6 +43,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
 
     private List<Permission> userPermissions = new ArrayList<Permission>();
     private List<Permission> userDataPermissions = new ArrayList<Permission>();
+    private List<Permission> allPermissions = new ArrayList<Permission>();
 
     private DefaultTreeNode resourceRoot;
 
@@ -63,9 +64,10 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
     }
 
     private void initPermissions() {
-        List<List<Permission>> allPermissions = filterPermissions(permissionManager.getPermissions(getSelectedUser()));
-        userPermissions = allPermissions.get(0);
-        userDataPermissions = allPermissions.get(1);
+        allPermissions = permissionManager.getPermissions(getSelectedUser());
+        List<List<Permission>> all = filterPermissions(allPermissions);
+        userPermissions = all.get(0);
+        userDataPermissions = all.get(1);
     }
 
     private void initPermissionTree() {
@@ -102,7 +104,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
-        newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
+        newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, userDataPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
     }
 
     /**
@@ -114,14 +116,14 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         Set<Permission> previouslyReplaced = getReplacedPermissions(userPermissions, selectedResourcePermissions);
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         selectedPermissions.addAll(previouslyReplaced);
-        Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
+        Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
 
         // Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
 
-        Set<Permission> revoked = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
+        Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
 
-        Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
-        Set<Permission> finalRevoked = revokeImpliedPermissions(userPermissions, revoked);
+        Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
+        Set<Permission> finalRevoked = revokeImpliedPermissions(allPermissions, revoked);
 
         for (Permission permission : finalRevoked) {
             permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());

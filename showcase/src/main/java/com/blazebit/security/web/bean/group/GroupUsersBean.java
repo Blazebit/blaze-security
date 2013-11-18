@@ -224,7 +224,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         Set<Permission> grant = getGrantablePermissions(userPermissions, user, selectedGroupPermissions);
         userPermissions.addAll(grant);
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
-            getSelectablePermissionTree(userNode, userPermissions, grant, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+            getSelectablePermissionTree(userNode, userPermissions, userDataPermissions, grant, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
         } else {
             getPermissionTree(userNode, userPermissions,  userDataPermissions, grant, Marking.NEW);
         }
@@ -240,7 +240,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         Set<Permission> revoked = grantedAndRevoked.get(0);
 
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
-            getSelectablePermissionTree(userNode, userPermissions, new HashSet<Permission>(), revoked, Marking.NEW, Marking.REMOVED);
+            getSelectablePermissionTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), revoked, Marking.NEW, Marking.REMOVED);
         } else {
             getPermissionTree(userNode, userPermissions, userDataPermissions, revoked, Marking.REMOVED);
         }

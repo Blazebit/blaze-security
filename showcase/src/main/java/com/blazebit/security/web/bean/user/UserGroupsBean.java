@@ -150,7 +150,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         currentPermissions.addAll(grantable);
 
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
-            newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, grantable, revokable, Marking.NEW, Marking.REMOVED);
+            newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, currentUserDataPermissions, grantable, revokable, Marking.NEW, Marking.REMOVED);
         } else {
             currentPermissions.remove(revokable);
             newPermissionTreeRoot = getPermissionTree(currentPermissions, currentUserDataPermissions, grantable, Marking.NEW);

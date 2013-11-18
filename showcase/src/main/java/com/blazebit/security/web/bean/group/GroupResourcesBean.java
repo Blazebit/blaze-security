@@ -121,7 +121,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         // new permission tree without the revoked but with the granted ones
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
-        newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
+        newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, groupDataPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
     }
 
     /**
@@ -249,7 +249,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
         if (!currentUserPermissions.isEmpty()) {
             if (userSession.getSelectedCompany().isUserLevelEnabled()) {
-                getSelectablePermissionTree(userNode, currentUserPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
+                getSelectablePermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
             } else {
                 userPermissions.removeAll(revoked);
                 getPermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, Marking.NEW);

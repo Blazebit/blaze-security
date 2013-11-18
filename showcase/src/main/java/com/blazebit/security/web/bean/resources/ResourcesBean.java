@@ -255,7 +255,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
         if (selectable) {
-            getSelectablePermissionTree(userNode, currentUserPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+            getSelectablePermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
         } else {
             getPermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, Marking.NEW);
         }
@@ -321,7 +321,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     private void createNewGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions) {
         TreeNodeModel nodeModel = (TreeNodeModel) groupNode.getData();
         UserGroup userGroup = (UserGroup) nodeModel.getTarget();
-        List<Permission> userGroupPermissions = permissionManager.getPermissions(userGroup);
+        List<Permission> userGroupPermissions = filterPermissions(permissionManager.getPermissions(userGroup)).get(0);
+        List<Permission> userGroupDataPermissions = filterPermissions(permissionManager.getPermissions(userGroup)).get(1);
 
         List<Set<Permission>> grant = getGrantablePermissions(userGroupPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
@@ -332,7 +333,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
         currentGroupPermissions.removeAll(replaced);
         currentGroupPermissions.addAll(granted);
-        getSelectablePermissionTree(groupNode, currentGroupPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+        getSelectablePermissionTree(groupNode, currentGroupPermissions, userGroupDataPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
     }
 
     private void createCurrentGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions) {
