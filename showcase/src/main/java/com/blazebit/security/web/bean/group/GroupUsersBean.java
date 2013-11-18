@@ -83,9 +83,11 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         for (UserGroup group : parents) {
             groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
-            List<Permission> permissions = permissionManager.getPermissions(group);
+            List<Permission> groupPermissions = permissionManager.getPermissions(group);
+            List<Permission> permissions = filterPermissions(groupPermissions).get(0);
+            List<Permission> dataPermissions = filterPermissions(groupPermissions).get(1);
             selectedGroupPermissions.addAll(permissions);
-            groupNode = getPermissionTree(permissions);
+            groupNode = getPermissionTree(permissions, dataPermissions);
         }
         Set<Permission> redundantPermissions = getRedundantPermissions(selectedGroupPermissions);
         selectedGroupPermissions.removeAll(redundantPermissions);
@@ -162,12 +164,14 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
     private void createCurrentPermissionTreeForAddedUser(DefaultTreeNode userNode) {
         TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
         User user = (User) userNodeModel.getTarget();
-        List<Permission> userPermissions = permissionManager.getPermissions(user);
+        List<Permission> permissions = permissionManager.getPermissions(user);
+        List<Permission> userPermissions = filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
         if (!userPermissions.isEmpty()) {
 
             Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedGroupPermissions);
 
-            getPermissionTree(userNode, userPermissions, replaced, Marking.REMOVED);
+            getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
         } else {
             TreeNode noPermissions = new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode);
             noPermissions.setSelectable(false);
@@ -178,12 +182,15 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
     private void createCurrentPermissionTreeForRemovedUser(DefaultTreeNode userNode) {
         TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
         User user = (User) userNodeModel.getTarget();
-        List<Permission> userPermissions = permissionManager.getPermissions(user);
+        List<Permission> permissions = permissionManager.getPermissions(user);
+        List<Permission> userPermissions = filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
+
         if (!userPermissions.isEmpty()) {
 
             List<Set<Permission>> grantedAndRevoked = getRevokedAndGrantedPermissionsWhenRevoking(userPermissions, user, selectedGroupPermissions);
             Set<Permission> revoked = grantedAndRevoked.get(0);
-            getPermissionTree(userNode, userPermissions, revoked, Marking.REMOVED);
+            getPermissionTree(userNode, userPermissions, userDataPermissions, revoked, Marking.REMOVED);
         } else {
             TreeNode noPermissions = new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode);
             noPermissions.setSelectable(false);
@@ -206,33 +213,36 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
 
     private void createNewPermissionTreeForAddedUser(DefaultTreeNode userNode) {
         TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
-        User currentUser = (User) userNodeModel.getTarget();
-        List<Permission> userPermissions = permissionManager.getPermissions(currentUser);
+        User user = (User) userNodeModel.getTarget();
+        List<Permission> permissions = permissionManager.getPermissions(user);
+        List<Permission> userPermissions = filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
 
         Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedGroupPermissions);
         userPermissions.removeAll(replaced);
 
-        Set<Permission> grant = getGrantablePermissions(userPermissions, currentUser, selectedGroupPermissions);
+        Set<Permission> grant = getGrantablePermissions(userPermissions, user, selectedGroupPermissions);
         userPermissions.addAll(grant);
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
             getSelectablePermissionTree(userNode, userPermissions, grant, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
         } else {
-            getPermissionTree(userNode, userPermissions, grant, Marking.NEW);
+            getPermissionTree(userNode, userPermissions,  userDataPermissions, grant, Marking.NEW);
         }
     }
 
     private void createNewPermissionTreeForRemovedUser(DefaultTreeNode userNode) {
         TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
         User user = (User) userNodeModel.getTarget();
-        List<Permission> userPermissions = permissionManager.getPermissions(user);
-
+        List<Permission> permissions = permissionManager.getPermissions(user);
+        List<Permission> userPermissions = filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
         List<Set<Permission>> grantedAndRevoked = getRevokedAndGrantedPermissionsWhenRevoking(userPermissions, user, selectedGroupPermissions);
         Set<Permission> revoked = grantedAndRevoked.get(0);
 
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
             getSelectablePermissionTree(userNode, userPermissions, new HashSet<Permission>(), revoked, Marking.NEW, Marking.REMOVED);
         } else {
-            getPermissionTree(userNode, userPermissions, revoked, Marking.REMOVED);
+            getPermissionTree(userNode, userPermissions, userDataPermissions, revoked, Marking.REMOVED);
         }
     }
 
@@ -243,7 +253,10 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         for (TreeNode userNode : currentPermissionRoot.getChildren()) {
             TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
             User user = (User) userNodeModel.getTarget();
-            List<Permission> userPermissions = permissionManager.getPermissions(user);
+            List<Permission> permissions = permissionManager.getPermissions(user);
+            List<Permission> userPermissions = filterPermissions(permissions).get(0);
+            List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
+            
             if (!userPermissions.isEmpty()) {
                 if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                     // this is an added or an existing user
@@ -254,7 +267,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
 
                     userNode.getChildren().clear();
 
-                    getPermissionTree(userNode, userPermissions, replaced, Marking.REMOVED);
+                    getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
 
                 } else {
                     // this is a removed user
@@ -262,7 +275,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
                     Set<Permission> revoked = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
 
                     userNode.getChildren().clear();
-                    getPermissionTree(userNode, userPermissions, revoked, Marking.REMOVED);
+                    getPermissionTree(userNode, userPermissions, userDataPermissions, revoked, Marking.REMOVED);
 
                 }
             } else {
@@ -286,11 +299,12 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
                 Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserNodes, userNode);
 
                 Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
+                Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
                 Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
                 for (Permission permission : replaced) {
                     permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
                 }
-                for (Permission permission : granted) {
+                for (Permission permission : finalGranted) {
                     permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
                 }
                 roleService.addSubjectToRole(user, getSelectedGroup());
@@ -298,7 +312,9 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
                 // remove user
                 Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserNodes, userNode);
                 Set<Permission> revoked = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
-                for (Permission permission : revoked) {
+                Set<Permission> finalRevoked = revokeImpliedPermissions(userPermissions, revoked);
+
+                for (Permission permission : finalRevoked) {
                     permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
                 }
                 roleService.removeSubjectFromRole(user, getSelectedGroup());

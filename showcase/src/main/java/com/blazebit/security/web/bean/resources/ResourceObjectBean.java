@@ -2,12 +2,15 @@ package com.blazebit.security.web.bean.resources;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.faces.bean.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.primefaces.event.FlowEvent;
@@ -19,20 +22,25 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityAction;
-import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
+import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.PermissionTreeHandlingBaseBean;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.util.FieldUtils;
 
 @Named
 @ViewScoped
 @Stateless
 public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
+
+    @Inject
+    private UserGroupService userGroupService;
 
     private IdHolder selectedSubject;
     private List<RowModel> selectedObjects = new ArrayList<RowModel>();
@@ -43,18 +51,25 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
     private TreeNode resourceRoot = new DefaultTreeNode();
     private TreeNode[] selectedResourceNodes = new TreeNode[] {};
     private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
+    private TreeNode[] selectedUserPermissionNodes = new TreeNode[] {};
 
     private TreeNode currentPermissionRoot = new DefaultTreeNode();
     private TreeNode newPermissionRoot = new DefaultTreeNode();
 
     private List<Permission> currentPermissions = new ArrayList<Permission>();
+    private List<Permission> currentDataPermissions = new ArrayList<Permission>();
+
+    private TreeNode currentUserPermissionRoot;
+    private TreeNode newUserPermissionRoot;
 
     private boolean confirmed = false;
+    private boolean usersConfirmed = false;
+    private Set<Permission> selectedPermissions;
 
     public void init() {
         currentPermissions = getCurrentPermissions();
+        currentDataPermissions = getCurrentDataPermissions();
         resourceRoot = new DefaultTreeNode();
-        confirmed = false;
         for (RowModel selectedObject : selectedObjects) {
             EntityObjectField entityObjectResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), selectedObject
                 .getEntity()
@@ -148,43 +163,56 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             // build current tree
             // revoked or replaced permissions cannot be displayed because they can only be object permissions and those cannot
             // be marked
-            currentPermissionRoot = getPermissionTree(currentPermissions, new HashSet<Permission>(), Marking.REMOVED);
+            currentPermissionRoot = getPermissionTree(currentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.REMOVED);
             // build new tree
             List<Permission> modifiedCurrentPermissions = new ArrayList<Permission>(currentPermissions);
             modifiedCurrentPermissions.removeAll(removedPermissions);
             modifiedCurrentPermissions.addAll(granted);
-            newPermissionRoot = getPermissionTree(modifiedCurrentPermissions, selectedPermissions, Marking.NEW);
+            newPermissionRoot = getPermissionTree(modifiedCurrentPermissions, currentDataPermissions, selectedPermissions, Marking.NEW);
         } else {
             if ("revoke".equals(action)) {
                 Set<Permission> revoked = getRevokablePermissions(selectedPermissions);
-                Set<Permission> finalRevoked = getPermissionsWithImpliedActionsToRevoke(currentPermissions, revoked);
-                currentPermissionRoot = getPermissionTree(currentPermissions, finalRevoked, Marking.REMOVED);
+                Set<Permission> finalRevoked = revokeImpliedPermissions(currentPermissions, revoked);
+                currentPermissionRoot = getPermissionTree(currentPermissions, currentDataPermissions, finalRevoked, Marking.REMOVED);
                 // build new tree
                 List<Permission> modifiedCurrentPermissions = new ArrayList<Permission>(currentPermissions);
                 modifiedCurrentPermissions.removeAll(finalRevoked);
-                newPermissionRoot = getPermissionTree(modifiedCurrentPermissions, new HashSet<Permission>(), Marking.NONE);
+                newPermissionRoot = getPermissionTree(modifiedCurrentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.NONE);
             }
         }
-
+        // reset values
+        selectedFields.clear();
+        selectedActions.clear();
+        selectedCollectionActions.clear();
+        selectedObjects.clear();
+        confirmed = false;
     }
 
     private List<Permission> getCurrentPermissions() {
         if (selectedSubject instanceof Subject) {
-            return permissionManager.getPermissions((Subject) selectedSubject);
+            return filterPermissions(permissionManager.getPermissions((Subject) selectedSubject)).get(0);
         } else {
-            return permissionManager.getPermissions((Role) selectedSubject);
+            return filterPermissions(permissionManager.getPermissions((Role) selectedSubject)).get(0);
+        }
+    }
+
+    private List<Permission> getCurrentDataPermissions() {
+        if (selectedSubject instanceof Subject) {
+            return filterPermissions(permissionManager.getPermissions((Subject) selectedSubject)).get(1);
+        } else {
+            return filterPermissions(permissionManager.getPermissions((Role) selectedSubject)).get(1);
         }
     }
 
     // confirm
-    public void confirmSelectedPermissions() {
+    public void confirmPermissions() {
         if (action.equals("grant")) {
-            Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
+            selectedPermissions = getSelectedPermissions(selectedResourceNodes);
             Set<Permission> granted = getGrantedPermission(currentPermissions, selectedPermissions).get(0);
             super.setNotGranted(getGrantedPermission(currentPermissions, selectedPermissions).get(1));
             Set<Permission> replaced = getReplacedPermissions(currentPermissions, selectedPermissions);
             // fix implied actions
-            Set<Permission> finalGranted = getPermissionsWithImpliedActionsToGrant(getCurrentPermissions(), granted);
+            Set<Permission> finalGranted = grantImpliedPermissions(getCurrentPermissions(), granted);
 
             for (Permission permission : replaced) {
                 revoke(permission);
@@ -196,23 +224,161 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
             Set<Permission> revoked = getRevokablePermissions(selectedPermissions);
             // fix implied actions
-            Set<Permission> finalRevoked = getPermissionsWithImpliedActionsToRevoke(currentPermissions, revoked);
+            Set<Permission> finalRevoked = revokeImpliedPermissions(currentPermissions, revoked);
 
             for (Permission permission : finalRevoked) {
                 revoke(permission);
             }
         }
         // reset permissions
-        currentPermissions = getCurrentPermissions();
-        currentPermissionRoot = getPermissionTree(currentPermissions, new HashSet<Permission>(), Marking.REMOVED);
+        currentPermissionRoot = getPermissionTree(getCurrentPermissions(), getCurrentDataPermissions(), new HashSet<Permission>(), Marking.REMOVED);
         // build new tree
         newPermissionRoot = new DefaultTreeNode();
         // reset initial values
-        selectedFields.clear();
-        selectedActions.clear();
-        selectedCollectionActions.clear();
-        selectedObjects.clear();
-        setConfirmed(true);
+        confirmed = true;
+        if (isGroup()) {
+            propagateChangesToUsers();
+        }
+
+    }
+
+    private void propagateChangesToUsers() {
+        if (selectedSubject instanceof Role) {
+            // propagate changes to users
+            Set<User> users = new HashSet<User>();
+            collectUsers((UserGroup) selectedSubject, users);
+            List<User> sortedUsers = new ArrayList<User>(users);
+            Collections.sort(sortedUsers, new Comparator<User>() {
+
+                @Override
+                public int compare(User o1, User o2) {
+                    return o1.getUsername().compareToIgnoreCase(o2.getUsername());
+                }
+
+            });
+            createUserPermissionTrees(sortedUsers, false);
+            usersConfirmed = false;
+
+            // if user level is not enabled confirm user permissions immediately
+            if (!userSession.getSelectedCompany().isUserLevelEnabled()) {
+                confirmUserPermissions();
+                usersConfirmed = true;
+            }
+        }
+    }
+
+    private void createUserPermissionTrees(List<User> selectedUsers, boolean selectable) {
+        setCurrentUserPermissionRoot(new DefaultTreeNode());
+        setNewUserPermissionRoot(new DefaultTreeNode());
+        for (User user : selectedUsers) {
+            createCurrentUserNode(user, currentUserPermissionRoot);
+            createNewUserNode(user, newUserPermissionRoot, selectable);
+        }
+    }
+
+    private void createCurrentUserNode(User user, TreeNode root) {
+        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
+
+        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, root);
+        userNode.setExpanded(true);
+        userNode.setSelectable(false);
+
+        createCurrentUserPermissionNode(userNode, selectedPermissions);
+
+    }
+
+    private void createCurrentUserPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions) {
+        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
+        User user = (User) nodeModel.getTarget();
+        List<Permission> permissions = permissionManager.getPermissions(user);
+        List<Permission> userPermissions = filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
+
+        List<Set<Permission>> grant = getGrantablePermissions(userPermissions, selectedPermissions);
+        super.setNotGranted(grant.get(1));
+        Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
+        // current permission tree
+        if (!userPermissions.isEmpty() || !userDataPermissions.isEmpty()) {
+            getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
+        } else {
+            new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode).setSelectable(false);
+        }
+
+    }
+
+    private void createNewUserNode(User user, TreeNode root, boolean selectable) {
+        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
+
+        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, root);
+        userNode.setExpanded(true);
+        userNode.setSelectable(false);
+
+        createNewUserPermissionNode(userNode, selectedPermissions, selectable);
+    }
+
+    private void createNewUserPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions, boolean selectable) {
+        TreeNodeModel nodeModel = (TreeNodeModel) userNode.getData();
+        User user = (User) nodeModel.getTarget();
+        List<Permission> permissions = permissionManager.getPermissions(user);
+        List<Permission> userPermissions = filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
+
+        List<Set<Permission>> grant = getGrantablePermissions(userPermissions, selectedPermissions);
+        Set<Permission> granted = grant.get(0);
+        super.setNotGranted(grant.get(1));
+        Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
+        // modify current user permissions based on resource selection
+        List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
+        // new permission tree without the replaced but with the granted + revoked ones, marked properly
+        currentUserPermissions.removeAll(replaced);
+        currentUserPermissions.addAll(granted);
+        if (currentUserPermissions.isEmpty() && userDataPermissions.isEmpty()) {
+            new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode).setSelectable(false);
+        } else {
+            if (selectable) {
+                getSelectablePermissionTree(userNode, currentUserPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+            } else {
+                getPermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, Marking.NEW);
+            }
+        }
+    }
+
+    public void confirmUserPermissions() {
+        for (TreeNode userNode : newUserPermissionRoot.getChildren()) {
+            User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
+            // Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
+            selectedPermissions = getSelectedPermissions(selectedResourceNodes);
+            List<Permission> userPermissions = permissionManager.getPermissions(user);
+            Set<Permission> granted = getGrantablePermissions(userPermissions, selectedPermissions).get(0);
+            Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
+            Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
+
+            for (Permission permission : replaced) {
+                permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
+            }
+            for (Permission permission : finalGranted) {
+                permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
+            }
+        }
+        usersConfirmed = true;
+        // rebuild new tree
+        currentUserPermissionRoot = new DefaultTreeNode();
+
+        for (TreeNode userNode : newUserPermissionRoot.getChildren()) {
+            User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
+            createCurrentUserNode(user, currentUserPermissionRoot);
+        }
+        newUserPermissionRoot = new DefaultTreeNode();
+
+    }
+
+    private void collectUsers(UserGroup group, Set<User> users) {
+        for (User user : userGroupService.getUsersFor(group)) {
+            users.add(user);
+        }
+        for (UserGroup child : userGroupService.getGroupsForGroup(group)) {
+            collectUsers(child, users);
+        }
     }
 
     private Set<Permission> getRevokablePermissions(Set<Permission> selectedPermissions) {
@@ -256,12 +422,25 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         if (event.getOldStep().equals("selectPermissions")) {
             processSelectedPermissions();
         } else {
-            System.out.println(event);
+            if (event.getOldStep().equals("confirmPermissions")) {
+                if (userSession.getSelectedCompany().isUserLevelEnabled()) {
+                    propagateChangesToUsers();
+                }
+            }
         }
         return event.getNewStep();
     }
 
     // initialize bean
+
+    public TreeNode[] getSelectedUserPermissionNodes() {
+        return selectedUserPermissionNodes;
+    }
+
+    public void setSelectedUserPermissionNodes(TreeNode[] selectedUserPermissionNodes) {
+        this.selectedUserPermissionNodes = selectedUserPermissionNodes;
+    }
+
     public void setSelectedObjects(List<RowModel> selectedObjects) {
         this.selectedObjects = selectedObjects;
     }
@@ -330,20 +509,48 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         return resourceRoot;
     }
 
-    public boolean isConfirmed() {
-        return confirmed;
-    }
-
-    public void setConfirmed(boolean confirmed) {
-        this.confirmed = confirmed;
-    }
-
     public TreeNode[] getSelectedPermissionNodes() {
         return selectedPermissionNodes;
     }
 
     public void setSelectedPermissionNodes(TreeNode[] selectedPermissionNodes) {
         this.selectedPermissionNodes = selectedPermissionNodes;
+    }
+
+    public TreeNode getCurrentUserPermissionRoot() {
+        return currentUserPermissionRoot;
+    }
+
+    public void setCurrentUserPermissionRoot(TreeNode currentUserPermissionRoot) {
+        this.currentUserPermissionRoot = currentUserPermissionRoot;
+    }
+
+    public TreeNode getNewUserPermissionRoot() {
+        return newUserPermissionRoot;
+    }
+
+    public void setNewUserPermissionRoot(TreeNode newUserPermissionRoot) {
+        this.newUserPermissionRoot = newUserPermissionRoot;
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
+    }
+
+    public void setConfirmed(boolean groupConfirmed) {
+        this.confirmed = groupConfirmed;
+    }
+
+    public boolean isUsersConfirmed() {
+        return usersConfirmed;
+    }
+
+    public void setUsersConfirmed(boolean usersConfirmed) {
+        this.usersConfirmed = usersConfirmed;
+    }
+
+    public boolean isGroup() {
+        return selectedSubject instanceof Role;
     }
 
 }

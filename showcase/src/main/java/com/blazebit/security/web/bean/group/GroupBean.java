@@ -146,8 +146,10 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
         for (UserGroup group : parents) {
             groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
             groupNode.setExpanded(true);
-            List<Permission> permissions = permissionManager.getPermissions(group);
-            getPermissionTree(groupNode, permissions);
+            List<Permission> allPermissions = permissionManager.getPermissions(group);
+            List<Permission> permissions = filterPermissions(allPermissions).get(0);
+            List<Permission> dataPermissions = filterPermissions(allPermissions).get(1);
+            getPermissionTree(groupNode, permissions, dataPermissions);
             if (getSelectedGroup().equals(group)) {
                 ((TreeNodeModel) groupNode.getData()).setMarking(Marking.SELECTED);
             }

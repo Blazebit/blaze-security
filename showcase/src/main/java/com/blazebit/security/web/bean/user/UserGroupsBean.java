@@ -91,7 +91,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         List<List<Permission>> userPermissions = filterPermissions(allUserPermissions);
         currentUserPermissions = userPermissions.get(0);
         currentUserDataPermissions = userPermissions.get(1);
-        this.permissionViewRoot = getPermissionTree(allUserPermissions);
+        this.permissionViewRoot = getPermissionTree(currentUserPermissions, currentUserDataPermissions);
     }
 
     private void initUserGroups() {
@@ -142,7 +142,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         // current permission tree
         Set<Permission> revokeablePermissionsWhenGranting = getRevokablePermissionsWhenGranting(grantable);
         revokable.addAll(revokeablePermissionsWhenGranting);
-        currentPermissionTreeRoot = getPermissionTree(getCurrentPermissions(), revokable, Marking.REMOVED);
+        currentPermissionTreeRoot = getPermissionTree(currentUserPermissions, currentUserDataPermissions, revokable, Marking.REMOVED);
 
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(currentUserPermissions);
@@ -153,7 +153,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
             newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, grantable, revokable, Marking.NEW, Marking.REMOVED);
         } else {
             currentPermissions.remove(revokable);
-            newPermissionTreeRoot = getPermissionTree(currentPermissions, grantable, Marking.NEW);
+            newPermissionTreeRoot = getPermissionTree(currentPermissions, currentUserDataPermissions, grantable, Marking.NEW);
         }
     }
 
@@ -260,7 +260,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
                 revokablePermissions.add(permission);
             }
         }
-        currentPermissionTreeRoot = getPermissionTree(getCurrentPermissions(), revokablePermissions, Marking.REMOVED);
+        currentPermissionTreeRoot = getPermissionTree(currentUserPermissions, currentUserDataPermissions, revokablePermissions, Marking.REMOVED);
 
     }
 
@@ -269,13 +269,20 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      */
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        Set<Permission> granted = getGrantedPermission(getCurrentPermissions(), selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(getCurrentPermissions(), selectedPermissions);
-        
+        Set<Permission> granted = getGrantedPermission(currentUserPermissions, selectedPermissions).get(0);
+        Set<Permission> replaced = getReplacedPermissions(currentUserPermissions, selectedPermissions);
+        Set<Permission> revoked = getRevokedPermissions(currentUserPermissions, selectedPermissions).get(0);
+
+        Set<Permission> finalGranted = grantImpliedPermissions(currentUserPermissions, granted);
+        Set<Permission> finalRevoked = grantImpliedPermissions(currentUserPermissions, revoked);
+
+        for (Permission permission : finalRevoked) {
+            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
+        }
         for (Permission permission : replaced) {
             permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
-        for (Permission permission : granted) {
+        for (Permission permission : finalGranted) {
             permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
         for (UserGroup group : removedGroups) {
@@ -381,13 +388,6 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
 
     public TreeNode getCurrentPermissionTreeRoot() {
         return currentPermissionTreeRoot;
-    }
-
-    public List<Permission> getCurrentPermissions() {
-        List<Permission> all = new ArrayList<Permission>(currentUserPermissions);
-        all.addAll(currentUserDataPermissions);
-        return all;
-
     }
 
     public TreeNode getNewPermissionTreeRoot() {

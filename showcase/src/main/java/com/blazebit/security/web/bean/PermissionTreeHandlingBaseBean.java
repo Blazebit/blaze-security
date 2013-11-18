@@ -114,8 +114,8 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
      * @param permissions
      * @return
      */
-    protected TreeNode getPermissionTree(TreeNode root, List<Permission> permissions) {
-        return getPermissionTree(root, permissions, new HashSet<Permission>(), Marking.NONE);
+    protected TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions) {
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), Marking.NONE);
     }
 
     /**
@@ -124,8 +124,8 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
      * @param permissions
      * @return
      */
-    protected TreeNode getPermissionTree(List<Permission> permissions) {
-        return getPermissionTree(permissions, new HashSet<Permission>(), Marking.NONE);
+    protected TreeNode getPermissionTree(List<Permission> permissions, List<Permission> dataPermissions) {
+        return getPermissionTree(permissions, dataPermissions, new HashSet<Permission>(), Marking.NONE);
     }
 
     /**
@@ -138,9 +138,9 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
      * @param marking
      * @return
      */
-    protected TreeNode getPermissionTree(List<Permission> permissions, Set<Permission> selectedPermissions, Marking marking) {
+    protected TreeNode getPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking marking) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, selectedPermissions, marking);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, marking);
     }
 
     /**
@@ -150,42 +150,55 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
      * @param permissions
      * @param permissionRoot
      */
-    protected TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, Set<Permission> selectedPermissions, Marking marking) {
+    protected TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking marking) {
         Map<String, List<Permission>> permissionMapByEntity = groupPermissionsByEntity(permissions);
+        Map<String, List<Permission>> dataPermissionMapByEntity = groupPermissionsByEntity(dataPermissions);
 
         for (String entity : permissionMapByEntity.keySet()) {
-
-            List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
-            // entity node
-            EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
-            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), root);
-            entityNode.setExpanded(true);
-            entityNode.setSelectable(false);
-
-            Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
-            for (Action action : permissionMapByAction.keySet()) {
-                // action node
-                EntityAction entityAction = (EntityAction) action;
-                DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
-                actionNode.setExpanded(true);
-                actionNode.setSelectable(false);
-                List<Permission> permissionsByAction = permissionMapByAction.get(action);
-
-                for (Permission permission : permissionsByAction) {
-
-                    if (!StringUtils.isEmpty(((EntityField) permission.getResource()).getField())) {
-                        // field node
-                        createFieldNode(selectedPermissions, marking, actionNode, permission);
-                    } else {
-                        // no field nodes -> fix action node
-                        adjustActionNode(selectedPermissions, marking, actionNode, permission);
-                    }
-                }
-                propagateNodePropertiesTo(actionNode);
+            // ignore entity names that appear as entity resources
+            if (dataPermissionMapByEntity.containsKey(entity)) {
+                dataPermissionMapByEntity.remove(entity);
             }
-            propagateNodePropertiesTo(entityNode);
+            List<Permission> permissionsByEntity = new ArrayList<Permission>(permissionMapByEntity.get(entity));
+            createEntityNode(root, dataPermissions, selectedPermissions, marking, permissionsByEntity, entity);
+        }
+        // remaining entity object resources will be attached to the end if they dont appear before
+        for (String objectEntity : dataPermissionMapByEntity.keySet()) {
+            List<Permission> permissionsByEntity = new ArrayList<Permission>(dataPermissionMapByEntity.get(objectEntity));
+            createEntityNode(root, dataPermissions, selectedPermissions, marking, permissionsByEntity, objectEntity);
         }
         return root;
+    }
+
+    private void createEntityNode(TreeNode root, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking marking, List<Permission> permissionsByEntity, String entity) {
+        // entity node
+        EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
+        DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), root);
+        entityNode.setExpanded(true);
+        entityNode.setSelectable(false);
+
+        Map<Action, List<Permission>> permissionMapByAction = groupPermissionsByAction(permissionsByEntity);
+        for (Action action : permissionMapByAction.keySet()) {
+            // action node
+            EntityAction entityAction = (EntityAction) action;
+            DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction), entityNode);
+            actionNode.setExpanded(true);
+            actionNode.setSelectable(false);
+            List<Permission> permissionsByAction = permissionMapByAction.get(action);
+
+            for (Permission permission : permissionsByAction) {
+
+                if (!StringUtils.isEmpty(((EntityField) permission.getResource()).getField())) {
+                    // field node
+                    createFieldNode(selectedPermissions, dataPermissions, marking, actionNode, permission);
+                } else {
+                    // no field nodes -> fix action node
+                    adjustActionNode(selectedPermissions, dataPermissions, marking, actionNode, permission);
+                }
+            }
+            propagateNodePropertiesTo(actionNode);
+        }
+        propagateNodePropertiesTo(entityNode);
     }
 
     /**
@@ -197,9 +210,9 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
      * @param permission
      * @param actioneNodeModel
      */
-    private void adjustActionNode(Set<Permission> selectedPermissions, Marking marking, DefaultTreeNode actionNode, Permission permission) {
+    private void adjustActionNode(Set<Permission> selectedPermissions, List<Permission> dataPermissions, Marking marking, DefaultTreeNode actionNode, Permission permission) {
         TreeNodeModel actioneNodeModel = (TreeNodeModel) actionNode.getData();
-        if (permission.getResource() instanceof EntityObjectField) {
+        if (contains(dataPermissions, permission, false)) {
             actioneNodeModel.setMarking(Marking.OBJECT);
             actioneNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
         }
@@ -219,12 +232,13 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
      * @param permission
      * @param actioneNodeModel
      */
-    private void createFieldNode(Set<Permission> selectedPermissions, Marking marking, DefaultTreeNode actionNode, Permission permission) {
+    private void createFieldNode(Set<Permission> selectedPermissions, List<Permission> dataPermissions, Marking marking, DefaultTreeNode actionNode, Permission permission) {
         DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
             permission.getResource(), Marking.NONE), actionNode);
         fieldNode.setSelectable(false);
         TreeNodeModel fieldNodeModel = (TreeNodeModel) fieldNode.getData();
-        if (permission.getResource() instanceof EntityObjectField) {
+        // add warning that it contains object permissions
+        if (contains(dataPermissions, permission, false)) {
             fieldNodeModel.setMarking(Marking.OBJECT);
             fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
         }
@@ -355,7 +369,5 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             }
         }
     }
-
-   
 
 }
