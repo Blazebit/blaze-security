@@ -27,8 +27,17 @@ import com.blazebit.security.impl.model.ResourceName;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Party", module = "Core")
+@ResourceName(name = "Party", module = "Core", test = "type")
 public class Party implements Serializable, IdHolder {
+    
+    
+    public Party() {
+        // TODO Auto-generated constructor stub
+    }
+
+    public Party(String type) {
+        this.type = type;
+    }
 
     /**
      * 
@@ -37,6 +46,7 @@ public class Party implements Serializable, IdHolder {
     private Integer id;
     private String partyField1;
     private String partyField2;
+    private String type;
 
     @Id
     @GeneratedValue
@@ -65,6 +75,14 @@ public class Party implements Serializable, IdHolder {
 
     public void setPartyField2(String partyField2) {
         this.partyField2 = partyField2;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
 }

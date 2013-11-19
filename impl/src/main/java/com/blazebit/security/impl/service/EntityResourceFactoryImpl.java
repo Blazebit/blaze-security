@@ -84,13 +84,11 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
     @Override
     public EntityField createResource(IdHolder entityObject) {
         return createResource(entityObject.getClass(), EntityField.EMPTY_FIELD, entityObject.getId());
-
     }
 
     @Override
     public EntityField createResource(IdHolder entityObject, String field) {
         return createResource(entityObject.getClass(), field, entityObject.getId());
-
     }
 
 }

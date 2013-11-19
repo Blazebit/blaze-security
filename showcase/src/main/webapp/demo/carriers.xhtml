@@ -183,11 +183,12 @@
 
 
 						<my:inputField fieldValue="#{carrierBean.partyModel.entity.partyField1}" fieldLabel="Field1"
-							selectedModel="#{carrierBean.partyModel}" fieldName="partyField1"
+							selectedModel="#{carrierBean.partyModel}" fieldName="partyField1" resourceName="Carrier_Party"
 							fieldModel="#{carrierBean.partyModel.fields.get('partyField1')}" />
 						<br />
+						
 						<my:inputField fieldValue="#{carrierBean.partyModel.entity.partyField2}" fieldLabel="Field2"
-							selectedModel="#{carrierBean.partyModel}" fieldName="partyField2"
+							selectedModel="#{carrierBean.partyModel}" fieldName="partyField2" resourceName="Carrier_Party"
 							fieldModel="#{carrierBean.partyModel.fields.get('partyField2')}" />
 						<br />
 
@@ -197,7 +198,7 @@
 						<p:commandButton value="Update" action="#{carrierBean.saveParty()}" update=":form:tabs:editParty"
 							rendered="#{not empty carrierBean.partyModel.entity.id and carrierBean.isAuthorizedResource('UPDATE',carrierBean.partyModel.entity)}" />
 						<p:commandButton value="Save" action="#{carrierBean.saveNewParty()}" update=":form:tabs:editParty"
-							rendered="#{empty carrierBean.partyModel.entity.id and carrierBean.isAuthorized('CREATE',carrierBean.partyModel.entity.class.name)}" />
+							rendered="#{empty carrierBean.partyModel.entity.id and carrierBean.isAuthorizedResourceName('CREATE','Carrier_Party')}" />
 					</h:panelGroup>
 				</p:tab>
 

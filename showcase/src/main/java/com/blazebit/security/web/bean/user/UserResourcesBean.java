@@ -87,20 +87,29 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      * wizard step 1
      */
     public void processSelectedResources() {
+        //read selected resources
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
-        List<Set<Permission>> revoke = getRevokedPermissions(userPermissions, selectedPermissions);
+        //add automatically object permissions because they could not have been unselected
+        selectedPermissions.addAll(userDataPermissions);
+        //check what has been revoked
+        List<Set<Permission>> revoke = getRevokedPermissions(allPermissions, selectedPermissions);
         Set<Permission> revoked = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
-        List<Set<Permission>> grant = getGrantedPermission(userPermissions, selectedPermissions);
+        //check what has been granted
+        List<Set<Permission>> grant = getGrantedPermission(allPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
-        Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
-        // modify current user permissions based on resource selection
-        List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
+        //replaced
+        Set<Permission> replaced = getReplacedPermissions(allPermissions, selectedPermissions);
+
         // current permission tree
         Set<Permission> removedPermissions = new HashSet<Permission>(revoked);
         removedPermissions.addAll(replaced);
-        currentPermissionTreeRoot = getPermissionTree(currentUserPermissions, userDataPermissions, removedPermissions, Marking.REMOVED);
+        currentPermissionTreeRoot = getPermissionTree(userPermissions, userDataPermissions, removedPermissions, Marking.REMOVED);
+
+        // modify current user permissions based on resource selection
+        List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
+        
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
@@ -113,13 +122,13 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      */
     public void confirmPermissions() {
         Set<Permission> selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
-        Set<Permission> previouslyReplaced = getReplacedPermissions(userPermissions, selectedResourcePermissions);
+        Set<Permission> previouslyReplaced = getReplacedPermissions(allPermissions, selectedResourcePermissions);
+        
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         selectedPermissions.addAll(previouslyReplaced);
+        
         Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
-
         // Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
-
         Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
 
         Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
@@ -136,16 +145,16 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         }
 
         // TODO normalize -> needed after implied action permissions. here or in service layer?
-        initPermissions();
-        Set<Permission> grant = normalizePermissions(userPermissions).get(0);
-        Set<Permission> revoke = normalizePermissions(userPermissions).get(1);
-
-        for (Permission permission : revoke) {
-            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        }
-        for (Permission permission : grant) {
-            permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        }
+        // initPermissions();
+        // Set<Permission> grant = normalizePermissions(userPermissions).get(0);
+        // Set<Permission> revoke = normalizePermissions(userPermissions).get(1);
+        //
+        // for (Permission permission : revoke) {
+        // permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
+        // }
+        // for (Permission permission : grant) {
+        // permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
+        // }
         init();
     }
 
@@ -154,15 +163,15 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      */
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
-        Set<Permission> previouslyReplaced = getReplacedPermissions(userPermissions, selectedResourcePermissions);
+        Set<Permission> previouslyReplaced = getReplacedPermissions(allPermissions, selectedResourcePermissions);
 
         // current selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         selectedPermissions.addAll(previouslyReplaced);
 
-        Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
-        Set<Permission> revoked = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
+        Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
+        Set<Permission> replaced = getReplacedPermissions(allPermissions, granted);
+        Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
 
         Set<Permission> removedPermissions = new HashSet<Permission>(revoked);
         removedPermissions.addAll(replaced);

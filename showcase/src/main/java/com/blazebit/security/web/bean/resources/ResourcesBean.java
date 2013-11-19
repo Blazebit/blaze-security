@@ -264,8 +264,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     public void confirmUserPermissions() {
         for (TreeNode userNode : newUserRoot.getChildren()) {
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
-
-            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
+            Set<Permission> selectedPermissions;
+            if (userSession.getSelectedCompany().isUserLevelEnabled()) {
+                selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
+            } else {
+                // workaround because if tree is not displayed the selected nodes are not set
+                List<TreeNode> nodes = getAllChildren(userNode.getChildren());
+                selectedPermissions = getSelectedPermissions(nodes.toArray(new TreeNode[nodes.size()]));
+            }
 
             List<Permission> userPermissions = permissionManager.getPermissions(user);
             Set<Permission> granted = getGrantablePermissions(userPermissions, selectedPermissions).get(0);
@@ -281,7 +287,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         }
         init();
     }
-
+    
     // resources for groups
     private boolean processResourcesForGroups() {
         if (selectedGroupNodes.length == 0) {

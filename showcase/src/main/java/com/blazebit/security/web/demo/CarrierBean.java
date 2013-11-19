@@ -73,7 +73,7 @@ public class CarrierBean extends SecurityBaseBean {
         selectedCarrierModel.getFields().put("comment", new FieldModel("comment", Type.PRIMITIVE));
         selectedCarrierModel.getFields().put("contacts", new FieldModel("contacts", Type.COLLECTION));
 
-        partyModel = new EditModel(new Party());
+        partyModel = new EditModel(new Party("carrier"));
         partyModel.getFields().put("partyField1", new FieldModel("partyField1"));
         partyModel.getFields().put("partyField2", new FieldModel("partyField2"));
 
@@ -105,7 +105,7 @@ public class CarrierBean extends SecurityBaseBean {
 
     public void tabChange(TabChangeEvent event) {
         if (partyModel.getEntity() == null) {
-            partyModel.setEntity(new Party());
+            partyModel.setEntity(new Party("carrier"));
         }
         tabIndex = event.getTab().getId();
     }
@@ -323,6 +323,7 @@ public class CarrierBean extends SecurityBaseBean {
                 resourceObjectBean.getSelectedObjects().add(rowModel);
             }
         }
+        resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
         WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
 
     }

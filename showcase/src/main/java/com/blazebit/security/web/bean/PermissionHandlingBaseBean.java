@@ -24,6 +24,7 @@ import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
+import com.blazebit.security.EntityResource;
 import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
@@ -31,13 +32,13 @@ import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.ResourceFactory;
+import com.blazebit.security.ResourceNameExtension;
 import com.blazebit.security.Role;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.web.bean.ResourceNameExtension.EntityResource;
 import com.blazebit.security.web.service.api.ActionUtils;
 import com.blazebit.security.web.util.FieldUtils;
 
@@ -181,7 +182,6 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         } catch (ClassNotFoundException e) {
         }
         return false;
-
     }
 
     /**
@@ -238,10 +238,12 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         List<Permission> entityFieldResorce = new ArrayList<Permission>();
         for (Permission permission : permissions) {
             EntityField resource = (EntityField) permission.getResource();
-            if (resource.isEmptyField()) {
-                entityResorce.add(permission);
-            } else {
-                entityFieldResorce.add(permission);
+            if (!(resource instanceof EntityObjectField)) {
+                if (resource.isEmptyField()) {
+                    entityResorce.add(permission);
+                } else {
+                    entityFieldResorce.add(permission);
+                }
             }
         }
         ret.add(entityResorce);
@@ -635,6 +637,11 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         return ret;
     }
 
+    /**
+     * 
+     * @param permissions
+     * @return
+     */
     protected List<Set<Permission>> normalizePermissions(Collection<Permission> permissions) {
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         Set<Permission> grant = new HashSet<Permission>();

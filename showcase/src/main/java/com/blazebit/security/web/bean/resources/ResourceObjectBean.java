@@ -10,6 +10,8 @@ import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.faces.bean.ViewScoped;
+import javax.faces.component.UIViewRoot;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -33,6 +35,7 @@ import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.util.FieldUtils;
+import com.blazebit.security.web.util.WebUtil;
 
 @Named
 @ViewScoped
@@ -66,6 +69,16 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
     private boolean usersConfirmed = false;
     private Set<Permission> selectedPermissions;
 
+    private String prevPath;
+
+    public String getPrevPath() {
+        return prevPath;
+    }
+
+    public void setPrevPath(String prevPath) {
+        this.prevPath = prevPath;
+    }
+
     public void init() {
         currentPermissions = getCurrentPermissions();
         currentDataPermissions = getCurrentDataPermissions();
@@ -74,7 +87,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             EntityObjectField entityObjectResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), selectedObject
                 .getEntity()
                 .getId());
-            DefaultTreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(selectedObject.getFieldSummary(), ResourceType.ENTITY, entityObjectResource), resourceRoot);
+            TreeNodeModel entityNodeModel = new TreeNodeModel(selectedObject.getFieldSummary(), ResourceType.ENTITY, entityObjectResource);
+
+            DefaultTreeNode entityNode = new DefaultTreeNode(entityNodeModel, resourceRoot);
             entityNode.setExpanded(true);
 
             createActionNodes(selectedActions, selectedObject, entityObjectResource, entityNode);
@@ -86,7 +101,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
     private void createActionNodes(List<EntityAction> selectedActions, RowModel selectedObject, EntityObjectField entityObjectResource, DefaultTreeNode entityNode) {
         for (EntityAction action : selectedActions) {
-            DefaultTreeNode actionNode = new DefaultTreeNode(new TreeNodeModel(action.getActionName(), ResourceType.ACTION, action), entityNode);
+            TreeNodeModel actionNodeModel = new TreeNodeModel(action.getActionName(), ResourceType.ACTION, action);
+            actionNodeModel.setEntityInstance(entityObjectResource);
+            DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
             actionNode.setExpanded(true);
             // fields
             if (!selectedFields.isEmpty()) {
@@ -95,7 +112,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 for (Field field : fields) {
                     EntityObjectField entityObjectFieldResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), field.getName(),
                                                                                                                         selectedObject.getEntity().getId());
-                    DefaultTreeNode fieldNode = new DefaultTreeNode(new TreeNodeModel(field.getName(), ResourceType.FIELD, entityObjectFieldResource), actionNode);
+                    TreeNodeModel fieldNodeModel = new TreeNodeModel(field.getName(), ResourceType.FIELD, entityObjectFieldResource);
+                    fieldNodeModel.setEntityInstance(entityObjectFieldResource);
+                    DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
 
                     Permission permission = permissionFactory.create(action, entityObjectFieldResource);
                     setFieldNodeProperties(field, fieldNode, permission);
@@ -161,7 +180,8 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             Set<Permission> removedPermissions = new HashSet<Permission>(revoked);
             removedPermissions.addAll(replaced);
             // build current tree
-            // revoked or replaced permissions cannot be displayed because they can only be object permissions and those cannot
+            // revoked or replaced permissions cannot be displayed because they can only be object permissions and those
+            // cannot
             // be marked
             currentPermissionRoot = getPermissionTree(currentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.REMOVED);
             // build new tree
@@ -336,7 +356,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode).setSelectable(false);
         } else {
             if (selectable) {
-                getSelectablePermissionTree(userNode, currentUserPermissions,userDataPermissions,  granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+                getSelectablePermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
             } else {
                 getPermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, Marking.NEW);
             }
@@ -348,16 +368,26 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             // Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             selectedPermissions = getSelectedPermissions(selectedResourceNodes);
-            List<Permission> userPermissions = permissionManager.getPermissions(user);
-            Set<Permission> granted = getGrantablePermissions(userPermissions, selectedPermissions).get(0);
-            Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
-            Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
+            if (action.equals("grant")) {
+                List<Permission> userPermissions = permissionManager.getPermissions(user);
+                Set<Permission> granted = getGrantablePermissions(userPermissions, selectedPermissions).get(0);
+                Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
+                Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
 
-            for (Permission permission : replaced) {
-                permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
-            }
-            for (Permission permission : finalGranted) {
-                permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
+                for (Permission permission : replaced) {
+                    permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
+                }
+                for (Permission permission : finalGranted) {
+                    permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
+                }
+            }else{
+                Set<Permission> revoked = getRevokablePermissions(selectedPermissions);
+                // fix implied actions
+                Set<Permission> finalRevoked = revokeImpliedPermissions(currentPermissions, revoked);
+
+                for (Permission permission : finalRevoked) {
+                    permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
+                }
             }
         }
         usersConfirmed = true;
@@ -551,6 +581,10 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
     public boolean isGroup() {
         return selectedSubject instanceof Role;
+    }
+
+    public void returnToPreviousPage() {
+        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase" + prevPath, false);
     }
 
 }

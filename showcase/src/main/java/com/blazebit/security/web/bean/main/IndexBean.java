@@ -147,7 +147,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
             }
             List<UserGroup> groups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
             for (UserGroup parent : groups) {
-                removeGroupPermissions(parent);
+                removeGroupObjectPermissions(parent);
             }
 
         }
@@ -175,12 +175,12 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
             }
         }
         for (UserGroup child : userGroupService.getGroupsForGroup(parent)) {
-            removeGroupPermissions(child);
+            replaceGroupPermissions(child);
         }
 
     }
 
-    private void removeGroupPermissions(UserGroup parent) {
+    private void removeGroupObjectPermissions(UserGroup parent) {
         List<Permission> permissions = permissionManager.getPermissions(parent);
         for (Permission permission : permissions) {
             EntityField entityField = (EntityField) permission.getResource();
@@ -189,7 +189,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
             }
         }
         for (UserGroup child : userGroupService.getGroupsForGroup(parent)) {
-            removeGroupPermissions(child);
+            removeGroupObjectPermissions(child);
         }
 
     }

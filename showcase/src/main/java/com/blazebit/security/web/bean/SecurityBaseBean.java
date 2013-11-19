@@ -29,6 +29,7 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
 import com.blazebit.security.web.service.api.ActionUtils;
+import com.blazebit.security.web.service.api.ResourceNameFactory;
 import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.service.api.UserService;
 import com.blazebit.security.web.util.FieldUtils;
@@ -40,6 +41,8 @@ public class SecurityBaseBean {
 
     @Inject
     protected EntityResourceFactory entityFieldFactory;
+    @Inject
+    protected ResourceNameFactory resourceNameFactory;
     @Inject
     protected ActionFactory actionFactory;
     @Inject
@@ -66,12 +69,24 @@ public class SecurityBaseBean {
      * @param field
      * @return
      */
-    public boolean isAuthorized(ActionConstants actionConstant, String resourceName, String field) {
+    public boolean isAuthorized(ActionConstants actionConstant, String clazzName, String field) {
         try {
-            return isGranted(actionConstant, entityFieldFactory.createResource(Class.forName(resourceName), field));
+            return isGranted(actionConstant, entityFieldFactory.createResource(Class.forName(clazzName), field));
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    /**
+     * authorization check for resource name with field. usage from EL
+     * 
+     * @param actionConstant
+     * @param resourceName
+     * @param field
+     * @return
+     */
+    public boolean isAuthorized(ActionConstants actionConstant, String clazzName) {
+        return isAuthorized(actionConstant, clazzName, EntityField.EMPTY_FIELD);
     }
 
     /**
@@ -81,12 +96,8 @@ public class SecurityBaseBean {
      * @param resourceName
      * @return
      */
-    public boolean isAuthorized(ActionConstants actionConstant, String resourceName) {
-        try {
-            return isGranted(actionConstant, entityFieldFactory.createResource(Class.forName(resourceName)));
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+    public boolean isAuthorizedResourceName(ActionConstants actionConstant, String resourceName) {
+        return isGranted(actionConstant, entityFieldFactory.createResource(resourceName));
     }
 
     /**
@@ -127,6 +138,10 @@ public class SecurityBaseBean {
      * @return
      */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String fieldName) {
+        if (entityObject == null || !(entityObject instanceof IdHolder)) {
+            return false;
+        }
+        Resource resource = resourceNameFactory.createResource((IdHolder) entityObject, fieldName);
         switch (actionConstant) {
         // object permission can only be granted if object level is enabled
             case GRANT:
@@ -136,7 +151,7 @@ public class SecurityBaseBean {
                 }
                 break;
             case READ:
-                if (isGranted(ActionConstants.READ, entityFieldFactory.createResource(entityObject.getClass(), fieldName, ((IdHolder) entityObject).getId()))) {
+                if (isGranted(ActionConstants.READ, resource)) {
                     return true;
                 } else {
                     if (fieldName.equals(EntityField.EMPTY_FIELD)) {
@@ -154,7 +169,7 @@ public class SecurityBaseBean {
                 }
                 break;
             case UPDATE:
-                if (isGranted(ActionConstants.UPDATE, entityFieldFactory.createResource(entityObject.getClass(), fieldName, ((IdHolder) entityObject).getId()))) {
+                if (isGranted(ActionConstants.UPDATE, resource)) {
                     return true;
                 } else {
                     if (fieldName.equals(EntityField.EMPTY_FIELD)) {
@@ -179,16 +194,8 @@ public class SecurityBaseBean {
 
         }
 
-        if (entityObject != null && entityObject instanceof IdHolder) {
-            Integer id = null;
-            if (((IdHolder) entityObject).getId() != null) {
-                id = ((IdHolder) entityObject).getId();
-            }
-            return isGranted(actionConstant, entityFieldFactory.createResource(entityObject.getClass(), fieldName, id));
-        } else {
-            return false;
-            // throw new IllegalArgumentException("entityobject empty for " + actionConstant);
-        }
+        return isGranted(actionConstant, /* entityFieldFactory.createResource(entityObject.getClass(), fieldName, id) */
+                         resource);
     }
 
     protected boolean isGranted(ActionConstants actionConstant, Resource resource) {
@@ -231,14 +238,14 @@ public class SecurityBaseBean {
         }
     }
 
-    //to grant object permissions
+    // to grant object permissions
     public List<Action> getEntityActions() {
         List<Action> ret = new ArrayList<Action>();
         ret.addAll(actionUtils.getActionsForEntityObject());
         return ret;
     }
 
-    //to grant object permissions
+    // to grant object permissions
     public List<Action> getCollectionActions() {
         List<Action> ret = new ArrayList<Action>();
         ret.addAll(actionUtils.getActionsForCollectionField());

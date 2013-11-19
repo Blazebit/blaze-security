@@ -55,7 +55,8 @@
 								<p:ajax event="unselect" update=":form:tab:currentResourcePermissionTree"
 									listener="#{userResourcesBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
-									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm"/>
+									<p:tooltip for="perm" value="#{newPermission.tooltip}" showEffect="fade" hideEffect="fade" rendered="#{not empty newPermission.tooltip}"/>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

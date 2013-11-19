@@ -1,5 +1,6 @@
 package com.blazebit.security.web.bean;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -80,7 +81,7 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
     }
 
     /**
-     * helper to mark parent nodes when child nodes are marked
+     * helper to mark/select/disable selection of parent nodes when child nodes are marked/selected/selectable
      * 
      * @param node
      */
@@ -102,19 +103,23 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
                 if (!childNodeModel.getMarking().equals(firstMarking)) {
                     foundDifferentMarking = true;
                 }
-
             }
-            node.setSelectable(foundSelectable);
             TreeNodeModel nodeModel = ((TreeNodeModel) node.getData());
-            if (!foundDifferentMarking) {
-                nodeModel.setMarking(firstMarking);
-            } else {
-                nodeModel.setMarking(Marking.NONE);
+            // TODO workaround
+            if (!Marking.NEW.equals(nodeModel.getMarking())) {
+                node.setSelectable(foundSelectable);
             }
-            if (!foundUnSelected) {
-                node.setSelected(true);
-            }
+            node.setSelected(!foundUnSelected);
 
+            // if there are different kind of markings among the children, keep the parent neutral (NONE)
+            if (foundDifferentMarking) {
+                nodeModel.setMarking(Marking.NONE);
+            } else {
+                // if node has some specific marking leave that, otherwise just take the first child marking
+                if (nodeModel.getMarking().equals(Marking.NONE)) {
+                    nodeModel.setMarking(firstMarking);
+                }
+            }
         } else {
             // if entityNode has no children remove it
             TreeNodeModel treeNodeModel = (TreeNodeModel) node.getData();
@@ -149,6 +154,23 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
 
         });
         return sortedSelectedNodes;
+    }
+
+    protected List<TreeNode> getAllChildren(List<TreeNode> children) {
+        List<TreeNode> ret = new ArrayList<TreeNode>();
+        for (TreeNode child : children) {
+            getChildren(child, ret);
+        }
+        return ret;
+    }
+
+    protected void getChildren(TreeNode child, List<TreeNode> nodes) {
+        if (child.isSelected()) {
+            nodes.add(child);
+        }
+        for (TreeNode node : child.getChildren()) {
+            getChildren(node, nodes);
+        }
     }
 
 }

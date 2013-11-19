@@ -3,6 +3,12 @@
  */
 package com.blazebit.security.web.bean.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.EntityObjectField;
+
 /**
  * 
  * @author cuszk
@@ -26,7 +32,7 @@ public class TreeNodeModel {
         REMOVED("color:red"),
         NEW("color:green"),
         SELECTED("color:gray");
-        
+
         private String style;
 
         Marking() {
@@ -47,10 +53,31 @@ public class TreeNodeModel {
 
     }
 
+    /**
+     * name to be displayed in the tree
+     */
     private String name;
+    /**
+     * decides what kind of content is in this node
+     */
     private ResourceType type;
+    /**
+     * a treenode can represent multiple resources. more precisely multiple object resources, but we store every type of
+     * referenced resource in this collection
+     */
+    private Set<EntityObjectField> objectInstances = new HashSet<EntityObjectField>();
+    private EntityField entityInstance;
+    /**
+     * the content of the actual node
+     */
     private Object target;
+    /**
+     * coloring
+     */
     private Marking marking;
+    /**
+     * tooltip
+     */
     private String tooltip;
 
     public TreeNodeModel(String name, ResourceType type, Object target) {
@@ -158,7 +185,21 @@ public class TreeNodeModel {
             return false;
         return true;
     }
-    
-    
+
+    public Set<EntityObjectField> getObjectInstances() {
+        return objectInstances;
+    }
+
+    public void setObjectInstances(Set<EntityObjectField> objectInstances) {
+        this.objectInstances = objectInstances;
+    }
+
+    public EntityField getEntityInstance() {
+        return entityInstance;
+    }
+
+    public void setEntityInstance(EntityField entityInstance) {
+        this.entityInstance = entityInstance;
+    }
 
 }

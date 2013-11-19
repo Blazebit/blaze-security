@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.blazebit.security.web.bean;
+package com.blazebit.security;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,9 +24,6 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import org.apache.commons.lang3.StringUtils;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.security.Action;
-import com.blazebit.security.ActionImplicationProvider;
-import com.blazebit.security.ResourceExtensionCallback;
 import com.blazebit.security.impl.model.ResourceName;
 
 /**
@@ -37,97 +34,12 @@ import com.blazebit.security.impl.model.ResourceName;
 @ServiceProvider(Extension.class)
 public class ResourceNameExtension implements Extension {
 
-    public static class EntityResource {
-
-        private String entityClassName;
-
-        public EntityResource() {
-        }
-
-        public EntityResource(String entityClassName) {
-            super();
-            this.entityClassName = entityClassName;
-        }
-
-        public String getEntityClassName() {
-            return entityClassName;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((entityClassName == null) ? 0 : entityClassName.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            EntityResource other = (EntityResource) obj;
-            if (entityClassName == null) {
-                if (other.entityClassName != null)
-                    return false;
-            } else if (!entityClassName.equals(other.entityClassName))
-                return false;
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "EntityResource [entityClassName=" + entityClassName + "]";
-        }
-
-    }
-
-    public static class ResourceDefinition {
-
-        public ResourceDefinition() {
-        }
-
-        public ResourceDefinition(String moduleName, String resourceName) {
-            this.moduleName = moduleName;
-            this.resourceName = resourceName;
-        }
-
-        String moduleName;
-        String resourceName;
-        String testExpression;
-
-        @Override
-        public String toString() {
-            return "ResourceDefinition [moduleName=" + moduleName + ", resourceName=" + resourceName + "]";
-        }
-
-    }
-
-    public static class EntityResourceDefinition {
-
-        public EntityResourceDefinition() {
-
-        }
-
-        public EntityResourceDefinition(EntityResource resource, String resourceName) {
-            this.resource = resource;
-            this.resourceName = resourceName;
-        }
-
-        EntityResource resource;
-        String resourceName;
-
-        @Override
-        public String toString() {
-            return "EntityResourceDefinition [resource=" + resource + ", resourceName=" + resourceName + "]";
-        }
-
-    }
-
     private Map<EntityResource, List<ResourceDefinition>> resources = new HashMap<EntityResource, List<ResourceDefinition>>();
+
+    public Map<EntityResource, List<ResourceDefinition>> getResources() {
+        return resources;
+    }
+
     private Map<ResourceDefinition, EntityResource> entities = new HashMap<ResourceDefinition, EntityResource>();
     private Map<Action, List<Action>> actions = new HashMap<Action, List<Action>>();
     private final Collection<Class<?>> resourceClasses = new HashSet<Class<?>>();
@@ -148,7 +60,7 @@ public class ResourceNameExtension implements Extension {
             } else {
                 resourceDefinitions = new ArrayList<ResourceDefinition>();
             }
-            ResourceDefinition resourceDefinition = new ResourceDefinition(annotation.module(), annotation.name());
+            ResourceDefinition resourceDefinition = new ResourceDefinition(annotation.module(), annotation.name(), "core");
             resourceDefinitions.add(resourceDefinition);
             entities.put(resourceDefinition, entityResource);
             resources.put(entityResource, resourceDefinitions);
@@ -166,6 +78,9 @@ public class ResourceNameExtension implements Extension {
                 List<ResourceDefinition> resourceDefinitions = resources.get(entityResource);
                 resourceDefinitions.addAll(result.get(entityResource));
                 resources.put(entityResource, resourceDefinitions);
+                for (ResourceDefinition rd: resourceDefinitions){
+                    entities.put(rd, entityResource);
+                }
             }
         }
         Iterator<ActionImplicationProvider> actionImplicationIterator = ServiceLoader.load(ActionImplicationProvider.class).iterator();
@@ -180,14 +95,14 @@ public class ResourceNameExtension implements Extension {
         for (EntityResource entityClassName : resources.keySet()) {
             for (ResourceDefinition resourceDefinition : resources.get(entityClassName)) {
                 List<EntityResourceDefinition> resourceNames = new ArrayList<EntityResourceDefinition>();
-                if (!StringUtils.isEmpty(resourceDefinition.moduleName)) {
-                    if (ret.containsKey(resourceDefinition.moduleName)) {
-                        resourceNames = ret.get(resourceDefinition.moduleName);
+                if (!StringUtils.isEmpty(resourceDefinition.getModuleName())) {
+                    if (ret.containsKey(resourceDefinition.getModuleName())) {
+                        resourceNames = ret.get(resourceDefinition.getModuleName());
                     } else {
                         resourceNames = new ArrayList<EntityResourceDefinition>();
                     }
-                    resourceNames.add(new EntityResourceDefinition(entityClassName, resourceDefinition.resourceName));
-                    ret.put(resourceDefinition.moduleName, resourceNames);
+                    resourceNames.add(new EntityResourceDefinition(entityClassName, resourceDefinition.getResourceName()));
+                    ret.put(resourceDefinition.getModuleName(), resourceNames);
                 }
             }
         }
@@ -197,7 +112,7 @@ public class ResourceNameExtension implements Extension {
 
                 @Override
                 public int compare(EntityResourceDefinition o1, EntityResourceDefinition o2) {
-                    return o1.resourceName.compareToIgnoreCase(o2.resourceName);
+                    return o1.getResourceName().compareToIgnoreCase(o2.getResourceName());
                 }
 
             });
@@ -208,7 +123,7 @@ public class ResourceNameExtension implements Extension {
 
     public EntityResource getEntityResourceByResourceName(String resourceName) {
         for (ResourceDefinition resourceDefinition : entities.keySet()) {
-            if (resourceDefinition.resourceName.equals(resourceName)) {
+            if (resourceDefinition.getResourceName().equals(resourceName)) {
                 return entities.get(resourceDefinition);
             }
         }

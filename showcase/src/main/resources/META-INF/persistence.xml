@@ -48,7 +48,7 @@
 			<property name="hibernate.show_sql" value="true" />
 			<property name="hibernate.hbm2ddl.auto" value="update" />
 			<property name="hibernate.ejb.interceptor"
-				value="com.blazebit.security.impl.interceptor.ChangeInterceptor" />
+				value="com.blazebit.security.interceptor.ChangeInterceptor" />
 		</properties>
 	</persistence-unit>
 </persistence>

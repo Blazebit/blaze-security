@@ -26,11 +26,11 @@
 
 				<p:tab id="subject" title="Users/Groups">
 
-					<p:tabView activeIndex="#{resourcesBean.activeTabIndex}">
+					<p:tabView activeIndex="#{resourcesBean.activeTabIndex}" >
 						<p:ajax event="tabChange" />
 
 						<p:tab title="Users" id="permissionsUser" disabled="#{!userSession.selectedCompany.userLevelEnabled}">
-							<p:dataTable value="#{resourcesBean.userList}" var="userModel">
+							<p:dataTable value="#{resourcesBean.userList}" var="userModel" rendered="#{userSession.selectedCompany.userLevelEnabled}">
 								<p:column>
 									<p:selectBooleanCheckbox value="#{userModel.selected}" />
 								</p:column>
@@ -143,7 +143,7 @@
 					<h:panelGrid columns="2" columnClasses="top,top">
 
 						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentGroupUserPermissionTree"
-							rendered="#{resourcesBean.currentUserRoot.childCount ne 0}">
+							rendered="#{resourcesBean.currentUserRoot.childCount ne 0}" selectionMode="checkbox">
 							<p:treeNode>
 								<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
 							</p:treeNode>

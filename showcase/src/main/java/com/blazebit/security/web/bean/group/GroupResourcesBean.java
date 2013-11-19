@@ -75,6 +75,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         TreeNode groupNode = permissionViewRoot;
         groupNode = new DefaultTreeNode(new TreeNodeModel(getSelectedGroup().getName(), ResourceType.USERGROUP, getSelectedGroup(), Marking.SELECTED), groupNode);
         groupNode.setExpanded(true);
+        groupNode.setSelectable(false);
         getPermissionTree(groupNode, groupPermissions, groupDataPermissions);
     }
 

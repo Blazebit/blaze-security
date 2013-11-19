@@ -20,7 +20,6 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
@@ -31,6 +30,7 @@ import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
+import com.blazebit.security.interceptor.ChangeInterceptor;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.api.UserGroupService;
@@ -202,6 +202,9 @@ public class StartupBean {
 
             permissionManager.save(permissionFactory.create(group, addAction, entityFieldFactory.createResource(Carrier.class, "contacts")));
             permissionManager.save(permissionFactory.create(group, removeAction, entityFieldFactory.createResource(Carrier.class, "contacts")));
+            
+            permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource("Carrier_Party")));
+            permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource("Carrier_Party")));
 
             group = groups.get(5);
             permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource(CarrierGroup.class)));

@@ -8,9 +8,6 @@ import java.util.Map;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.web.bean.ResourceNameExtension;
-import com.blazebit.security.web.bean.ResourceNameExtension.EntityResource;
-import com.blazebit.security.web.bean.ResourceNameExtension.ResourceDefinition;
 
 @ServiceProvider(ResourceExtensionCallback.class)
 public class CarrierResourceExtensionCallback implements ResourceExtensionCallback {
@@ -21,7 +18,7 @@ public class CarrierResourceExtensionCallback implements ResourceExtensionCallba
         Map<EntityResource, List<ResourceDefinition>> ret = new HashMap<EntityResource, List<ResourceDefinition>>();
         for (Class<?> type : collection) {
             if (type.equals(Party.class)) {
-                ResourceDefinition def = new ResourceNameExtension.ResourceDefinition("Carrier", "Carrier_Party");
+                ResourceDefinition def = new ResourceDefinition("Carrier", "Carrier_Party", "carrier");
                 ret.put(new EntityResource(type.getName()), Arrays.asList(def));
             }
         }

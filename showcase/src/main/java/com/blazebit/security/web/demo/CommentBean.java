@@ -121,6 +121,7 @@ public class CommentBean extends SecurityBaseBean {
                     resourceObjectBean.getSelectedObjects().add(rowModel);
                 }
             }
+            resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
             WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
         } else {
             System.err.println("Must select subject/action/comment");

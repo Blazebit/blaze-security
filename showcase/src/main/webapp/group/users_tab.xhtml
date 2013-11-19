@@ -57,8 +57,9 @@
 				</h:panelGrid>
 
 				<h:panelGroup layout="block">
-					<p:commandButton value="Back" onclick="groupUserWizard.back();" style="float:left" />
-					<p:commandButton value="Confirm" style="float:left" action="#{groupUsersBean.confirmPermissions}"
+					<p:commandButton value="Back" onclick="groupUserWizard.back();" style="float:left" rendered="#{!userSession.selectedCompany.userLevelEnabled}" action="#{groupUsersBean.init()}" oncomplete="groupUserWizard.loadStep (groupUserWizard.cfg.steps [0], true)"/>
+					<p:commandButton value="Back" onclick="groupUserWizard.back();" style="float:left" rendered="#{userSession.selectedCompany.userLevelEnabled}"/>
+					<p:commandButton value="Confirm" style="float:left" action="#{groupUsersBean.confirmPermissions}" rendered="#{userSession.selectedCompany.userLevelEnabled}"
 						oncomplete="groupUserWizard.loadStep (groupUserWizard.cfg.steps [0], true)" />
 				</h:panelGroup>
 			</p:tab>

@@ -2,11 +2,14 @@ package com.blazebit.security.web.bean;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -28,8 +31,8 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
      */
     protected DefaultTreeNode buildGroupTree(List<UserGroup> selectedGroups) {
         DefaultTreeNode root = new DefaultTreeNode("root", null);
-        List<UserGroup> rootParents = new ArrayList<UserGroup>();
-        List<UserGroup> passedParents = new ArrayList<UserGroup>();
+        Set<UserGroup> rootParents = new HashSet<UserGroup>();
+        Set<UserGroup> passedParents = new HashSet<UserGroup>();
         for (UserGroup userGroup : selectedGroups) {
             UserGroup parent = userGroup.getParent();
             passedParents.add(userGroup);
@@ -46,6 +49,14 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
             }
 
         }
+        List<UserGroup> groups = new ArrayList<UserGroup>(rootParents);
+        Collections.sort(groups, new Comparator<UserGroup>() {
+
+            @Override
+            public int compare(UserGroup o1, UserGroup o2) {
+                return o1.getName().compareToIgnoreCase(o2.getName());
+            }
+        });
         for (UserGroup parent : rootParents) {
             createGroupNode(parent, passedParents, selectedGroups, root);
 
@@ -61,7 +72,7 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
      * @param userGroups
      * @param node
      */
-    private void createGroupNode(UserGroup group, List<UserGroup> parentGroups, List<UserGroup> userGroups, TreeNode node) {
+    private void createGroupNode(UserGroup group, Collection<UserGroup> parentGroups, Collection<UserGroup> userGroups, TreeNode node) {
         if (parentGroups.contains(group)) {
             DefaultTreeNode childNode = new DefaultTreeNode(new UserGroupModel(group, userGroups.contains(group), false), node);
             childNode.setExpanded(true);

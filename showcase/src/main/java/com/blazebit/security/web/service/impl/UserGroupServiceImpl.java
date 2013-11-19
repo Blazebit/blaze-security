@@ -41,6 +41,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     public void delete(UserGroup userGroup) {
         UserGroup reloadedUserGroup = loadUserGroup(userGroup);
         permissionManager.remove(reloadedUserGroup.getAllPermissions());
+        permissionManager.flush();
         for (UserGroup ug : reloadedUserGroup.getUserGroups()) {
             ug.setParent(null);
             entityManager.merge(ug);
