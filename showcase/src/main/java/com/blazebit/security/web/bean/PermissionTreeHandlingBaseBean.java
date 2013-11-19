@@ -63,13 +63,14 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                         // collection field resources are ALWAYS stored as entity field resources; all field childs selected
                         // then action node should be taken, if object resources specified action node should be taken
 
-                        if (!permissionNodeData.getObjectInstances().isEmpty()) {
-                            // add object resources if exist
-                            for (EntityField instance : permissionNodeData.getObjectInstances()) {
-                                Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), instance);
-                                ret.add(actionPermission);
-                            }
-                        }
+                        // if (!permissionNodeData.getObjectInstances().isEmpty()) {
+                        // // add object resources if exist
+                        // for (EntityField instance : permissionNodeData.getObjectInstances()) {
+                        // Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(),
+                        // instance);
+                        // ret.add(actionPermission);
+                        // }
+                        // }
 
                         if (!actionUtils.getActionsForCollectionField().contains(permissionNodeData.getTarget())
                             && allChildFieldsListed(permissionNode, ((TreeNodeModel) entityNode.getData()).getName())) {
@@ -78,6 +79,8 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                                 // add entity field resource
                                 Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), permissionNodeData.getEntityInstance());
                                 ret.add(actionPermission);
+                            } else {
+                                System.err.println("Somethings wrong in the code!!");
                             }
                         }
                     }
@@ -88,13 +91,16 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                     TreeNode actionEntityNode = actionNode.getParent();
 
                     if ((parentNode != null && actionEntityNode.getParent().getData().equals(parentNode.getData())) || parentNode == null) {
-                        for (EntityField instance : permissionNodeData.getObjectInstances()) {
-                            Permission fieldPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), instance);
-                            ret.add(fieldPermission);
-                        }
+                        // for (EntityField instance : permissionNodeData.getObjectInstances()) {
+                        // Permission fieldPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(),
+                        // instance);
+                        // ret.add(fieldPermission);
+                        // }
                         if (permissionNodeData.getEntityInstance() != null) {
                             Permission actionPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), permissionNodeData.getEntityInstance());
                             ret.add(actionPermission);
+                        } else {
+                            System.err.println("Somethings wrong in the code");
                         }
                     }
                     break;
@@ -254,7 +260,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             actioneNodeModel.setMarking(marking);
             actionNode.setSelected(true);
         }
-        
+
     }
 
     /**
@@ -282,7 +288,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             fieldNodeModel.setMarking(marking);
             fieldNode.setSelected(true);
         }
-        
+
     }
 
     /**
@@ -364,7 +370,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
         DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
         actionNode.setExpanded(true);
-        //actionNodeModel.setEntityInstance(entityField);
+        // actionNodeModel.setEntityInstance(entityField);
 
         createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, permissionsByAction, actionNode);
         createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, dataPermissionsByAction, actionNode);

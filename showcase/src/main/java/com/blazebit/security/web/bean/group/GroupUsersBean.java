@@ -228,7 +228,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         Set<Permission> grant = getGrantablePermissions(userPermissions, user, selectedGroupPermissions);
         userPermissions.addAll(grant);
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
-            getSelectablePermissionTree(userNode, userPermissions, userDataPermissions, grant, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+            getSelectablePermissionTree(userNode, userPermissions, new ArrayList<Permission>(), grant, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
         } else {
             getPermissionTree(userNode, userPermissions, userDataPermissions, grant, Marking.NEW);
         }
@@ -244,7 +244,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         Set<Permission> revoked = grantedAndRevoked.get(0);
 
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
-            getSelectablePermissionTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), revoked, Marking.NEW, Marking.REMOVED);
+            getSelectablePermissionTree(userNode, userPermissions, new ArrayList<Permission>(), new HashSet<Permission>(), revoked, Marking.NEW, Marking.REMOVED);
         } else {
             List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
             currentUserPermissions = (List<Permission>) removeAll(currentUserPermissions, revoked);
@@ -297,7 +297,9 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
         for (TreeNode userNode : newPermissionRoot.getChildren()) {
             TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
             User user = (User) userNodeModel.getTarget();
-            List<Permission> userPermissions = permissionManager.getPermissions(user);
+            List<Permission> allPermissions = permissionManager.getPermissions(user);
+            List<Permission> userPermissions = filterPermissions(allPermissions).get(0);
+            List<Permission> userDataPermissions = filterPermissions(allPermissions).get(1);
             Set<Permission> selectedPermissions;
 
             // TODO fix this. set selectedUserNodes when building the tree
@@ -308,11 +310,13 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
                 List<TreeNode> nodes = getAllChildren(userNode.getChildren());
                 selectedPermissions = getSelectedPermissions(nodes.toArray(new TreeNode[nodes.size()]));
             }
+            selectedPermissions.addAll(userDataPermissions);
+            
             if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                 // add new suers
-                Set<Permission> granted = getGrantedPermission(userPermissions, selectedPermissions).get(0);
-                Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
-                Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
+                Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
+                Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
+                Set<Permission> replaced = getReplacedPermissions(allPermissions, selectedPermissions);
                 for (Permission permission : replaced) {
                     permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
                 }
@@ -322,8 +326,8 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
                 roleService.addSubjectToRole(user, getSelectedGroup());
             } else {
                 // remove user
-                Set<Permission> revoked = getRevokedPermissions(userPermissions, selectedPermissions).get(0);
-                Set<Permission> finalRevoked = revokeImpliedPermissions(userPermissions, revoked);
+                Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
+                Set<Permission> finalRevoked = revokeImpliedPermissions(allPermissions, revoked);
 
                 for (Permission permission : finalRevoked) {
                     permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());

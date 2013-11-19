@@ -356,7 +356,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), userNode).setSelectable(false);
         } else {
             if (selectable) {
-                getSelectablePermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+                getSelectablePermissionTree(userNode, currentUserPermissions, new ArrayList<Permission>(), granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
             } else {
                 getPermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, Marking.NEW);
             }

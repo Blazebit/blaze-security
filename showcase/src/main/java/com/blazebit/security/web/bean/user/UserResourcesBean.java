@@ -113,7 +113,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
-        newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, userDataPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
+        newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, new ArrayList<Permission>(), granted, revoked, Marking.NEW, Marking.REMOVED);
     }
 
     /**
@@ -121,25 +121,30 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      * 
      */
     public void confirmPermissions() {
+        //always handle object permissions like they were selected -> then they will be revoked if necessary
         Set<Permission> selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
+        selectedResourcePermissions.addAll(userDataPermissions);
         Set<Permission> previouslyReplaced = getReplacedPermissions(allPermissions, selectedResourcePermissions);
         
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         selectedPermissions.addAll(previouslyReplaced);
         
+        selectedPermissions.addAll(userDataPermissions);
+        
         Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
-        // Set<Permission> replaced = getReplacedPermissions(userPermissions, granted);
+        Set<Permission> replaced = getReplacedPermissions(allPermissions, granted);
         Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
 
         Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
         Set<Permission> finalRevoked = revokeImpliedPermissions(allPermissions, revoked);
+        
+        for (Permission permission : replaced) {
+            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
+        }
 
         for (Permission permission : finalRevoked) {
             permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
-        // for (Permission permission : replaced) {
-        // permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        // }
         for (Permission permission : finalGranted) {
             permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
@@ -163,11 +168,13 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      */
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
+        selectedResourcePermissions.addAll(userDataPermissions);
         Set<Permission> previouslyReplaced = getReplacedPermissions(allPermissions, selectedResourcePermissions);
 
         // current selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         selectedPermissions.addAll(previouslyReplaced);
+        selectedPermissions.addAll(userDataPermissions);
 
         Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
         Set<Permission> replaced = getReplacedPermissions(allPermissions, granted);

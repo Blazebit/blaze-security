@@ -1,5 +1,5 @@
 /*
- * To change this template, choose Tools | Templates and open the template in the editor.
+ * \ * To change this template, choose Tools | Templates and open the template in the editor.
  */
 package com.blazebit.security.web.bean.resources;
 
@@ -177,11 +177,11 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         if (selectedUsers.isEmpty()) {
             return false;
         }
-        createUserPermissionTrees(selectedUsers, true);
+        createUserPermissionTreesAfterResourceSelect(selectedUsers, true);
         return true;
     }
 
-    private void createUserPermissionTrees(List<User> selectedUsers, boolean selectable) {
+    private void createUserPermissionTreesAfterGroupConfirmation(List<User> selectedUsers, boolean selectable) {
         currentUserRoot = new DefaultTreeNode();
         newUserRoot = new DefaultTreeNode();
         for (User user : selectedUsers) {
@@ -195,6 +195,15 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
             createCurrentUserNode(user, currentUserRoot, selectedPermissions);
             createNewUserNode(user, newUserRoot, selectedPermissions, selectable);
+        }
+    }
+
+    private void createUserPermissionTreesAfterResourceSelect(List<User> selectedUsers, boolean selectable) {
+        currentUserRoot = new DefaultTreeNode();
+        newUserRoot = new DefaultTreeNode();
+        for (User user : selectedUsers) {
+            createCurrentUserNode(user, currentUserRoot, selectedResourcePermissions);
+            createNewUserNode(user, newUserRoot, selectedResourcePermissions, selectable);
         }
     }
 
@@ -255,7 +264,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
         if (selectable) {
-            getSelectablePermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+            getSelectablePermissionTree(userNode, currentUserPermissions, new ArrayList<Permission>(), granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
         } else {
             getPermissionTree(userNode, currentUserPermissions, userDataPermissions, granted, Marking.NEW);
         }
@@ -273,10 +282,13 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 selectedPermissions = getSelectedPermissions(nodes.toArray(new TreeNode[nodes.size()]));
             }
 
-            List<Permission> userPermissions = permissionManager.getPermissions(user);
-            Set<Permission> granted = getGrantablePermissions(userPermissions, selectedPermissions).get(0);
-            Set<Permission> finalGranted = grantImpliedPermissions(userPermissions, granted);
-            Set<Permission> replaced = getReplacedPermissions(userPermissions, selectedPermissions);
+            List<Permission> allPermissions = permissionManager.getPermissions(user);
+            List<Permission> userDataPermissions = filterPermissions(allPermissions).get(1);
+            selectedPermissions.addAll(userDataPermissions);
+
+            Set<Permission> granted = getGrantablePermissions(allPermissions, selectedPermissions).get(0);
+            Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
+            Set<Permission> replaced = getReplacedPermissions(allPermissions, selectedPermissions);
 
             for (Permission permission : replaced) {
                 permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
@@ -287,7 +299,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         }
         init();
     }
-    
+
     // resources for groups
     private boolean processResourcesForGroups() {
         if (selectedGroupNodes.length == 0) {
@@ -339,7 +351,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
         currentGroupPermissions.removeAll(replaced);
         currentGroupPermissions.addAll(granted);
-        getSelectablePermissionTree(groupNode, currentGroupPermissions, userGroupDataPermissions, granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
+        getSelectablePermissionTree(groupNode, currentGroupPermissions, new ArrayList<Permission>(), granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
     }
 
     private void createCurrentGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions) {
@@ -405,11 +417,16 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             UserGroup userGroup = (UserGroup) ((TreeNodeModel) groupNode.getData()).getTarget();
             selectedGroups.add(userGroup);
 
-            List<Permission> groupPermissions = permissionManager.getPermissions(userGroup);
-            Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
+            List<Permission> permissions = permissionManager.getPermissions(userGroup);
 
-            Set<Permission> granted = getGrantablePermissions(groupPermissions, selectedPermissions).get(0);
-            Set<Permission> finalGranted = grantImpliedPermissions(groupPermissions, granted);
+            List<Permission> groupPermissions = filterPermissions(permissions).get(0);
+            List<Permission> groupDataPermissions = filterPermissions(permissions).get(1);
+
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
+            selectedPermissions.addAll(groupDataPermissions);
+
+            Set<Permission> granted = getGrantablePermissions(permissions, selectedPermissions).get(0);
+            Set<Permission> finalGranted = grantImpliedPermissions(permissions, granted);
             Set<Permission> replaced = getReplacedPermissions(userGroup, granted);
 
             for (Permission permission : replaced) {
@@ -433,7 +450,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             }
 
         });
-        createUserPermissionTrees(sortedUsers, userSession.getSelectedCompany().isUserLevelEnabled());
+        createUserPermissionTreesAfterGroupConfirmation(sortedUsers, userSession.getSelectedCompany().isUserLevelEnabled());
         // if user level is not enabled confirm user permissions immediately
         if (!userSession.getSelectedCompany().isUserLevelEnabled()) {
             confirmUserPermissions();
