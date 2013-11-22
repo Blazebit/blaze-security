@@ -15,15 +15,10 @@ package com.blazebit.security.web.service.impl;
 import java.util.Set;
 
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.PermissionActionException;
-import com.blazebit.security.PermissionDataAccess;
-import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.service.api.RoleService;

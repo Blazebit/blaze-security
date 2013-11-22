@@ -30,11 +30,11 @@ import org.hibernate.type.Type;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.reflection.ReflectionUtils;
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionException;
 import com.blazebit.security.PermissionService;
+import com.blazebit.security.ResourceNameFactory;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.EntityField;
@@ -92,13 +92,14 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
-        //ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
+        // EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
         PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
         boolean isGranted = changedPropertyNames.isEmpty();
         for (String propertyName : changedPropertyNames) {
             isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                    entityFieldFactory.createResource((IdHolder) entity, propertyName));
+            /* entityFieldFactory.createResource((IdHolder) entity, propertyName) */
+            resourceNameFactory.createResource((IdHolder) entity, propertyName));
             if (!isGranted) {
                 break;
             }
@@ -135,7 +136,8 @@ public class ChangeInterceptor extends EmptyInterceptor {
             String fieldName = StringUtils.replace(newValuesCollection.getRole(), entity.getClass().getName() + ".", "");
             UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
             ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-            EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+            // EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+            ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
             PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
 
             // find all objects that were added
@@ -151,16 +153,16 @@ public class ChangeInterceptor extends EmptyInterceptor {
             if (!oldValues.isEmpty()) {
                 // if something remained
                 isGrantedToRemove = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
-                                                                entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                                                                resourceNameFactory.createResource((IdHolder) entity, fieldName));
             }
             newValues.removeAll(retained);
             if (!newValues.isEmpty()) {
                 if (userContext.getUser().getCompany().isFieldLevelEnabled()) {
                     isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                                 entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                                                                 resourceNameFactory.createResource((IdHolder) entity, fieldName));
                 } else {
                     isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                 entityFieldFactory.createResource((IdHolder) entity));
+                                                                 resourceNameFactory.createResource((IdHolder) entity));
                 }
             }
 
@@ -239,10 +241,11 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        // EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
         PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
         boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
-                                                        entityFieldFactory.createResource(entity.getClass(), EntityField.EMPTY_FIELD));
+                                                        resourceNameFactory.createResource((IdHolder) entity, EntityField.EMPTY_FIELD));
         if (!isGranted) {
             throw new PermissionException("Entity " + entity + " is not permitted to be persisted by " + userContext.getUser());
         }
@@ -258,10 +261,10 @@ public class ChangeInterceptor extends EmptyInterceptor {
                     // elements have been added
                     if (userContext.getUser().getCompany().isFieldLevelEnabled()) {
                         isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                                         entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                                                                         resourceNameFactory.createResource((IdHolder) entity, fieldName));
                     } else {
                         isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                         entityFieldFactory.createResource((IdHolder) entity));
+                                                                         resourceNameFactory.createResource((IdHolder) entity));
                     }
 
                     if (!isGrantedAddEntity) {
@@ -273,7 +276,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
                     // if value has been changed
                     if (state[i] != null) {
                         isGrantedUpdateRelatedEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                                   entityFieldFactory.createResource((IdHolder) entity, fieldName));
+                                                                                   resourceNameFactory.createResource((IdHolder) entity, fieldName));
                         if (!isGrantedUpdateRelatedEntity) {
                             throw new PermissionException("Entity " + entity + "'s field " + fieldName + " cannot be updated by " + userContext.getUser());
                         }
@@ -300,10 +303,11 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        //EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
+        ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
         PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
         boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.DELETE),
-                                                        entityFieldFactory.createResource((IdHolder) entity));
+                                                        resourceNameFactory.createResource((IdHolder) entity));
         if (!isGranted) {
             throw new PermissionException("Entity " + entity + " is not permitted to be deleted by " + userContext.getUser());
         }

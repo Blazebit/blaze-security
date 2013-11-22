@@ -9,8 +9,7 @@
 			<f:event listener="#{userGroupsBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
 			<h3>Selected user: #{userSession.selectedUser.username}</h3>
 
-			<p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="groupWizard" showNavBar="false"
-				step="#{userGroupsBean.groupWizardStep}">
+			<p:wizard flowListener="#{userGroupsBean.groupWizardListener}" widgetVar="groupWizard" showNavBar="false">
 				<script>
 					groupWizard.loadStep (groupWizard.cfg.steps [0], true)
 				</script>
@@ -20,7 +19,7 @@
 						group.<br /> To remove the selected user from the group unselect the group.<br />
 					</p>
 
-
+#{userGroupsBean.groupRoot.childCount}
 					<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
 
 						<h:panelGroup layout="block">

@@ -3,7 +3,6 @@
  */
 package com.blazebit.security.web.service.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Stateless;

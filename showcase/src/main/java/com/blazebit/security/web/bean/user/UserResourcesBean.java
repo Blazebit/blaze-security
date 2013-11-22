@@ -5,6 +5,7 @@ package com.blazebit.security.web.bean.user;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
 
     private void initPermissions() {
         allPermissions = permissionManager.getPermissions(getSelectedUser());
-        List<List<Permission>> all = filterPermissions(allPermissions);
+        List<List<Permission>> all = permissionHandlingUtils.filterPermissions(allPermissions);
         userPermissions = all.get(0);
         userDataPermissions = all.get(1);
     }
@@ -79,7 +80,6 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         if (event.getOldStep().equals("resources")) {
             processSelectedResources();
         }
-
         return event.getNewStep();
     }
 
@@ -87,100 +87,89 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      * wizard step 1
      */
     public void processSelectedResources() {
-        //read selected resources
+        // read selected resources
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
-        //add automatically object permissions because they could not have been unselected
-        selectedPermissions.addAll(userDataPermissions);
-        //check what has been revoked
-        List<Set<Permission>> revoke = getRevokedPermissions(allPermissions, selectedPermissions);
+        // check what has been revoked
+        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokable(userPermissions, selectedPermissions);
         Set<Permission> revoked = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
-        //check what has been granted
-        List<Set<Permission>> grant = getGrantedPermission(allPermissions, selectedPermissions);
+
+        // remove revoked permissions from current permission list so we can check what can be granted after revoking
+        // check what has been granted
+        List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(userPermissions, revoked), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
-        //replaced
-        Set<Permission> replaced = getReplacedPermissions(allPermissions, selectedPermissions);
+
+        Set<Permission> allReplaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, granted);
 
         // current permission tree
         Set<Permission> removedPermissions = new HashSet<Permission>(revoked);
-        removedPermissions.addAll(replaced);
+        removedPermissions.addAll(allReplaced);
         currentPermissionTreeRoot = getPermissionTree(userPermissions, userDataPermissions, removedPermissions, Marking.REMOVED);
 
         // modify current user permissions based on resource selection
         List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
-        
+
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
+        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(currentUserPermissions, granted);
         currentUserPermissions.removeAll(replaced);
         currentUserPermissions.addAll(granted);
         newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, new ArrayList<Permission>(), granted, revoked, Marking.NEW, Marking.REMOVED);
     }
 
     /**
-     * confirm button when adding permissions to user
+     * wizard step 2: confirm button when adding permissions to user
      * 
      */
     public void confirmPermissions() {
-        //always handle object permissions like they were selected -> then they will be revoked if necessary
         Set<Permission> selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
-        selectedResourcePermissions.addAll(userDataPermissions);
-        Set<Permission> previouslyReplaced = getReplacedPermissions(allPermissions, selectedResourcePermissions);
-        
+        Set<Permission> previouslyReplaced = permissionHandlingUtils.getReplacedByGranting(userPermissions, selectedResourcePermissions);
+
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        selectedPermissions.addAll(previouslyReplaced);
-        
-        selectedPermissions.addAll(userDataPermissions);
-        
-        Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(allPermissions, granted);
-        Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
-
-        Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
-        Set<Permission> finalRevoked = revokeImpliedPermissions(allPermissions, revoked);
-        
-        for (Permission permission : replaced) {
-            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
+        // add back previously replaced, because we need to recalculate based on the current selections
+        for (Permission replacedPermission : previouslyReplaced) {
+            if (!permissionHandlingUtils.implies(selectedPermissions, replacedPermission)) {
+                selectedPermissions.add(replacedPermission);
+            }
         }
 
-        for (Permission permission : finalRevoked) {
+        Set<Permission> revoked = permissionHandlingUtils.getRevokable(userPermissions, selectedPermissions).get(0);
+        Collection<Permission> currentPermissions = permissionHandlingUtils.removeAll(userPermissions, revoked);
+        Set<Permission> granted = permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0);
+
+        for (Permission permission : revoked) {
             permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
-        for (Permission permission : finalGranted) {
+        for (Permission permission : granted) {
             permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
         }
-
-        // TODO normalize -> needed after implied action permissions. here or in service layer?
-        // initPermissions();
-        // Set<Permission> grant = normalizePermissions(userPermissions).get(0);
-        // Set<Permission> revoke = normalizePermissions(userPermissions).get(1);
-        //
-        // for (Permission permission : revoke) {
-        // permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        // }
-        // for (Permission permission : grant) {
-        // permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        // }
         init();
     }
 
     /**
-     * listener for select unselect permissons in the new permission tree
+     * changes after wizard step1, before confirm. listener for select unselect permissons in the new permission tree
      */
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedResourcePermissions = getSelectedPermissions(selectedResourceNodes);
-        selectedResourcePermissions.addAll(userDataPermissions);
-        Set<Permission> previouslyReplaced = getReplacedPermissions(allPermissions, selectedResourcePermissions);
+        Set<Permission> previouslyReplaced = permissionHandlingUtils.getReplacedByGranting(userPermissions, selectedResourcePermissions);
 
         // current selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        selectedPermissions.addAll(previouslyReplaced);
-        selectedPermissions.addAll(userDataPermissions);
+        // add back previously replaced, because we need to recalculate based on the current selections
+        for (Permission replacedPermission : previouslyReplaced) {
+            if (!permissionHandlingUtils.implies(selectedPermissions, replacedPermission)) {
+                selectedPermissions.add(replacedPermission);
+            }
+        }
 
-        Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(allPermissions, granted);
-        Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
+        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokable(userPermissions, selectedPermissions);
+        Set<Permission> revoked = revoke.get(0);
+        super.setNotRevoked(revoke.get(1));
 
-        Set<Permission> removedPermissions = new HashSet<Permission>(revoked);
+        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, selectedPermissions);
+
+        Set<Permission> removedPermissions = new HashSet<Permission>();
+        removedPermissions.addAll(revoked);
         removedPermissions.addAll(replaced);
         // current permission tree
         currentPermissionTreeRoot = getPermissionTree(userPermissions, userDataPermissions, removedPermissions, Marking.REMOVED);

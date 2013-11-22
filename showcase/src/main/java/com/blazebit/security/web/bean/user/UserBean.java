@@ -26,7 +26,6 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.GroupView;
 import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.model.UserGroupModel;
 import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.service.api.UserService;
 
@@ -79,8 +78,8 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         this.userSession.setSelectedUser(selectedUser);
 
         List<Permission> permissions = permissionManager.getPermissions(user);
-        List<Permission> userPermissions = filterPermissions(permissions).get(0);
-        List<Permission> userDataPermissions = filterPermissions(permissions).get(1);
+        List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
+        List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(permissions).get(1);
 
         this.permissionRoot = new DefaultTreeNode("root", null);
         permissionRoot = getPermissionTree(userPermissions, userDataPermissions);

@@ -15,7 +15,6 @@ import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityField;

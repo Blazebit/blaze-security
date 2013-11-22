@@ -18,7 +18,6 @@ import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.web.bean.SecurityBaseBean;
-import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.resources.ResourceObjectBean;
 import com.blazebit.security.web.util.WebUtil;

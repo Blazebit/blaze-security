@@ -52,12 +52,13 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     private List<Permission> userPermissions = new ArrayList<Permission>();
     private List<Permission> userDataPermissions = new ArrayList<Permission>();
     private List<Permission> allPermissions = new ArrayList<Permission>();
+
     private List<UserGroup> currentUserGroups = new ArrayList<UserGroup>();
     // group tree
     private TreeNode[] selectedGroupNodes = new TreeNode[] {};
-    private DefaultTreeNode groupRoot;
+    private DefaultTreeNode groupRoot = new DefaultTreeNode();
     // permissio view tree
-    private TreeNode permissionViewRoot;
+    private TreeNode permissionViewRoot = new DefaultTreeNode();
     // selected group to view group permissions
     private UserGroup selectedGroup;
 
@@ -79,17 +80,11 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
     public void init() {
         initUserGroups();
         initUserPermissions();
-        initWizard();
-    }
-
-    private void initWizard() {
-        groupWizardStep = "groups";
-
     }
 
     private void initUserPermissions() {
         allPermissions = permissionManager.getPermissions(getSelectedUser());
-        List<List<Permission>> permissions = filterPermissions(allPermissions);
+        List<List<Permission>> permissions = permissionHandlingUtils.filterPermissions(allPermissions);
         userPermissions = permissions.get(0);
         userDataPermissions = permissions.get(1);
         this.permissionViewRoot = getPermissionTree(userPermissions, userDataPermissions);
@@ -147,13 +142,13 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
 
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
-        currentPermissions = (List<Permission>) removeAll(currentPermissions, revokeablePermissionsWhenGranting);
+        currentPermissions = new ArrayList<Permission>(permissionHandlingUtils.removeAll(currentPermissions, revokeablePermissionsWhenGranting));
         currentPermissions.addAll(grantable);
 
         if (userSession.getSelectedCompany().isUserLevelEnabled()) {
             newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, new ArrayList<Permission>(), grantable, revokable, Marking.NEW, Marking.REMOVED);
         } else {
-            currentPermissions=(List<Permission>) removeAll(currentPermissions, revokable);
+            currentPermissions = (List<Permission>) permissionHandlingUtils.removeAll(currentPermissions, revokable);
             newPermissionTreeRoot = getPermissionTree(currentPermissions, userDataPermissions, grantable, Marking.NEW);
         }
     }
@@ -189,7 +184,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         for (UserGroup selecteGroup : selectedGroupsWithParents) {
             List<Permission> groupPermissions = permissionManager.getPermissions(selecteGroup);
             List<Permission> currentPermissions = permissionManager.getPermissions(getSelectedUser());
-            currentPermissions = (List<Permission>) removeAll(currentPermissions, revokable);
+            currentPermissions = new ArrayList(permissionHandlingUtils.removeAll(currentPermissions, revokable));
             for (Permission permission : groupPermissions) {
                 // filter out grantable permissions
                 if (permissionDataAccess.isGrantable(currentPermissions, permission.getAction(), permission.getResource())
@@ -209,8 +204,8 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
             }
         }
         // filter out redundant permissions
-        Set<Permission> redundantPermissions = getRedundantPermissions(grantable);
-        grantable.removeAll(redundantPermissions);
+        grantable = permissionHandlingUtils.getNormalizedPermissions(grantable);
+
         ret.add(grantable);
         ret.add(notGrantable);
         return ret;
@@ -247,28 +242,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      * listener for select unselect permissons in the new permission tree
      */
     public void rebuildCurrentPermissionTree() {
-        Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        selectedPermissions.addAll(userDataPermissions);
-        
-        Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(allPermissions, selectedPermissions);
-        Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
-
-        //todo?
-        Set<Permission> revokablePermissions = new HashSet<Permission>();
-        
-        for (Permission selectedPermission : granted) {
-            revokablePermissions.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(getSelectedUser(), selectedPermission.getAction(),
-                                                                                                 selectedPermission.getResource()));
-        }
-
-        for (Permission permission : revokableWhenRemovingFromGroup) {
-            if (!contains(selectedPermissions, permission)) {
-                revokablePermissions.add(permission);
-            }
-        }
-        currentPermissionTreeRoot = getPermissionTree(userPermissions, userDataPermissions, revokablePermissions, Marking.REMOVED);
-
+        // TODOD
     }
 
     /**
@@ -276,24 +250,12 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      */
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        selectedPermissions.addAll(userDataPermissions);
-        
-        Set<Permission> granted = getGrantedPermission(allPermissions, selectedPermissions).get(0);
-        Set<Permission> replaced = getReplacedPermissions(allPermissions, selectedPermissions);
-        Set<Permission> revoked = getRevokedPermissions(allPermissions, selectedPermissions).get(0);
 
-        Set<Permission> finalGranted = grantImpliedPermissions(allPermissions, granted);
-        Set<Permission> finalRevoked = grantImpliedPermissions(allPermissions, revoked);
+        Set<Permission> revoked = permissionHandlingUtils.getRevokable(userPermissions, selectedPermissions).get(0);
+        Set<Permission> granted = permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(userPermissions, revoked), selectedPermissions).get(0);
 
-        for (Permission permission : finalRevoked) {
-            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        }
-        for (Permission permission : replaced) {
-            permissionService.revoke(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        }
-        for (Permission permission : finalGranted) {
-            permissionService.grant(userSession.getUser(), getSelectedUser(), permission.getAction(), permission.getResource());
-        }
+        performRevokeAndGrant(getSelectedUser(), allPermissions, revoked, granted);
+
         for (UserGroup group : removedGroups) {
             roleService.removeSubjectFromRole(getSelectedUser(), group);
         }

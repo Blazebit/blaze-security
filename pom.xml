@@ -21,6 +21,7 @@
 		<module>api</module>
 		<module>impl</module>
 		<module>showcase</module>
+		<module>commons-test</module>
 	</modules>
 
 	<issueManagement>
@@ -88,6 +89,16 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>blaze-security-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-security-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-commons-test</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
