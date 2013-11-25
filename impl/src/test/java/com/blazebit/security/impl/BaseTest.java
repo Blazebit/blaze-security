@@ -81,10 +81,10 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
     protected User user1;
     protected User user2;
     // groups
-    protected UserGroup userGroupAB;
     protected UserGroup userGroupA;
     protected UserGroup userGroupB;
     protected UserGroup userGroupC;
+    protected UserGroup userGroupD;
     // actions
     protected Action createAction;
     protected Action deleteAction;
@@ -120,9 +120,6 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         user2 = new User("User 2");
         entityManager.persist(user2);
 
-        userGroupAB = new UserGroup("Usergroup AB");
-        entityManager.persist(userGroupAB);
-
         userGroupA = new UserGroup("Usergroup A");
         entityManager.persist(userGroupA);
 
@@ -131,6 +128,10 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
 
         userGroupC = new UserGroup("Usergroup C");
         entityManager.persist(userGroupC);
+        
+        userGroupD = new UserGroup("Usergroup D");
+        entityManager.persist(userGroupD);
+
         // create actions
         createAction = actionFactory.createAction(ActionConstants.CREATE);
         deleteAction = actionFactory.createAction(ActionConstants.DELETE);

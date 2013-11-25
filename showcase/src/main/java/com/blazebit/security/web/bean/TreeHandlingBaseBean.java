@@ -156,7 +156,7 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
         return sortedSelectedNodes;
     }
 
-    protected List<TreeNode> getAllChildren(List<TreeNode> children) {
+    protected List<TreeNode> getSelectedNodes(List<TreeNode> children) {
         List<TreeNode> ret = new ArrayList<TreeNode>();
         for (TreeNode child : children) {
             getChildren(child, ret);
@@ -164,7 +164,7 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
         return ret;
     }
 
-    protected void getChildren(TreeNode child, List<TreeNode> nodes) {
+    private void getChildren(TreeNode child, List<TreeNode> nodes) {
         if (child.isSelected()) {
             nodes.add(child);
         }

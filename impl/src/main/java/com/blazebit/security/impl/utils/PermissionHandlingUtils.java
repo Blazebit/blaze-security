@@ -34,6 +34,24 @@ public class PermissionHandlingUtils {
     private PermissionFactory permissionFactory;
 
     /**
+     * special 'containsAll' method for permissions. subject check eliminated, concentrates on action and resource comparison.
+     * 
+     * @param permissions
+     * @param permission
+     * @return
+     */
+    public boolean containsAll(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
+        boolean contains = true;
+        for (Permission permission : selectedPermissions) {
+            contains = contains(permissions, permission, true);
+            if (!contains) {
+                break;
+            }
+        }
+        return contains;
+    }
+
+    /**
      * special 'contains' method for permissions. subject check eliminated, concentrates on action and resource comparison.
      * 
      * @param permissions
@@ -129,7 +147,7 @@ public class PermissionHandlingUtils {
      * @param permission
      * @return
      */
-    public List<Permission> remove(Collection<Permission> permissions, Permission permission) {
+    public Collection<Permission> remove(Collection<Permission> permissions, Permission permission) {
         return remove(permissions, permission, true);
     }
 
@@ -239,26 +257,24 @@ public class PermissionHandlingUtils {
      * @param selectedPermissions
      * @return
      */
-    public List<Set<Permission>> getGrantable(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
+    public List<Set<Permission>> getGrantableFromSelected(Collection<Permission> permissions, Collection<Permission> toBeGranted) {
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         Set<Permission> granted = new HashSet<Permission>();
         Set<Permission> notGranted = new HashSet<Permission>();
 
         Set<Permission> currentPermissions = new HashSet<Permission>(permissions);
-        for (Permission selectedPermission : selectedPermissions) {
+        for (Permission selectedPermission : toBeGranted) {
             // if is grantable
             if (permissionDataAccess.isGrantable(new ArrayList<Permission>(currentPermissions), selectedPermission.getAction(), selectedPermission.getResource())) {
                 granted.add(selectedPermission);
             } else {
-                // if it is not grantable because the current permissions already contains it, dont mark it as not grantable
-                if (!contains(permissions, selectedPermission)) {
-                    notGranted.add(selectedPermission);
-                }
+                notGranted.add(selectedPermission);
             }
         }
         ret.add(granted);
         ret.add(notGranted);
         return ret;
+
     }
 
     /**
@@ -269,7 +285,7 @@ public class PermissionHandlingUtils {
      * @param selectedPermissions
      * @return
      */
-    public Set<Permission> getRevoked(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
+    private Set<Permission> getRevoked(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
         Set<Permission> ret = new HashSet<Permission>();
 
         for (Permission currentPermission : permissions) {
@@ -289,7 +305,7 @@ public class PermissionHandlingUtils {
      * @param selectedPermissions
      * @return
      */
-    public List<Set<Permission>> getRevokable(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
+    public List<Set<Permission>> getRevokableFromSelected(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
         Set<Permission> toBeRevoked = getRevoked(permissions, selectedPermissions);
         return getRevokableFromRevoked(permissions, toBeRevoked);
     }
@@ -300,7 +316,7 @@ public class PermissionHandlingUtils {
      * @param toBeRevoked
      * @return
      */
-    public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Set<Permission> toBeRevoked) {
+    public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
 
         Set<Permission> revoked = new HashSet<Permission>();
@@ -327,7 +343,7 @@ public class PermissionHandlingUtils {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Set<Permission> selectedPermissions, boolean force) {
+    public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> selectedPermissions, boolean force) {
         if (!force) {
             return getRevokableFromRevoked(permissions, selectedPermissions);
         } else {
@@ -344,12 +360,17 @@ public class PermissionHandlingUtils {
                 } else {
                     EntityField resource = (EntityField) selectedPermission.getResource();
                     if (!resource.isEmptyField()) {
-                        if (permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), resource.getParent())) {
+                        // if parent permission present
+                        Permission parentPermission = permissionDataAccess.findPermission(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
+                                                                                          resource.getParent());
+                        if (parentPermission != null) {
+                            // permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions),
+                            // selectedPermission.getAction(), resource.getParent())
                             try {
                                 if (findActionAndResourceMatch(granted, selectedPermission, true) == null) {
                                     List<String> fields = resourceMetamodel.getFields(resource.getEntity());
                                     // revoke parent entity
-                                    revoked.add(permissionDataAccess.findPermission(new ArrayList<Permission>(permissions), selectedPermission.getAction(), resource.getParent()));
+                                    revoked.add(parentPermission);
                                     // add rest of the fields
                                     for (String field : fields) {
                                         if (!field.equals(resource.getField())) {
@@ -357,7 +378,7 @@ public class PermissionHandlingUtils {
                                         }
                                     }
                                 } else {
-                                    granted = (Set<Permission>) remove(granted, selectedPermission);
+                                    granted = new HashSet<Permission>(remove(granted, selectedPermission));
                                 }
                             } catch (ClassNotFoundException e) {
                             }
@@ -383,7 +404,7 @@ public class PermissionHandlingUtils {
      * @param revoked
      * @return
      */
-    public Set<Permission> eliminateRevokedConflicts(Set<Permission> granted, Set<Permission> revoked) {
+    public Set<Permission> getRevokedByEliminatingConflicts(Set<Permission> granted, Set<Permission> revoked) {
         Set<Permission> modifiedRevoked = new HashSet<Permission>(revoked);
         Set<Permission> dontRevoke = new HashSet<Permission>();
         for (Permission permission : revoked) {
@@ -397,12 +418,14 @@ public class PermissionHandlingUtils {
     }
 
     /**
-     * Reconsideres permissions to be granted and revoked
+     * Reconsideres permissions to be granted and revoked based on the current permissions. For example: if subject/role has
+     * entity field permissions and the missing entity field permissions are granted -> the existing entity field permissions
+     * will be revoked and the entity permission will be granted.
      * 
      * @param permissions
      * @return set of non redundant permissions
      */
-    public List<Set<Permission>> getReconsideredRevokeAndGrant(Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+    public List<Set<Permission>> getRevokedAndGrantedAfterMerge(Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
         List<Permission> currentPermissions = new ArrayList<Permission>(current);
         Set<Permission> finalGranted = new HashSet<Permission>(granted);
         Set<Permission> finalRevoked = new HashSet<Permission>(revoked);

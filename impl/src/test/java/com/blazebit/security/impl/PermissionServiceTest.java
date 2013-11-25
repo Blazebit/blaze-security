@@ -35,7 +35,7 @@ import com.blazebit.security.impl.model.User;
  */
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 @Stateless
-public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
+public class PermissionServiceTest extends BaseTest<PermissionServiceTest> {
 
     private static final long serialVersionUID = 1L;
     @Inject
@@ -45,6 +45,20 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void init() {
         super.initData();
+
+        userGroupA.getUserGroups().add(userGroupB);
+        userGroupB.setParent(userGroupA);
+        self.get().merge(userGroupB);
+
+        userGroupB.getUserGroups().add(userGroupC);
+        userGroupC.setParent(userGroupB);
+        self.get().merge(userGroupC);
+
+        userGroupC.getUserGroups().add(userGroupD);
+        userGroupD.setParent(userGroupC);
+        self.get().merge(userGroupD);
+
+        // D->C->B->A
         setUserContext(admin);
     }
 
@@ -408,6 +422,230 @@ public class SecurityServiceTest extends BaseTest<SecurityServiceTest> {
     public void test_admin_grants_access_to_entity_user_accesses_entity_field() {
         securityService.grant(admin, user1, readAction, documentEntity);
         assertTrue(securityService.isGranted(user1, readAction, documentEntityTitleField));
+    }
+
+    // grant to role -> logic in grating and revoking for roles works the same way as for subjects
+    // BUT difference is the propagation option to users----> tests for propagation
+    // grant permission to A-> propagated to A users
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users1() {
+        userGroupA.getUsers().add(user1);
+        self.get().merge(userGroupA);
+        user1.getUserGroups().add(userGroupA);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity, true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users2() {
+        userGroupA.getUsers().add(user1);
+        self.get().merge(userGroupA);
+        user1.getUserGroups().add(userGroupA);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntityContentField, true);
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    // garnt to A, propagate to users of child groups of A
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users3() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity, true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    // grant to A, propagate to Users, it completes it for user into entity permission
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users4() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("content"));
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("title"));
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("size"));
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("id"), true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    // user already has the same permission
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users5() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, user1, readAction, documentEntity);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity, true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    // user already has overrideing permission
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users6() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, user1, readAction, documentEntity);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("content"), true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    // group permission will override user permission
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users7() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("content"));
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity, true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    @Test
+    public void test_grant_permission_to_role_propagate_to_users8() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        userGroupB.getUsers().add(user2);
+        self.get().merge(userGroupB);
+        user2.getUserGroups().add(userGroupB);
+        self.get().merge(user2);
+
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("content"));
+        securityService.grant(admin, user2, readAction, documentEntity);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity, true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+        assertTrue(securityService.isGranted(user2, readAction, documentEntity));
+    }
+
+    //by revoking permission from group take the same permission away from users
+    @Test
+    public void test_revoke_permission_to_role_propagate_to_users1() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity);
+        securityService.grant(admin, user1, readAction, documentEntity);
+
+        securityService.revoke(admin, userGroupA, readAction, documentEntity, true);
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity));
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity));
+    }
+
+    @Test
+    public void test_revoke_permission_to_role_propagate_to_users2() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity);
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("content"));
+
+        securityService.revoke(admin, userGroupA, readAction, documentEntity, true);
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity));
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity.getChild("content")));
+    }
+    
+    @Test
+    public void test_revoke_permission_to_role_propagate_to_users3() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("content"));
+        securityService.grant(admin, user1, readAction, documentEntity);
+
+        securityService.revoke(admin, userGroupA, readAction, documentEntity.getChild("content"), true);
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity));
+        assertFalse(securityService.isGranted(user1, readAction, documentEntity.getChild("content")));
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity.getChild("title")));
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity.getChild("size")));
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity.getChild("id")));
+    }
+    
+    
+    @Test
+    public void test_revoke_permission_to_role_propagate_to_users4() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity);
+        securityService.grant(admin, userGroupA, readAction, emailEntity);
+        
+        securityService.grant(admin, user1, readAction, documentEntity);
+
+        securityService.revoke(admin, userGroupA, readAction, emailEntity, true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity));
+    }
+    
+    @Test
+    public void test_revoke_permission_to_role_propagate_to_users5() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("content"));
+        
+        
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("title"));
+
+        securityService.revoke(admin, userGroupA, readAction, documentEntity.getChild("content"), true);
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity.getChild("title")));
+    }
+    
+    @Test
+    public void test_revoke_permission_to_role_propagate_to_users6() {
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
+        user1.getUserGroups().add(userGroupC);
+        self.get().merge(user1);
+
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("content"));
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("title"));
+        securityService.grant(admin, userGroupA, readAction, documentEntity.getChild("size"));
+        
+        assertTrue(securityService.isGranted(userGroupA, readAction, documentEntity.getChild("content")));
+        assertTrue(securityService.isGranted(userGroupA, readAction, documentEntity.getChild("title")));
+        assertTrue(securityService.isGranted(userGroupA, readAction, documentEntity.getChild("size")));
+        
+        
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("title"));
+        securityService.grant(admin, user1, readAction, documentEntity.getChild("id"));
+
+        securityService.revoke(admin, userGroupA, readAction, documentEntity.getChild("content"), true);
+        securityService.revoke(admin, userGroupA, readAction, documentEntity.getChild("title"), true);
+        
+        assertTrue(securityService.isGranted(userGroupA, readAction, documentEntity.getChild("size")));
+        assertTrue(securityService.isGranted(user1, readAction, documentEntity.getChild("id")));
+        
     }
 
 }

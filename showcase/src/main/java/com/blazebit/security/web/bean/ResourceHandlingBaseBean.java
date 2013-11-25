@@ -11,6 +11,7 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
@@ -51,7 +52,7 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
                     // first come actions available only for entity
                     createActionNodes(actionUtils.getActionsForEntity(), selectedPermissions, entityNode, entityField);
                     // then come actions common for fields and entities
-                    if (userSession.getSelectedCompany().isFieldLevelEnabled()) {
+                    if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
                         // fields for entity
                         List<String> primitiveFields = resourceMetamodel.getPrimitiveFields(resourceName);
                         if (!primitiveFields.isEmpty()) {

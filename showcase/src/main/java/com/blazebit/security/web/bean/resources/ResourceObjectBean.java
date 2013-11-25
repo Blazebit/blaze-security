@@ -21,17 +21,18 @@ import com.blazebit.security.IdHolder;
 import com.blazebit.security.Permission;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.service.api.UserGroupService;
 import com.blazebit.security.web.bean.PermissionTreeHandlingBaseBean;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
-import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
@@ -173,8 +174,8 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
         if ("grant".equals(action)) {
 
-            Set<Permission> granted = permissionHandlingUtils.getGrantable(allPermissions, selectedPermissions).get(0);
-            super.setNotGranted(permissionHandlingUtils.getGrantable(allPermissions, selectedPermissions).get(1));
+            Set<Permission> granted = permissionHandlingUtils.getGrantableFromSelected(allPermissions, selectedPermissions).get(0);
+            super.setNotGranted(permissionHandlingUtils.getGrantableFromSelected(allPermissions, selectedPermissions).get(1));
 
             Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(currentDataPermissions, selectedPermissions);
 
@@ -233,15 +234,15 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         selectedPermissions = getSelectedPermissions(selectedResourceNodes);
         if (action.equals("grant")) {
 
-            Set<Permission> granted = permissionHandlingUtils.getGrantable(currentDataPermissions, selectedPermissions).get(0);
-            super.setNotGranted(permissionHandlingUtils.getGrantable(currentDataPermissions, selectedPermissions).get(1));
+            Set<Permission> granted = permissionHandlingUtils.getGrantableFromSelected(currentDataPermissions, selectedPermissions).get(0);
+            super.setNotGranted(permissionHandlingUtils.getGrantableFromSelected(currentDataPermissions, selectedPermissions).get(1));
 
             for (Permission permission : granted) {
                 grant(permission);
             }
         } else {
             if (action.equals("revoke")) {
-                Set<Permission> revoked = permissionHandlingUtils.getRevokable(allPermissions, selectedPermissions).get(0);
+                Set<Permission> revoked = permissionHandlingUtils.getRevokableFromSelected(allPermissions, selectedPermissions).get(0);
 
                 for (Permission permission : revoked) {
                     revoke(permission);
@@ -280,7 +281,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             usersConfirmed = false;
 
             // if user level is not enabled confirm user permissions immediately
-            if (!userSession.getSelectedCompany().isUserLevelEnabled()) {
+            if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
                 confirmUserPermissions();
                 usersConfirmed = true;
             }
@@ -315,7 +316,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
         List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(permissions).get(1);
 
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(userDataPermissions, selectedPermissions);
+        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(userDataPermissions, selectedPermissions);
         super.setNotGranted(grant.get(1));
         Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(userDataPermissions, selectedPermissions);
         // current permission tree
@@ -345,7 +346,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
         List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(permissions).get(1);
 
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(userDataPermissions, selectedPermissions);
+        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(userDataPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
         Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(userDataPermissions, selectedPermissions);
@@ -413,7 +414,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             processSelectedPermissions();
         } else {
             if (event.getOldStep().equals("confirmPermissions")) {
-                if (userSession.getSelectedCompany().isUserLevelEnabled()) {
+                if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
                     propagateChangesToUsers();
                 }
             }

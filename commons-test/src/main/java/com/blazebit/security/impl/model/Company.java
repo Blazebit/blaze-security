@@ -13,6 +13,11 @@ import com.blazebit.security.IdHolder;
 @ResourceName(name = "Company", module = "Core")
 public class Company implements Serializable, IdHolder {
 
+    public static final String USER_LEVEL = "user_level";
+    public static final String FIELD_LEVEL = "field_level";
+    public static final String OBJECT_LEVEL = "object_level";
+    public static final String GROUP_HIERARCHY = "group_hierarchy";
+
     /**
      * 
      */

@@ -20,14 +20,15 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.service.api.UserGroupService;
 import com.blazebit.security.web.bean.PermissionTreeHandlingBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
-import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
  * 
@@ -91,7 +92,7 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
 
     public void saveGroup() {
         UserGroup ug = userGroupService.createUserGroup(userSession.getSelectedCompany(), newGroup.getName());
-        if (userSession.getSelectedCompany().isGroupHierarchyEnabled()) {
+        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
             if (getSelectedGroup() != null) {
                 ug.setParent(getSelectedGroup());
                 userGroupService.saveGroup(ug);

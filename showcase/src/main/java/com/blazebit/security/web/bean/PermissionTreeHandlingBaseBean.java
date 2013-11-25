@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.deltaspike.core.util.StringUtils;
@@ -24,6 +25,7 @@ import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.service.api.PropertyDataAccess;
 import com.blazebit.security.web.util.Constants;
 
 /**
@@ -34,6 +36,9 @@ import com.blazebit.security.web.util.Constants;
 @ManagedBean(name = "permissionHandlingBaseBean")
 @Named
 public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
+
+    @Inject
+    protected PropertyDataAccess propertyDataAccess;
 
     // TODO enough size check?
     protected boolean allChildFieldsListed(TreeNode actionNode, String entityName) {
@@ -51,6 +56,42 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
 
     protected Set<Permission> getSelectedPermissions(TreeNode[] selectedPermissionNodes) {
         return getSelectedPermissions(selectedPermissionNodes, null);
+    }
+
+    protected TreeNode rebuildCurrentTree(List<Permission> allPermissions, Set<Permission> selectedPermissions, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+        TreeNode root = new DefaultTreeNode();
+        return rebuildCurrentTree(root, allPermissions, selectedPermissions, prevRevoked, prevReplaced);
+    }
+
+    protected TreeNode rebuildCurrentTree(TreeNode node, List<Permission> allPermissions, Set<Permission> selectedPermissions, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+        List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
+        List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(1);
+
+        // add back previously replaced
+        for (Permission replacedPermission : prevReplaced) {
+            if (!permissionHandlingUtils.implies(selectedPermissions, replacedPermission)) {
+                selectedPermissions.add(replacedPermission);
+            }
+        }
+        Set<Permission> revoked = new HashSet<Permission>();
+        // add back previously revoked
+        for (Permission revokedPermission : prevRevoked) {
+            if (!permissionHandlingUtils.implies(selectedPermissions, revokedPermission)) {
+                revoked.add(revokedPermission);
+            }
+        }
+        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, selectedPermissions);
+        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokableFromSelected(userPermissions, concat(userPermissions, selectedPermissions));
+        revoked.addAll(revoke.get(0));
+        super.setNotRevoked(revoke.get(1));
+        super.setNotGranted(new HashSet<Permission>());
+
+        Set<Permission> removablePermissions = new HashSet<Permission>();
+        removablePermissions.addAll(revoked);
+        removablePermissions.addAll(replaced);
+        // current permission tree
+
+        return getPermissionTree(node, userPermissions, userDataPermissions, removablePermissions, Marking.REMOVED);
     }
 
     /**
@@ -177,6 +218,9 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         for (String objectEntity : dataPermissionMapByEntity.keySet()) {
             List<Permission> permissionsByEntity = dataPermissionMapByEntity.get(objectEntity);
             createEntityNode(root, dataPermissions, selectedPermissions, marking, new ArrayList<Permission>(), permissionsByEntity, objectEntity);
+        }
+        if (root.getChildCount() == 0) {
+            new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), root).setSelectable(false);
         }
         return root;
     }
@@ -340,6 +384,9 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             // create entity node
             createEntityNode(root, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, entity, permissionsByEntity, permissionsByEntity);
         }
+        if (root.getChildCount() == 0) {
+            new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), root).setSelectable(false);
+        }
         return root;
     }
 
@@ -423,7 +470,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                 } else {
                     actionNodeModel.setEntityInstance((EntityField) permission.getResource());
                 }
-                actionNode.setSelected(true);
+                // actionNode.setSelected(true);
                 actionNode.setSelectable(false);
             }
         }
@@ -448,7 +495,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                     fieldNodeModel.setMarking(Marking.OBJECT);
                     fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
                 }
-                fieldNode.setSelected(true);
+                // fieldNode.setSelected(true);
                 fieldNode.setSelectable(false);
             }
         }

@@ -3,6 +3,7 @@ package com.blazebit.security.web.service.impl;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.service.api.PropertyDataAccess;
 
@@ -12,29 +13,24 @@ public class PropertyDataAccessImpl implements PropertyDataAccess {
     @Inject
     private UserSession userSession;
 
-    private static final String USER_LEVEL = "user_level";
-    private static final String FIELD_LEVEL = "field_level";
-    private static final String OBJECT_LEVEL = "object_level";
-    private static final String GROUP_HIERARCHY = "group_hierarchy";
-
     @Override
-    public Boolean getPropertyValue(String propertyId) {
-        if (propertyId.equals(USER_LEVEL)) {
-            return userSession.getSelectedCompany().isUserLevelEnabled();
+    public String getPropertyValue(String propertyId) {
+        if (propertyId.equals(Company.USER_LEVEL)) {
+            return String.valueOf(userSession.getSelectedCompany().isUserLevelEnabled());
 
         }
-        if (propertyId.equals(FIELD_LEVEL)) {
-            return userSession.getSelectedCompany().isFieldLevelEnabled();
+        if (propertyId.equals(Company.FIELD_LEVEL)) {
+            return String.valueOf(userSession.getSelectedCompany().isFieldLevelEnabled());
 
         }
-        if (propertyId.equals(OBJECT_LEVEL)) {
-            return userSession.getSelectedCompany().isObjectLevelEnabled();
+        if (propertyId.equals(Company.OBJECT_LEVEL)) {
+            return String.valueOf(userSession.getSelectedCompany().isObjectLevelEnabled());
 
         }
-        if (propertyId.equals(GROUP_HIERARCHY)) {
-            return userSession.getSelectedCompany().isGroupHierarchyEnabled();
+        if (propertyId.equals(Company.GROUP_HIERARCHY)) {
+            return String.valueOf(userSession.getSelectedCompany().isGroupHierarchyEnabled());
 
         }
-        return false;
+        return String.valueOf(false);
     }
 }

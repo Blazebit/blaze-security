@@ -1,4 +1,4 @@
-package com.blazebit.security.web.service.api;
+package com.blazebit.security.service.api;
 
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;

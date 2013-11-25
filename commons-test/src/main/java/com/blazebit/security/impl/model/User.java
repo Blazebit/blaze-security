@@ -121,7 +121,7 @@ public class User implements Subject, Serializable, IdHolder {
 
     @Override
     public String toString() {
-        return id + ", " + username;
+        return "[" + id + ", " + username + "]";
     }
 
     @Override

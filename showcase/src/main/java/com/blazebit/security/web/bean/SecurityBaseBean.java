@@ -25,11 +25,11 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.service.api.UserGroupService;
+import com.blazebit.security.service.api.UserService;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
 import com.blazebit.security.web.service.api.ActionUtils;
-import com.blazebit.security.web.service.api.UserGroupService;
-import com.blazebit.security.web.service.api.UserService;
 
 @Named
 @ViewScoped

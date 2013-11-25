@@ -1,7 +1,7 @@
 /*
  * To change this template, choose Tools | Templates and open the template in the editor.
  */
-package com.blazebit.security.web.service.impl;
+package com.blazebit.security.service.impl;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.service.api.UserGroupService;
 
 /**
  * 

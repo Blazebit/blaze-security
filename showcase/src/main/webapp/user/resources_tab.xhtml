@@ -50,9 +50,9 @@
 						
 							<p:tree value="#{userResourcesBean.newPermissionTreeRoot}" var="newPermission" selectionMode="checkbox"
 								selection="#{userResourcesBean.selectedPermissionNodes}">
-								<p:ajax event="select" update=":form:tab:currentResourcePermissionTree"
+								<p:ajax event="select" update=":form:tab:currentResourcePermissionTree, :dialogs"
 									listener="#{userResourcesBean.rebuildCurrentPermissionTree}" />
-								<p:ajax event="unselect" update=":form:tab:currentResourcePermissionTree"
+								<p:ajax event="unselect" update=":form:tab:currentResourcePermissionTree, :dialogs"
 									listener="#{userResourcesBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
 									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm"/>

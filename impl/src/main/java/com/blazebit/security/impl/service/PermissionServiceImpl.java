@@ -13,6 +13,7 @@
 package com.blazebit.security.impl.service;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,6 +34,7 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.utils.PermissionHandlingUtils;
 
 /**
  * 
@@ -54,6 +56,9 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
 
     @Inject
     private PermissionManager permissionManager;
+
+    @Inject
+    private PermissionHandlingUtils permissionHandlingUtils;
 
     @Override
     public boolean isGranted(Subject subject, Action action, Resource resource) {
@@ -173,7 +178,25 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         // grant permission to all users of this role
         Collection<Subject> subjects = root.getSubjects();
         for (Subject subject : subjects) {
-            grant(authorizer, subject, action, resource);
+            // take care of merging permissions with the existing permissions
+
+            // first: check if permission to be granted is grantable to subject
+            Set<Permission> toBeGranted = new HashSet<Permission>();
+            toBeGranted.add(permissionFactory.create(subject, action, resource));
+            List<Permission> currentPermissions = permissionManager.getPermissions(subject);
+            // second: check if permission can be merged with existing ones
+            Set<Permission> grant = permissionHandlingUtils.getGrantableFromSelected(currentPermissions, toBeGranted).get(0);
+            List<Set<Permission>> revokeAndGrant = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, new HashSet<Permission>(), grant);
+            Set<Permission> revoke = revokeAndGrant.get(0);
+            grant = revokeAndGrant.get(1);
+            // merging might need revoke and grant operations
+            for (Permission permission : revoke) {
+                revoke(authorizer, subject, permission.getAction(), permission.getResource());
+            }
+            for (Permission permission : grant) {
+                grant(authorizer, subject, permission.getAction(), permission.getResource());
+            }
+
         }
         Collection<Role> children = root.getRoles();
         if (!children.isEmpty()) {
@@ -226,7 +249,22 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         // revoke permission from all users of this role
         Collection<Subject> subjects = root.getSubjects();
         for (Subject subject : subjects) {
-            revoke(authorizer, subject, action, resource);
+            // take care of merging permissions with the existing permissions
+
+            // first: check if permission to be granted is grantable to subject
+            Set<Permission> toBeRevoked = new HashSet<Permission>();
+            toBeRevoked.add(permissionFactory.create(subject, action, resource));
+            List<Permission> currentPermissions = permissionManager.getPermissions(subject);
+            // second: check if permission can be merged with existing ones
+            Set<Permission> revoke = permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(0);
+            Set<Permission> grant = permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(2);
+            // merging might need revoke and grant operations
+            for (Permission permission : revoke) {
+                revoke(authorizer, subject, permission.getAction(), permission.getResource());
+            }
+            for (Permission permission : grant) {
+                grant(authorizer, subject, permission.getAction(), permission.getResource());
+            }
         }
         Collection<Role> children = root.getRoles();
         if (!children.isEmpty()) {

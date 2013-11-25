@@ -21,11 +21,12 @@ import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.service.api.UserGroupService;
+import com.blazebit.security.service.api.UserService;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
-import com.blazebit.security.web.service.api.UserGroupService;
-import com.blazebit.security.web.service.api.UserService;
+import com.blazebit.security.web.service.api.PropertyDataAccess;
 
 /**
  * 
@@ -47,6 +48,8 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
     private UserSession userSession;
     @Inject
     private PermissionManager permissionManager;
+    @Inject
+    private PropertyDataAccess propertyDataAccess;
 
     private List<User> users = new ArrayList<User>();
     private Company selectedCompany;
@@ -113,7 +116,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         userSession.setSelectedCompany(company);
         userSession.getUser().setCompany(company);
         // fix existing permissions
-        if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
+        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
             List<User> users = userService.findUsers(userSession.getSelectedCompany());
             for (User user : users) {
                 List<Permission> permissions = permissionManager.getPermissions(user);
@@ -133,7 +136,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
 
         }
         // fix object level permissions
-        if (!userSession.getSelectedCompany().isObjectLevelEnabled()) {
+        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.OBJECT_LEVEL))) {
             List<User> users = userService.findUsers(userSession.getSelectedCompany());
             for (User user : users) {
                 List<Permission> permissions = permissionManager.getPermissions(user);
@@ -151,7 +154,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
 
         }
         // fix group hierarchy
-        if (!userSession.getSelectedCompany().isGroupHierarchyEnabled()) {
+        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
             List<UserGroup> groups = userGroupService.getAllGroups(userSession.getSelectedCompany());
             for (UserGroup group : groups) {
                 group.setParent(null);
