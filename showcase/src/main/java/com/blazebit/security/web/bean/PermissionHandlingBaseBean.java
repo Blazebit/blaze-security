@@ -116,7 +116,7 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
     }
 
-    private List<Set<Permission>> performRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+    protected List<Set<Permission>> performRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
         List<Set<Permission>> permissions = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         for (Permission permission : finalRevoked) {

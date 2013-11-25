@@ -163,6 +163,9 @@ public interface PermissionDataAccess {
      */
     public Permission findPermission(List<Permission> permissions, Action action, Resource resource);
 
+	Set<Permission> getImpliedBy(List<Permission> permissions, Action action,
+			Resource resource);
+
     
 
     
