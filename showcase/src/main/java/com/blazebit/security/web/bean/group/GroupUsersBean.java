@@ -5,8 +5,10 @@ package com.blazebit.security.web.bean.group;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
@@ -17,7 +19,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.filter.ContainsFilterConstraint;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
@@ -64,6 +65,8 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements
 	private Set<Permission> selectedGroupPermissions = new HashSet<Permission>();
 
 	private TreeNode[] selectedUserNodes = new TreeNode[] {};
+	private Map<User, Set<Permission>> currentReplacedUserMap = new HashMap<User, Set<Permission>>();
+	private Map<User, Set<Permission>> currentRevokedUserMap = new HashMap<User, Set<Permission>>();
 
 	public void init() {
 		initUsers();
@@ -232,15 +235,16 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements
 		userNode.setExpanded(true/* addedUser */);
 		userNode.setSelectable(false);
 		if (addedUser) {
-			createNewPermissionTreeForAddedUser(userNode, userPermissions);
+			createNewPermissionTreeForAddedUser(user, userNode, userPermissions);
 		} else {
-			createNewPermissionTreeForRemovedUser(userNode, userPermissions);
+			createNewPermissionTreeForRemovedUser(user, userNode,
+					userPermissions);
 		}
 		return userNode;
 	}
 
-	private void createNewPermissionTreeForAddedUser(DefaultTreeNode userNode,
-			List<Permission> userPermissions) {
+	private void createNewPermissionTreeForAddedUser(User user,
+			DefaultTreeNode userNode, List<Permission> userPermissions) {
 		Set<Permission> granted = permissionHandlingUtils
 				.getGrantableFromSelected(userPermissions,
 						selectedGroupPermissions).get(0);
@@ -250,7 +254,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements
 				userPermissions);
 		currentPermissions.removeAll(replaced);
 		currentPermissions.addAll(granted);
-
+		currentReplacedUserMap.put(user, replaced);
 		if (Boolean.valueOf(propertyDataAccess
 				.getPropertyValue(Company.USER_LEVEL))) {
 			getSelectablePermissionTree(userNode, new ArrayList<Permission>(
@@ -265,7 +269,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements
 		}
 	}
 
-	private void createNewPermissionTreeForRemovedUser(
+	private void createNewPermissionTreeForRemovedUser(User user,
 			DefaultTreeNode userNode, List<Permission> userPermissions) {
 		// TODO case not working when user has entity permission, and group has
 		// fields-> only those fields should be revoked and not the whole entity
@@ -293,6 +297,7 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements
 		revoked = new HashSet<Permission>(permissionHandlingUtils.removeAll(
 				revoked, impliedBy));
 		revoked.addAll(toRevoke);
+		currentRevokedUserMap.put(user, revoked);
 
 		Set<Permission> currentPermissions = new HashSet<Permission>(
 				userPermissions);
@@ -409,12 +414,27 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements
 				roleService.addSubjectToRole(user, getSelectedGroup());
 			} else {
 				// remove user
-				Set<Permission> revoked = permissionHandlingUtils
-						.getRevokableFromRevoked(userPermissions,
-								selectedPermissions, true).get(0);
+				Set<Permission> revoked = new HashSet<Permission>();
+				for (Permission permission : currentRevokedUserMap.get(user)) {
+					if (!permissionHandlingUtils.implies(selectedPermissions,
+							permission)) {
+						revoked.add(permission);
+					}
+				}
+				revoked.addAll(permissionHandlingUtils
+						.getRevokableFromSelected(userPermissions,
+								selectedPermissions).get(0));
+				// revoked.addAll(permissionHandlingUtils.getRevokableFromRevoked(
+				// userPermissions, selectedPermissions, true).get(0));
+				// revoked=permissionHandlingUtils.getNormalizedPermissions(revoked);
+				// Set<Permission> granted = permissionHandlingUtils
+				// .getRevokableFromRevoked(userPermissions,
+				// selectedPermissions, true).get(2);
 				Set<Permission> granted = permissionHandlingUtils
-						.getRevokableFromRevoked(userPermissions,
-								selectedPermissions, true).get(2);
+						.getGrantableFromSelected(
+								permissionHandlingUtils.removeAll(
+										userPermissions, revoked),
+								selectedPermissions).get(0);
 
 				performRevokeAndGrant(user, allPermissions, revoked, granted);
 				roleService.removeSubjectFromRole(user, getSelectedGroup());
