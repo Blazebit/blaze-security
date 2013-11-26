@@ -125,7 +125,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
      */
     public void confirmPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        performRevokeAndGrant(getSelectedUser(), allPermissions, selectedPermissions, currentRevoked, currentReplaced);
+        executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, currentRevoked, currentReplaced);
         init();
     }
 

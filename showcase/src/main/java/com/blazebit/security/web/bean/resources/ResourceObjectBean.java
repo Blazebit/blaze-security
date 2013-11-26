@@ -13,7 +13,6 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -92,6 +91,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
             propagateNodePropertiesTo(entityNode);
         }
+        if (resourceRoot.getChildCount() == 0) {
+            new DefaultTreeNode(new TreeNodeModel("No resource can be granted or revoked", null, null), resourceRoot).setSelectable(false);
+        }
     }
 
     private void createActionNodes(List<EntityAction> selectedActions, RowModel selectedObject, EntityObjectField entityObjectResource, DefaultTreeNode entityNode) {
@@ -135,14 +137,25 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 // already existing permission -> when granting dont allow user to revoke
                 actionNode.setSelectable(false);
             } else {
+                // hide if implied by entity field permissions
+                if (permissionHandlingUtils.implies(currentPermissions, permission)) {
+                    actionNode.setParent(null);
+                }
                 actionNode.setSelected(true);
                 ((TreeNodeModel) actionNode.getData()).setMarking(Marking.NEW);
             }
         } else {
             if (this.action.equals("revoke")) {
-                if (permissionHandlingUtils.contains(currentDataPermissions, permission) || permissionHandlingUtils.replaces(currentDataPermissions, permission)) {
+                Set<Permission> selectedPermissions = new HashSet<Permission>();
+                selectedPermissions.add(permission);
+                if (permissionHandlingUtils.getRevokableFromRevoked(currentDataPermissions, selectedPermissions, true).get(0).isEmpty()) {
+                    actionNode.setParent(null);
+                } else {
+                    // if (permissionHandlingUtils.contains(currentDataPermissions, permission) ||
+                    // permissionHandlingUtils.replaces(currentDataPermissions, permission)) {
                     actionNode.setSelected(true);
                     ((TreeNodeModel) actionNode.getData()).setMarking(Marking.REMOVED);
+                    // }
                 }
             }
         }
@@ -150,19 +163,29 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
     private void setFieldNodeProperties(String field, DefaultTreeNode fieldNode, Permission permission) {
         if (this.action.equals("grant")) {
-            if (permissionHandlingUtils.implies(currentDataPermissions, permission)) {
-                fieldNode.setSelectable(false);
+            if (permissionHandlingUtils.implies(currentPermissions, permission)) {
+                fieldNode.setParent(null);
             } else {
-                if (selectedFields.contains(new FieldModel(field))) {
-                    fieldNode.setSelected(true);
-                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.NEW);
+                if (permissionHandlingUtils.implies(currentDataPermissions, permission)) {
+                    fieldNode.setSelectable(false);
+                } else {
+                    if (selectedFields.contains(new FieldModel(field))) {
+                        fieldNode.setSelected(true);
+                        ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.NEW);
+                    }
                 }
             }
         } else {
             if (this.action.equals("revoke")) {
-                if (selectedFields.contains(new FieldModel(field))) {
-                    fieldNode.setSelected(true);
-                    ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.REMOVED);
+                Set<Permission> selectedPermissions = new HashSet<Permission>();
+                selectedPermissions.add(permission);
+                if (permissionHandlingUtils.getRevokableFromRevoked(currentDataPermissions, selectedPermissions, true).get(0).isEmpty()) {
+                    fieldNode.setParent(null);
+                } else {
+                    if (selectedFields.contains(new FieldModel(field))) {
+                        fieldNode.setSelected(true);
+                        ((TreeNodeModel) fieldNode.getData()).setMarking(Marking.REMOVED);
+                    }
                 }
             }
         }

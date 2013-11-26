@@ -230,7 +230,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         permissions.addAll(userDataPermissions);
 
         Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(permissions, selectedPermissions);
-        
+
         // current permission tree
         getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
     }
@@ -294,7 +294,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            performRevokeAndGrant(user, allPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
+            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
+            executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
         }
         init();
     }
@@ -388,9 +389,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             selectedGroups.add(userGroup);
 
             List<Permission> permissions = permissionManager.getPermissions(userGroup);
+            List<Permission> groupPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
-            Set<Permission> finalGranted = performRevokeAndGrant(userGroup, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedGroupMap.get(userGroup))
-                .get(1);
+            Set<Permission> finalGranted = executeRevokeAndGrant(userGroup, groupPermissions, selectedPermissions, new HashSet<Permission>(),
+                                                                 currentReplacedGroupMap.get(userGroup)).get(1);
 
             // to be propagated to users
             grantedGroupPermissions.put(userGroup, finalGranted);

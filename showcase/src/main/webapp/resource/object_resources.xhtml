@@ -51,7 +51,7 @@
 						</p:treeNode>
 					</p:tree>
 
-					<p:commandButton value="Next" onclick="permissionWizard.next()" />
+					<p:commandButton value="Next" onclick="permissionWizard.next()" rendered="#{resourceObjectBean.resourceRoot.childCount ne 0}"/>
 				</p:tab>
 
 				<p:tab id="confirmPermissions" title="Permissions">

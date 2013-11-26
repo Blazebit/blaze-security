@@ -197,7 +197,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      */
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        performRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, currentRevoked, currentReplaced);
+        executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, currentRevoked, currentReplaced);
 
         for (UserGroup group : removedGroups) {
             roleService.removeSubjectFromRole(getSelectedUser(), group);

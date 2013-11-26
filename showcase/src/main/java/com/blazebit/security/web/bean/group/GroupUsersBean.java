@@ -283,12 +283,12 @@ public class GroupUsersBean extends PermissionTreeHandlingBaseBean implements Pe
 
             if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                 // add new users + resources or add new group resources to users
-                performRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
+                executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
                 roleService.addSubjectToRole(user, getSelectedGroup());
             } else {
                 if (Marking.REMOVED.equals(userNodeModel.getMarking())) {
                     // remove user and remove unselected resources too
-                    performRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>());
+                    executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>());
                     roleService.removeSubjectFromRole(user, getSelectedGroup());
                 }
             }

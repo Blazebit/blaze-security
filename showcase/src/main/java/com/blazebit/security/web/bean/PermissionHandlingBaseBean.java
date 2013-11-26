@@ -73,7 +73,7 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         return ret;
     }
 
-    protected List<Set<Permission>> performRevokeAndGrant(Role role, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+    protected List<Set<Permission>> executeRevokeAndGrant(Role role, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
@@ -90,11 +90,11 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
         revoked.addAll(permissionHandlingUtils.getRevokableFromSelected(current, concat(current, selected)).get(0));
         Set<Permission> granted = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(current, revoked), selected).get(0);
-        return performRevokeAndGrant(role, current, revoked, granted);
+        return performOperations(role, current, revoked, granted);
 
     }
 
-    protected List<Set<Permission>> performRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+    protected List<Set<Permission>> executeRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
@@ -111,11 +111,11 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
         revoked.addAll(permissionHandlingUtils.getRevokableFromSelected(current, concat(current, selected)).get(0));
         Set<Permission> granted = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(current, revoked), selected).get(0);
-        return performRevokeAndGrant(subject, current, revoked, granted);
+        return performOperations(subject, current, revoked, granted);
 
     }
 
-    protected List<Set<Permission>> performRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+    private List<Set<Permission>> performOperations(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
         List<Set<Permission>> permissions = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         for (Permission permission : finalRevoked) {
@@ -132,7 +132,7 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
     }
 
-    private List<Set<Permission>> performRevokeAndGrant(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+    private List<Set<Permission>> performOperations(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
         List<Set<Permission>> permissions = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         for (Permission permission : finalRevoked) {

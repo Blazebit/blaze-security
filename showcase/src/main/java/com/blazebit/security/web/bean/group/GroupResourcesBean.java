@@ -111,9 +111,9 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             if (event.getOldStep().equals("permissions") && !event.getNewStep().equals("resources")) {
                 confirmGroupPermissions();
 
-//                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
-//                    confirmUserPermissions();
-//                }
+                // if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+                // confirmUserPermissions();
+                // }
             }
         }
         return event.getNewStep();
@@ -163,7 +163,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
      */
     public void confirmGroupPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-        List<Set<Permission>> result = performRevokeAndGrant(getSelectedGroup(), allPermissions, selectedPermissions, currentRevoked, currentReplaced);
+        List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, currentRevoked, currentReplaced);
         prepareUserPropagationView(result.get(1), result.get(0));
         // reset
         init();
@@ -303,8 +303,10 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             User user = (User) userNodeModel.getTarget();
 
             List<Permission> allPermissions = permissionManager.getPermissions(user);
+            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
+            
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
-            performRevokeAndGrant(user, allPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
+            executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
 
         }
         init();

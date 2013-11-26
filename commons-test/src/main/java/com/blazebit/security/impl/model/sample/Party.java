@@ -29,10 +29,14 @@ import com.blazebit.security.impl.model.ResourceName;
 @Entity
 @ResourceName(name = "Party", module = "Core", test = "object.type eq 'Core'")
 public class Party implements Serializable, IdHolder {
-    
-    
+
+    @Override
+    public String toString() {
+        return "Party [id=" + id + ", partyField1=" + partyField1 + ", partyField2=" + partyField2 + ", type=" + type + "]";
+    }
+
     public Party() {
-        // TODO Auto-generated constructor stub
+        this.type = "Core";
     }
 
     public Party(String type) {
@@ -77,6 +81,7 @@ public class Party implements Serializable, IdHolder {
         this.partyField2 = partyField2;
     }
 
+    @Basic(optional = false)
     public String getType() {
         return type;
     }
