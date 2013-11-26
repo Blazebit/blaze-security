@@ -10,7 +10,7 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package com.blazebit.security.service.impl;
+package com.blazebit.security.web.service.impl;
 
 import java.util.Set;
 
@@ -21,7 +21,7 @@ import javax.persistence.PersistenceContext;
 import com.blazebit.security.PermissionActionException;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.RoleService;
+import com.blazebit.security.web.service.api.RoleService;
 
 /**
  * 

@@ -26,12 +26,12 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.UserGroupService;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
  * 
@@ -111,9 +111,9 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             if (event.getOldStep().equals("permissions") && !event.getNewStep().equals("resources")) {
                 confirmGroupPermissions();
 
-                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
-                    confirmUserPermissions();
-                }
+//                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+//                    confirmUserPermissions();
+//                }
             }
         }
         return event.getNewStep();
@@ -275,7 +275,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
             currentPermissions = new ArrayList<Permission>(permissionHandlingUtils.removeAll(currentPermissions, removable));
             newPermissionTreeRoot = getPermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
-            selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()));
+            selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()).toArray());
         }
     }
 
@@ -291,6 +291,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> userPermissions = permissionManager.getPermissions(user);
+            userNode.getChildren().clear();
             rebuildCurrentTree(userNode, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
         }
     }

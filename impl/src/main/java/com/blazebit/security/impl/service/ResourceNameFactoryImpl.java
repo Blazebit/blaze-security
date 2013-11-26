@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import com.blazebit.security.EntityResourceFactory;
@@ -17,7 +16,6 @@ import com.blazebit.security.metamodel.ResourceMetamodel;
 import com.blazebit.security.spi.EntityResource;
 import com.blazebit.security.spi.ResourceDefinition;
 
-@Stateless
 public class ResourceNameFactoryImpl implements ResourceNameFactory {
 
     @Inject
@@ -52,7 +50,7 @@ public class ResourceNameFactoryImpl implements ResourceNameFactory {
             }
         }
         
-        throw new RuntimeException("No blabla found");
+        throw new RuntimeException("No resource definition found!!");
     }
 
 }

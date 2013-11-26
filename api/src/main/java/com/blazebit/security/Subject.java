@@ -20,6 +20,8 @@ import java.util.Collection;
  */
 public interface Subject {
 
+    public Collection<Role> getRoles();
+
     /**
      * 
      * @return collection of all the permissions of a subject

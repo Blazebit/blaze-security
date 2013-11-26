@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.blazebit.security.IdHolder;
+import com.blazebit.security.web.bean.model.FieldModel.Type;
 
 public class EditModel {
 
@@ -40,6 +41,26 @@ public class EditModel {
 
     public void setSelected(boolean selected) {
         this.selected = selected;
+    }
+
+    public Map<String, FieldModel> getCollectionFields() {
+        Map<String, FieldModel> ret = new HashMap<String, FieldModel>();
+        for (String field : fields.keySet()) {
+            if (Type.COLLECTION.equals(fields.get(field).getType())) {
+                ret.put(field, fields.get(field));
+            }
+        }
+        return ret;
+    }
+
+    public Map<String, FieldModel> getPrimitiveFields() {
+        Map<String, FieldModel> ret = new HashMap<String, FieldModel>();
+        for (String field : fields.keySet()) {
+            if (Type.PRIMITIVE.equals(fields.get(field).getType())) {
+                ret.put(field, fields.get(field));
+            }
+        }
+        return ret;
     }
 
 }

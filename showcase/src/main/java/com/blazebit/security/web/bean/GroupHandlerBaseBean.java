@@ -16,8 +16,8 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.utils.GroupPermissionHandlingUtils;
-import com.blazebit.security.service.api.UserGroupService;
 import com.blazebit.security.web.bean.model.UserGroupModel;
+import com.blazebit.security.web.service.api.UserGroupService;
 
 public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBean {
 

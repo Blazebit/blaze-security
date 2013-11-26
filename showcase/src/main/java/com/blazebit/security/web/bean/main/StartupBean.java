@@ -31,10 +31,10 @@ import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.service.api.RoleService;
-import com.blazebit.security.service.api.UserGroupService;
-import com.blazebit.security.service.api.UserService;
 import com.blazebit.security.web.service.api.CompanyService;
+import com.blazebit.security.web.service.api.RoleService;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 

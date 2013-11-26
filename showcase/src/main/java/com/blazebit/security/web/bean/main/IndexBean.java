@@ -16,17 +16,19 @@ import javax.inject.Inject;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.UserGroupService;
-import com.blazebit.security.service.api.UserService;
+import com.blazebit.security.impl.utils.ActionUtils;
+import com.blazebit.security.service.api.PropertyDataAccess;
 import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
-import com.blazebit.security.web.service.api.PropertyDataAccess;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 
@@ -50,6 +52,8 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
     private PermissionManager permissionManager;
     @Inject
     private PropertyDataAccess propertyDataAccess;
+    @Inject
+    private ActionUtils actionUtils;
 
     private List<User> users = new ArrayList<User>();
     private Company selectedCompany;
@@ -123,8 +127,16 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
                 for (Permission permission : permissions) {
                     EntityField entityField = (EntityField) permission.getResource();
                     if (!entityField.isEmptyField()) {
-                        if (permissionDataAccess.isGrantable(user, permission.getAction(), entityField.getParent())) {
-                            permissionService.grant(userSession.getUser(), user, permission.getAction(), entityField.getParent());
+                        // TODO replaced ADD+REMOVE with update
+                        if (actionUtils.getActionsForCollectionField().contains(permission.getAction())) {
+                            if (permissionDataAccess.isGrantable(user, actionFactory.createAction(ActionConstants.UPDATE), entityField.getParent())) {
+                                permissionService.grant(userSession.getUser(), user, actionFactory.createAction(ActionConstants.UPDATE), entityField.getParent());
+                            }
+                        } else {
+                            // replace with parent resource(=entity permission) permission
+                            if (permissionDataAccess.isGrantable(user, permission.getAction(), entityField.getParent())) {
+                                permissionService.grant(userSession.getUser(), user, permission.getAction(), entityField.getParent());
+                            }
                         }
                     }
                 }

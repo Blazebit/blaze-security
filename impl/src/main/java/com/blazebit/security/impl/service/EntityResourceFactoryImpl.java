@@ -37,12 +37,12 @@ public class EntityResourceFactoryImpl implements EntityResourceFactory {
 
     @Override
     public EntityObjectField createResource(String entity, Integer id) {
-        return new EntityObjectField(entity, EntityField.EMPTY_FIELD, String.valueOf(id));
+        return createResource(entity, EntityField.EMPTY_FIELD, id);
     }
 
     @Override
-    public EntityField createResource(String entity, String field, Integer id) {
-        return new EntityField(entity, field);
+    public EntityObjectField createResource(String entity, String field, Integer id) {
+        return new EntityObjectField(entity, field, String.valueOf(id));
     }
 
     @Override

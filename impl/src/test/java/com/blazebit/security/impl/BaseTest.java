@@ -35,6 +35,7 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContextMock;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
@@ -114,10 +115,19 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
 
     protected void initData() {
         ChangeInterceptor.deactivate();
+        Company company=new Company();
+        company.setUserLevelEnabled(true);
+        company.setFieldLevelEnabled(true);
+        company.setGroupHierarchyEnabled(true);
+        company.setObjectLevelEnabled(true);
+        entityManager.persist(company);
+        
         user1 = new User("User 1");
+        user1.setCompany(company);
         entityManager.persist(user1);
 
         user2 = new User("User 2");
+        user2.setCompany(company);
         entityManager.persist(user2);
 
         userGroupA = new UserGroup("Usergroup A");
@@ -155,6 +165,7 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         document1EntityContentField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Content_Field, 1);
         // create admin
         admin = new User("Admin");
+        admin.setCompany(company);
         entityManager.persist(admin);
         // add permissions to admin
         // admin can grant to users and usergroups
@@ -184,6 +195,8 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(updateAction)));
         // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(readAction)));
 
+        //admin change user_level, field_level, etc
+        permissionManager.save(permissionFactory.create(admin, updateAction, entityFieldFactory.createResource(Company.class)));
         // admin can grant the sample entities
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(TestCarrier.class)));
         //permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));

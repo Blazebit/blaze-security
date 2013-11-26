@@ -1,4 +1,4 @@
-package com.blazebit.security.web.service.api;
+package com.blazebit.security.impl.utils;
 
 import java.util.ArrayList;
 import java.util.List;

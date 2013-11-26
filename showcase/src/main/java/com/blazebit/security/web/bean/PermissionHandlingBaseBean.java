@@ -27,10 +27,9 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.impl.utils.PermissionHandlingUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
-import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
-import com.blazebit.security.web.service.api.ActionUtils;
 
 /**
  * 

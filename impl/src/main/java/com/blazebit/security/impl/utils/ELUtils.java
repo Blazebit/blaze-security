@@ -34,7 +34,7 @@ public class ELUtils {
     public static <T> T getValueSimple(String expression, Class<T> expectedType, Map<String, Object> variables) {
         ExpressionFactory ef = ExpressionFactory.newInstance();
         ELContext elContext = new SimpleContext(variables, ef, new SimpleELResolver());
-        return (T) ef.createValueExpression(elContext, expression, expectedType).getValue(elContext);
+        return (T) ef.createValueExpression(elContext, "#{" + expression + "}", expectedType).getValue(elContext);
     }
 
     @SuppressWarnings("unchecked")
@@ -48,7 +48,7 @@ public class ELUtils {
     public static <T> T getValue(String expression, Class<T> expectedType, Map<String, Object> variables, ELResolver elResolver) {
         ExpressionFactory ef = ExpressionFactory.newInstance();
         ELContext elContext = new SimpleContext(variables, ef, elResolver);
-        return (T) ef.createValueExpression(elContext, expression, expectedType).getValue(elContext);
+        return (T) ef.createValueExpression(elContext, "#{" + expression + "}", expectedType).getValue(elContext);
     }
 
     public static ELResolver getCdiAwareELResolver() {

@@ -6,17 +6,19 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import com.blazebit.lang.StringUtils;
 import com.blazebit.security.Action;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.Resource;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.sample.Comment;
+import com.blazebit.security.impl.model.sample.Party;
 import com.blazebit.security.web.bean.SecurityBaseBean;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.resources.ResourceObjectBean;
@@ -25,7 +27,7 @@ import com.blazebit.security.web.util.WebUtil;
 @Named
 @ViewScoped
 @Stateless
-public class CommentBean extends SecurityBaseBean {
+public class PartyBean extends SecurityBaseBean {
 
     @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;
@@ -33,61 +35,41 @@ public class CommentBean extends SecurityBaseBean {
     @Inject
     private PermissionDataAccess permissionDataAccess;
 
-    private List<RowModel> comments = new ArrayList<RowModel>();
-    private Comment newComment = new Comment();
+    private List<RowModel> parties = new ArrayList<RowModel>();
+    private Party newParty = new Party("");
 
     public void init() {
-        List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userSession.getSelectedCompany().getId()).getResultList();
-        comments.clear();
-        for (Comment c : result) {
-            comments.add(new RowModel(c, "Comment-" + c.getText()));
+        List<Party> result = entityManager.createQuery("select party from " + Party.class.getCanonicalName() + " party", Party.class).getResultList();
+        parties.clear();
+        for (Party p : result) {
+            parties.add(new RowModel(p, "Party-" + p.getPartyField1() + "," + p.getPartyField2()));
         }
-        newComment = new Comment();
+        setNewParty(new Party(""));
     }
 
-    public List<RowModel> getComments() {
-        return comments;
-    }
+    public void saveNewParty() {
+        if (!StringUtils.isEmpty(newParty.getType())) {
+            entityManager.persist(newParty);
 
-    public Comment getNewComment() {
-        return newComment;
-    }
+            Resource resource = createResource(newParty);
 
-    public void setNewComment(Comment newComment) {
-        this.newComment = newComment;
-    }
-
-    public void saveNewComment() {
-        User subject = userSession.getUser();
-        newComment.setUser(subject);
-        entityManager.persist(newComment);
-        init();
-
-        Resource resource = entityResourceFactory.createResource(newComment.getClass(), newComment.getId());
-        Action readAction = actionFactory.createAction(ActionConstants.READ);
-        if (permissionDataAccess.isGrantable(subject, readAction, resource)) {
-            permissionService.grant(userSession.getAdmin(), subject, readAction, resource);
+            for (Action action : actionImplicationProvider.getActionsImpledBy(actionFactory.createAction(ActionConstants.CREATE))) {
+                if (permissionDataAccess.isGrantable(userSession.getUser(), action, resource)) {
+                    permissionService.grant(userSession.getAdmin(), userSession.getUser(), action, resource);
+                }
+            }
+            newParty = new Party("");
+            init();
         }
-        Action updateAction = actionFactory.createAction(ActionConstants.UPDATE);
-        if (permissionDataAccess.isGrantable(subject, updateAction, resource)) {
-            permissionService.grant(userSession.getAdmin(), subject, updateAction, resource);
-        }
-
-        Action deleteAction = actionFactory.createAction(ActionConstants.DELETE);
-        if (permissionDataAccess.isGrantable(subject, deleteAction, resource)) {
-            permissionService.grant(userSession.getAdmin(), subject, deleteAction, resource);
-        }
-        newComment = new Comment();
     }
 
-    public void saveComment(Comment comment) {
-        entityManager.merge(comment);
+    public void saveParty(Party party) {
+        entityManager.merge(party);
         init();
     }
 
-    public void deleteComment(Comment comment) {
-        entityManager.remove(entityManager.find(Comment.class, comment.getId()));
+    public void deleteParty(Party party) {
+        entityManager.remove(entityManager.find(Party.class, party.getId()));
         init();
     }
 
@@ -102,20 +84,20 @@ public class CommentBean extends SecurityBaseBean {
     }
 
     public Class<?> getEntityClass() {
-        return Comment.class;
+        return Party.class;
     }
 
     @Inject
     ResourceObjectBean resourceObjectBean;
 
     public void goToPermissions() {
-        if (selectedSubject != null && selectedActions != null && isSelected(comments)) {
+        if (selectedSubject != null && selectedActions != null && isSelected(parties)) {
             resourceObjectBean.setSelectedSubject(selectedSubject);
             resourceObjectBean.setSelectedActions(selectedActions);
             resourceObjectBean.getSelectedFields().clear();
 
             resourceObjectBean.getSelectedObjects().clear();
-            for (RowModel rowModel : comments) {
+            for (RowModel rowModel : parties) {
                 if (rowModel.isSelected()) {
                     resourceObjectBean.getSelectedObjects().add(rowModel);
                 }
@@ -123,8 +105,36 @@ public class CommentBean extends SecurityBaseBean {
             resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
             WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
         } else {
-            System.err.println("Must select subject/action/comment");
+            System.err.println("Must select subject/action/party");
         }
+    }
+
+    public Party getNewParty() {
+        return newParty;
+    }
+
+    public void setNewParty(Party newParty) {
+        this.newParty = newParty;
+    }
+
+    public List<RowModel> getParties() {
+        return parties;
+    }
+
+    public void setParties(List<RowModel> parties) {
+        this.parties = parties;
+    }
+
+    public Party getPartyEntityWithType(String type) {
+        if (!StringUtils.isEmpty(type)) {
+            return new Party(type);
+        } else {
+            return null;
+        }
+    }
+
+    public void handleTypeChange(ValueChangeEvent event) {
+        newParty.setType((String) event.getNewValue());
     }
 
 }

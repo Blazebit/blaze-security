@@ -13,10 +13,10 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.impl.model.EntityAction;
+import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
-import com.blazebit.security.web.service.api.ActionUtils;
 
 public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
 
@@ -85,7 +85,7 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
      * 
      * @param node
      */
-    protected void propagateNodePropertiesTo(DefaultTreeNode node) {
+    protected void propagateNodePropertiesTo(TreeNode node) {
         if (node.getChildCount() > 0) {
             TreeNodeModel firstChild = ((TreeNodeModel) node.getChildren().get(0).getData());
             boolean foundDifferentMarking = false;

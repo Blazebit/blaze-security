@@ -33,6 +33,9 @@ public class PermissionHandlingUtils {
     @Inject
     private PermissionFactory permissionFactory;
 
+    @Inject
+    private ActionUtils actionUtils;
+
     /**
      * special 'containsAll' method for permissions. subject check eliminated, concentrates on action and resource comparison.
      * 
@@ -368,7 +371,15 @@ public class PermissionHandlingUtils {
                             // selectedPermission.getAction(), resource.getParent())
                             try {
                                 if (findActionAndResourceMatch(granted, selectedPermission, true) == null) {
-                                    List<String> fields = resourceMetamodel.getFields(resource.getEntity());
+
+                                    List<String> fields = new ArrayList<String>();
+                                    if (actionUtils.getActionsForCollectionField().contains(selectedPermission.getAction())) {
+                                        fields = resourceMetamodel.getCollectionFields(resource.getEntity());
+                                    } else {
+                                        if (actionUtils.getActionsForPrimitiveField().contains(selectedPermission.getAction())) {
+                                            fields = resourceMetamodel.getPrimitiveFields(resource.getEntity());
+                                        }
+                                    }
                                     // revoke parent entity
                                     revoked.add(parentPermission);
                                     // add rest of the fields
@@ -603,6 +614,46 @@ public class PermissionHandlingUtils {
             }
             group.add(p);
             ret.put(entityName, group);
+        }
+        for (String entityName : ret.keySet()) {
+            group = ret.get(entityName);
+            Collections.sort(group, new Comparator<Permission>() {
+
+                @Override
+                public int compare(Permission o1, Permission o2) {
+                    return ((EntityField) o1.getResource()).getField().compareTo(((EntityField) o2.getResource()).getField());
+                }
+            });
+            ret.put(entityName, group);
+
+        }
+        return ret;
+    }
+
+    /**
+     * 
+     * @param permissions
+     * @return
+     */
+    public SortedMap<String, List<Permission>> groupPermissionsByField(Collection<Permission> permissions) {
+        SortedMap<String, List<Permission>> ret = new TreeMap<String, List<Permission>>(new Comparator<String>() {
+
+            @Override
+            public int compare(String o1, String o2) {
+                return o1.compareToIgnoreCase(o2);
+            }
+        });
+        List<Permission> group;
+        for (Permission p : permissions) {
+            String field = ((EntityField) p.getResource()).getField();
+            if (ret.containsKey(field)) {
+                group = ret.get(field);
+            } else {
+                group = new ArrayList<Permission>();
+
+            }
+            group.add(p);
+            ret.put(field, group);
         }
         for (String entityName : ret.keySet()) {
             group = ret.get(entityName);

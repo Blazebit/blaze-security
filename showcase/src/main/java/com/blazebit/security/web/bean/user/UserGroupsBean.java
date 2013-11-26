@@ -23,11 +23,11 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.RoleService;
 import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.UserGroupModel;
+import com.blazebit.security.web.service.api.RoleService;
 
 /**
  * 
@@ -129,8 +129,8 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         removedGroups = addedAndRemovedGroups.get(1);
 
         // get granted and revoked permissions from added and removed groups
-        Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(getSelectedGroups());
-        Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removedGroups);
+        Set<Permission> granted = new HashSet<Permission>(permissionHandlingUtils.filterPermissions(groupPermissionHandlingUtils.getGrantedFromGroup(getSelectedGroups())).get(0));
+        Set<Permission> revoked = new HashSet<Permission>(permissionHandlingUtils.filterPermissions(groupPermissionHandlingUtils.getRevokedByGroup(removedGroups)).get(0));
         revoked = permissionHandlingUtils.getRevokedByEliminatingConflicts(granted, revoked);
 
         // get permissions which can be revoked from the user
@@ -156,7 +156,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
 
         // current permission tree
         Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, grantable);
-        
+
         Set<Permission> removable = new HashSet<Permission>();
         removable.addAll(replaced);
         removable.addAll(currentRevoked);
@@ -197,7 +197,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      */
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        performRevokeAndGrant(getSelectedUser(), allPermissions, selectedPermissions, currentReplaced, currentRevoked);
+        performRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, currentRevoked, currentReplaced);
 
         for (UserGroup group : removedGroups) {
             roleService.removeSubjectFromRole(getSelectedUser(), group);

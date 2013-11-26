@@ -38,4 +38,10 @@ public interface Role {
      */
     public Collection<Role> getRoles();
 
+    /**
+     * 
+     * @return
+     */
+    public Role getParent();
+
 }

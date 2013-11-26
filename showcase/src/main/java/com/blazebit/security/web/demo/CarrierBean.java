@@ -263,7 +263,8 @@ public class CarrierBean extends SecurityBaseBean {
     }
 
     public void goToPermissions(String action) {
-        if (selectedSubject != null && (!selectedActions.isEmpty() || !selectedCollectionActions.isEmpty())) {
+        if (selectedSubject != null && isSelected(carriers)
+            && (!selectedActions.isEmpty() || (!selectedCollectionActions.isEmpty() && isSelectedFields(selectedCarrierModel.getCollectionFields().values())))) {
             // check if user can grant to selectedsubject
             boolean allowed = false;
             if (selectedSubject instanceof Subject) {
@@ -271,13 +272,10 @@ public class CarrierBean extends SecurityBaseBean {
             } else {
                 allowed = isAuthorizedToGrantRevoke((Role) selectedSubject);
             }
+
             if (allowed) {
                 if (Carrier.class.equals(getTabEntityClass())) {
-                    if (isSelected(carriers)) {
-                        goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedCarrierModel, carriers);
-                    } else {
-                        System.err.println("Select subject/action/carrier");
-                    }
+                    goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedCarrierModel, carriers);
                 } else {
                     if (Party.class.equals(getTabEntityClass())) {
                         if (partyModel.getEntity().getId() != null) {
@@ -287,7 +285,7 @@ public class CarrierBean extends SecurityBaseBean {
                             if (isSelected(ret)) {
                                 goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, partyModel, ret);
                             } else {
-                                System.err.println("Select subject/action/party");
+                                System.err.println("Select party");
                             }
                         }
                     } else {
@@ -295,7 +293,7 @@ public class CarrierBean extends SecurityBaseBean {
                             if (isSelected(contacts)) {
                                 goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedContactModel, contacts);
                             } else {
-                                System.err.println("Select subject/action/contact");
+                                System.err.println("Select contact");
                             }
                         }
                     }
@@ -303,7 +301,10 @@ public class CarrierBean extends SecurityBaseBean {
             } else {
                 System.err.println("User cannot grant or revoke");
             }
+        } else {
+            System.err.println("Select carrier/action!");
         }
+
     }
 
     public void goToObjectResourceManagement(String action, IdHolder selectedSubject, List<EntityAction> selectedActions, List<EntityAction> selectedCollectionActions, EditModel selectedEditModel, List<RowModel> rowModelList) {

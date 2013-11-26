@@ -11,7 +11,7 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.UserGroupService;
+import com.blazebit.security.service.api.RoleManager;
 
 public class GroupPermissionHandlingUtils {
 
@@ -22,14 +22,17 @@ public class GroupPermissionHandlingUtils {
     private PermissionHandlingUtils permissionHandlingUtils;
 
     @Inject
-    private UserGroupService userGroupService;
+    private RoleManager roleManager;
 
     public List<Set<UserGroup>> getAddedAndRemovedUserGroups(User user, Set<UserGroup> selectedGroups) {
         List<Set<UserGroup>> ret = new ArrayList<Set<UserGroup>>();
         Set<UserGroup> added = new HashSet<UserGroup>();
         Set<UserGroup> removed = new HashSet<UserGroup>();
-        List<UserGroup> groupsForUser = userGroupService.getGroupsForUser(user);
+        @SuppressWarnings("unchecked")
+        List<UserGroup> groupsForUser = (List<UserGroup>) roleManager.getSubjectRoles(user);
+        // List<UserGroup> groupsForUser = userGroupService.getGroupsForUser(user);
         for (UserGroup group : selectedGroups) {
+
             if (!groupsForUser.contains(group)) {
                 added.add(group);
             }

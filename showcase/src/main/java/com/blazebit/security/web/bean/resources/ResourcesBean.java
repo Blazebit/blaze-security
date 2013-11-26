@@ -19,8 +19,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
-import org.primefaces.event.NodeSelectEvent;
-import org.primefaces.event.NodeUnselectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -28,14 +26,13 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.UserGroupService;
-import com.blazebit.security.service.api.UserService;
 import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserModel;
-import com.blazebit.security.web.service.api.PropertyDataAccess;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 
@@ -219,11 +216,11 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         userNode.setExpanded(true);
         userNode.setSelectable(false);
 
-        createCurrentUserPermissionNode(userNode, selectedPermissions, userPermissions, userDataPermissions);
+        createCurrentUserPermissionNode(user, userNode, selectedPermissions, userPermissions, userDataPermissions);
 
     }
 
-    private void createCurrentUserPermissionNode(DefaultTreeNode userNode, Set<Permission> selectedPermissions, List<Permission> userPermissions, List<Permission> userDataPermissions) {
+    private void createCurrentUserPermissionNode(User user, DefaultTreeNode userNode, Set<Permission> selectedPermissions, List<Permission> userPermissions, List<Permission> userDataPermissions) {
 
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(userPermissions, selectedPermissions);
         super.setNotGranted(grant.get(1));
@@ -233,7 +230,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         permissions.addAll(userDataPermissions);
 
         Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(permissions, selectedPermissions);
-
+        
         // current permission tree
         getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
     }
@@ -269,7 +266,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         } else {
             // workaround because if tree is not displayed the selected nodes are not set
             getPermissionTree(userNode, currentUserPermissions, new ArrayList<Permission>(), granted, Marking.NEW);
-            selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()));
+            selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()).toArray());
         }
     }
 
@@ -283,12 +280,9 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             List<Permission> permissions = userPermissionMap.get(user);
             // current selected permissions
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
-            // add previously replaced permissions
-            Set<Permission> currentReplaced = currentReplacedUserMap.get(user);
-
             // current permission tree
             userNode.getChildren().clear();
-            rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplaced);
+            rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
         }
     }
 
@@ -300,8 +294,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            Set<Permission> currentReplaced = currentReplacedUserMap.get(user);
-            performRevokeAndGrant(user, allPermissions, selectedPermissions, new HashSet<Permission>(), currentReplaced);
+            performRevokeAndGrant(user, allPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
         }
         init();
     }
@@ -381,6 +374,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             List<Permission> permissions = groupPermissionMap.get(userGroup);
             // current selected permissions
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes);
+            groupNode.getChildren().clear();
             // add previously replaced permissions
             rebuildCurrentTree(groupNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedGroupMap.get(userGroup));
         }
@@ -406,6 +400,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     }
 
     private void prepareUserPropagationView(Set<UserGroup> selectedGroups) {
+        currentReplacedUserMap.clear();
         Set<User> users = new HashSet<User>();
         for (UserGroup group : selectedGroups) {
             collectUsers(group, users);

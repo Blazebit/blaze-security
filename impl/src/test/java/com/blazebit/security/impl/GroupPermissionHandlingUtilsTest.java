@@ -94,7 +94,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
     public void test_add_remove_from_groups1() {
         // user is in A and B
         user1.getUserGroups().add(userGroupA);
+        userGroupA.getUsers().add(user1);
+        self.get().merge(userGroupA);
         user1.getUserGroups().add(userGroupB);
+        userGroupB.getUsers().add(user1);
+        self.get().merge(userGroupB);
         self.get().merge(user1);
 
         // add to D, remove from B, keep A
@@ -118,7 +122,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
     @Test
     public void test_add_remove_from_groups2() {
         user1.getUserGroups().add(userGroupA);
+        userGroupA.getUsers().add(user1);
+        self.get().merge(userGroupA);
         user1.getUserGroups().add(userGroupB);
+        userGroupB.getUsers().add(user1);
+        self.get().merge(userGroupB);
         self.get().merge(user1);
 
         // remove from A, B add to C
@@ -160,7 +168,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
     @Test
     public void test_add_remove_from_groups4() {
         user1.getUserGroups().add(userGroupA);
+        userGroupA.getUsers().add(user1);
+        self.get().merge(userGroupA);
         user1.getUserGroups().add(userGroupC);
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
         self.get().merge(user1);
 
         // remove from A, B add to C
@@ -189,7 +201,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         self.get().persist(permissionFactory.create(userGroupD, updateAction, entityFieldFactory.createResource(Comment.class)));
 
         user1.getUserGroups().add(userGroupA);
+        userGroupA.getUsers().add(user1);
+        self.get().merge(userGroupA);
         user1.getUserGroups().add(userGroupC);
+        userGroupC.getUsers().add(user1);
+        self.get().merge(userGroupC);
         self.get().merge(user1);
 
         self.get().persist(permissionFactory.create(user1, updateAction, entityFieldFactory.createResource(Carrier.class)));

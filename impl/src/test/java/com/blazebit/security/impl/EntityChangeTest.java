@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.PermissionException;
+import com.blazebit.security.PermissionActionException;
 import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.User;
@@ -131,7 +131,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getField(), "field_changed");
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_entity_primitive_field_not_permitted() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "field"));
         setUserContext(user1);
@@ -176,7 +176,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getPartyWithCascade().getPartyField1(), "party_field_1_changed");
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_one_field_cascade_with_wrong_entity_field_permission() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Party.class, "partyField2"));
         setUserContext(user1);
@@ -194,7 +194,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getPartyWithCascade().getPartyField1(), "party_field_1_changed");
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_one_field_cascade_with_wrong_entity_object_field_permission() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Party.class, "partyField1", -2));
         setUserContext(user1);
@@ -202,7 +202,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         carrier = (TestCarrier) self.get().merge(carrier);
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_one_field_cascade_with_wrong_entity_permission() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(User.class));
         setUserContext(user1);
@@ -273,7 +273,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getParty().getPartyField1(), "party_field_1_changed");
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_one_field_reference_with_wrong_entity_object_field_permission() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "-2"));
         setUserContext(user1);
@@ -286,7 +286,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_one_field_reference_not_permitted() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Party.class, "partyField1"));
         setUserContext(user1);
@@ -332,7 +332,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_many_field_cascade_with_wrong_entity_field_permission() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Document.class, "id"));
         setUserContext(user1);
@@ -353,7 +353,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_many_field_cascade_with_wrong_entity_object_field_permission() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Document.class, -1));
         setUserContext(user1);
@@ -367,6 +367,38 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
     public void test_change_one_to_many_cascade_add_new_with_entity_field_permission() {
         securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "documents"));
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
+        setUserContext(user1);
+
+        Document newDocument = new Document();
+        carrier.getDocuments().add(newDocument);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(2, carrier.getDocuments().size());
+
+    }
+
+    @Test(expected = PermissionActionException.class)
+    public void test_change_one_to_many_cascade_add_new_with_entity_field_permission_without_field_level_not_allowed() {
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "documents"));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        Document newDocument = new Document();
+        carrier.getDocuments().add(newDocument);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(1, carrier.getDocuments().size());
+
+    }
+
+    @Test
+    public void test_change_one_to_many_cascade_add_new_with_entity_field_permission_without_field_level() {
+        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
         setUserContext(user1);
 
         Document newDocument = new Document();
@@ -392,8 +424,42 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     }
 
+    @Test(expected = PermissionActionException.class)
+    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission_Without_field_level_not_allowed() {
+        securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        Contact newContact = new Contact();
+        self.get().persist(newContact);
+        carrier.getContacts().add(newContact);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(2, carrier.getContacts().size());
+
+    }
+
+    @Test
+    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission_Without_field_level() {
+        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        Contact newContact = new Contact();
+        self.get().persist(newContact);
+        carrier.getContacts().add(newContact);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(2, carrier.getContacts().size());
+
+    }
+
     // without add permission
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_many_cascade_add_new_not_permitted() {
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
         setUserContext(user1);
@@ -404,7 +470,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
     }
 
     // without add permission
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_many_no_cascade_add_new_not_permitted() {
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
         setUserContext(user1);
@@ -443,7 +509,35 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(0, carrier.getContacts().size());
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
+    public void test_change_one_to_many_remove_with_entity_field_permission_without_field_level_not_allowed() {
+        securityService.grant(admin, user1, getRemoveAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        carrier.getContacts().remove(carrier.getContacts().iterator().next());
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(0, carrier.getContacts().size());
+    }
+    
+    @Test
+    public void test_change_one_to_many_remove_with_entity_field_permission_without_field_level() {
+        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        carrier.getContacts().remove(carrier.getContacts().iterator().next());
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(0, carrier.getContacts().size());
+    }
+
+    @Test(expected = PermissionActionException.class)
     public void test_change_one_to_many_remove_not_permitted() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Contact.class));
         setUserContext(user1);
@@ -488,7 +582,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(2, carrier.getGroups().size());
     }
 
-    @Test(expected = PermissionException.class)
+    @Test(expected = PermissionActionException.class)
     public void test_change_many_to_many_add_new_not_permitted() {
         securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class));

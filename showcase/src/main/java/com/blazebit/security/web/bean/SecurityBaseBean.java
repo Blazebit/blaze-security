@@ -1,7 +1,10 @@
 package com.blazebit.security.web.bean;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.faces.bean.ViewScoped;
@@ -21,15 +24,23 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.service.api.UserGroupService;
-import com.blazebit.security.service.api.UserService;
+import com.blazebit.security.impl.spi.EntityActionImplicationProvider;
+import com.blazebit.security.impl.utils.ActionUtils;
+import com.blazebit.security.impl.utils.ELUtils;
+import com.blazebit.security.metamodel.ResourceMetamodel;
+import com.blazebit.security.service.api.PropertyDataAccess;
+import com.blazebit.security.spi.EntityResource;
+import com.blazebit.security.spi.ResourceDefinition;
+import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
-import com.blazebit.security.web.service.api.ActionUtils;
+import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserService;
 
 @Named
 @ViewScoped
@@ -37,24 +48,35 @@ import com.blazebit.security.web.service.api.ActionUtils;
 public class SecurityBaseBean {
 
     @Inject
-    protected EntityResourceFactory entityFieldFactory;
+    protected EntityResourceFactory entityResourceFactory;
     @Inject
     protected ActionFactory actionFactory;
     @Inject
     protected PermissionService permissionService;
     @Inject
     protected UserSession userSession;
+    @Inject
+    protected EntityActionImplicationProvider actionImplicationProvider;
+    @Inject
+    protected ResourceMetamodel resourceMetamodel;
+    @Inject
+    protected PropertyDataAccess propertyDataAccess;
+    @Inject
+    private UserService userService;
+
+    @Inject
+    private UserGroupService userGroupService;
+
+    @Inject
+    private ActionUtils actionUtils;
 
     protected List<Object> subjects = new ArrayList<Object>();
     protected List<EntityAction> selectedActions = new ArrayList<EntityAction>();
     protected List<EntityAction> selectedCollectionActions = new ArrayList<EntityAction>();
     protected IdHolder selectedSubject;
 
-    @Inject
-    private ActionUtils actionUtils;
-
     @PersistenceContext(unitName = "TestPU")
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     /**
      * authorization check for resource name with field. usage from EL
@@ -66,7 +88,7 @@ public class SecurityBaseBean {
      */
     public boolean isAuthorized(ActionConstants actionConstant, String clazzName, String field) {
         try {
-            return isGranted(actionConstant, entityFieldFactory.createResource(Class.forName(clazzName), field));
+            return isGranted(actionConstant, entityResourceFactory.createResource(Class.forName(clazzName), field));
         } catch (ClassNotFoundException e) {
             return false;
         }
@@ -92,7 +114,7 @@ public class SecurityBaseBean {
      * @return
      */
     public boolean isAuthorizedResourceName(ActionConstants actionConstant, String resourceName) {
-        return isGranted(actionConstant, entityFieldFactory.createResource(resourceName));
+        return isGranted(actionConstant, entityResourceFactory.createResource(resourceName));
     }
 
     /**
@@ -133,65 +155,115 @@ public class SecurityBaseBean {
      * @return
      */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String fieldName) {
-//        if (entityObject == null || !(entityObject instanceof IdHolder)) {
-//            return false;
-//        }
-//        //Resource resource = resourceNameFactory.createResource((IdHolder) entityObject, fieldName);
-//        switch (actionConstant) {
-//        // object permission can only be granted if object level is enabled
-//            case GRANT:
-//            case REVOKE:
-//                if (!userSession.getSelectedCompany().isObjectLevelEnabled() && (!(entityObject instanceof Subject) && !(entityObject instanceof Role))) {
-//                    return false;
-//                }
-//                break;
-//            case READ:
-//                if (isGranted(ActionConstants.READ, resource)) {
-//                    return true;
-//                } else {
-//                    if (fieldName.equals(EntityField.EMPTY_FIELD)) {
-//                        List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
-//                        boolean foundOneUpdateableField = false;
-//                        for (Field field : primitives) {
-//                            if (isAuthorizedResource(ActionConstants.READ, entityObject, field.getName())) {
-//                                foundOneUpdateableField = true;
-//                            }
-//                        }
-//                        if (foundOneUpdateableField) {
-//                            return true;
-//                        }
-//                    }
-//                }
-//                break;
-//            case UPDATE:
-//                if (isGranted(ActionConstants.UPDATE, resource)) {
-//                    return true;
-//                } else {
-//                    if (fieldName.equals(EntityField.EMPTY_FIELD)) {
-//                        List<Field> primitives = FieldUtils.getPrimitiveFields(entityObject.getClass());
-//                        boolean foundOneUpdateableField = false;
-//                        for (Field field : primitives) {
-//                            if (isAuthorizedResource(ActionConstants.UPDATE, entityObject, field.getName())) {
-//                                foundOneUpdateableField = true;
-//                            }
-//                        }
-//                        if (foundOneUpdateableField) {
-//                            return true;
-//                        }
-//                    }
-//                }
-//                break;
-//            case ADD:
-//            case REMOVE:
-//                if (!userSession.getSelectedCompany().isFieldLevelEnabled()) {
-//                    isAuthorizedResource(ActionConstants.UPDATE, entityObject);
-//                }
-//
-//        }
-//
-//        return isGranted(actionConstant, /* entityFieldFactory.createResource(entityObject.getClass(), fieldName, id) */
-//                         resource);
-        return true;
+        return isAuthorizedResource(actionConstant, entityObject, fieldName, false);
+    }
+
+    protected Resource createResource(IdHolder entityObject) {
+        return createResource(entityObject, EntityField.EMPTY_FIELD);
+    }
+
+    // TODO resourceNameFactory injecttion didnt work
+    protected Resource createResource(IdHolder entityObject, String field) {
+        List<ResourceDefinition> resourceDefinitions = resourceMetamodel.getEntityResources().get(new EntityResource(entityObject.getClass().getName()));
+        Map<String, Object> variableMap = new HashMap<String, Object>();
+
+        variableMap.put("object", entityObject);
+
+        if (resourceDefinitions.size() == 1) {
+            ResourceDefinition def = resourceDefinitions.get(0);
+
+            if (com.blazebit.lang.StringUtils.isEmpty(def.getTestExpression())) {
+                return entityResourceFactory.createResource(def.getResourceName(), field, entityObject.getId());
+            }
+        }
+
+        for (ResourceDefinition def : resourceDefinitions) {
+            if (Boolean.TRUE.equals(ELUtils.getValue(def.getTestExpression(), Boolean.class, variableMap))) {
+                return entityResourceFactory.createResource(def.getResourceName(), field, entityObject.getId());
+            }
+        }
+
+        throw new RuntimeException("No resource definition found!!");
+    }
+
+    /**
+     * authorization check for a field of a concrete object
+     * 
+     * @param actionConstant
+     * @param entityObject
+     * @return
+     */
+    public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String fieldName, boolean strict) {
+        if (entityObject == null || !(entityObject instanceof IdHolder)) {
+            return false;
+        }
+        Resource resource = createResource((IdHolder) entityObject, fieldName);
+        switch (actionConstant) {
+        // object permission can only be granted if object level is enabled
+            case GRANT:
+            case REVOKE:
+                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.OBJECT_LEVEL)) && (!(entityObject instanceof Subject) && !(entityObject instanceof Role))) {
+                    return false;
+                }
+                break;
+            case ADD:
+            case REMOVE:
+                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+                    isAuthorizedResource(ActionConstants.UPDATE, entityObject);
+                }
+            default:
+                if (!strict) {
+                    if (isGranted(actionConstant, resource)) {
+                        return true;
+                    } else {
+                        // found field that has permission to perform this action
+                        boolean foundFieldPermission = false;
+                        if (fieldName.equals(EntityField.EMPTY_FIELD)) {
+                            foundFieldPermission = findFieldPermissionFor(entityObject, resource, actionConstant);
+                        }
+                        if (foundFieldPermission) {
+                            return true;
+                        } else {
+                            // try implied actions
+                            for (Action action : actionImplicationProvider.getActionsWhichImply(actionFactory.createAction(actionConstant))) {
+                                ActionConstants impliedByAction = ActionConstants.valueOf(((EntityAction) action).getActionName());
+                                if (isGranted(impliedByAction, resource)) {
+                                    return true;
+                                } else {
+                                    boolean foundImpliedByFieldPermission = false;
+                                    if (fieldName.equals(EntityField.EMPTY_FIELD)) {
+                                        foundImpliedByFieldPermission = findFieldPermissionFor(entityObject, resource, impliedByAction);
+                                    }
+                                    return foundImpliedByFieldPermission;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+
+        }
+        return isGranted(actionConstant, resource);
+    }
+
+    private boolean findFieldPermissionFor(Object entityObject, Resource resource, ActionConstants action) {
+        List<String> fields;
+        try {
+            fields = resourceMetamodel.getPrimitiveFields(((EntityField) resource).getEntity());
+            boolean foundOneUpdateableField = false;
+            for (String field : fields) {
+                if (isAuthorizedResource(action, entityObject, field)) {
+                    foundOneUpdateableField = true;
+                }
+            }
+            if (foundOneUpdateableField) {
+                return true;
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     protected boolean isGranted(ActionConstants actionConstant, Resource resource) {
@@ -260,12 +332,6 @@ public class SecurityBaseBean {
         return subjects;
     }
 
-    @Inject
-    private UserService userService;
-
-    @Inject
-    private UserGroupService userGroupService;
-
     public void initSubjects() {
         subjects.clear();
         List<User> users = userService.findUsers(userSession.getSelectedCompany());
@@ -292,6 +358,15 @@ public class SecurityBaseBean {
 
     protected boolean isSelected(List<RowModel> ret) {
         for (RowModel r : ret) {
+            if (r.isSelected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    protected boolean isSelectedFields(Collection<FieldModel> ret) {
+        for (FieldModel r : ret) {
             if (r.isSelected()) {
                 return true;
             }

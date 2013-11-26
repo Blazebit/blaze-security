@@ -1,5 +1,8 @@
 package com.blazebit.security.impl.spi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -12,18 +15,32 @@ import com.blazebit.security.spi.ActionImplicationProvider;
 public class EntityActionImplicationProvider implements ActionImplicationProvider {
 
     @Override
-    public boolean isImplied(Action action, Action impliedAction) {
-        if (action == null || impliedAction == null) {
-            return false;
+    public List<Action> getActionsWhichImply(Action action) {
+        List<Action> ret = new ArrayList<Action>();
+        if (action == null) {
+            return ret;
         }
-
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
 
-        if (actionFactory.createAction(ActionConstants.UPDATE).equals(action)) {
-            return actionFactory.createAction(ActionConstants.READ).equals(impliedAction);
+        if (actionFactory.createAction(ActionConstants.READ).equals(action)) {
+            ret.add(actionFactory.createAction(ActionConstants.UPDATE));
         }
+        return ret;
+    }
+    
+    @Override
+    public List<Action> getActionsImpledBy(Action action) {
+        List<Action> ret = new ArrayList<Action>();
+        if (action == null) {
+            return ret;
+        }
+        ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
 
-        return false;
+        if (actionFactory.createAction(ActionConstants.CREATE).equals(action)) {
+            ret.add(actionFactory.createAction(ActionConstants.UPDATE));
+            ret.add(actionFactory.createAction(ActionConstants.DELETE));
+        }
+        return ret;
     }
 
 }
