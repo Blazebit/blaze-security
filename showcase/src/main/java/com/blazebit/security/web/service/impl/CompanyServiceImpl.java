@@ -126,12 +126,14 @@ public class CompanyServiceImpl implements CompanyService {
         List<String> fields;
         try {
             fields = resourceMetaModel.getCollectionFields(entityField.getEntity());
-            for (String field : fields) {
-                if (permissionDataAccess.isGrantable(user, actionFactory.createAction(ActionConstants.ADD), entityField.getParent().getChild(field))) {
-                    permissionService.grant(userSession.getUser(), user, actionFactory.createAction(ActionConstants.ADD), entityField.getParent().getChild(field));
-                }
-                if (permissionDataAccess.isGrantable(user, actionFactory.createAction(ActionConstants.REMOVE), entityField.getParent().getChild(field))) {
-                    permissionService.grant(userSession.getUser(), user, actionFactory.createAction(ActionConstants.REMOVE), entityField.getParent().getChild(field));
+            if (permissionDataAccess.findPermission(user, actionFactory.createAction(ActionConstants.UPDATE), entityField) != null) {
+                for (String field : fields) {
+                    if (permissionDataAccess.isGrantable(user, actionFactory.createAction(ActionConstants.ADD), entityField.getParent().getChild(field))) {
+                        permissionService.grant(userSession.getUser(), user, actionFactory.createAction(ActionConstants.ADD), entityField.getParent().getChild(field));
+                    }
+                    if (permissionDataAccess.isGrantable(user, actionFactory.createAction(ActionConstants.REMOVE), entityField.getParent().getChild(field))) {
+                        permissionService.grant(userSession.getUser(), user, actionFactory.createAction(ActionConstants.REMOVE), entityField.getParent().getChild(field));
+                    }
                 }
             }
         } catch (ClassNotFoundException e) {

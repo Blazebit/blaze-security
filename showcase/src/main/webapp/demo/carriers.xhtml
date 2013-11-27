@@ -104,7 +104,6 @@
 							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'contacts') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
 
 						<br />
-
 						<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 							panelStyle="width:220px" valueChangeListener="#{carrierBean.selectCollectionAction}"
 							rendered="#{(securityBaseBean.isAuthorizedResource('GRANT', carrierBean.tabEntity) or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.tabEntity)) and securityBaseBean.isEnabled('OBJECT_LEVEL')}">
