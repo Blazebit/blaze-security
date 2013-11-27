@@ -101,8 +101,8 @@ public class CommentBean extends SecurityBaseBean {
             + "&revoke=true", false);
     }
 
-    public Class<?> getEntityClass() {
-        return Comment.class;
+    public Object getTabEntity() {
+        return new Comment();
     }
 
     @Inject

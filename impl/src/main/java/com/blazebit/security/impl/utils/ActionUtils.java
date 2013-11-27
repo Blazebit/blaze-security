@@ -52,6 +52,29 @@ public class ActionUtils {
         return ret;
     }
     
+    /**
+     * list of possible actions for a field
+     * 
+     * @return
+     */
+    public List<Action> getActionsForPrimitiveAndCollectionField() {
+        List<Action> ret = new ArrayList<Action>();
+        ret.add(actionFactory.createAction(ActionConstants.READ));
+        return ret;
+    }
+    
+    /**
+     * list of possible actions for a field
+     * 
+     * @return
+     */
+    public List<Action> getActionsForOnlyPrimitiveField() {
+        List<Action> ret = new ArrayList<Action>();
+        ret.add(actionFactory.createAction(ActionConstants.UPDATE));
+        return ret;
+    }
+
+    
     public List<Action> getActionsForCollectionField() {
         List<Action> ret = new ArrayList<Action>();
         ret.add(actionFactory.createAction(ActionConstants.ADD));

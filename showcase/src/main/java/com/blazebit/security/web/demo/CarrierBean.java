@@ -16,6 +16,7 @@ import org.primefaces.event.TabChangeEvent;
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.Comment;
@@ -263,46 +264,43 @@ public class CarrierBean extends SecurityBaseBean {
     }
 
     public void goToPermissions(String action) {
-        if (selectedSubject != null && isSelected(carriers)
+        // check if user can grant to selected subject
+        boolean allowed = false;
+        if (selectedSubject instanceof Subject) {
+            allowed = isAuthorized((Subject) selectedSubject, "grant".equals(action) ? ActionConstants.GRANT : ActionConstants.REVOKE);
+        } else {
+            allowed = isAuthorized((Role) selectedSubject, "grant".equals(action) ? ActionConstants.GRANT : ActionConstants.REVOKE);
+        }
+        if (!allowed) {
+            return;
+        }
+        if (selectedSubject != null
             && (!selectedActions.isEmpty() || (!selectedCollectionActions.isEmpty() && isSelectedFields(selectedCarrierModel.getCollectionFields().values())))) {
-            // check if user can grant to selectedsubject
-            boolean allowed = false;
-            if (selectedSubject instanceof Subject) {
-                allowed = isAuthorizedToGrantRevoke((Subject) selectedSubject);
-            } else {
-                allowed = isAuthorizedToGrantRevoke((Role) selectedSubject);
-            }
 
-            if (allowed) {
-                if (Carrier.class.equals(getTabEntityClass())) {
-                    goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedCarrierModel, carriers);
-                } else {
-                    if (Party.class.equals(getTabEntityClass())) {
-                        if (partyModel.getEntity().getId() != null) {
-                            List<RowModel> ret = new ArrayList<RowModel>();
-                            ret.add(new RowModel(partyModel.getEntity(), partyModel.isSelected(), "Party-" + ((Party) partyModel.getEntity()).getPartyField1() + ", "
-                                + ((Party) partyModel.getEntity()).getPartyField2()));
-                            if (isSelected(ret)) {
-                                goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, partyModel, ret);
-                            } else {
-                                System.err.println("Select party");
-                            }
+            if (getTabEntity() instanceof Carrier) {
+                goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedCarrierModel, carriers);
+            } else {
+                if (getTabEntity() instanceof Party) {
+                    if (partyModel.getEntity().getId() != null) {
+                        List<RowModel> ret = new ArrayList<RowModel>();
+                        ret.add(new RowModel(partyModel.getEntity(), partyModel.isSelected(), "Party-" + ((Party) partyModel.getEntity()).getPartyField1() + ", "
+                            + ((Party) partyModel.getEntity()).getPartyField2()));
+                        if (isSelected(ret)) {
+                            goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, partyModel, ret);
+                        } else {
+                            System.err.println("Select party");
                         }
-                    } else {
-                        if (Contact.class.equals(getTabEntityClass())) {
-                            if (isSelected(contacts)) {
-                                goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedContactModel, contacts);
-                            } else {
-                                System.err.println("Select contact");
-                            }
+                    }
+                } else {
+                    if (getTabEntity() instanceof Contact) {
+                        if (isSelected(contacts)) {
+                            goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedContactModel, contacts);
+                        } else {
+                            System.err.println("Select contact");
                         }
                     }
                 }
-            } else {
-                System.err.println("User cannot grant or revoke");
             }
-        } else {
-            System.err.println("Select carrier/action!");
         }
 
     }
@@ -365,28 +363,23 @@ public class CarrierBean extends SecurityBaseBean {
         return contacts;
     }
 
-    public Class<?> getTabEntityClass() {
+    public Object getTabEntity() {
         if ("carrierTab".equals(tabIndex)) {
-            return Carrier.class;
+            return new Carrier();
         } else {
             if ("contactTab".equals(tabIndex)) {
-                return Contact.class;
+                return new Contact();
             } else {
                 if ("partyTab".equals(tabIndex)) {
-                    return Party.class;
+                    return new Party("Carrier");
+                }else{
+                    if ("commentTab".equals(tabIndex)) {
+                        return new Comment();
+                    }
                 }
             }
         }
         return null;
-    }
-
-    @Override
-    public boolean isRelatedTabEntity() {
-        Class<?> entityClass = getTabEntityClass();
-        if (entityClass.equals(Contact.class)) {
-            return true;
-        }
-        return false;
     }
 
     public List<Comment> getComments() {

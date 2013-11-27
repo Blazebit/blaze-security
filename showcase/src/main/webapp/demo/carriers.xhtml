@@ -27,10 +27,10 @@
 
 
 			<h:panelGroup id="subjects">
-				Current entity: #{carrierBean.tabEntityClass.name}<br />
+				Current entity: #{securityBaseBean.createResource(carrierBean.tabEntity).entity}<br />
 				<p:selectOneMenu effect="fade" var="p" style="width:160px" filter="true" filterMatchMode="startsWith"
 					valueChangeListener="#{carrierBean.selectSubject}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled and (securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name))}">
+					rendered="#{(securityBaseBean.isAuthorizedResource('GRANT', carrierBean.tabEntity) or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.tabEntity) and securityBaseBean.isEnabled('OBJECT_LEVEL'))}">
 					<f:event listener="#{carrierBean.initSubjects}" type="preRenderComponent" />
 					<f:selectItem itemLabel="Select subject" itemValue="" />
 					<f:selectItems value="#{carrierBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
@@ -46,7 +46,7 @@
 				<p:ajax event="tabChange" listener="#{carrierBean.tabChange}" update=":form:subjects, :form:actions" />
 				<p:tab title="Carrier" id="carrierTab">
 					<p:commandButton value="New" action="#{carrierBean.newCarrier()}" update=":form:tabs:editCarrier"
-						rendered="#{carrierBean.isAuthorized('CREATE', carrierBean.selectedCarrierModel.entity.class.name)}" />
+						rendered="#{securityBaseBean.isAuthorizedResource('CREATE', carrierBean.selectedCarrierModel.entity)}" />
 					<br />
 					<h:panelGroup id="editCarrier">
 						Current entity id: #{carrierBean.selectedCarrierModel.entity.id}<br />
@@ -75,13 +75,13 @@
 
 
 						<p:selectBooleanCheckbox value="#{party.selected}"
-							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'party') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'party')}" />
+							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'party') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'party') and  securityBaseBean.isEnabled('OBJECT_LEVEL') and securityBaseBean.isEnabled('FIELD_LEVEL')}" />
 						<h:outputLabel value="Party"
 							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'party') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'party')}" />
 
 						<br />
 						<p:selectBooleanCheckbox value="#{comment.selected}"
-							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'comment') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'comment')}" />
+							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'comment') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'comment') and  securityBaseBean.isEnabled('OBJECT_LEVEL') and securityBaseBean.isEnabled('FIELD_LEVEL')}" />
 						<h:outputLabel value="Comment"
 							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'comment') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'comment')}" />
 
@@ -89,7 +89,7 @@
 
 						<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 							panelStyle="width:220px" valueChangeListener="#{carrierBean.selectAction}"
-							rendered="#{userSession.selectedCompany.objectLevelEnabled and (securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name))}">
+							rendered="#{(securityBaseBean.isAuthorizedResource('GRANT', carrierBean.tabEntity) or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.tabEntity)) and securityBaseBean.isEnabled('OBJECT_LEVEL')}">
 							<f:selectItems value="#{securityBaseBean.entityActions}" var="action" itemLabel="#{action.actionName}"
 								itemValue="#{action.actionName}" />
 						</p:selectCheckboxMenu>
@@ -99,7 +99,7 @@
 						<c:set var="contacts" value="#{carrierBean.selectedCarrierModel.fields.get('contacts')}" />
 
 						<p:selectBooleanCheckbox value="#{contacts.selected}"
-							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'contacts') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
+							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'contacts') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'contacts') and  securityBaseBean.isEnabled('OBJECT_LEVEL') and securityBaseBean.isEnabled('FIELD_LEVEL')}" />
 						<h:outputLabel value="Contacts"
 							rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'contacts') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
 
@@ -107,7 +107,7 @@
 
 						<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 							panelStyle="width:220px" valueChangeListener="#{carrierBean.selectCollectionAction}"
-							rendered="#{userSession.selectedCompany.objectLevelEnabled and (securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name) or securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name))}">
+							rendered="#{(securityBaseBean.isAuthorizedResource('GRANT', carrierBean.tabEntity) or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.tabEntity)) and securityBaseBean.isEnabled('OBJECT_LEVEL')}">
 							<f:selectItems value="#{carrierBean.collectionActions}" var="action" itemLabel="#{action.actionName}"
 								itemValue="#{action.actionName}" />
 						</p:selectCheckboxMenu>
@@ -117,7 +117,7 @@
 						<p:commandButton value="Update" action="#{carrierBean.saveCarrier()}" update=":form:tabs:carriers"
 							rendered="#{not empty carrierBean.selectedCarrierModel.entity.id and carrierBean.isAuthorizedResource('UPDATE', carrierBean.selectedCarrierModel.entity)}" />
 						<p:commandButton value="Save" action="#{carrierBean.saveNewCarrier()}" update=":form:tabs"
-							rendered="#{empty carrierBean.selectedCarrierModel.entity.id and carrierBean.isAuthorized('CREATE', carrierBean.selectedCarrierModel.entity.class.name)}" />
+							rendered="#{empty carrierBean.selectedCarrierModel.entity.id and carrierBean.isAuthorizedResource('CREATE', carrierBean.selectedCarrierModel.entity)}" />
 						<br />
 
 
@@ -129,42 +129,42 @@
 										<h:outputText value="Select" />
 									</f:facet>
 									<h:selectBooleanCheckbox value="#{carrier.selected}"
-										rendered="#{carrierBean.isAuthorizedResource('GRANT', carrier.entity)}" />
+										rendered="#{carrierBean.isAuthorizedResource('GRANT', carrier.entity) or carrierBean.isAuthorizedResource('REVOKE', carrier.entity) and securityBaseBean.isEnabled('OBJECT_LEVEL')}" />
 								</p:column>
 								<p:column>
 									<f:facet name="header">
 										<h:outputText value="Field 1" />
 									</f:facet>
 									<h:outputText value="#{carrier.entity.field1}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field1') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field1')}" />
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field1')}" />
 								</p:column>
 								<p:column>
 									<f:facet name="header">
 										<h:outputText value="Field 2" />
 									</f:facet>
 									<h:outputText value="#{carrier.entity.field2}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field2') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field2')}" />
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field2')}" />
 								</p:column>
 								<p:column>
 									<f:facet name="header">
 										<h:outputText value="Field 3" />
 									</f:facet>
 									<h:outputText value="#{carrier.entity.field3}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field3') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field3')}" />
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field3')}" />
 								</p:column>
 								<p:column>
 									<f:facet name="header">
 										<h:outputText value="Field 4" />
 									</f:facet>
 									<h:outputText value="#{carrier.entity.field4}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field4') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field4')}" />
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field4')}" />
 								</p:column>
 								<p:column>
 									<f:facet name="header">
 										<h:outputText value="Field 5" />
 									</f:facet>
 									<h:outputText value="#{carrier.entity.field5}"
-										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field5') or carrierBean.isAuthorizedResource('UPDATE', carrier.entity, 'field5')}" />
+										rendered="#{carrierBean.isAuthorizedResource('READ', carrier.entity, 'field5')}" />
 								</p:column>
 								<p:column>
 									<p:commandButton value="Select" action="#{carrierBean.selectCarrier(carrier.entity)}" update=":form:tabs"
@@ -183,12 +183,12 @@
 
 
 						<my:inputField fieldValue="#{carrierBean.partyModel.entity.partyField1}" fieldLabel="Field1"
-							selectedModel="#{carrierBean.partyModel}" fieldName="partyField1" resourceName="Carrier_Party"
+							selectedModel="#{carrierBean.partyModel}" fieldName="partyField1"
 							fieldModel="#{carrierBean.partyModel.fields.get('partyField1')}" />
 						<br />
-						
+
 						<my:inputField fieldValue="#{carrierBean.partyModel.entity.partyField2}" fieldLabel="Field2"
-							selectedModel="#{carrierBean.partyModel}" fieldName="partyField2" resourceName="Carrier_Party"
+							selectedModel="#{carrierBean.partyModel}" fieldName="partyField2"
 							fieldModel="#{carrierBean.partyModel.fields.get('partyField2')}" />
 						<br />
 
@@ -198,7 +198,7 @@
 						<p:commandButton value="Update" action="#{carrierBean.saveParty()}" update=":form:tabs:editParty"
 							rendered="#{not empty carrierBean.partyModel.entity.id and carrierBean.isAuthorizedResource('UPDATE',carrierBean.partyModel.entity)}" />
 						<p:commandButton value="Save" action="#{carrierBean.saveNewParty()}" update=":form:tabs:editParty"
-							rendered="#{empty carrierBean.partyModel.entity.id and carrierBean.isAuthorizedResourceName('CREATE','Carrier_Party')}" />
+							rendered="#{empty carrierBean.partyModel.entity.id and carrierBean.isAuthorizedResource('CREATE', carrierBean.partyModel.entity)}" />
 					</h:panelGroup>
 				</p:tab>
 
@@ -222,7 +222,7 @@
 				<p:tab title="Contacts (one2many)" disabled="#{empty carrierBean.selectedCarrierModel.entity.id}" id="contactTab">
 					<h:panelGroup id="editContact">
 						<p:commandButton value="New" action="#{carrierBean.newContact()}" update=":form:tabs:editContact"
-							rendered="#{carrierBean.isAuthorized('CREATE', carrierBean.selectedContactModel.entity.class.name)  and carrierBean.isAuthorizedResource('ADD', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
+							rendered="#{carrierBean.isAuthorizedResource('CREATE', carrierBean.selectedContactModel.entity)  and carrierBean.isAuthorizedResource('ADD', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
 						<br />
 						<my:inputField fieldValue="#{carrierBean.selectedContactModel.entity.contactField}" fieldLabel="Field"
 							selectedModel="#{carrierBean.selectedContactModel}" fieldName="contactField"
@@ -232,7 +232,7 @@
 							rendered="#{not empty carrierBean.selectedContactModel.entity.id and carrierBean.isAuthorizedResource('UPDATE', carrierBean.selectedContactModel.entity)}" />
 						<p:commandButton value="Save" action="#{carrierBean.saveNewContact()}"
 							update=":form:tabs:contacts, :form:tabs:editContact"
-							rendered="#{empty carrierBean.selectedContactModel.entity.id and carrierBean.isAuthorized('CREATE', carrierBean.selectedContactModel.entity.class.name) and carrierBean.isAuthorizedResource('ADD', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
+							rendered="#{empty carrierBean.selectedContactModel.entity.id and carrierBean.isAuthorizedResource('CREATE', carrierBean.selectedContactModel.entity) and carrierBean.isAuthorizedResource('ADD', carrierBean.selectedCarrierModel.entity, 'contacts')}" />
 
 					</h:panelGroup>
 
@@ -266,14 +266,11 @@
 			</p:tabView>
 
 			<h:panelGroup id="actions">
-
-
-				<br />
-
 				<p:commandButton value="grant" action="#{carrierBean.goToPermissions('grant')}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled and  securityBaseBean.isAuthorized('GRANT', carrierBean.tabEntityClass.name)}" />
+					rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.tabEntity) and securityBaseBean.isEnabled('OBJECT_LEVEL')}" />
+					
 				<p:commandButton value="revoke" action="#{carrierBean.goToPermissions('revoke')}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled and securityBaseBean.isAuthorized('REVOKE', carrierBean.tabEntityClass.name)}" />
+					rendered="#{securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.tabEntity) and securityBaseBean.isEnabled('OBJECT_LEVEL')}" />
 			</h:panelGroup>
 
 		</h:form>

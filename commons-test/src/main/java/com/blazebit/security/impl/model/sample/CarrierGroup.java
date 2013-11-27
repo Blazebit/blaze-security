@@ -27,7 +27,7 @@ import com.blazebit.security.impl.model.ResourceName;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Carrier group", module = "Carrier")
+@ResourceName(name = "Carrier group", module = "Carrier", skip = true)
 public class CarrierGroup implements IdHolder, Serializable {
 
     /**

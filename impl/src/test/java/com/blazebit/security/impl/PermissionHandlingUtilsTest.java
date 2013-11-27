@@ -468,6 +468,38 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
     }
 
+    // multiple entity permission
+    @Test
+    public void test_getNormalizedPermissions14() {
+        Set<Permission> permissions = new HashSet<Permission>();
+        Set<Permission> redundantPermissions = new HashSet<Permission>();
+
+        permissions.add(permissionFactory.create(userGroupA, updateAction, documentEntity));
+        permissions.add(permissionFactory.create(admin, updateAction, documentEntity));
+
+        redundantPermissions.add(permissionFactory.create(updateAction, documentEntity));
+
+        assertTrue(redundantPermissions.size() == permissionHandlingUtils.getNormalizedPermissions(permissions).size());
+        assertTrue(permissionHandlingUtils.containsAll(redundantPermissions, permissionHandlingUtils.getNormalizedPermissions(permissions)));
+
+    }
+    
+    @Test
+    public void test_getNormalizedPermissions15() {
+        Set<Permission> permissions = new HashSet<Permission>();
+        Set<Permission> redundantPermissions = new HashSet<Permission>();
+
+        permissions.add(permissionFactory.create(userGroupA, updateAction, documentEntity));
+        permissions.add(permissionFactory.create(admin, updateAction, documentEntityContentField));
+        permissions.add(permissionFactory.create(admin, updateAction, documentEntity));
+
+        redundantPermissions.add(permissionFactory.create(updateAction, documentEntity));
+
+        assertTrue(redundantPermissions.size() == permissionHandlingUtils.getNormalizedPermissions(permissions).size());
+        assertTrue(permissionHandlingUtils.containsAll(redundantPermissions, permissionHandlingUtils.getNormalizedPermissions(permissions)));
+
+    }
+
     // getGrantable(Collection<Permission>, Collection<Permission>) from selectedpermissions
 
     // given document update + selected is email update -> email update

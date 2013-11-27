@@ -39,6 +39,7 @@ import com.blazebit.security.spi.ResourceDefinition;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
+import com.blazebit.security.web.service.api.ResourceNameFactory;
 import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.service.api.UserService;
 
@@ -54,6 +55,8 @@ public class SecurityBaseBean {
     @Inject
     protected PermissionService permissionService;
     @Inject
+    private ResourceFactory resourceFactory;
+    @Inject
     protected UserSession userSession;
     @Inject
     protected EntityActionImplicationProvider actionImplicationProvider;
@@ -63,12 +66,15 @@ public class SecurityBaseBean {
     protected PropertyDataAccess propertyDataAccess;
     @Inject
     private UserService userService;
-
     @Inject
     private UserGroupService userGroupService;
-
     @Inject
     private ActionUtils actionUtils;
+    // WELD-001408 Unsatisfied dependencies for type [ResourceNameFactory] with qualifiers [@Default] at injection point
+    // [[field] @Inject private com.blazebit.security.web.bean.SecurityBaseBean.resourceNameFactory]
+    // TODO why???
+    // @Inject
+    // private ResourceNameFactory resourceNameFactory;
 
     protected List<Object> subjects = new ArrayList<Object>();
     protected List<EntityAction> selectedActions = new ArrayList<EntityAction>();
@@ -78,43 +84,64 @@ public class SecurityBaseBean {
     @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
 
+    // /**
+    // * reads the configuration for checking whether the given levels are enabled
+    // *
+    // * @param levels
+    // * @return
+    // */
+    // public boolean isEnabled(String... levels) {
+    // if (levels.length == 0) {
+    // return false;
+    // }
+    // for (String level : levels) {
+    // if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(level))) {
+    // return false;
+    // }
+    // }
+    // return true;
+    // }
+
+    public boolean isEnabled(String level) {
+        return Boolean.valueOf(propertyDataAccess.getPropertyValue(level));
+    }
+
     /**
-     * authorization check for resource name with field. usage from EL
+     * Authorization check for role and actions. At least one of the actions should be available.
      * 
-     * @param actionConstant
-     * @param resourceName
-     * @param field
+     * @param role
+     * @param actionConstants
      * @return
      */
-    public boolean isAuthorized(ActionConstants actionConstant, String clazzName, String field) {
-        try {
-            return isGranted(actionConstant, entityResourceFactory.createResource(Class.forName(clazzName), field));
-        } catch (ClassNotFoundException e) {
+    protected boolean isAuthorized(Role role, ActionConstants... actionConstants) {
+        if (actionConstants.length == 0) {
             return false;
         }
+        for (ActionConstants actionConstant : actionConstants) {
+            if (isGranted(actionConstant, resourceFactory.createResource(role))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
-     * authorization check for resource name with field. usage from EL
+     * Authorization check for subject and actions. At least one of the actions should be available.
      * 
-     * @param actionConstant
-     * @param resourceName
-     * @param field
+     * @param subject
+     * @param actionConstants
      * @return
      */
-    public boolean isAuthorized(ActionConstants actionConstant, String clazzName) {
-        return isAuthorized(actionConstant, clazzName, EntityField.EMPTY_FIELD);
-    }
-
-    /**
-     * authorization check for resource name. usage from EL
-     * 
-     * @param actionConstant
-     * @param resourceName
-     * @return
-     */
-    public boolean isAuthorizedResourceName(ActionConstants actionConstant, String resourceName) {
-        return isGranted(actionConstant, entityResourceFactory.createResource(resourceName));
+    protected boolean isAuthorized(Subject subject, ActionConstants... actionConstants) {
+        if (actionConstants.length == 0) {
+            return false;
+        }
+        for (ActionConstants actionConstant : actionConstants) {
+            if (isGranted(actionConstant, resourceFactory.createResource(subject))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -129,24 +156,6 @@ public class SecurityBaseBean {
         return isAuthorizedResource(actionConstant, entityObject, EntityField.EMPTY_FIELD);
     }
 
-    @Inject
-    private ResourceFactory resourceFactory;
-
-    protected boolean isAuthorizedToGrantRevoke(Subject subject) {
-        if (!isGranted(ActionConstants.GRANT, resourceFactory.createResource(subject)) && !isGranted(ActionConstants.REVOKE, resourceFactory.createResource(subject))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    protected boolean isAuthorizedToGrantRevoke(Role role) {
-        if (!isGranted(ActionConstants.GRANT, resourceFactory.createResource(role)) && !isGranted(ActionConstants.REVOKE, resourceFactory.createResource(role))) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * authorization check for a field of a concrete object
      * 
@@ -158,12 +167,16 @@ public class SecurityBaseBean {
         return isAuthorizedResource(actionConstant, entityObject, fieldName, false);
     }
 
-    protected Resource createResource(IdHolder entityObject) {
+    // TODO workaround because resourceNameFactory injection didnt work
+    public Resource createResource(IdHolder entityObject) {
         return createResource(entityObject, EntityField.EMPTY_FIELD);
     }
 
-    // TODO resourceNameFactory injecttion didnt work
-    protected Resource createResource(IdHolder entityObject, String field) {
+    // TODO resourceNameFactory injection didnt work
+    public Resource createResource(IdHolder entityObject, String field) {
+        if (entityObject == null) {
+            return null;
+        }
         List<ResourceDefinition> resourceDefinitions = resourceMetamodel.getEntityResources().get(new EntityResource(entityObject.getClass().getName()));
         Map<String, Object> variableMap = new HashMap<String, Object>();
 
@@ -209,8 +222,9 @@ public class SecurityBaseBean {
             case ADD:
             case REMOVE:
                 if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
-                    isAuthorizedResource(ActionConstants.UPDATE, entityObject);
+                    return isAuthorizedResource(ActionConstants.UPDATE, entityObject);
                 }
+                break;
             default:
                 if (!strict) {
                     if (isGranted(actionConstant, resource)) {
@@ -352,10 +366,6 @@ public class SecurityBaseBean {
         }
     }
 
-    public boolean isRelatedTabEntity() {
-        return false;
-    }
-
     protected boolean isSelected(List<RowModel> ret) {
         for (RowModel r : ret) {
             if (r.isSelected()) {
@@ -364,7 +374,7 @@ public class SecurityBaseBean {
         }
         return false;
     }
-    
+
     protected boolean isSelectedFields(Collection<FieldModel> ret) {
         for (FieldModel r : ret) {
             if (r.isSelected()) {

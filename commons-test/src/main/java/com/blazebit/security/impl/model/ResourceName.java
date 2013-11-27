@@ -30,4 +30,6 @@ public @interface ResourceName {
     String module() default "";
     
     String test() default "";
+    
+    boolean skip() default false;
 }

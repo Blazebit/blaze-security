@@ -214,11 +214,7 @@ public class EntityObjectField extends EntityField {
     }
 
     public EntityObjectField getChild(String field) {
-        if (isEmptyField()) {
-            return new EntityObjectField(entity, field, entityId);
-        } else {
-            return null;
-        }
+        return new EntityObjectField(entity, field, entityId);
     }
 
     public EntityObjectField getInstance(String entityId) {

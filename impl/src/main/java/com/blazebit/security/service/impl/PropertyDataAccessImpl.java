@@ -7,7 +7,6 @@ import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.service.api.PropertyDataAccess;
 
-@Stateless
 public class PropertyDataAccessImpl implements PropertyDataAccess {
 
     @Inject

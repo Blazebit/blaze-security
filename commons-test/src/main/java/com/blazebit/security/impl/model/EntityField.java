@@ -182,19 +182,11 @@ public class EntityField implements Resource {
     }
 
     public EntityField getParent() {
-        if (!isEmptyField()) {
-            return new EntityField(entity);
-        } else {
-            return null;
-        }
+        return new EntityField(entity);
     }
 
     public EntityField getChild(String field) {
-        if (isEmptyField()) {
-            return new EntityField(entity, field);
-        } else {
-            return null;
-        }
+        return new EntityField(entity, field);
     }
 
 }

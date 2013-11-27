@@ -518,8 +518,9 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                 } else {
                     actionNodeModel.setEntityInstance((EntityField) permission.getResource());
                 }
+                // already existis entity permission
                 // actionNode.setSelected(true);
-                actionNode.setSelectable(selectable);
+                actionNode.setSelectable(false);
             }
         }
     }
@@ -539,14 +540,15 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                 fieldNodeModel.setMarking(marking2);
                 fieldNode.setSelectable(selectable);
             } else {
-                // field resource: entity field or entity object field
+                // field resource: entity field or entity object field -> paint it blue, add tooltip, color might be overwritten
                 if (permission.getResource() instanceof EntityObjectField) {
                     fieldNodeModel.getObjectInstances().add((EntityObjectField) permission.getResource());
                     fieldNodeModel.setMarking(Marking.OBJECT);
                     fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
                 }
+                // already existing permission for this resource
                 // fieldNode.setSelected(true);
-                fieldNode.setSelectable(selectable);
+                fieldNode.setSelectable(false);
             }
         }
     }

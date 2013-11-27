@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -55,11 +56,11 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
                     if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
                         // fields for entity
                         List<String> primitiveFields = resourceMetamodel.getPrimitiveFields(resourceName);
+                        List<String> collectionFields = resourceMetamodel.getCollectionFields(resourceName);
                         if (!primitiveFields.isEmpty()) {
                             // actions for primitive fields
                             createActionNodes(actionUtils.getActionsForPrimitiveField(), primitiveFields, entityField, selectedPermissions, entityNode);
                         }
-                        List<String> collectionFields = resourceMetamodel.getCollectionFields(resourceName);
                         if (!collectionFields.isEmpty()) {
                             // actions for collection fields
                             createActionNodes(actionUtils.getActionsForCollectionField(), collectionFields, entityField, selectedPermissions, entityNode);

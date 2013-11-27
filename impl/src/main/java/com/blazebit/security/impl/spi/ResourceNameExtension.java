@@ -43,19 +43,21 @@ public class ResourceNameExtension implements Extension {
             ResourceName annotation = type.getAnnotation(ResourceName.class);
             // TODO find out why doesnt this work anymore!! ResourceName annotation = (ResourceName)
             // AnnotationUtils.findAnnotation(type.getClass(), ResourceName.class);
-            Class<?> entityClass = (Class<?>) type.getBaseType();
-            resourceClasses.add(entityClass);
-            EntityResource entityResource = new EntityResource(entityClass.getName());
-            List<ResourceDefinition> resources = new ArrayList<ResourceDefinition>();
-            if (entityResources.containsKey(entityResource)) {
-                resources = entityResources.get(entityResource);
-            } else {
-                resources = new ArrayList<ResourceDefinition>();
+            if (!annotation.skip()) {
+                Class<?> entityClass = (Class<?>) type.getBaseType();
+                resourceClasses.add(entityClass);
+                EntityResource entityResource = new EntityResource(entityClass.getName());
+                List<ResourceDefinition> resources = new ArrayList<ResourceDefinition>();
+                if (entityResources.containsKey(entityResource)) {
+                    resources = entityResources.get(entityResource);
+                } else {
+                    resources = new ArrayList<ResourceDefinition>();
+                }
+                ResourceDefinition resourceDefinition = new ResourceDefinition(annotation.module(), annotation.name(), annotation.test());
+                resources.add(resourceDefinition);
+                this.resourceDefinitions.put(resourceDefinition, entityResource);
+                entityResources.put(entityResource, resources);
             }
-            ResourceDefinition resourceDefinition = new ResourceDefinition(annotation.module(), annotation.name(), annotation.test());
-            resources.add(resourceDefinition);
-            this.resourceDefinitions.put(resourceDefinition, entityResource);
-            entityResources.put(entityResource, resources);
         }
     }
 

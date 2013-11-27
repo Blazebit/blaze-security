@@ -577,12 +577,14 @@ public class PermissionHandlingUtils {
         Set<Permission> redundantPermissions = new HashSet<Permission>();
         Set<Permission> currentPermissions = new HashSet<Permission>(permissions);
         for (Permission permission : currentPermissions) {
-            // remove current one
-            currentPermissions = new HashSet<Permission>(permissions);
-            currentPermissions.remove(permission);
-            // check if any other permission is implied by this permission
-            if (implies(currentPermissions, permission)) {
-                redundantPermissions.add(permission);
+            if (!contains(redundantPermissions, permission)) {
+                // remove current one
+                currentPermissions = new HashSet<Permission>(permissions);
+                currentPermissions.remove(permission);
+                // check if any other permission is implied by this permission
+                if (implies(currentPermissions, permission)) {
+                    redundantPermissions.add(permission);
+                }
             }
         }
         currentPermissions = new HashSet<Permission>(permissions);

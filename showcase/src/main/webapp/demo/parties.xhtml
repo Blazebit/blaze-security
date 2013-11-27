@@ -19,6 +19,8 @@
 	<h:body>
 		<f:event listener="#{partyBean.init}" type="preRenderView" />
 		<h:form id="form">
+			<c:set var="grantOrRevoke"
+				value="#{securityBaseBean.isAuthorizedResource('GRANT',partyBean.getPartyEntityWithType('Core')) or securityBaseBean.isAuthorizedResource('GRANT',partyBean.getPartyEntityWithType('Carrier')) or securityBaseBean.isAuthorizedResource('REVOKE', partyBean.getPartyEntityWithType('Core')) or securityBaseBean.isAuthorizedResource('REVOKE',partyBean.getPartyEntityWithType('Carrier'))}" />
 			<h3>
 				Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
 				<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
@@ -27,7 +29,7 @@
 			<h:panelGroup id="subjects">
 				<p:selectOneMenu effect="fade" var="p" style="width:160px" filter="true" filterMatchMode="startsWith"
 					valueChangeListener="#{partyBean.selectSubject}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled and (partyBean.isAuthorized('GRANT', partyBean.entityClass.name) or partyBean.isAuthorized('REVOKE', partyBean.entityClass.name))}">
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and grantOrRevoke}">
 					<f:event listener="#{partyBean.initSubjects}" type="preRenderComponent" />
 					<f:selectItem itemLabel="Select subject" itemValue="" />
 					<f:selectItems value="#{partyBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
@@ -78,25 +80,23 @@
 						itemDisabled="#{!partyBean.isAuthorizedResource('CREATE', partyBean.getPartyEntityWithType('Core'))}" />
 					<f:selectItem itemLabel="Carrier" itemValue="Carrier"
 						itemDisabled="#{!partyBean.isAuthorizedResource('CREATE', partyBean.getPartyEntityWithType('Carrier'))}" />
-					<p:ajax update=":form:createButton" event="change"/>
+					<p:ajax update=":form:createButton" event="change" />
 				</p:selectOneMenu>
 				<br />
 				<h:inputTextarea value="#{partyBean.newParty.partyField1}" />
 				<br />
 				<h:panelGroup id="createButton">
-					#{partyBean.newParty}
-					#{partyBean.newParty.type}
-					<p:commandButton value="Create" action="#{partyBean.saveNewParty()}"
-						update=":form:parties, :form:new" />
+					<p:commandButton value="Create" action="#{partyBean.saveNewParty()}" update=":form:parties, :form:new" />
 				</h:panelGroup>
 				<br />
 				<h:outputText value="-------------------------------------------------------------" />
 			</h:panelGroup>
 			<br />
+
 			<h:panelGroup id="actions">
 				<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 					panelStyle="width:220px" valueChangeListener="#{partyBean.selectAction}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled  and (partyBean.isAuthorized('GRANT', partyBean.entityClass.name) or partyBean.isAuthorized('REVOKE', partyBean.entityClass.name))}">
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and grantOrRevoke}">>
 					<f:selectItems value="#{partyBean.entityActions}" var="action" itemLabel="#{action.actionName}"
 						itemValue="#{action.actionName}" />
 				</p:selectCheckboxMenu>
@@ -104,9 +104,10 @@
 				<br />
 
 				<p:commandButton value="grant" action="#{partyBean.goToPermissions('grant')}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled and securityBaseBean.isAuthorized('GRANT', partyBean.entityClass.name)}" />
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and grantOrRevoke}" />
 				<p:commandButton value="revoke" action="#{partyBean.goToPermissions('revoke')}"
-					rendered="#{userSession.selectedCompany.objectLevelEnabled and securityBaseBean.isAuthorized('REVOKE', partyBean.entityClass.name)}" />
+						rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and grantOrRevoke}" />
+			
 			</h:panelGroup>
 
 		</h:form>

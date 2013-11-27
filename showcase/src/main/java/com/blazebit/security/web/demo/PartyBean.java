@@ -17,6 +17,8 @@ import com.blazebit.security.Action;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.Resource;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Party;
 import com.blazebit.security.web.bean.SecurityBaseBean;
@@ -54,6 +56,11 @@ public class PartyBean extends SecurityBaseBean {
             Resource resource = createResource(newParty);
 
             for (Action action : actionImplicationProvider.getActionsImpledBy(actionFactory.createAction(ActionConstants.CREATE))) {
+                //TODO what to do?
+                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.OBJECT_LEVEL))) {
+                    EntityField entityField = (EntityField) resource;
+                    resource = entityResourceFactory.createResource(entityField.getEntity());
+                }
                 if (permissionDataAccess.isGrantable(userSession.getUser(), action, resource)) {
                     permissionService.grant(userSession.getAdmin(), userSession.getUser(), action, resource);
                 }

@@ -68,7 +68,7 @@ public class ResourceMetamodelProducer {
                         return getResourceDefinitions().get(resourceDefinition).getEntityClassName();
                     }
                 }
-                return null;
+                throw new IllegalArgumentException("Resource name " + resourceName + " wrong!!!");
             }
 
             @Override
@@ -78,9 +78,9 @@ public class ResourceMetamodelProducer {
                 ret.addAll(getCollectionFields(resourceName));
                 return ret;
             }
-            
+
             @Override
-            public List<String> getFields(Class<?> entityClass)  {
+            public List<String> getFields(Class<?> entityClass) {
                 List<String> ret = new ArrayList<String>();
                 ret.addAll(getPrimitiveFields(entityClass));
                 ret.addAll(getCollectionFields(entityClass));
