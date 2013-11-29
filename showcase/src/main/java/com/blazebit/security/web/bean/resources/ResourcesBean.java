@@ -198,8 +198,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
         for (User user : selectedUsers) {
 
             List<Permission> permissions = userPermissionMap.get(user);
-            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
-            List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(permissions).get(1);
+            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
+            List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
 
             createCurrentUserNode(user, currentUserRoot, selectedResourcePermissions, userPermissions, userDataPermissions);
             // if authorizer was able to select users they are selectable, no need to check for user level enabled
@@ -222,14 +222,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     private void createCurrentUserPermissionNode(User user, DefaultTreeNode userNode, Set<Permission> selectedPermissions, List<Permission> userPermissions, List<Permission> userDataPermissions) {
 
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(userPermissions, selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(userPermissions, selectedPermissions);
         super.setNotGranted(grant.get(1));
 
         List<Permission> permissions = new ArrayList<Permission>();
         permissions.addAll(userPermissions);
         permissions.addAll(userDataPermissions);
 
-        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(permissions, selectedPermissions);
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(permissions, selectedPermissions);
 
         // current permission tree
         getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
@@ -247,12 +247,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     private void createNewUserPermissionNode(User user, DefaultTreeNode userNode, Set<Permission> selectedPermissions, List<Permission> userPermissions, boolean selectable) {
 
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(userPermissions, selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(userPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         // TODO fix this to put it per user
         super.setNotGranted(grant.get(1));
 
-        Set<Permission> replacedByGranting = permissionHandlingUtils.getReplacedByGranting(userPermissions, selectedPermissions);
+        Set<Permission> replacedByGranting = permissionHandling.getReplacedByGranting(userPermissions, selectedPermissions);
         currentReplacedUserMap.put(user, replacedByGranting);
 
         // modify current user permissions based on resource selection
@@ -294,7 +294,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
+            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
             executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
         }
         init();
@@ -312,8 +312,8 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             UserGroup userGroup = (UserGroup) node.getData();
 
             List<Permission> allPermissions = groupPermissionMap.get(userGroup);
-            List<Permission> groupPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
-            List<Permission> groupDataPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(1);
+            List<Permission> groupPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
+            List<Permission> groupDataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
 
             createCurrentGroupNode(currentGroupRoot, userGroup, groupPermissions, groupDataPermissions);
             createNewGroupNode(newGroupRoot, userGroup, groupPermissions);
@@ -332,7 +332,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     }
 
     private void createCurrentGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions, List<Permission> groupPermissions, List<Permission> groupDataPermissions) {
-        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(groupPermissions, selectedPermissions);
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(groupPermissions, selectedPermissions);
 
         if (!groupPermissions.isEmpty()) {
             getPermissionTree(groupNode, groupPermissions, groupDataPermissions, replaced, Marking.REMOVED);
@@ -353,12 +353,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     }
 
     private void createNewGroupPermissionNode(UserGroup userGroup, DefaultTreeNode groupNode, Set<Permission> selectedPermissions, List<Permission> groupPermissions) {
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(groupPermissions, selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(groupPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
         // TODO fix this to put it per group
         super.setNotGranted(grant.get(1));
 
-        Set<Permission> currentReplaced = permissionHandlingUtils.getReplacedByGranting(groupPermissions, granted);
+        Set<Permission> currentReplaced = permissionHandling.getReplacedByGranting(groupPermissions, granted);
         currentReplacedGroupMap.put(userGroup, currentReplaced);
         // modify current user permissions based on resource selection
         List<Permission> currentGroupPermissions = new ArrayList<Permission>(groupPermissions);
@@ -389,7 +389,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             selectedGroups.add(userGroup);
 
             List<Permission> permissions = permissionManager.getPermissions(userGroup);
-            List<Permission> groupPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
+            List<Permission> groupPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
             Set<Permission> finalGranted = executeRevokeAndGrant(userGroup, groupPermissions, selectedPermissions, new HashSet<Permission>(),
                                                                  currentReplacedGroupMap.get(userGroup)).get(1);
@@ -435,9 +435,9 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
                 }
             }
             List<Permission> permissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(permissions).get(0);
-            List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(permissions).get(1);
-            selectedPermissions = permissionHandlingUtils.getNormalizedPermissions(selectedPermissions);
+            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
+            List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
+            selectedPermissions = permissionHandling.getNormalizedPermissions(selectedPermissions);
             createCurrentUserNode(user, currentUserRoot, selectedPermissions, userPermissions, userDataPermissions);
             createNewUserNode(user, newUserRoot, selectedPermissions, userPermissions, selectable);
         }

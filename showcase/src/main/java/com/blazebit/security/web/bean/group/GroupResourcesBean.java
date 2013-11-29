@@ -87,8 +87,8 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
     private void initPermissions() {
         allPermissions = permissionManager.getPermissions(getSelectedGroup());
-        groupPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
-        groupDataPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(1);
+        groupPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
+        groupDataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
     }
 
     private void initPermissionTree() {
@@ -126,16 +126,16 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         // get selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
         // get revoked permissions
-        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokableFromSelected(groupPermissions, selectedPermissions);
+        List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(groupPermissions, selectedPermissions);
         currentRevoked = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
         // get granted permissions
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(groupPermissions, currentRevoked), selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(groupPermissions, currentRevoked), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
 
         // get replaced permissions
-        Set<Permission> allReplaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, granted);
+        Set<Permission> allReplaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
 
         // current permission tree without the revoked ones
         Set<Permission> removedPermissions = new HashSet<Permission>(currentRevoked);
@@ -146,7 +146,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         List<Permission> currentPermissions = new ArrayList<Permission>(groupPermissions);
 
         // new permission tree without the revoked but with the granted ones
-        currentReplaced = permissionHandlingUtils.getReplacedByGranting(groupPermissions, granted);
+        currentReplaced = permissionHandling.getReplacedByGranting(groupPermissions, granted);
         currentPermissions.removeAll(currentReplaced);
         currentPermissions.addAll(granted);
         newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, new ArrayList<Permission>(), granted, currentRevoked, Marking.NEW, Marking.REMOVED);
@@ -202,8 +202,8 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             userNode.setSelectable(false);
 
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
-            List<Permission> userDataPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(1);
+            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
+            List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
 
             createCurrentPermissionTree(userNode, userPermissions, userDataPermissions, grantedPermissions, revokedPermissions);
 
@@ -216,22 +216,22 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
     private void createCurrentPermissionTree(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions, Set<Permission> grantedPermissions, Set<Permission> revokedPermissions) {
         // get permissions which can be revoked from the user
-        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
+        List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
         Set<Permission> revoked = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(userPermissions, revoked), grantedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revoked), grantedPermissions);
         Set<Permission> grantable = grant.get(0);
         super.setNotGranted(grant.get(1));
 
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);
         // TODO merge needed?
-        grantable = permissionHandlingUtils.getNormalizedPermissions(grantable);
+        grantable = permissionHandling.getNormalizedPermissions(grantable);
 
         // current permission tree
-        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, grantable);
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(allPermissions, grantable);
         Set<Permission> removable = new HashSet<Permission>();
         removable.addAll(replaced);
         removable.addAll(revoked);
@@ -243,26 +243,26 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         User user = (User) userNodeModel.getTarget();
 
         // get permissions which can be revoked from the user
-        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
+        List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
         Set<Permission> currentRevoked = revoke.get(0);
         currentRevokedUserMap.put(user, currentRevoked);
         super.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(userPermissions, currentRevoked), grantedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, currentRevoked), grantedPermissions);
         Set<Permission> grantable = grant.get(0);
         super.setNotGranted(grant.get(1));
 
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);
         // TODO merge needed?
-        grantable = permissionHandlingUtils.getNormalizedPermissions(grantable);
+        grantable = permissionHandling.getNormalizedPermissions(grantable);
 
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
-        Set<Permission> currentReplaced = permissionHandlingUtils.getReplacedByGranting(userPermissions, grantable);
+        Set<Permission> currentReplaced = permissionHandling.getReplacedByGranting(userPermissions, grantable);
         currentReplacedUserMap.put(user, currentReplaced);
-        currentPermissions = new ArrayList<Permission>(permissionHandlingUtils.removeAll(currentPermissions, currentReplaced));
+        currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, currentReplaced));
         currentPermissions.addAll(grantable);
 
         if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
@@ -273,7 +273,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             removable.addAll(currentReplaced);
             removable.addAll(currentRevoked);
 
-            currentPermissions = new ArrayList<Permission>(permissionHandlingUtils.removeAll(currentPermissions, removable));
+            currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, removable));
             newPermissionTreeRoot = getPermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
             selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()).toArray());
         }
@@ -303,7 +303,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             User user = (User) userNodeModel.getTarget();
 
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = permissionHandlingUtils.filterPermissions(allPermissions).get(0);
+            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
             
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));

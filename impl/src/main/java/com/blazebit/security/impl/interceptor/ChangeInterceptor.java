@@ -13,12 +13,17 @@
 package com.blazebit.security.impl.interceptor;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
@@ -298,6 +303,17 @@ public class ChangeInterceptor extends EmptyInterceptor {
 
     // delete
 
+    private static class Tuple {
+        Object o;
+        String fieldName;
+        
+        public Tuple(Object o, String fieldName) {
+            super();
+            this.o = o;
+            this.fieldName = fieldName;
+        }
+    }
+    
     @Override
     public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
         if (!ChangeInterceptor.active) {
@@ -317,6 +333,41 @@ public class ChangeInterceptor extends EmptyInterceptor {
                                                         resourceNameFactory.createResource((IdHolder) entity));
         if (!isGranted) {
             throw new PermissionActionException("Entity " + entity + " is not permitted to be deleted by " + userContext.getUser());
+        }
+        
+        Map<Class<?>, Tuple> toBeChecked = new HashMap<Class<?>, Tuple>();
+        
+        // TODO: use propertyNames and types instead
+        for(Field f : ReflectionUtils.getInstanceFields(entity.getClass())) {
+            ManyToOne annotation;
+            if((annotation = ReflectionUtils.getGetter(entity.getClass(), f.getName()).getAnnotation(ManyToOne.class)) != null) {
+                Object val = null;
+                
+                try {
+                    val = ReflectionUtils.getGetter(entity.getClass(), f.getName()).invoke(entity);
+                } catch(Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+                
+                if(val != null) {
+                    toBeChecked.put(ReflectionUtils.getResolvedFieldType(entity.getClass(), f), new Tuple(val, f.getName()));
+                }
+            }
+        }
+        
+        for(Map.Entry<Class<?>, Tuple> entry : toBeChecked.entrySet()) {
+            Class<?> c = entry.getKey();
+            
+            for(Field f : ReflectionUtils.getInstanceFields(c)) {
+                OneToMany annotation;
+                if((annotation = ReflectionUtils.getGetter(c, f.getName()).getAnnotation(OneToMany.class)) != null) {
+                    if(entity.getClass().isAssignableFrom(ReflectionUtils.getResolvedFieldTypeArguments(c, f)[0]) && (annotation.mappedBy().isEmpty() ? true : annotation.mappedBy().equals(entry.getValue().fieldName))) {
+                        if(!permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE), resourceNameFactory.createResource((IdHolder) entry.getValue().o, f.getName()))) {
+                            throw new PermissionActionException("Entity " + c + "'s field " + f.getName() + " cannot be removed by " + userContext.getUser());
+                        }
+                    }
+                }
+            }
         }
 
         // TODO decide if collection remove should be checked

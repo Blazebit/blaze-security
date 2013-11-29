@@ -1,6 +1,5 @@
 package com.blazebit.security.service.impl;
 
-import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import com.blazebit.security.impl.context.UserContext;

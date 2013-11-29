@@ -11,6 +11,7 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.service.PermissionHandlingImpl;
 import com.blazebit.security.service.api.RoleManager;
 
 public class GroupPermissionHandlingUtils {
@@ -19,7 +20,7 @@ public class GroupPermissionHandlingUtils {
     private PermissionManager permissionManager;
 
     @Inject
-    private PermissionHandlingUtils permissionHandlingUtils;
+    private PermissionHandlingImpl permissionHandlingUtils;
 
     @Inject
     private RoleManager roleManager;

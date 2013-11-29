@@ -24,6 +24,7 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.el.utils.ELUtils;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
@@ -31,7 +32,6 @@ import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.spi.EntityActionImplicationProvider;
 import com.blazebit.security.impl.utils.ActionUtils;
-import com.blazebit.security.impl.utils.ELUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
 import com.blazebit.security.service.api.PropertyDataAccess;
 import com.blazebit.security.spi.EntityResource;
@@ -59,6 +59,7 @@ public class SecurityBaseBean {
     @Inject
     protected UserSession userSession;
     @Inject
+    //TODO: use serviceProvider lookup
     protected EntityActionImplicationProvider actionImplicationProvider;
     @Inject
     protected ResourceMetamodel resourceMetamodel;

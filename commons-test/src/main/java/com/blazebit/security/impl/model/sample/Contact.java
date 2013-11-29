@@ -17,6 +17,7 @@ import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.impl.model.ResourceName;
@@ -35,6 +36,8 @@ public class Contact implements Serializable, IdHolder {
     private static final long serialVersionUID = 1L;
     private Integer id;
     private String contactField;
+    private Carrier carrier;
+    private Carrier carrier2;
 
     @Id
     @GeneratedValue
@@ -89,6 +92,24 @@ public class Contact implements Serializable, IdHolder {
         } else if (!id.equals(other.id))
             return false;
         return true;
+    }
+
+    @ManyToOne
+    public Carrier getCarrier() {
+        return carrier;
+    }
+
+    public void setCarrier(Carrier carrier) {
+        this.carrier = carrier;
+    }
+
+    @ManyToOne
+    public Carrier getCarrier2() {
+        return carrier2;
+    }
+
+    public void setCarrier2(Carrier carrier2) {
+        this.carrier2 = carrier2;
     }
     
     

@@ -209,7 +209,7 @@ public class EntityObjectField extends EntityField {
         if (!isEmptyField()) {
             return new EntityObjectField(entity, entityId);
         } else {
-            return null;
+            return this;
         }
     }
 

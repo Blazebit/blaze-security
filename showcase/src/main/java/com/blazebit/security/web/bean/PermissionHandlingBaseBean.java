@@ -26,9 +26,11 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
+import com.blazebit.security.impl.model.AbstractDataPermission;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.service.PermissionHandlingImpl;
+import com.blazebit.security.impl.service.resource.EntityFieldResourceHandlingUtils;
 import com.blazebit.security.impl.utils.ActionUtils;
-import com.blazebit.security.impl.utils.PermissionHandlingUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
 
 /**
@@ -61,10 +63,35 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     @Inject
     protected ResourceMetamodel resourceMetamodel;
     @Inject
-    protected PermissionHandlingUtils permissionHandlingUtils;
+    protected PermissionHandlingImpl permissionHandling;
+
+    @Inject
+    protected EntityFieldResourceHandlingUtils resourceUtils;
 
     private List<Permission> notGranted = new ArrayList<Permission>();
     private List<Permission> notRevoked = new ArrayList<Permission>();
+
+    /**
+     * separates permissions and data permissions
+     * 
+     * @param permissions
+     * @return
+     */
+    public List<List<Permission>> filterPermissions(Collection<Permission> permissions) {
+        List<List<Permission>> ret = new ArrayList<List<Permission>>();
+        List<Permission> entities = new ArrayList<Permission>();
+        List<Permission> objects = new ArrayList<Permission>();
+        for (Permission p : permissions) {
+            if (p.getClass().isAssignableFrom(AbstractDataPermission.class)) {
+                objects.add(p);
+            } else {
+                entities.add(p);
+            }
+        }
+        ret.add(entities);
+        ret.add(objects);
+        return ret;
+    }
 
     protected Set<Permission> concat(Collection<Permission> current, Collection<Permission> added) {
         Set<Permission> ret = new HashSet<Permission>();
@@ -77,19 +104,19 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
-            if (!permissionHandlingUtils.implies(selected, permission)) {
+            if (!permissionHandling.implies(selected, permission)) {
                 revoked.add(permission);
             }
         }
         // add back previous replaced permisssion if no overriding permission exists in the current selected ones
         for (Permission permission : prevReplaced) {
-            if (!permissionHandlingUtils.implies(selected, permission)) {
+            if (!permissionHandling.implies(selected, permission)) {
                 selected.add(permission);
             }
         }
 
-        revoked.addAll(permissionHandlingUtils.getRevokableFromSelected(current, concat(current, selected)).get(0));
-        Set<Permission> granted = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(current, revoked), selected).get(0);
+        revoked.addAll(permissionHandling.getRevokableFromSelected(current, concat(current, selected)).get(0));
+        Set<Permission> granted = permissionHandling.getGrantable(permissionHandling.removeAll(current, revoked), selected).get(0);
         return performOperations(role, current, revoked, granted);
 
     }
@@ -98,25 +125,25 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
-            if (!permissionHandlingUtils.implies(selected, permission)) {
+            if (!permissionHandling.implies(selected, permission)) {
                 revoked.add(permission);
             }
         }
         // add back previous replaced permisssion if no overriding permission exists in the current selected ones
         for (Permission permission : prevReplaced) {
-            if (!permissionHandlingUtils.implies(selected, permission)) {
+            if (!permissionHandling.implies(selected, permission)) {
                 selected.add(permission);
             }
         }
 
-        revoked.addAll(permissionHandlingUtils.getRevokableFromSelected(current, concat(current, selected)).get(0));
-        Set<Permission> granted = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(current, revoked), selected).get(0);
+        revoked.addAll(permissionHandling.getRevokableFromSelected(current, concat(current, selected)).get(0));
+        Set<Permission> granted = permissionHandling.getGrantable(permissionHandling.removeAll(current, revoked), selected).get(0);
         return performOperations(subject, current, revoked, granted);
 
     }
 
     private List<Set<Permission>> performOperations(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
-        List<Set<Permission>> permissions = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(current, revoked, granted);
+        List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         for (Permission permission : finalRevoked) {
             permissionService.revoke(userSession.getUser(), subject, permission.getAction(), permission.getResource());
@@ -133,7 +160,7 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     }
 
     private List<Set<Permission>> performOperations(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
-        List<Set<Permission>> permissions = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(current, revoked, granted);
+        List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         for (Permission permission : finalRevoked) {
             permissionService.revoke(userSession.getUser(), role, permission.getAction(), permission.getResource());

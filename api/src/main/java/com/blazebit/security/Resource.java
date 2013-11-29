@@ -48,4 +48,10 @@ public interface Resource {
      * @return
      */
     public boolean isApplicable(Action action);
+
+    /**
+     * 
+     * @return resource that implies current resource
+     */
+    public Resource getParent();
 }

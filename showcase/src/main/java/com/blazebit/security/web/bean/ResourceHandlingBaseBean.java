@@ -96,7 +96,7 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
             actionNode.setExpanded(true);
 
             // check if action node should be selected or not based on selectedPermissions
-            Permission found = permissionHandlingUtils.findActionAndResourceMatch(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+            Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
             if (found != null) {
                 actionNode.setSelected(true);
                 actionNode.setSelectable(isGranted(ActionConstants.REVOKE, entityField));
@@ -129,7 +129,7 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
             // fields
             createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
             // lookup if entity is grantable
-            Permission found = permissionHandlingUtils.findActionAndResourceMatch(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+            Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
             if (found == null) {
                 // remove actionNode is entity cannot be granted
                 if (!isGranted(ActionConstants.GRANT, entityField)) {
@@ -157,8 +157,8 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
             TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityFieldWithField);
             fieldNodeModel.setEntityInstance(entityFieldWithField);
             // decide how field node should be marked (red/blue/green)
-            Permission foundWithField = permissionHandlingUtils.findActionAndResourceMatch(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField), true);
-            Permission foundWithoutField = permissionHandlingUtils.findActionAndResourceMatch(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+            Permission foundWithField = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField), true);
+            Permission foundWithoutField = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
 
             if (foundWithField != null || foundWithoutField != null) {
                 // entity object resources are blue

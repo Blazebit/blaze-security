@@ -68,7 +68,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
 
     private void initPermissions() {
         allPermissions = permissionManager.getPermissions(getSelectedUser());
-        List<List<Permission>> all = permissionHandlingUtils.filterPermissions(allPermissions);
+        List<List<Permission>> all = resourceUtils.getSeparatedPermissionsByResource(allPermissions);
         userPermissions = all.get(0);
         userDataPermissions = all.get(1);
     }
@@ -92,17 +92,17 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         // read selected resources
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
         // check what has been revoked
-        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokableFromSelected(userPermissions, selectedPermissions);
+        List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(userPermissions, selectedPermissions);
         currentRevoked = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
 
         // remove revoked permissions from current permission list so we can check what can be granted after revoking
         // check what has been granted
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(userPermissions, currentRevoked), selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, currentRevoked), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
 
-        Set<Permission> allReplaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, granted);
+        Set<Permission> allReplaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
 
         // current permission tree
         Set<Permission> removedPermissions = new HashSet<Permission>(currentRevoked);
@@ -113,7 +113,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
 
         // new permission tree without the replaced but with the granted + revoked ones, marked properly
-        currentReplaced = permissionHandlingUtils.getReplacedByGranting(currentUserPermissions, granted);
+        currentReplaced = permissionHandling.getReplacedByGranting(currentUserPermissions, granted);
         currentUserPermissions.removeAll(currentReplaced);
         currentUserPermissions.addAll(granted);
         newPermissionTreeRoot = getSelectablePermissionTree(currentUserPermissions, new ArrayList<Permission>(), granted, currentRevoked, Marking.NEW, Marking.REMOVED);

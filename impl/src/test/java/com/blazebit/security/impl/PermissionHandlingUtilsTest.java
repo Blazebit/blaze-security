@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.impl.utils.PermissionHandlingUtils;
+import com.blazebit.security.impl.service.PermissionHandlingImpl;
 
 /**
  * 
@@ -40,7 +40,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
     private static final long serialVersionUID = 1L;
     @Inject
-    private PermissionHandlingUtils permissionHandlingUtils;
+    private PermissionHandlingImpl permissionHandlingUtils;
     @Inject
     private PermissionFactory permissionFactory;
 
@@ -62,6 +62,31 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         entityManager.flush();
         return object;
     }
+
+    // implies(Collection<Permission>, Permission)
+    // replaces(Collection<Permission>, Permission)
+    // eliminateRevokeConflicts(Set<Permission>, Set<Permission>)
+
+    // contains(Collection<Permission>, Permission)
+    // contains(Collection<Permission>, Permission, boolean)
+    // containsAll(Collection<Permission>, Collection<Permission>)
+    //
+    // remove(Collection<Permission>, Permission)
+    // remove(Collection<Permission>, Permission, boolean)
+    // removeAll(Collection<Permission>, Collection<Permission>)
+    // removeAll(Collection<Permission>, Collection<Permission>, boolean)
+
+    // getNormalizedPermissions(Collection<Permission>)
+
+    // findPermission(Collection<Permission>, Permission, boolean)
+
+    // getGrantable(Collection<Permission>, Collection<Permission>)
+    // getReplacedByGranting(Collection<Permission>, Collection<Permission>)
+    // getReplacedByRevoking(Collection<Permission>, Collection<Permission>)
+    // getRevokableFromRevoked(Collection<Permission>, Collection<Permission>)
+    // getRevokableFromRevoked(Collection<Permission>, Collection<Permission>, boolean)
+    // getRevokableFromSelected(Collection<Permission>, Collection<Permission>)
+    // getRevokedAndGrantedAfterMerge(Collection<Permission>, Set<Permission>, Set<Permission>)
 
     // implies(Collection<Permission>, Permission)
     @Test
@@ -216,7 +241,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
     }
 
     @Test
-    public void test_implies_parent_replaces_object_child() {
+    public void test_replaces_parent_replaces_object_child() {
         Set<Permission> permissions = new HashSet<Permission>();
         permissions.add(permissionFactory.create(updateAction, document1EntityContentField));
 
@@ -244,9 +269,9 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> redundantPermissions = new HashSet<Permission>();
 
         redundantPermissions.add(permissionFactory.create(updateAction, documentEntity));
-        redundantPermissions.add(permissionFactory.create(updateAction, emailEntity.getChild("subject")));
+        redundantPermissions.add(permissionFactory.create(updateAction, userEntity.getChild("username")));
 
-        permissions.add(permissionFactory.create(updateAction, emailEntity.getChild("subject")));
+        permissions.add(permissionFactory.create(updateAction, userEntity.getChild("username")));
         permissions.add(permissionFactory.create(updateAction, documentEntityTitleField));
         permissions.add(permissionFactory.create(updateAction, documentEntityContentField));
         permissions.add(permissionFactory.create(updateAction, documentEntity));
@@ -483,7 +508,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         assertTrue(permissionHandlingUtils.containsAll(redundantPermissions, permissionHandlingUtils.getNormalizedPermissions(permissions)));
 
     }
-    
+
     @Test
     public void test_getNormalizedPermissions15() {
         Set<Permission> permissions = new HashSet<Permission>();
@@ -516,8 +541,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> notGranted = new HashSet<Permission>();
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(1));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(1));
 
     }
 
@@ -535,8 +560,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> notGranted = new HashSet<Permission>();
         notGranted.add(permissionFactory.create(updateAction, documentEntityContentField));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(1));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(1));
 
     }
 
@@ -552,8 +577,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> granted = new HashSet<Permission>();
         granted.add(permissionFactory.create(updateAction, documentEntity));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(new HashSet<Permission>(), permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(1));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0));
+        assertSetsEquals(new HashSet<Permission>(), permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(1));
 
     }
 
@@ -574,8 +599,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> replaced = new HashSet<Permission>();
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, toGrant).get(0));
-        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, toGrant).get(1));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(1));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, toGrant));
 
     }
@@ -597,8 +622,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> replaced = new HashSet<Permission>();
         replaced.add(permissionFactory.create(updateAction, documentEntityContentField));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, toGrant).get(0));
-        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, toGrant).get(1));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(1));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, toGrant));
 
     }
@@ -619,7 +644,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         granted.add(permissionFactory.create(updateAction, documentEntity.getChild("id")));
         granted.add(permissionFactory.create(updateAction, documentEntity.getChild("size")));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0));
 
         Set<Permission> finalGranted = new HashSet<Permission>();
         finalGranted.add(permissionFactory.create(updateAction, documentEntity));
@@ -651,7 +676,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         granted.add(permissionFactory.create(updateAction, document1Entity.getChild("id")));
         granted.add(permissionFactory.create(updateAction, document1Entity.getChild("size")));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0));
 
         Set<Permission> finalGranted = new HashSet<Permission>();
         finalGranted.add(permissionFactory.create(updateAction, document1Entity));
@@ -691,7 +716,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> revoked = new HashSet<Permission>();
         revoked.add(permissionFactory.create(readAction, document1EntityContentField));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, selectedPermissions).get(0));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
@@ -727,7 +752,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         granted.add(permissionFactory.create(updateAction, documentEntityContentField));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(granted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(1));
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(0));
@@ -749,7 +774,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         granted.add(permissionFactory.create(updateAction, documentEntityTitleField));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(granted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(1));
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(0));
@@ -775,7 +800,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         granted.add(permissionFactory.create(updateAction, documentEntity.getChild("size")));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(granted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(1));
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(0));
@@ -788,16 +813,16 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         currentPermissions.add(permissionFactory.create(updateAction, documentEntity));
 
         Set<Permission> selectedPermissions = new HashSet<Permission>();
-        selectedPermissions.add(permissionFactory.create(updateAction, emailEntity));
+        selectedPermissions.add(permissionFactory.create(updateAction, userEntity));
 
         Set<Permission> revoked = new HashSet<Permission>();
         revoked.add(permissionFactory.create(updateAction, documentEntity));
 
         Set<Permission> granted = new HashSet<Permission>();
-        granted.add(permissionFactory.create(updateAction, emailEntity));
+        granted.add(permissionFactory.create(updateAction, userEntity));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(granted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(1));
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(0));
@@ -822,7 +847,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         granted.add(permissionFactory.create(updateAction, documentEntity));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(granted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(1));
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(0));
@@ -851,7 +876,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, selectedPermissions));
 
@@ -876,7 +901,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, granted));
 
@@ -901,7 +926,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, granted));
 
@@ -926,7 +951,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, selectedPermissions));
 
@@ -953,7 +978,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
     }
 
@@ -978,7 +1003,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
     }
 
@@ -1014,7 +1039,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), selectedPermissions).get(0));
 
     }
 
@@ -1081,8 +1106,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> granted = new HashSet<Permission>();
         granted.add(permissionFactory.create(updateAction, documentEntity));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(0));
-        assertSetsEquals(new HashSet<Permission>(), permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(1));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(0));
+        assertSetsEquals(new HashSet<Permission>(), permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(1));
     }
 
     @Test
@@ -1097,8 +1122,8 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> notGranted = new HashSet<Permission>();
         notGranted.add(permissionFactory.create(updateAction, documentEntityContentField));
 
-        assertSetsEquals(new HashSet<Permission>(), permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(0));
-        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(1));
+        assertSetsEquals(new HashSet<Permission>(), permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(1));
     }
 
     @Test
@@ -1121,7 +1146,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> finalRevoked = new HashSet<Permission>();
         finalRevoked.addAll(currentPermissions);
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(0));
         assertSetsEquals(finalRevoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, new HashSet<Permission>(), granted).get(0));
         assertSetsEquals(finalGranted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, new HashSet<Permission>(), granted).get(1));
 
@@ -1232,7 +1257,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> expected = new HashSet<Permission>();
 
-        assertSetsEquals(expected, permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
+        assertSetsEquals(expected, permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
     }
 
     @Test
@@ -1247,7 +1272,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> expected = new HashSet<Permission>();
         expected.add(permissionFactory.create(updateAction, documentEntityTitleField));
 
-        assertSetsEquals(expected, permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
+        assertSetsEquals(expected, permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
     }
 
     @Test
@@ -1261,7 +1286,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> expected = new HashSet<Permission>();
 
-        assertSetsEquals(expected, permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
+        assertSetsEquals(expected, permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
     }
 
     @Test
@@ -1275,7 +1300,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> expected = new HashSet<Permission>();
 
-        assertSetsEquals(expected, permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
+        assertSetsEquals(expected, permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
     }
 
     @Test
@@ -1295,7 +1320,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         expected.add(permissionFactory.create(updateAction, documentEntity.getChild("id")));
         expected.add(permissionFactory.create(updateAction, documentEntity.getChild("size")));
 
-        assertSetsEquals(expected, permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
+        assertSetsEquals(expected, permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke));
     }
 
     // test cases for Users->Groups. The scenario is that user has a set of current permissions, granted permissions and revoked
@@ -1314,7 +1339,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntityTitleField));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
         replaced.addAll(currentPermissions);
@@ -1328,7 +1353,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> additionalGranted = new HashSet<Permission>();
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(0));
@@ -1348,7 +1373,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntity));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
 
@@ -1360,7 +1385,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
 
         Set<Permission> additionalGranted = new HashSet<Permission>();
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(currentPermissions, groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(0));
@@ -1380,7 +1405,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntity));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
 
@@ -1398,7 +1423,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(1));
         assertSetsEquals(additionalGranted, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(2));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
     }
@@ -1417,7 +1442,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntity));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
 
@@ -1435,7 +1460,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(1));
         assertSetsEquals(additionalGranted, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(2));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
     }
@@ -1454,7 +1479,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntity));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
 
@@ -1474,7 +1499,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(1));
         assertSetsEquals(additionalGranted, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(2));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
     }
@@ -1491,7 +1516,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntity));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
 
@@ -1509,7 +1534,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(1));
         assertSetsEquals(additionalGranted, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(2));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
     }
@@ -1526,7 +1551,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         Set<Permission> groupPermissionsToRevoke = new HashSet<Permission>();
         groupPermissionsToRevoke.add(permissionFactory.create(updateAction, documentEntity));
 
-        groupPermissionsToRevoke = permissionHandlingUtils.getRevokedByEliminatingConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
+        groupPermissionsToRevoke = permissionHandlingUtils.eliminateRevokeConflicts(groupPermissionsToGrant, groupPermissionsToRevoke);
 
         Set<Permission> replaced = new HashSet<Permission>();
 
@@ -1542,7 +1567,7 @@ public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtil
         assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(1));
         assertSetsEquals(additionalGranted, permissionHandlingUtils.getRevokableFromRevoked(currentPermissions, groupPermissionsToRevoke, true).get(2));
 
-        assertSetsEquals(granted, permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(permissionHandlingUtils.removeAll(currentPermissions, revoked), groupPermissionsToGrant).get(0));
         assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, groupPermissionsToGrant));
 
     }

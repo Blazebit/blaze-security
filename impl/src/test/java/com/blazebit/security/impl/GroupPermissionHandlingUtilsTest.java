@@ -33,8 +33,8 @@ import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Document;
+import com.blazebit.security.impl.service.PermissionHandlingImpl;
 import com.blazebit.security.impl.utils.GroupPermissionHandlingUtils;
-import com.blazebit.security.impl.utils.PermissionHandlingUtils;
 
 /**
  * 
@@ -46,7 +46,7 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
 
     private static final long serialVersionUID = 1L;
     @Inject
-    private PermissionHandlingUtils permissionHandlingUtils;
+    private PermissionHandlingImpl permissionHandlingUtils;
     @Inject
     private GroupPermissionHandlingUtils groupPermissionHandlingUtils;
     @Inject
@@ -224,11 +224,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(added);
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(currentPermissions, granted);
+        List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
         Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removed);
-        revoked = permissionHandlingUtils.getRevokedByEliminatingConflicts(granted, revoked);
+        revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
         expectedGranted.add(permissionFactory.create(user1, updateAction, entityFieldFactory.createResource(CarrierGroup.class)));
@@ -265,11 +265,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(added);
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(currentPermissions, granted);
+        List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
 
         Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removed);
-        revoked = permissionHandlingUtils.getRevokedByEliminatingConflicts(granted, revoked);
+        revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
         expectedGranted.add(permissionFactory.create(user1, updateAction, documentEntity));
@@ -305,11 +305,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(added);
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(currentPermissions, granted);
+        List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
         Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removed);
-        revoked = permissionHandlingUtils.getRevokedByEliminatingConflicts(granted, revoked);
+        revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
         expectedGranted.add(permissionFactory.create(user1, updateAction, documentEntity));

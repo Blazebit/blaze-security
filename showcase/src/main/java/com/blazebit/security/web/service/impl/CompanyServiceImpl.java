@@ -58,11 +58,6 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Company saveCompany(Company selectedCompany) {
         Company company = entityManager.merge(selectedCompany);
-        adjustFieldLevelPermissions(company);
-        removeObjectLevelPermissions(company);
-        removeGroupHierarchy(company);
-        // fix user level permissions
-        // TODO adjust current user permissions to the groups the user belongs to?
         return company;
     }
 

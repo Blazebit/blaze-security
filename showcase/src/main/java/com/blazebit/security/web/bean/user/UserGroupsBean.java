@@ -92,7 +92,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
 
     private void initUserPermissions() {
         allPermissions = permissionManager.getPermissions(getSelectedUser());
-        List<List<Permission>> permissions = permissionHandlingUtils.filterPermissions(allPermissions);
+        List<List<Permission>> permissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions);
         userPermissions = permissions.get(0);
         userDataPermissions = permissions.get(1);
         this.permissionViewRoot = getPermissionTree(userPermissions, userDataPermissions);
@@ -129,24 +129,24 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         removedGroups = addedAndRemovedGroups.get(1);
 
         // get granted and revoked permissions from added and removed groups
-        Set<Permission> granted = new HashSet<Permission>(permissionHandlingUtils.filterPermissions(groupPermissionHandlingUtils.getGrantedFromGroup(getSelectedGroups())).get(0));
-        Set<Permission> revoked = new HashSet<Permission>(permissionHandlingUtils.filterPermissions(groupPermissionHandlingUtils.getRevokedByGroup(removedGroups)).get(0));
-        revoked = permissionHandlingUtils.getRevokedByEliminatingConflicts(granted, revoked);
+        Set<Permission> granted = new HashSet<Permission>(resourceUtils.getSeparatedPermissionsByResource(groupPermissionHandlingUtils.getGrantedFromGroup(getSelectedGroups())).get(0));
+        Set<Permission> revoked = new HashSet<Permission>(resourceUtils.getSeparatedPermissionsByResource(groupPermissionHandlingUtils.getRevokedByGroup(removedGroups)).get(0));
+        revoked = permissionHandling.eliminateRevokeConflicts(granted, revoked);
 
         // get permissions which can be revoked from the user
-        List<Set<Permission>> revoke = permissionHandlingUtils.getRevokableFromRevoked(userPermissions, revoked, true);
+        List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userPermissions, revoked, true);
         currentRevoked = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
-        List<Set<Permission>> grant = permissionHandlingUtils.getGrantableFromSelected(permissionHandlingUtils.removeAll(userPermissions, currentRevoked), granted);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, currentRevoked), granted);
         Set<Permission> grantable = grant.get(0);
         super.setNotGranted(grant.get(1));
 
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);
         // TODO merge needed?
-        grantable = permissionHandlingUtils.getNormalizedPermissions(grantable);
+        grantable = permissionHandling.getNormalizedPermissions(grantable);
 
         // // merge grant and revoke based on the current permissions
         // List<Set<Permission>> revokeAndGrant = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(userPermissions,
@@ -155,7 +155,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         // grantable = revokeAndGrant.get(1);
 
         // current permission tree
-        Set<Permission> replaced = permissionHandlingUtils.getReplacedByGranting(allPermissions, grantable);
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(allPermissions, grantable);
 
         Set<Permission> removable = new HashSet<Permission>();
         removable.addAll(replaced);
@@ -164,14 +164,14 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
 
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
-        currentReplaced = permissionHandlingUtils.getReplacedByGranting(userPermissions, grantable);
-        currentPermissions = new ArrayList<Permission>(permissionHandlingUtils.removeAll(currentPermissions, currentReplaced));
+        currentReplaced = permissionHandling.getReplacedByGranting(userPermissions, grantable);
+        currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, currentReplaced));
         currentPermissions.addAll(grantable);
 
         if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
             newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, new ArrayList<Permission>(), grantable, currentRevoked, Marking.NEW, Marking.REMOVED);
         } else {
-            currentPermissions = new ArrayList<Permission>(permissionHandlingUtils.removeAll(currentPermissions, removable));
+            currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, removable));
             newPermissionTreeRoot = getPermissionTree(currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
         }
     }

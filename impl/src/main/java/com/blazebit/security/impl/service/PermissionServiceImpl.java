@@ -14,11 +14,17 @@ package com.blazebit.security.impl.service;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+
+import org.apache.deltaspike.core.util.ServiceUtils;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
@@ -34,7 +40,7 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
-import com.blazebit.security.impl.utils.PermissionHandlingUtils;
+import com.blazebit.security.spi.ActionImplicationProvider;
 
 /**
  * 
@@ -58,7 +64,14 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
     private PermissionManager permissionManager;
 
     @Inject
-    private PermissionHandlingUtils permissionHandlingUtils;
+    private PermissionHandlingImpl permissionHandlingUtils;
+    
+    private List<ActionImplicationProvider> actionImplicationProviders;
+    
+    @PostConstruct
+    private void init() {
+        actionImplicationProviders = ServiceUtils.loadServiceImplementations(ActionImplicationProvider.class);
+    }
 
     @Override
     public boolean isGranted(Subject subject, Action action, Resource resource) {
@@ -185,7 +198,7 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
             toBeGranted.add(permissionFactory.create(subject, action, resource));
             List<Permission> currentPermissions = permissionManager.getPermissions(subject);
             // second: check if permission can be merged with existing ones
-            Set<Permission> grant = permissionHandlingUtils.getGrantableFromSelected(currentPermissions, toBeGranted).get(0);
+            Set<Permission> grant = permissionHandlingUtils.getGrantable(currentPermissions, toBeGranted).get(0);
             List<Set<Permission>> revokeAndGrant = permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, new HashSet<Permission>(), grant);
             Set<Permission> revoke = revokeAndGrant.get(0);
             grant = revokeAndGrant.get(1);

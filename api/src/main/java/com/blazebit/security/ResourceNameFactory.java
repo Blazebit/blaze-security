@@ -1,10 +1,15 @@
 package com.blazebit.security;
 
-
 public interface ResourceNameFactory {
 
-    Resource createResource(IdHolder entityObject, String field);
+    /**
+     * 
+     * @param entityObject
+     * @param field
+     * @return
+     */
+    public Resource createResource(IdHolder entityObject, String field);
 
-    Resource createResource(IdHolder entityObject);
+    public Resource createResource(IdHolder entity);
 
 }

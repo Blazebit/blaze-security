@@ -49,6 +49,7 @@ public class Carrier implements Serializable, IdHolder {
     private String field5;
     private Party party;
     private Set<Contact> contacts = new HashSet<Contact>();
+    private Set<Contact> contacts2 = new HashSet<Contact>();
     private Set<CarrierGroup> groups = new HashSet<CarrierGroup>();
     private Comment comment;
 
@@ -129,13 +130,22 @@ public class Carrier implements Serializable, IdHolder {
         this.party = party;
     }
 
-    @OneToMany
+    @OneToMany(mappedBy = "carrier")
     public Set<Contact> getContacts() {
         return contacts;
     }
 
     public void setContacts(Set<Contact> contacts) {
         this.contacts = contacts;
+    }
+
+    @OneToMany(mappedBy = "carrier2")
+    public Set<Contact> getContacts2() {
+        return contacts2;
+    }
+
+    public void setContacts2(Set<Contact> contacts2) {
+        this.contacts2 = contacts2;
     }
 
     @ManyToMany

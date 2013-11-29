@@ -40,6 +40,7 @@ import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.CarrierTeam;
 import com.blazebit.security.impl.model.sample.Comment;
@@ -199,7 +200,7 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         permissionManager.save(permissionFactory.create(admin, updateAction, entityFieldFactory.createResource(Company.class)));
         // admin can grant the sample entities
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(TestCarrier.class)));
-        //permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Party.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Contact.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
@@ -208,7 +209,7 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
         permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Comment.class)));
         // admin can revoke the sample entities
-        //permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Contact.class)));
         permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));

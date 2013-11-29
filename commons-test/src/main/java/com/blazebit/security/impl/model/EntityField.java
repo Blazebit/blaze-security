@@ -166,7 +166,7 @@ public class EntityField implements Resource {
         List<Resource> ret = new ArrayList<Resource>();
         ret.add(this);
         EntityField parent = getParent();
-        if (parent != null) {
+        if (parent != this) {
             ret.add(parent);
         }
         return ret;
@@ -182,7 +182,11 @@ public class EntityField implements Resource {
     }
 
     public EntityField getParent() {
-        return new EntityField(entity);
+        if (!isEmptyField()) {
+            return new EntityField(entity);
+        } else {
+            return this;
+        }
     }
 
     public EntityField getChild(String field) {
