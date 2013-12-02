@@ -27,7 +27,26 @@ public class EntityActionImplicationProvider implements ActionImplicationProvide
         }
         return ret;
     }
-    
+
+    @Override
+    public List<Action> getActionsWhichImply(Action action, boolean fieldLevelEnabled) {
+        if (fieldLevelEnabled) {
+            return getActionsWhichImply(action);
+        }
+        List<Action> ret = new ArrayList<Action>();
+        ret.addAll(getActionsWhichImply(action));
+
+        ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
+
+        if (actionFactory.createAction(ActionConstants.ADD).equals(action)) {
+            ret.add(actionFactory.createAction(ActionConstants.UPDATE));
+        }
+        if (actionFactory.createAction(ActionConstants.REMOVE).equals(action)) {
+            ret.add(actionFactory.createAction(ActionConstants.UPDATE));
+        }
+        return ret;
+    }
+
     @Override
     public List<Action> getActionsImpledBy(Action action) {
         List<Action> ret = new ArrayList<Action>();

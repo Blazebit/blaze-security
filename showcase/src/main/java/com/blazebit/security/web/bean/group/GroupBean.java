@@ -16,18 +16,15 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 
+import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.bean.PermissionTreeHandlingBaseBean;
+import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
-import com.blazebit.security.web.bean.model.TreeNodeModel;
-import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
-import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
@@ -36,7 +33,7 @@ import com.blazebit.security.web.service.api.UserGroupService;
  */
 @ManagedBean(name = "groupBean")
 @ViewScoped
-public class GroupBean extends PermissionTreeHandlingBaseBean implements PermissionView, Serializable {
+public class GroupBean extends GroupHandlerBaseBean implements PermissionView, Serializable {
 
     /**
      * 
@@ -46,13 +43,14 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
     @Inject
     private UserGroupService userGroupService;
 
+    private List<UserGroup> groups = new ArrayList<UserGroup>();
     private List<User> users = new ArrayList<User>();
-
     private DefaultTreeNode groupRoot;
     private UserGroup selectedGroup;
     private DefaultTreeNode permissionRoot;
     private UserGroup newGroup = new UserGroup("new_group");
     private TreeNode selectedGroupTreeNode;
+    private boolean parentGroup;
 
     public void backToIndex() throws IOException {
         userSession.setUser(null);
@@ -68,11 +66,15 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
 
     private void initUserGroups() {
         // init groups tree
-        List<UserGroup> availableGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
-        this.groupRoot = new DefaultTreeNode("", null);
-        groupRoot.setExpanded(true);
-        for (UserGroup group : availableGroups) {
-            createNode(group, groupRoot);
+        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
+            this.groupRoot = new DefaultTreeNode("", null);
+            groupRoot.setExpanded(true);
+            for (UserGroup group : parentGroups) {
+                createNode(group, groupRoot);
+            }
+        } else {
+            groups = userGroupDataAccess.getAllGroups(userSession.getSelectedCompany());
         }
     }
 
@@ -85,20 +87,24 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
     private void createNode(UserGroup group, DefaultTreeNode node) {
         DefaultTreeNode childNode = new DefaultTreeNode(group, node);
         childNode.setExpanded(true);
-        for (UserGroup child : userGroupService.getGroupsForGroup(group)) {
+        for (UserGroup child : userGroupDataAccess.getGroupsForGroup(group)) {
             createNode(child, childNode);
         }
     }
 
     public void saveGroup() {
-        UserGroup ug = userGroupService.createUserGroup(userSession.getSelectedCompany(), newGroup.getName());
+        UserGroup newGroup = userGroupService.create(userSession.getSelectedCompany(), this.newGroup.getName());
         if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
-            if (getSelectedGroup() != null) {
-                ug.setParent(getSelectedGroup());
-                userGroupService.saveGroup(ug);
+            if (isParentGroup()) {
+                newGroup.setParent(getSelectedGroup().getParent());
+                getSelectedGroup().setParent(newGroup);
+                userGroupService.save(getSelectedGroup());
+                userGroupService.save(newGroup);
+            } else {
+                newGroup.setParent(getSelectedGroup());
+                userGroupService.save(newGroup);
             }
         }
-
         initUserGroups();
         newGroup = new UserGroup();
     }
@@ -122,40 +128,29 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
     public void selectGroup() {
         if (selectedGroupTreeNode != null) {
             selectedGroup = (UserGroup) selectedGroupTreeNode.getData();
-            userSession.setSelectedUserGroup(selectedGroup);
-            this.users = userGroupService.getUsersFor(selectedGroup);
-            initPermissions();
+            initSelectedGroup();
         }
+    }
+
+    public void selectGroup(UserGroup userGroup) {
+        selectedGroup = userGroup;
+        initSelectedGroup();
+    }
+
+    public void onGroupSelect(SelectEvent event) {
+        selectGroup((UserGroup) event.getObject());
+    }
+
+    private void initSelectedGroup() {
+        userSession.setSelectedUserGroup(selectedGroup);
+        this.users = userGroupDataAccess.getUsersFor(selectedGroup);
+        permissionRoot = initGroupPermissions(getSelectedGroup(), !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
     }
 
     public void unselectGroup() {
         selectedGroupTreeNode = null;
         userSession.setSelectedUserGroup(null);
         this.users.clear();
-    }
-
-    private void initPermissions() {
-        List<UserGroup> parents = new ArrayList<UserGroup>();
-        UserGroup parent = getSelectedGroup().getParent();
-        parents.add(getSelectedGroup());
-        while (parent != null) {
-            parents.add(0, parent);
-            parent = parent.getParent();
-        }
-        this.permissionRoot = new DefaultTreeNode("root", null);
-        DefaultTreeNode groupNode = permissionRoot;
-        for (UserGroup group : parents) {
-            groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
-            groupNode.setExpanded(true);
-            groupNode.setSelectable(false);
-            List<Permission> allPermissions = permissionManager.getPermissions(group);
-            List<Permission> permissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
-            List<Permission> dataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
-            getPermissionTree(groupNode, permissions, dataPermissions);
-            if (getSelectedGroup().equals(group)) {
-                ((TreeNodeModel) groupNode.getData()).setMarking(Marking.SELECTED);
-            }
-        }
     }
 
     public void deleteGroup(UserGroup group) {
@@ -188,6 +183,23 @@ public class GroupBean extends PermissionTreeHandlingBaseBean implements Permiss
 
     public void setNewGroup(UserGroup newGroup) {
         this.newGroup = newGroup;
+    }
+
+    public boolean isParentGroup() {
+        return parentGroup;
+    }
+
+    public void setParentGroup(boolean parentGroup) {
+        newGroup.setName("");
+        this.parentGroup = parentGroup;
+    }
+
+    public List<UserGroup> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<UserGroup> groups) {
+        this.groups = groups;
     }
 
 }

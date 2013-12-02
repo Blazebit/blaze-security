@@ -12,6 +12,7 @@ import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
+import com.blazebit.security.impl.service.resource.EntityFieldResourceHandlingUtils;
 import com.blazebit.security.service.api.RoleManager;
 
 public class GroupPermissionHandlingUtils {
@@ -20,10 +21,13 @@ public class GroupPermissionHandlingUtils {
     private PermissionManager permissionManager;
 
     @Inject
-    private PermissionHandlingImpl permissionHandlingUtils;
+    private PermissionHandlingImpl permissionHandling;
 
     @Inject
     private RoleManager roleManager;
+
+    @Inject
+    private EntityFieldResourceHandlingUtils resourceHandling;
 
     public List<Set<UserGroup>> getAddedAndRemovedUserGroups(User user, Set<UserGroup> selectedGroups) {
         List<Set<UserGroup>> ret = new ArrayList<Set<UserGroup>>();
@@ -49,28 +53,40 @@ public class GroupPermissionHandlingUtils {
         return ret;
     }
 
-    public Set<Permission> getGrantedFromGroup(Set<UserGroup> addedGroups) {
-
-        Set<Permission> ret = new HashSet<Permission>();
-        for (UserGroup group : addedGroups) {
-            ret.addAll(permissionManager.getPermissions(group));
-
-            UserGroup parent = group.getParent();
-            while (parent != null) {
-                ret.addAll(permissionManager.getPermissions(parent));
-                parent = parent.getParent();
-            }
-        }
-        return permissionHandlingUtils.getNormalizedPermissions(ret);
+    public Set<Permission> getGroupPermissions(Set<UserGroup> addedGroups) {
+        return getGroupPermissions(addedGroups, true);
     }
 
-    public Set<Permission> getRevokedByGroup(Set<UserGroup> removedGroups) {
-        Set<Permission> ret = new HashSet<Permission>();
-        for (UserGroup group : removedGroups) {
-            ret.addAll(permissionManager.getPermissions(group));
-        }
+    public Set<Permission> getGroupPermissions(Set<UserGroup> groups, boolean inherit) {
 
-        return permissionHandlingUtils.getNormalizedPermissions(ret);
+        Set<Permission> ret = new HashSet<Permission>();
+        for (UserGroup group : groups) {
+            ret.addAll(permissionManager.getPermissions(group));
+            if (inherit) {
+                UserGroup parent = group.getParent();
+                while (parent != null) {
+                    ret.addAll(permissionManager.getPermissions(parent));
+                    parent = parent.getParent();
+                }
+            }
+        }
+        return permissionHandling.getNormalizedPermissions(ret);
+    }
+
+    public Set<Permission> getGroupPermissions(Set<UserGroup> groups, boolean inherit, boolean fieldLevel) {
+
+        Set<Permission> ret = new HashSet<Permission>();
+        for (UserGroup group : groups) {
+            ret.addAll(!fieldLevel ? permissionManager.getPermissions(group) : permissionHandling.getParentPermissions(permissionManager.getPermissions(group)));
+            if (inherit) {
+                UserGroup parent = group.getParent();
+                while (parent != null) {
+                    ret.addAll(!fieldLevel ? permissionManager.getPermissions(group) : permissionHandling.getParentPermissions(permissionManager.getPermissions(group)));
+                    parent = parent.getParent();
+                }
+            }
+        }
+        return permissionHandling.getNormalizedPermissions(ret);
     }
 
 }

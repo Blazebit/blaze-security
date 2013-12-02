@@ -1,8 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
 	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
-	xmlns:my="http://java.sun.com/jsf/composite/components"
-		xmlns:c="http://java.sun.com/jsp/jstl/core">
+	xmlns:my="http://java.sun.com/jsf/composite/components" xmlns:c="http://java.sun.com/jsp/jstl/core">
 <ui:composition>
 	<p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedUserGroup}">
 
@@ -16,7 +15,7 @@
 				<h3>
 					Selected group: #{userSession.selectedUserGroup.name}
 					<p:commandButton action="#{groupBean.unselectGroup}" update=":form:tab" value="X"
-						rendered="#{not empty userSession.selectedUserGroup}" process="@this"/>
+						rendered="#{not empty userSession.selectedUserGroup}" process="@this" />
 				</h3>
 				<p:dataTable value="#{groupBean.users}" var="user">
 					<f:facet name="header">Users of #{userSession.selectedUserGroup.name}</f:facet>
@@ -26,9 +25,14 @@
                     </p:column>
 				</p:dataTable>
 
-				<h:inputText value="#{groupBean.newGroup.name}"/>
-				<c:set var="newGroup" value="#{groupBean.newGroup}"/>
-				<p:commandButton value="Save" action="#{groupBean.saveGroup}" rendered="#{groupBean.isAuthorizedResource('CREATE', newGroup)}" update=":form:tab:groupTree"/>
+				<h:outputText value="#{groupBean.parentGroup ? 'Add parent ' : 'Add child '}"  rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}"/>
+
+				<h:inputText value="#{groupBean.newGroup.name}" />
+
+				<h:outputText value=" to #{userSession.selectedUserGroup.name}    "  rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}"/>
+				<c:set var="newGroup" value="#{groupBean.newGroup}" />
+				<p:commandButton value="Save" action="#{groupBean.saveGroup}"
+					rendered="#{groupBean.isAuthorizedResource('CREATE', newGroup)}" update=":form:tab:groupTree" />
 			</h:panelGroup>
 
 			<my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
@@ -36,17 +40,47 @@
 
 		<h:panelGroup id="groupTree">
 			<p:treeTable value="#{groupBean.groupRoot}" var="group" selectionMode="single"
-				selection="#{groupBean.selectedGroupTreeNode}">
-				<p:ajax event="select" update=":form:tab" partialSubmit="true"/>
+				selection="#{groupBean.selectedGroupTreeNode}" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+				<p:ajax event="select" update=":form:tab" partialSubmit="true" />
+
 				<p:column>
 					<f:facet name="header">Group name</f:facet>
 					<h:outputText value="#{group.name}" />
 				</p:column>
+
 				<p:column>
 					<f:facet name="header">Action</f:facet>
-					<p:commandButton value="Delete" rendered="#{groupBean.isAuthorizedResource('DELETE', group)}" action="#{groupBean.deleteGroup(group)}" update=":form:tab"/>
+
+					<p:commandButton value="Add parent" action="#{groupBean.selectGroup(group)}"
+						rendered="#{securityBaseBean.isAuthorizedResource('CREATE', groupBean.newGroup)}" update=":form:tab">
+						<f:setPropertyActionListener target="#{groupBean.parentGroup}" value="true" />
+					</p:commandButton>
+					<p:commandButton value="Add child" action="#{groupBean.selectGroup(group)}"
+						rendered="#{securityBaseBean.isAuthorizedResource('CREATE', groupBean.newGroup)}" update=":form:tab">
+						<f:setPropertyActionListener target="#{groupBean.parentGroup}" value="false" />
+					</p:commandButton>
+
+					<p:commandButton value="Delete" rendered="#{groupBean.isAuthorizedResource('DELETE', group)}"
+						action="#{groupBean.deleteGroup(group)}" update=":form:tab" />
+
 				</p:column>
 			</p:treeTable>
+
+			<p:dataTable value="#{groupBean.groups}" var="group" rendered="#{not securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+				<p:column>
+					<f:facet name="header">Group name</f:facet>
+					<p:commandLink action="#{groupBean.selectGroup(group)}" update=":form:tab">
+						<h:outputText value="#{group.name}" />
+					</p:commandLink>
+				</p:column>
+
+				<p:column>
+					<f:facet name="header">Action</f:facet>
+					<p:commandButton value="Delete" rendered="#{groupBean.isAuthorizedResource('DELETE', group)}"
+						action="#{groupBean.deleteGroup(group)}" update=":form:tab" />
+
+				</p:column>
+			</p:dataTable>
 		</h:panelGroup>
 	</p:tab>
 

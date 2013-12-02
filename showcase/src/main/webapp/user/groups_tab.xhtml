@@ -15,9 +15,8 @@
 				</script>
 				<p:tab id="groups" title="Groups">
 					<p style="font-size: 0.8em">
-						User belongs to selected groups.<br/>
-						Select groups to add selected user to groups<br /> 
-						Unselect groups to remove selected user from the groups.<br />
+						User belongs to selected groups.<br /> Select groups to add selected user to groups<br /> Unselect groups to
+						remove selected user from the groups.<br />
 					</p>
 
 
@@ -26,7 +25,7 @@
 						<h:panelGroup layout="block">
 
 							<p:tree value="#{userGroupsBean.groupRoot}" propagateSelectionDown="false" propagateSelectionUp="false"
-								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group">
+								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
 								<p:treeNode type="default">
 									<h:outputText value="#{group.userGroup.name}" />
 									<p:commandLink oncomplete="permissionDialog.show()" update=":dialogs" process="@this">
@@ -35,6 +34,19 @@
 									</p:commandLink>
 								</p:treeNode>
 							</p:tree>
+
+							<p:dataTable value="#{userGroupsBean.groups}" var="group" rendered="#{not securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+								<p:column>
+									<p:selectBooleanCheckbox value="#{group.selected}"/>
+									<h:outputText value="#{group.userGroup.name}" />
+
+									<p:commandLink oncomplete="permissionDialog.show()" update=":dialogs" process="@this">
+										<f:setPropertyActionListener target="#{userGroupsBean.selectedGroup}" value="#{group.userGroup}" />
+										<h:outputText value=" (permissions)" />
+									</p:commandLink>
+								</p:column>
+
+							</p:dataTable>
 							<br />
 							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" />
 						</h:panelGroup>
@@ -46,8 +58,7 @@
 				<p:tab id="groupPermissions" title="Permissions">
 					<h:panelGrid columns="2" columnClasses="top, top" style="width:80%">
 						<h:panelGroup>
-					    Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()"
-								update=":dialogs" />
+					    Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
 							<br />
 							RED entries will be revoked after confirmation
 							<h:outputText value="No permissions available"
@@ -69,8 +80,8 @@
 						</h:panelGroup>
 
 						<h:panelGroup>
-					    New permissions<p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()"
-								update=":dialogs" alt="Not granted"/>
+					    New permissions<p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()" update=":dialogs"
+								alt="Not granted" />
 							<br />
 							GREEN and SELECTED entries will be granted after confirmation
 							<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree"

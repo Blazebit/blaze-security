@@ -40,7 +40,9 @@
 								id="currentResourcePermissionTree" selectionMode="checkbox">
 								<p:treeNode>
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="perm" />
-									<p:tooltip for="perm" value="#{currentPermission.tooltip}" showEffect="fade" hideEffect="fade" />
+									<p:tooltip for="perm"  showEffect="fade" hideEffect="fade" rendered="#{not empty currentPermission.tooltip}" >
+									<h:outputText value="#{currentPermission.tooltip}" escape="false" />
+									</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

@@ -223,11 +223,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
         Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(added);
+        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
-        Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removed);
+        Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -264,11 +264,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
         Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(added);
+        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
 
-        Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removed);
+        Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -304,11 +304,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
         Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandlingUtils.getGrantedFromGroup(added);
+        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
-        Set<Permission> revoked = groupPermissionHandlingUtils.getRevokedByGroup(removed);
+        Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();

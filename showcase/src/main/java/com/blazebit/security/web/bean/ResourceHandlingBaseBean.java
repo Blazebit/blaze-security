@@ -1,11 +1,12 @@
 package com.blazebit.security.web.bean;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -20,7 +21,7 @@ import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.util.Constants;
 
-public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
+public class ResourceHandlingBaseBean extends GroupHandlerBaseBean {
 
     protected DefaultTreeNode getResourceTree() throws ClassNotFoundException {
         return getResourceTree(new HashSet<Permission>());
@@ -50,24 +51,18 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
                     TreeNodeModel entityNodeModel = new TreeNodeModel(entityField.getEntity(), TreeNodeModel.ResourceType.ENTITY, entityField);
                     DefaultTreeNode entityNode = new DefaultTreeNode(entityNodeModel, moduleNode);
                     entityNode.setExpanded(true);
-                    // first come actions available only for entity
-                    createActionNodes(actionUtils.getActionsForEntity(), selectedPermissions, entityNode, entityField);
-                    // then come actions common for fields and entities
+
+                    List<String> primitiveFields = new ArrayList<String>();
+                    List<String> collectionFields = new ArrayList<String>();
                     if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
-                        // fields for entity
-                        List<String> primitiveFields = resourceMetamodel.getPrimitiveFields(resourceName);
-                        List<String> collectionFields = resourceMetamodel.getCollectionFields(resourceName);
-                        if (!primitiveFields.isEmpty()) {
-                            // actions for primitive fields
-                            createActionNodes(actionUtils.getActionsForPrimitiveField(), primitiveFields, entityField, selectedPermissions, entityNode);
+                        primitiveFields = resourceMetamodel.getPrimitiveFields(resourceName);
+                        collectionFields = resourceMetamodel.getCollectionFields(resourceName);
+                    }
+                    LinkedHashMap<Action, List<String>> actionFields = actionUtils.getActionFieldsCombinations(primitiveFields, collectionFields);
+                    for (Action action : actionFields.keySet()) {
+                        if (actionFields.get(action) != null) {
+                            createActionNode(action, actionFields.get(action), entityNode, entityField, selectedPermissions);
                         }
-                        if (!collectionFields.isEmpty()) {
-                            // actions for collection fields
-                            createActionNodes(actionUtils.getActionsForCollectionField(), collectionFields, entityField, selectedPermissions, entityNode);
-                        }
-                    } else {
-                        // if field level is not enabled add these common action to the tree as well
-                        createActionNodes(actionUtils.getCommonActionsForEntity(), selectedPermissions, entityNode, entityField);
                     }
                     propagateNodePropertiesTo(entityNode);
                 }
@@ -79,65 +74,32 @@ public class ResourceHandlingBaseBean extends PermissionTreeHandlingBaseBean {
     }
 
     /**
-     * creates nodes for actions without fields
-     * 
-     * @param actions
-     * @param entityField
-     * @param selectedPermissions
-     * @param entityNode - attach action node to entity node
-     */
-    private void createActionNodes(List<Action> actions, Collection<Permission> selectedPermissions, TreeNode entityNode, EntityField entityField) {
-        for (Action action : actions) {
-            EntityAction entityAction = (EntityAction) action;
-            TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
-            actionNodeModel.setEntityInstance(entityField);
-
-            DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
-            actionNode.setExpanded(true);
-
-            // check if action node should be selected or not based on selectedPermissions
-            Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
-            if (found != null) {
-                actionNode.setSelected(true);
-                actionNode.setSelectable(isGranted(ActionConstants.REVOKE, entityField));
-            } else {
-                // if resource does not belong to user and cannot be granted HIDE it
-                if (!isGranted(ActionConstants.GRANT, entityField)) {
-                    actionNode.setParent(null);
-                }
-            }
-        }
-    }
-
-    /**
      * create action node with fields
      * 
-     * @param actions
      * @param fields
+     * @param entityNode
      * @param entityField
      * @param selectedPermissions
-     * @param entityNode
+     * @param actions
      */
-    private void createActionNodes(List<Action> actions, List<String> fields, EntityField entityField, Collection<Permission> selectedPermissions, TreeNode entityNode) {
-        for (Action action : actions) {
-            EntityAction entityAction = (EntityAction) action;
-            TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
-            actionNodeModel.setEntityInstance(entityField);
+    private void createActionNode(Action action, List<String> fields, TreeNode entityNode, EntityField entityField, Collection<Permission> selectedPermissions) {
+        EntityAction entityAction = (EntityAction) action;
+        TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
+        actionNodeModel.setEntityInstance(entityField);
 
-            DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
-            actionNode.setExpanded(true);
-            // fields
-            createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
-            // lookup if entity is grantable
-            Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
-            if (found == null) {
-                // remove actionNode is entity cannot be granted
-                if (!isGranted(ActionConstants.GRANT, entityField)) {
-                    actionNode.setParent(null);
-                }
-            } else {
-                propagateNodePropertiesTo(actionNode);
+        DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
+        actionNode.setExpanded(true);
+        // fields
+        createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
+        // lookup if entity is grantable
+        Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+        if (found == null) {
+            // remove actionNode is entity cannot be granted
+            if (!isGranted(ActionConstants.GRANT, entityField)) {
+                actionNode.setParent(null);
             }
+        } else {
+            propagateNodePropertiesTo(actionNode);
         }
     }
 

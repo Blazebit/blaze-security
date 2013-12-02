@@ -11,12 +11,10 @@
 
 			<h:panelGrid columns="2" width="50%" columnClasses="top,top">
 
-				<my:groupTree bean="#{userBean}" />
+				<my:groupTree bean="#{userBean}" hierarchyEnabled="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}"/>
 				<my:permissionTree bean="#{userBean}" />
 
-
 			</h:panelGrid>
-
 		</h:panelGroup>
 
 		<h:panelGroup id="users">

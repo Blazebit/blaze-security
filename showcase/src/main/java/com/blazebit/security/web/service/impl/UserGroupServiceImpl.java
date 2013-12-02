@@ -3,8 +3,6 @@
  */
 package com.blazebit.security.web.service.impl;
 
-import java.util.List;
-
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -12,8 +10,8 @@ import javax.persistence.PersistenceContext;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
-import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.web.service.api.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
@@ -28,8 +26,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     @Inject
     private PermissionManager permissionManager;
 
+    @Inject
+    private UserGroupDataAccess userGroupDataAccess;
+
     @Override
-    public UserGroup createUserGroup(Company company, String name) {
+    public UserGroup create(Company company, String name) {
         UserGroup ug = new UserGroup(name);
         ug.setCompany(company);
         entityManager.persist(ug);
@@ -38,7 +39,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     @Override
     public void delete(UserGroup userGroup) {
-        UserGroup reloadedUserGroup = loadUserGroup(userGroup);
+        UserGroup reloadedUserGroup = userGroupDataAccess.loadUserGroup(userGroup);
         permissionManager.remove(reloadedUserGroup.getAllPermissions());
         permissionManager.flush();
         for (UserGroup ug : reloadedUserGroup.getUserGroups()) {
@@ -50,46 +51,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
-    public UserGroup loadUserGroup(UserGroup userGroup) {
-        UserGroup reloadedUserGroup = entityManager.find(UserGroup.class, userGroup.getId());
-        reloadedUserGroup.getUserGroups();
-        reloadedUserGroup.getAllPermissions();
-        return reloadedUserGroup;
-    }
-
-    @Override
-    public List<UserGroup> getGroupsForUser(User user) {
-        return entityManager
-            .createQuery("select groups from " + User.class.getCanonicalName() + " user JOIN user.userGroups groups where user.id= :userId order by groups.name", UserGroup.class)
-            .setParameter("userId", user.getId())
-            .getResultList();
-    }
-
-    @Override
-    public List<UserGroup> getAllParentGroups(Company company) {
-        return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.parent is null and ug.company.id='" + company.getId()
-                                             + "' order by ug.name", UserGroup.class).getResultList();
-    }
-    
-    @Override
-    public List<UserGroup> getAllGroups(Company company) {
-        return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.company.id='" + company.getId()
-                                             + "' order by ug.name", UserGroup.class).getResultList();
-    }
-
-    @Override
-    public List<UserGroup> getGroupsForGroup(UserGroup group) {
-        return entityManager.createQuery("select ug from " + UserGroup.class.getCanonicalName() + " ug where ug.parent.id  = " + group.getId(), UserGroup.class).getResultList();
-    }
-
-    @Override
-    public List<User> getUsersFor(UserGroup group) {
-        return entityManager.createQuery("select users from " + UserGroup.class.getCanonicalName() + " ug JOIN ug.users users where ug.id  = " + group.getId()
-                                             + " order by users.username", User.class).getResultList();
-    }
-
-    @Override
-    public UserGroup saveGroup(UserGroup ug) {
+    public UserGroup save(UserGroup ug) {
         UserGroup ret = entityManager.merge(ug);
         entityManager.flush();
         return ret;

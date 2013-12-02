@@ -18,6 +18,10 @@ import com.blazebit.security.impl.model.User;
 @RequestScoped
 public class WebUserContext implements UserContext {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     @Inject
     private UserSession userSession;
 

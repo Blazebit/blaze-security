@@ -13,10 +13,16 @@ import javax.inject.Inject;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.utils.GroupPermissionHandlingUtils;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.UserGroupModel;
+import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
+import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.service.api.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBean {
@@ -25,9 +31,50 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
     protected UserGroupService userGroupService;
 
     @Inject
+    protected UserGroupDataAccess userGroupDataAccess;
+
+    @Inject
     protected GroupPermissionHandlingUtils groupPermissionHandlingUtils;
-    
-    
+
+    protected DefaultTreeNode initGroupPermissions(UserGroup selectedUserGroup, boolean hideFieldLevel) {
+        DefaultTreeNode root = new DefaultTreeNode("root", null);
+        DefaultTreeNode groupNode = root;
+
+        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
+            List<UserGroup> parents = new ArrayList<UserGroup>();
+            UserGroup parent = selectedUserGroup.getParent();
+            parents.add(selectedUserGroup);
+            while (parent != null) {
+                parents.add(0, parent);
+                parent = parent.getParent();
+            }
+
+            for (UserGroup group : parents) {
+                groupNode = new DefaultTreeNode(new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group), groupNode);
+                groupNode.setExpanded(true);
+                groupNode.setSelectable(false);
+                List<Permission> allPermissions = permissionManager.getPermissions(group);
+                List<Permission> permissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
+                List<Permission> dataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
+                getImmutablePermissionTree(groupNode, permissions, dataPermissions, hideFieldLevel);
+                if (selectedUserGroup.equals(group)) {
+                    ((TreeNodeModel) groupNode.getData()).setMarking(Marking.SELECTED);
+                }
+            }
+        } else {
+            groupNode = new DefaultTreeNode(new TreeNodeModel(selectedUserGroup.getName(), ResourceType.USERGROUP, selectedUserGroup), groupNode);
+            groupNode.setExpanded(true);
+            groupNode.setSelectable(false);
+
+            List<Permission> allPermissions = permissionManager.getPermissions(selectedUserGroup);
+            List<Permission> permissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
+            List<Permission> dataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
+            getImmutablePermissionTree(groupNode, permissions, dataPermissions, hideFieldLevel);
+        }
+        return root;
+    }
+
+
     /**
      * Builds a group tree for the selected groups
      * 
@@ -82,7 +129,7 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
             DefaultTreeNode childNode = new DefaultTreeNode(new UserGroupModel(group, userGroups.contains(group), false), node);
             childNode.setExpanded(true);
 
-            for (UserGroup ug : userGroupService.getGroupsForGroup(group)) {
+            for (UserGroup ug : userGroupDataAccess.getGroupsForGroup(group)) {
                 createGroupNode(ug, parentGroups, userGroups, childNode);
             }
         }
@@ -127,7 +174,7 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
                 childNode.setSelectable(false);
             }
         }
-        for (UserGroup child : userGroupService.getGroupsForGroup(group)) {
+        for (UserGroup child : userGroupDataAccess.getGroupsForGroup(group)) {
             createNode(child, childNode, selectedUserGroups);
         }
     }

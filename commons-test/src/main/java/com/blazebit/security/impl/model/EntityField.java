@@ -175,7 +175,7 @@ public class EntityField implements Resource {
     @Override
     public boolean isApplicable(Action action) {
         if (!isEmptyField()) {
-            return !action.implies(new EntityAction(ActionConstants.CREATE)) && !action.implies(new EntityAction(ActionConstants.DELETE));
+            return !action.implies(new EntityAction(ActionConstants.DELETE));
         } else {
             return !action.implies(new EntityAction(ActionConstants.ADD)) && !action.implies(new EntityAction(ActionConstants.REMOVE));
         }

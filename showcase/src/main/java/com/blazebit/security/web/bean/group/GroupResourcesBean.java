@@ -5,8 +5,6 @@ package com.blazebit.security.web.bean.group;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +13,6 @@ import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.inject.Inject;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
@@ -31,7 +28,6 @@ import com.blazebit.security.web.bean.ResourceHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
-import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
  * 
@@ -41,12 +37,7 @@ import com.blazebit.security.web.service.api.UserGroupService;
 @ManagedBean(name = "groupResourcesBean")
 public class GroupResourcesBean extends ResourceHandlingBaseBean implements PermissionView, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
-    @Inject
-    private UserGroupService userGroupService;
 
     private List<Permission> allPermissions = new ArrayList<Permission>();
     private List<Permission> groupPermissions = new ArrayList<Permission>();
@@ -92,12 +83,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     }
 
     private void initPermissionTree() {
-        this.permissionViewRoot = new DefaultTreeNode("root", null);
-        TreeNode groupNode = permissionViewRoot;
-        groupNode = new DefaultTreeNode(new TreeNodeModel(getSelectedGroup().getName(), ResourceType.USERGROUP, getSelectedGroup(), Marking.SELECTED), groupNode);
-        groupNode.setExpanded(true);
-        groupNode.setSelectable(false);
-        getPermissionTree(groupNode, groupPermissions, groupDataPermissions);
+        this.permissionViewRoot = initGroupPermissions(getSelectedGroup(), !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
     }
 
     public UserGroup getSelectedGroup() {
@@ -125,6 +111,11 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     public void processSelectedResources() {
         // get selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
+        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+            // if field is level is not enabled but the user has field level permissions, these need to be marked as selected,
+            // otherwise it would be taken as revoked
+            selectedPermissions.addAll(permissionHandling.getSeparatedParentAndChildPermissions(groupPermissions).get(1));
+        }
         // get revoked permissions
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(groupPermissions, selectedPermissions);
         currentRevoked = revoke.get(0);
@@ -140,7 +131,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         // current permission tree without the revoked ones
         Set<Permission> removedPermissions = new HashSet<Permission>(currentRevoked);
         removedPermissions.addAll(allReplaced);
-        currentPermissionTreeRoot = getPermissionTree(groupPermissions, groupDataPermissions, removedPermissions, Marking.REMOVED);
+        currentPermissionTreeRoot = getImmutablePermissionTree(groupPermissions, groupDataPermissions, removedPermissions, Marking.REMOVED);
 
         // modify current group permissions based on resource selection
         List<Permission> currentPermissions = new ArrayList<Permission>(groupPermissions);
@@ -149,12 +140,13 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         currentReplaced = permissionHandling.getReplacedByGranting(groupPermissions, granted);
         currentPermissions.removeAll(currentReplaced);
         currentPermissions.addAll(granted);
-        newPermissionTreeRoot = getSelectablePermissionTree(currentPermissions, new ArrayList<Permission>(), granted, currentRevoked, Marking.NEW, Marking.REMOVED);
+        newPermissionTreeRoot = getMutablePermissionTree(currentPermissions, new ArrayList<Permission>(), granted, currentRevoked, Marking.NEW, Marking.REMOVED);
     }
 
     public void rebuildCurrentGroupPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced);
+        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced,
+                                                       !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
     }
 
     /**
@@ -171,21 +163,9 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
     private void prepareUserPropagationView(Set<Permission> granted, Set<Permission> revoked) {
         // show user propagation view
-        Set<User> users = new HashSet<User>(userGroupService.getUsersFor(getSelectedUserGroup()));
-        List<UserGroup> groups = userGroupService.getGroupsForGroup(getSelectedUserGroup());
-        for (UserGroup userGroup : groups) {
-            mergeUserList(userGroup, users);
-        }
-        List<User> sortedUsers = new ArrayList<User>(users);
-        Collections.sort(sortedUsers, new Comparator<User>() {
-
-            @Override
-            public int compare(User o1, User o2) {
-                return o1.getUsername().compareToIgnoreCase(o2.getUsername());
-            }
-
-        });
-        buildUserPermissionTrees(sortedUsers, granted, revoked);
+        Set<UserGroup> selected = new HashSet<UserGroup>();
+        selected.add(getSelectedGroup());
+        buildUserPermissionTrees(userGroupDataAccess.collectUsers(selected, Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))), granted, revoked);
         // if user level is not enabled confirm user permissions immediately
         if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
             confirmUserPermissions();
@@ -235,7 +215,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         Set<Permission> removable = new HashSet<Permission>();
         removable.addAll(replaced);
         removable.addAll(revoked);
-        getPermissionTree(userNode, userPermissions, userDataPermissions, removable, Marking.REMOVED);
+        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, removable, Marking.REMOVED);
     }
 
     private void createNewPermissionTree(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions, Set<Permission> grantedPermissions, Set<Permission> revokedPermissions) {
@@ -266,7 +246,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         currentPermissions.addAll(grantable);
 
         if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
-            getSelectablePermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, currentRevoked, Marking.NEW, Marking.REMOVED);
+            getMutablePermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, currentRevoked, Marking.NEW, Marking.REMOVED);
         } else {
 
             Set<Permission> removable = new HashSet<Permission>();
@@ -274,15 +254,8 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             removable.addAll(currentRevoked);
 
             currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, removable));
-            newPermissionTreeRoot = getPermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
+            newPermissionTreeRoot = getImmutablePermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
             selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()).toArray());
-        }
-    }
-
-    private void mergeUserList(UserGroup userGroup, Set<User> users) {
-        users.addAll(userGroupService.getUsersFor(userGroup));
-        for (UserGroup childGroup : userGroupService.getGroupsForGroup(userGroup)) {
-            mergeUserList(childGroup, users);
         }
     }
 
@@ -292,7 +265,8 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> userPermissions = permissionManager.getPermissions(user);
             userNode.getChildren().clear();
-            rebuildCurrentTree(userNode, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
+            rebuildCurrentTree(userNode, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user),
+                               !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
         }
     }
 
@@ -304,7 +278,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
             List<Permission> allPermissions = permissionManager.getPermissions(user);
             List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
-            
+
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
 
@@ -314,10 +288,6 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
 
     public TreeNode getResourceRoot() {
         return resourceRoot;
-    }
-
-    public UserGroup getSelectedUserGroup() {
-        return userSession.getSelectedUserGroup();
     }
 
     @Override

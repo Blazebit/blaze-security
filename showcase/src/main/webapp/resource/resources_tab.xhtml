@@ -44,11 +44,20 @@
 
 						<p:tab title="Groups" id="permissionsGroup">
 							<p:tree value="#{resourcesBean.groupRoot}" var="group" selection="#{resourcesBean.selectedGroupNodes}"
-								selectionMode="checkbox" propagateSelectionDown="false" propagateSelectionUp="false">
+								selectionMode="checkbox" propagateSelectionDown="false" propagateSelectionUp="false"
+								rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
 								<p:treeNode>
 									<h:outputText value="#{group.name}" />
 								</p:treeNode>
 							</p:tree>
+
+							<p:dataTable value="#{resourcesBean.groups}" var="group"
+								rendered="#{not securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+								<p:column>
+									<p:selectBooleanCheckbox value="#{group.selected}"/>
+									<h:outputText value="#{group.userGroup.name}" />
+								</p:column>
+							</p:dataTable>
 						</p:tab>
 					</p:tabView>
 

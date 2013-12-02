@@ -128,7 +128,7 @@ public abstract class TreeHandlingBaseBean extends SecurityBaseBean {
             } else {
                 if (ResourceType.ACTION.equals(treeNodeModel.getType())) {
                     // if it a collection field action
-                    if (actionUtils.getActionsForCollectionField().contains((EntityAction) treeNodeModel.getTarget())) {
+                    if (actionUtils.getUpdateActionsForCollectionField().contains((EntityAction) treeNodeModel.getTarget())) {
                         node.setParent(null);
                     }
                 }

@@ -32,7 +32,7 @@ import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
-import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserGroupDataAccess;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
@@ -41,7 +41,7 @@ import com.blazebit.security.web.util.WebUtil;
 public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
     @Inject
-    private UserGroupService userGroupService;
+    private UserGroupDataAccess userGroupDataAccess;
 
     private IdHolder selectedSubject;
     private List<RowModel> selectedObjects = new ArrayList<RowModel>();
@@ -106,7 +106,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             if (!selectedFields.isEmpty()) {
                 // selectedFields
                 List<String> fields;
-                if (actionUtils.getActionsForCollectionField().contains(action)) {
+                if (actionUtils.getUpdateActionsForCollectionField().contains(action)) {
                     fields = resourceMetamodel.getCollectionFields(selectedObject.getEntity().getClass());
                 } else {
                     fields = resourceMetamodel.getPrimitiveFields(selectedObject.getEntity().getClass());
@@ -202,9 +202,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             Set<Permission> replaced = permissionHandling.getReplacedByGranting(currentDataPermissions, selectedPermissions);
 
             // build current tree
-            currentPermissionRoot = getPermissionTree(currentPermissions, currentDataPermissions, replaced, Marking.REMOVED);
+            currentPermissionRoot = getImmutablePermissionTree(currentPermissions, currentDataPermissions, replaced, Marking.REMOVED);
             // build new tree -> show only new object permissions
-            newPermissionRoot = getPermissionTree(new ArrayList<Permission>(), new ArrayList<Permission>(granted), granted, Marking.NEW);
+            newPermissionRoot = getImmutablePermissionTree(new ArrayList<Permission>(), new ArrayList<Permission>(granted), granted, Marking.NEW);
         } else {
             if ("revoke".equals(action)) {
 
@@ -226,9 +226,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 revoked.addAll(toRevoke);
 
                 // build current tree
-                currentPermissionRoot = getPermissionTree(currentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.REMOVED);
+                currentPermissionRoot = getImmutablePermissionTree(currentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.REMOVED);
                 // build new tree -> show only new object permissions
-                newPermissionRoot = getSelectablePermissionTree(new ArrayList<Permission>(), new ArrayList<Permission>(concat(granted, revoked)), granted, revoked, Marking.NEW,
+                newPermissionRoot = getImmutablePermissionTree(new ArrayList<Permission>(), new ArrayList<Permission>(concat(granted, revoked)), granted, revoked, Marking.NEW,
                                                                 Marking.REMOVED, false);
             }
         }
@@ -269,7 +269,8 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         // reset view
         allPermissions = getAllPermissions();
         // reset permissions
-        currentPermissionRoot = getPermissionTree(getCurrentPermissions(allPermissions), getCurrentDataPermissions(allPermissions), new HashSet<Permission>(), Marking.REMOVED);
+        currentPermissionRoot = getImmutablePermissionTree(getCurrentPermissions(allPermissions), getCurrentDataPermissions(allPermissions), new HashSet<Permission>(),
+                                                           Marking.REMOVED);
         // build new tree
         newPermissionRoot = new DefaultTreeNode();
         // reset initial values
@@ -294,7 +295,9 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             }
 
         });
-        createUserPermissionTrees(sortedUsers, false);
+        Set<UserGroup> selected = new HashSet<UserGroup>();
+        selected.add((UserGroup) selectedSubject);
+        createUserPermissionTrees(userGroupDataAccess.collectUsers(selected, Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))), false);
         usersConfirmed = false;
     }
 
@@ -330,10 +333,11 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         super.setNotGranted(grant.get(1));
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(userDataPermissions, selectedPermissions);
         // current permission tree
-        getPermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
+        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
 
     }
 
+ 
     private void createNewUserNode(User user, TreeNode root, boolean selectable) {
         TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
 
@@ -356,7 +360,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             Set<Permission> granted = grant.get(0);
             super.setNotGranted(grant.get(1));
 
-            getPermissionTree(userNode, new ArrayList<Permission>(), new ArrayList<Permission>(granted), granted, Marking.NEW);
+            getImmutablePermissionTree(userNode, new ArrayList<Permission>(), new ArrayList<Permission>(granted), granted, Marking.NEW);
         } else {
             if (action.equals("revoke")) {
                 List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userDataPermissions, selectedPermissions, true);
@@ -377,8 +381,8 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 revoked.addAll(toRevoke);
 
                 // build new tree -> show only new object permissions
-                getSelectablePermissionTree(userNode, new ArrayList<Permission>(), new ArrayList<Permission>(concat(granted, revoked)), revoked, granted, Marking.REMOVED,
-                                            Marking.NEW, false);
+                getImmutablePermissionTree(userNode, new ArrayList<Permission>(), new ArrayList<Permission>(concat(granted, revoked)), revoked, granted, Marking.REMOVED,
+                                         Marking.NEW, false);
             }
         }
     }
@@ -424,10 +428,10 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
     }
 
     private void collectUsers(UserGroup group, Set<User> users) {
-        for (User user : userGroupService.getUsersFor(group)) {
+        for (User user : userGroupDataAccess.getUsersFor(group)) {
             users.add(user);
         }
-        for (UserGroup child : userGroupService.getGroupsForGroup(group)) {
+        for (UserGroup child : userGroupDataAccess.getGroupsForGroup(group)) {
             collectUsers(child, users);
         }
     }

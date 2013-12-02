@@ -19,4 +19,12 @@ public interface ActionImplicationProvider {
      * @return
      */
     public List<Action> getActionsImpledBy(Action action);
+
+    /**
+     * 
+     * @param action
+     * @param fieldLevelEnabled
+     * @return
+     */
+    public List<Action> getActionsWhichImply(Action action, boolean fieldLevelEnabled);
 }

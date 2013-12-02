@@ -64,7 +64,6 @@ public interface PermissionHandling {
      */
     public List<Set<Permission>> getGrantable(Collection<Permission> permissions, Collection<Permission> toBeGranted);
 
-
     /**
      * Merges child permissions into parent permissions if all child permissions are given and eliminates permissions that imply
      * one another.
@@ -172,5 +171,12 @@ public interface PermissionHandling {
      * @return
      */
     public boolean replaces(Collection<Permission> permissions, Permission givenPermission);
+
+    /**
+     * 
+     * @param permissions
+     * @return
+     */
+    public Set<Permission> getParentPermissions(Collection<Permission> permissions);
 
 }

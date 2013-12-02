@@ -105,19 +105,19 @@ public class StartupBean {
 
             List<UserGroup> groups = new ArrayList<UserGroup>();
 
-            groups.add(userGroupService.createUserGroup(company, "UserGroup"));
-            groups.add(userGroupService.createUserGroup(company, "User"));
-            groups.add(userGroupService.createUserGroup(company, "Admin"));
+            groups.add(userGroupService.create(company, "UserGroup"));
+            groups.add(userGroupService.create(company, "User"));
+            groups.add(userGroupService.create(company, "Admin"));
 
-            groups.add(userGroupService.createUserGroup(company, "Base"));
-            groups.add(userGroupService.createUserGroup(company, "Carrier"));
-            groups.add(userGroupService.createUserGroup(company, "Empty"));
+            groups.add(userGroupService.create(company, "Base"));
+            groups.add(userGroupService.create(company, "Carrier"));
+            groups.add(userGroupService.create(company, "Empty"));
 
-            groups.add(userGroupService.createUserGroup(company, "Document"));
+            groups.add(userGroupService.create(company, "Document"));
 
-            groups.add(userGroupService.createUserGroup(company, "Comment"));
+            groups.add(userGroupService.create(company, "Comment"));
             
-            groups.add(userGroupService.createUserGroup(company, "Company"));
+            groups.add(userGroupService.create(company, "Company"));
 
             roleService.addGroupToGroup(groups.get(1), groups.get(0));
             roleService.addGroupToGroup(groups.get(2), groups.get(1));

@@ -3,10 +3,7 @@
  */
 package com.blazebit.security.web.service.api;
 
-import java.util.List;
-
 import com.blazebit.security.impl.model.Company;
-import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 
 /**
@@ -15,22 +12,25 @@ import com.blazebit.security.impl.model.UserGroup;
  */
 public interface UserGroupService {
 
-    public List<UserGroup> getGroupsForUser(User user);
+    /**
+     * 
+     * @param group
+     * @return
+     */
+    public UserGroup save(UserGroup group);
 
-    public List<UserGroup> getGroupsForGroup(UserGroup group);
+    /**
+     * 
+     * @param company
+     * @param name
+     * @return
+     */
+    public UserGroup create(Company company, String name);
 
-    public List<User> getUsersFor(UserGroup group);
-
-    public UserGroup saveGroup(UserGroup group);
-
-    public UserGroup createUserGroup(Company company, String name);
-
-    public List<UserGroup> getAllParentGroups(Company company);
-
+    /**
+     * 
+     * @param userGroup
+     */
     public void delete(UserGroup userGroup);
-
-    public UserGroup loadUserGroup(UserGroup userGroup);
-
-    public List<UserGroup> getAllGroups(Company company);
 
 }

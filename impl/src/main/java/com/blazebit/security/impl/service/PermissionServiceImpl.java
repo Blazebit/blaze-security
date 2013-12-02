@@ -14,14 +14,11 @@ package com.blazebit.security.impl.service;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 import org.apache.deltaspike.core.util.ServiceUtils;
@@ -40,6 +37,8 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.service.api.PropertyDataAccess;
 import com.blazebit.security.spi.ActionImplicationProvider;
 
 /**
@@ -65,9 +64,12 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
 
     @Inject
     private PermissionHandlingImpl permissionHandlingUtils;
-    
+
+    @Inject
+    private PropertyDataAccess propertyDataAccess;
+
     private List<ActionImplicationProvider> actionImplicationProviders;
-    
+
     @PostConstruct
     private void init() {
         actionImplicationProviders = ServiceUtils.loadServiceImplementations(ActionImplicationProvider.class);
@@ -80,6 +82,17 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         for (Permission permission : permissions) {
             if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
                 return true;
+            }
+        }
+        // if implying permission not found, try with implying action
+        for (ActionImplicationProvider provider : actionImplicationProviders) {
+            List<Action> actions = provider.getActionsWhichImply(action, Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+            for (Action implyAction : actions) {
+                for (Permission permission : permissions) {
+                    if (permission.getAction().implies(implyAction) && permission.getResource().implies(resource)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -140,9 +153,21 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
     @Override
     public boolean isGranted(Role role, Action action, Resource resource) {
         checkParameters(role, action, resource);
-        for (Permission permission : permissionManager.getPermissions(role)) {
+        List<Permission> permissions = permissionManager.getPermissions(role);
+        for (Permission permission : permissions) {
             if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
                 return true;
+            }
+        }
+        // if implying permission not found, try with implying action
+        for (ActionImplicationProvider provider : actionImplicationProviders) {
+            List<Action> actions = provider.getActionsWhichImply(action);
+            for (Action implyAction : actions) {
+                for (Permission permission : permissions) {
+                    if (permission.getAction().implies(implyAction) && permission.getResource().implies(resource)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;

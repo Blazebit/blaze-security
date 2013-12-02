@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.deltaspike.core.util.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -45,12 +46,12 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         return getSelectedPermissions(selectedPermissionNodes, null);
     }
 
-    protected TreeNode rebuildCurrentTree(List<Permission> allPermissions, Set<Permission> selectedPermissions, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+    protected TreeNode rebuildCurrentTree(List<Permission> allPermissions, Set<Permission> selectedPermissions, Set<Permission> prevRevoked, Set<Permission> prevReplaced, boolean hideFieldLevel) {
         DefaultTreeNode root = new DefaultTreeNode();
-        return rebuildCurrentTree(root, allPermissions, selectedPermissions, prevRevoked, prevReplaced);
+        return rebuildCurrentTree(root, allPermissions, selectedPermissions, prevRevoked, prevReplaced, hideFieldLevel);
     }
 
-    protected TreeNode rebuildCurrentTree(TreeNode node, List<Permission> allPermissions, Set<Permission> selectedPermissions, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+    protected TreeNode rebuildCurrentTree(TreeNode node, List<Permission> allPermissions, Set<Permission> selectedPermissions, Set<Permission> prevRevoked, Set<Permission> prevReplaced, boolean hideFieldLevel) {
         List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
         List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
 
@@ -78,7 +79,8 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         removablePermissions.addAll(replaced);
         // current permission tree
 
-        return getPermissionTree(node, userPermissions, userDataPermissions, removablePermissions, Marking.REMOVED);
+        return getImmutablePermissionTree(node, userPermissions, userDataPermissions, removablePermissions, new HashSet<Permission>(), Marking.REMOVED, Marking.NONE,
+                                          hideFieldLevel);
     }
 
     /**
@@ -113,7 +115,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                         // }
                         // }
 
-                        if (!actionUtils.getActionsForCollectionField().contains(permissionNodeData.getTarget())
+                        if (!actionUtils.getUpdateActionsForCollectionField().contains(permissionNodeData.getTarget())
                             && allChildFieldsListed(permissionNode, ((TreeNodeModel) entityNode.getData()).getName())) {
 
                             // add entity field resource
@@ -144,106 +146,80 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         return permissionHandling.getNormalizedPermissions(ret);
     }
 
-    /**
-     * builds a simple, not selectable permission tree with a given root and permission list
-     * 
-     * @param root
-     * @param permissions
-     * @return
-     */
-    protected TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions) {
-        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), Marking.NONE);
-    }
-
-    /**
-     * builds a simple, not selectable permission tree from the given permission list
-     * 
-     * @param permissions
-     * @return
-     */
-    protected TreeNode getPermissionTree(List<Permission> permissions, List<Permission> dataPermissions) {
-        return getPermissionTree(permissions, dataPermissions, new HashSet<Permission>(), Marking.NONE);
-    }
-
-    /**
-     * 
-     * builds a simple, not selectable permission tree from the given permission list and marks with the given marking the
-     * selected permissions
-     * 
-     * @param permissions
-     * @param selectedPermissions
-     * @param marking
-     * @return
-     */
-    protected TreeNode getPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking marking) {
-        DefaultTreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, marking);
-    }
-
-    /**
-     * builds the simplest permission tree from the given permission list with the given root. object permissions have tooltip
-     * and marking
-     * 
-     * @param permissions
-     * @param permissionRoot
-     */
-    protected TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking marking) {
-        return getSelectablePermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), marking, Marking.NONE, false);
-    }
-
-    /**
-     * builds a selectable permission tree from the given permission list and marks the selected and not selected permissions
-     * respectively
-     * 
-     * @param permissions
-     * @param selectedPermissions
-     * @param notSelectedPermissions
-     * @param selectedMarking
-     * @param notSelectedMarking
-     * @return
-     */
-    protected TreeNode getSelectablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean selectable) {
+    protected TreeNode getMutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
         TreeNode root = new DefaultTreeNode();
-        return getSelectablePermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, selectable);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel);
     }
 
-    /**
-     * builds a selectable permission tree from the given permission list and marks the selected and not selected permissions
-     * respectively
-     * 
-     * @param permissions
-     * @param selectedPermissions
-     * @param notSelectedPermissions
-     * @param selectedMarking
-     * @param notSelectedMarking
-     * @return
-     */
-    protected TreeNode getSelectablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
+    protected TreeNode getMutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
+
         TreeNode root = new DefaultTreeNode();
-        return getSelectablePermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, false);
     }
 
-    /**
-     * builds a selectable permission tree with the give rootm from the given permission list and marks the selected and not
-     * selected permissions respectively
-     * 
-     * @param permissions
-     * @param selectedPermissions
-     * @param notSelectedPermissions
-     */
-    protected TreeNode getSelectablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
-        return getSelectablePermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true);
+    protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, false);
     }
 
-    /**
-     * builds a selectable permission tree with the give rootm from the given permission list and marks the selected and not
-     * selected permissions respectively
-     * 
-     * @param permissions
-     * @param selectedPermissions
-     * @param notSelectedPermissions
-     */
-    protected TreeNode getSelectablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean selectable) {
+    protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel);
+    }
+
+    protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
+        TreeNode root = new DefaultTreeNode();
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, false);
+    }
+
+    protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
+        TreeNode root = new DefaultTreeNode();
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, hideFieldLevel);
+    }
+
+    protected TreeNode getImmutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, false);
+    }
+
+    protected TreeNode getImmutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, hideFieldLevel);
+    }
+
+    protected TreeNode getImmutablePermissionTree(DefaultTreeNode groupNode, List<Permission> permissions, List<Permission> dataPermissions) {
+        return getPermissionTree(groupNode, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, false);
+    }
+
+    protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking) {
+        TreeNode root = new DefaultTreeNode();
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, false);
+    }
+
+    protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking, boolean hideFieldLevel) {
+        TreeNode root = new DefaultTreeNode();
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, hideFieldLevel);
+    }
+
+    protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, boolean hideFieldLevel) {
+        TreeNode root = new DefaultTreeNode();
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, hideFieldLevel);
+    }
+
+    protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions) {
+        TreeNode root = new DefaultTreeNode();
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, false);
+    }
+
+    protected TreeNode getImmutablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, false);
+    }
+
+    protected TreeNode getImmutablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking, boolean hideFieldLevel) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, hideFieldLevel);
+    }
+
+    protected TreeNode getImmutablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, boolean hideFieldLevel) {
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, hideFieldLevel);
+    }
+
+    private TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean selectable, boolean hideFieldLevel) {
         // group permissions by entity
         Map<String, List<Permission>> permissionMapByEntity = resourceUtils.groupPermissionsByResourceName(permissions);
         Map<String, List<Permission>> dataPermissionMapByEntity = resourceUtils.groupPermissionsByResourceName(dataPermissions);
@@ -257,13 +233,13 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             List<Permission> permissionsByEntity = permissionMapByEntity.get(entity);
             // create entity node
             createEntityNode(root, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, entity, permissionsByEntity, dataPermisssionsByEntity,
-                             selectable);
+                             selectable, hideFieldLevel);
         }
         for (String entity : dataPermissionMapByEntity.keySet()) {
             List<Permission> permissionsByEntity = dataPermissionMapByEntity.get(entity);
             // create entity node
             createEntityNode(root, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, entity, new ArrayList<Permission>(), permissionsByEntity,
-                             selectable);
+                             selectable, hideFieldLevel);
         }
         if (root.getChildCount() == 0) {
             new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), root).setSelectable(false);
@@ -271,7 +247,7 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         return root;
     }
 
-    private void createEntityNode(TreeNode root, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, String entity, List<Permission> permissionsByEntity, List<Permission> dataPermisssionsByEntity, boolean selectable) {
+    private void createEntityNode(TreeNode root, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, String entity, List<Permission> permissionsByEntity, List<Permission> dataPermisssionsByEntity, boolean selectable, boolean hideFieldLevel) {
         EntityField entityField = (EntityField) entityFieldFactory.createResource(entity);
         TreeNode entityNode = new DefaultTreeNode(new TreeNodeModel(entity, TreeNodeModel.ResourceType.ENTITY, entityField), root);
         entityNode.setExpanded(true);
@@ -286,42 +262,46 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             }
             List<Permission> permissionsByAction = permissionMapByAction.get(action);
             createActionNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, entity, entityField, entityNode, permissionsByAction,
-                             dataPermissionsByAction, action, selectable);
+                             dataPermissionsByAction, action, selectable, hideFieldLevel);
         }
 
         for (Action action : dataPermissionMapByAction.keySet()) {
             List<Permission> dataPermissionsByAction = dataPermissionMapByAction.get(action);
             createActionNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, entity, entityField, entityNode, new ArrayList<Permission>(),
-                             dataPermissionsByAction, action, selectable);
+                             dataPermissionsByAction, action, selectable, hideFieldLevel);
         }
         propagateNodePropertiesTo(entityNode);
     }
 
-    private void createActionNode(Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, String entity, EntityField entityField, TreeNode entityNode, List<Permission> permissionsByAction, List<Permission> dataPermissionsByAction, Action action, boolean selectable) {
+    private void createActionNode(Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, String entity, EntityField entityField, TreeNode entityNode, List<Permission> permissionsByAction, List<Permission> dataPermissionsByAction, Action action, boolean selectable, boolean hideFieldLevel) {
         // create action node
         EntityAction entityAction = (EntityAction) action;
         TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
         DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
         actionNode.setExpanded(true);
         // actionNodeModel.setEntityInstance(entityField);
-
-        createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, permissionsByAction, actionNode, selectable);
-        createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, dataPermissionsByAction, actionNode, selectable);
+        createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, permissionsByAction, actionNode, selectable, hideFieldLevel);
+        createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, dataPermissionsByAction, actionNode, selectable, hideFieldLevel);
         addRevokedFields(notSelectedPermissions, entity, entityField, permissionsByAction, actionNode);
-
         propagateNodePropertiesTo(actionNode);
     }
 
-    private void createFieldNodes(Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, List<Permission> permissionsByAction, DefaultTreeNode actionNode, boolean selectable) {
+    private void createFieldNodes(Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, List<Permission> permissionsByAction, DefaultTreeNode actionNode, boolean selectable, boolean hideFieldLevel) {
         Map<String, List<Permission>> fieldPermissions = resourceUtils.groupEntityPermissionsByField(permissionsByAction);
         for (String field : fieldPermissions.keySet()) {
             List<Permission> permissionsByField = fieldPermissions.get(field);
-            // take always just one!
+            // take always just one! at least one for sure exists, otherwise it wouldnt be in the map
             Permission permission = permissionsByField.get(0);
 
             // add entity fields if there are any
             if (!((EntityField) permission.getResource()).isEmptyField()) {
-                createFieldNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permission, selectable);
+                if (hideFieldLevel) {
+                    ((TreeNodeModel) actionNode.getData()).setMarking(Marking.OBJECT);
+                    ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_FIELDS);
+                    adjustActionNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permission, selectable);
+                } else {
+                    createFieldNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permission, selectable);
+                }
             } else {
                 // no field nodes -> fix action node
                 adjustActionNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permission, selectable);
@@ -329,38 +309,33 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         }
     }
 
-    // in this case we know that entity field has no field
     private void adjustActionNode(Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, DefaultTreeNode actionNode, Permission permission, boolean selectable) {
 
         TreeNodeModel actionNodeModel = ((TreeNodeModel) actionNode.getData());
         actionNodeModel.setEntityInstance((EntityField) permission.getResource());
+
+        if (permission.getResource() instanceof EntityObjectField) {
+            actionNodeModel.getObjectInstances().add((EntityObjectField) permission.getResource());
+            actionNodeModel.setMarking(Marking.OBJECT);
+            if (StringUtils.isEmpty(actionNodeModel.getTooltip())) {
+                actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+            } else {
+                actionNodeModel.setTooltip(new StringBuilder().append(actionNodeModel.getTooltip()).append("<br/>").append(Constants.CONTAINS_OBJECTS).toString());
+            }
+        }
 
         if (permissionHandling.contains(selectedPermissions, permission, false)) {
             actionNodeModel.setMarking(selectedMarking);
             actionNode.setSelected(true);
             actionNode.setSelectable(selectable);
 
-            if (permission.getResource() instanceof EntityObjectField) {
-                actionNodeModel.getObjectInstances().add((EntityObjectField) permission.getResource());
-                actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-            } else {
-                actionNodeModel.setEntityInstance((EntityField) permission.getResource());
-            }
         } else {
             if (permissionHandling.contains(notSelectedPermissions, permission)) {
                 actionNode.setSelected(false);
                 actionNodeModel.setMarking(notSelectedMarking);
                 actionNode.setSelectable(selectable);
-
             } else {
-                if (permission.getResource() instanceof EntityObjectField) {
-                    actionNodeModel.getObjectInstances().add((EntityObjectField) permission.getResource());
-                    actionNodeModel.setMarking(Marking.OBJECT);
-                    actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-                } else {
-                    actionNodeModel.setEntityInstance((EntityField) permission.getResource());
-                }
-                // already existis entity permission
+                // already existing entity permission
                 // actionNode.setSelected(true);
                 actionNode.setSelectable(false);
             }

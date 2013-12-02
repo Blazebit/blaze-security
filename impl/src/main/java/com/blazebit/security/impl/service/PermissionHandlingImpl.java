@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
+import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionHandling;
 import com.blazebit.security.Resource;
 import com.blazebit.security.impl.service.resource.EntityFieldResourceHandlingUtils;
@@ -21,6 +22,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Inject
     private EntityFieldResourceHandlingUtils resourceHandlingUtils;
+
+    @Inject
+    private PermissionFactory permissionFactory;
 
     @Override
     public boolean contains(Collection<Permission> permissions, Permission permission) {
@@ -69,7 +73,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
                     return permission;
                 }
             } else {
-                resourceHandlingUtils.findPermission(permissions, givenPermission);
+                return resourceHandlingUtils.findPermission(permissions, givenPermission);
             }
         }
         return null;
@@ -355,6 +359,43 @@ public class PermissionHandlingImpl implements PermissionHandling {
         return !permissionDataAccess
             .getRevokablePermissionsWhenGranting(new ArrayList<Permission>(permissions), givenPermission.getAction(), givenPermission.getResource())
             .isEmpty();
+    }
+
+    /**
+     * 
+     * @param permissions
+     * @return
+     */
+    @Override
+    public Set<Permission> getParentPermissions(Collection<Permission> permissions) {
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Permission permission : permissions) {
+            ret.add(permissionFactory.create(permission.getAction(), permission.getResource().getParent()));
+        }
+        return getNormalizedPermissions(ret);
+    }
+    
+    /**
+     * Separates the parent and the child permissions of permission collection. Requirement: all permissions belong to the same
+     * resource name.
+     * 
+     * @param permissions
+     * @return
+     */
+    public List<Set<Permission>> getSeparatedParentAndChildPermissions(Collection<Permission> permissions) {
+        Set<Permission> parents = new HashSet<Permission>();
+        Set<Permission> children = new HashSet<Permission>();
+        for (Permission permission : permissions) {
+            if (permission.getResource().getParent().equals(this)) {
+                parents.add(permission);
+            } else {
+                children.add(permission);
+            }
+        }
+        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
+        ret.add(parents);
+        ret.add(children);
+        return ret;
     }
 
 }

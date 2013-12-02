@@ -104,7 +104,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         boolean isGranted = changedPropertyNames.isEmpty();
         for (String propertyName : changedPropertyNames) {
             isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-            resourceNameFactory.createResource((IdHolder) entity, propertyName));
+                                                    resourceNameFactory.createResource((IdHolder) entity, propertyName));
             if (!isGranted) {
                 break;
             }
@@ -157,24 +157,13 @@ public class ChangeInterceptor extends EmptyInterceptor {
             // if there is a difference between oldValues and newValues
             if (!oldValues.isEmpty()) {
                 // if something remained
-                if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
-                    isGrantedToRemove = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
-                                                                    resourceNameFactory.createResource((IdHolder) entity, fieldName));
-                } else {
-                    isGrantedToRemove = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                 resourceNameFactory.createResource((IdHolder) entity));
-                }
+                isGrantedToRemove = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
+                                                                resourceNameFactory.createResource((IdHolder) entity, fieldName));
             }
-            
             newValues.removeAll(retained);
             if (!newValues.isEmpty()) {
-                if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
-                    isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                                 resourceNameFactory.createResource((IdHolder) entity, fieldName));
-                } else {
-                    isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                 resourceNameFactory.createResource((IdHolder) entity));
-                }
+                isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                             resourceNameFactory.createResource((IdHolder) entity, fieldName));
             }
 
             if (!isGrantedToAdd) {
@@ -272,14 +261,8 @@ public class ChangeInterceptor extends EmptyInterceptor {
                 Collection<?> collection = (Collection<?>) state[i];
                 if (!collection.isEmpty()) {
                     // elements have been added
-                    if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
-                        isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
-                                                                         resourceNameFactory.createResource((IdHolder) entity, fieldName));
-                    } else {
-                        isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
-                                                                         resourceNameFactory.createResource((IdHolder) entity));
-                    }
-
+                    isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                                                                     resourceNameFactory.createResource((IdHolder) entity, fieldName));
                     if (!isGrantedAddEntity) {
                         throw new PermissionActionException("Element to Entity " + entity + "'s collection " + fieldName + " cannot be added by " + userContext.getUser());
                     }
@@ -304,16 +287,17 @@ public class ChangeInterceptor extends EmptyInterceptor {
     // delete
 
     private static class Tuple {
+
         Object o;
         String fieldName;
-        
+
         public Tuple(Object o, String fieldName) {
             super();
             this.o = o;
             this.fieldName = fieldName;
         }
     }
-    
+
     @Override
     public void onDelete(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
         if (!ChangeInterceptor.active) {
@@ -334,44 +318,43 @@ public class ChangeInterceptor extends EmptyInterceptor {
         if (!isGranted) {
             throw new PermissionActionException("Entity " + entity + " is not permitted to be deleted by " + userContext.getUser());
         }
-        
+
         Map<Class<?>, Tuple> toBeChecked = new HashMap<Class<?>, Tuple>();
-        
+
         // TODO: use propertyNames and types instead
-        for(Field f : ReflectionUtils.getInstanceFields(entity.getClass())) {
+        for (Field f : ReflectionUtils.getInstanceFields(entity.getClass())) {
             ManyToOne annotation;
-            if((annotation = ReflectionUtils.getGetter(entity.getClass(), f.getName()).getAnnotation(ManyToOne.class)) != null) {
+            if ((annotation = ReflectionUtils.getGetter(entity.getClass(), f.getName()).getAnnotation(ManyToOne.class)) != null) {
                 Object val = null;
-                
+
                 try {
                     val = ReflectionUtils.getGetter(entity.getClass(), f.getName()).invoke(entity);
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
-                
-                if(val != null) {
+
+                if (val != null) {
                     toBeChecked.put(ReflectionUtils.getResolvedFieldType(entity.getClass(), f), new Tuple(val, f.getName()));
                 }
             }
         }
-        
-        for(Map.Entry<Class<?>, Tuple> entry : toBeChecked.entrySet()) {
+
+        for (Map.Entry<Class<?>, Tuple> entry : toBeChecked.entrySet()) {
             Class<?> c = entry.getKey();
-            
-            for(Field f : ReflectionUtils.getInstanceFields(c)) {
+
+            for (Field f : ReflectionUtils.getInstanceFields(c)) {
                 OneToMany annotation;
-                if((annotation = ReflectionUtils.getGetter(c, f.getName()).getAnnotation(OneToMany.class)) != null) {
-                    if(entity.getClass().isAssignableFrom(ReflectionUtils.getResolvedFieldTypeArguments(c, f)[0]) && (annotation.mappedBy().isEmpty() ? true : annotation.mappedBy().equals(entry.getValue().fieldName))) {
-                        if(!permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE), resourceNameFactory.createResource((IdHolder) entry.getValue().o, f.getName()))) {
+                if ((annotation = ReflectionUtils.getGetter(c, f.getName()).getAnnotation(OneToMany.class)) != null) {
+                    if (entity.getClass().isAssignableFrom(ReflectionUtils.getResolvedFieldTypeArguments(c, f)[0])
+                        && (annotation.mappedBy().isEmpty() ? true : annotation.mappedBy().equals(entry.getValue().fieldName))) {
+                        if (!permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
+                                                         resourceNameFactory.createResource((IdHolder) entry.getValue().o, f.getName()))) {
                             throw new PermissionActionException("Entity " + c + "'s field " + f.getName() + " cannot be removed by " + userContext.getUser());
                         }
                     }
                 }
             }
         }
-
-        // TODO decide if collection remove should be checked
-
         super.onDelete(entity, id, state, propertyNames, types);
     }
 

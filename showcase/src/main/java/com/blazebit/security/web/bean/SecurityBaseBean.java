@@ -30,7 +30,6 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.spi.EntityActionImplicationProvider;
 import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
 import com.blazebit.security.service.api.PropertyDataAccess;
@@ -39,8 +38,7 @@ import com.blazebit.security.spi.ResourceDefinition;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
-import com.blazebit.security.web.service.api.ResourceNameFactory;
-import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.service.api.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserService;
 
 @Named
@@ -59,16 +57,13 @@ public class SecurityBaseBean {
     @Inject
     protected UserSession userSession;
     @Inject
-    //TODO: use serviceProvider lookup
-    protected EntityActionImplicationProvider actionImplicationProvider;
-    @Inject
     protected ResourceMetamodel resourceMetamodel;
     @Inject
     protected PropertyDataAccess propertyDataAccess;
     @Inject
     private UserService userService;
     @Inject
-    private UserGroupService userGroupService;
+    private UserGroupDataAccess userGroupDataAccess;
     @Inject
     private ActionUtils actionUtils;
     // WELD-001408 Unsatisfied dependencies for type [ResourceNameFactory] with qualifiers [@Default] at injection point
@@ -238,20 +233,6 @@ public class SecurityBaseBean {
                         }
                         if (foundFieldPermission) {
                             return true;
-                        } else {
-                            // try implied actions
-                            for (Action action : actionImplicationProvider.getActionsWhichImply(actionFactory.createAction(actionConstant))) {
-                                ActionConstants impliedByAction = ActionConstants.valueOf(((EntityAction) action).getActionName());
-                                if (isGranted(impliedByAction, resource)) {
-                                    return true;
-                                } else {
-                                    boolean foundImpliedByFieldPermission = false;
-                                    if (fieldName.equals(EntityField.EMPTY_FIELD)) {
-                                        foundImpliedByFieldPermission = findFieldPermissionFor(entityObject, resource, impliedByAction);
-                                    }
-                                    return foundImpliedByFieldPermission;
-                                }
-                            }
                         }
                     }
                 }
@@ -331,7 +312,7 @@ public class SecurityBaseBean {
     // to grant object permissions
     public List<Action> getCollectionActions() {
         List<Action> ret = new ArrayList<Action>();
-        ret.addAll(actionUtils.getActionsForCollectionField());
+        ret.addAll(actionUtils.getUpdateActionsForCollectionField());
         return ret;
     }
 
@@ -353,7 +334,7 @@ public class SecurityBaseBean {
         for (User user : users) {
             subjects.add(new SubjectModel(user));
         }
-        List<UserGroup> userGroups = userGroupService.getAllParentGroups(userSession.getSelectedCompany());
+        List<UserGroup> userGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
         for (UserGroup ug : userGroups) {
             addToList(ug);
         }

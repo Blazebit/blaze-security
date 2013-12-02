@@ -20,6 +20,10 @@ import com.blazebit.security.impl.model.UserGroup;
 @SessionScoped
 public class UserSession implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private User user;
     private User selectedUser;
     private UserGroup selectedUserGroup;

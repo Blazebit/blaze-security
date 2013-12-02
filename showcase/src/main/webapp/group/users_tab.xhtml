@@ -40,7 +40,8 @@
 					<p:tree value="#{groupUsersBean.currentPermissionRoot}" var="permissionModel" id="currentUserPermissionTree"
 						selectionMode="checkbox">
 						<p:treeNode>
-							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" />
+							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm"/>
+							<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade" rendered="#{not empty permissionModel.tooltip}"/>
 						</p:treeNode>
 					</p:tree>
 
