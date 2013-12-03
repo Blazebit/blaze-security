@@ -156,8 +156,8 @@ public class CarrierBean extends SecurityBaseBean {
     public void saveNewContact() {
         ((Contact) selectedContactModel.getEntity()).setCarrier((Carrier) selectedCarrierModel.getEntity());
         entityManager.persist(selectedContactModel.getEntity());
-//        ((Carrier) selectedCarrierModel.getEntity()).getContacts().add((Contact) selectedContactModel.getEntity());
-        Carrier selectedCarrier = entityManager.merge(((Carrier) selectedCarrierModel.getEntity()));
+        entityManager.flush();
+        Carrier selectedCarrier = entityManager.find(Carrier.class, selectedCarrierModel.getEntity().getId());
 
         List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
         contacts.clear();
@@ -172,8 +172,9 @@ public class CarrierBean extends SecurityBaseBean {
             selectedContactModel.setEntity(null);
         }
         entityManager.remove(entityManager.find(Contact.class, contact.getId()));
-        ((Carrier) selectedCarrierModel.getEntity()).getContacts().remove(contact);
-        Carrier selectedCarrier = entityManager.merge(((Carrier) selectedCarrierModel.getEntity()));
+        entityManager.flush();
+        Carrier selectedCarrier = entityManager.find(Carrier.class, selectedCarrierModel.getEntity().getId());
+        
         List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
         contacts.clear();
         for (Contact c : allContacts) {
@@ -385,7 +386,7 @@ public class CarrierBean extends SecurityBaseBean {
 
     public List<Comment> getComments() {
         List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userSession.getSelectedCompany().getId()).getResultList();
+                                                             + userSession.getSelectedCompany().getId(), Comment.class).getResultList();
         return result;
     }
 

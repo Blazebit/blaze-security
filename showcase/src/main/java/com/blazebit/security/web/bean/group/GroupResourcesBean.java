@@ -155,7 +155,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
      */
     public void confirmGroupPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-        List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, currentRevoked, currentReplaced);
+        List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, currentRevoked, currentReplaced,true);
         prepareUserPropagationView(result.get(1), result.get(0));
         // reset
         init();
@@ -279,6 +279,10 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
 
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
+            //TODO put them into one transaction?
+            //confirm groups
+            executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, currentRevoked, currentReplaced,false);
+            //confirm users
             executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
 
         }

@@ -1,8 +1,6 @@
 package com.blazebit.security.web.bean.resources;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +67,10 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
     private Set<Permission> selectedPermissions;
 
     private String prevPath;
+
+    private Set<Permission> groupGrantedPermissions;
+
+    private Set<Permission> groupRevokedPermissions;
 
     // builds resource tree based on selected objects
     public void init() {
@@ -254,7 +256,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 performOperations(subject, currentPermissions, new HashSet<Permission>(), granted);
             } else {
                 Role role = (Role) selectedSubject;
-                performOperations(role, currentPermissions, new HashSet<Permission>(), granted);
+                groupGrantedPermissions = performOperations(role, currentPermissions, new HashSet<Permission>(), granted, true).get(1);
             }
         } else {
             if (action.equals("revoke")) {
@@ -267,16 +269,17 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                     performOperations(subject, currentPermissions, revoked, granted);
                 } else {
                     Role role = (Role) selectedSubject;
-                    performOperations(role, currentPermissions, revoked, granted);
+                    List<Set<Permission>> result = performOperations(role, currentPermissions, revoked, granted, true);
+                    groupGrantedPermissions = result.get(1);
+                    groupRevokedPermissions = result.get(0);
                 }
-
             }
         }
         // reset view
         allPermissions = getAllPermissions();
         // reset permissions
         currentPermissionRoot = getImmutablePermissionTree(getCurrentPermissions(allPermissions), getCurrentDataPermissions(allPermissions), new HashSet<Permission>(),
-                                                           Marking.REMOVED);
+                                                           Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
         // build new tree
         newPermissionRoot = new DefaultTreeNode();
         // reset initial values
@@ -290,20 +293,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
     private void propagateChangesToUsers() {
         // propagate changes to users
-        Set<User> users = new HashSet<User>();
-        collectUsers((UserGroup) selectedSubject, users);
-        List<User> sortedUsers = new ArrayList<User>(users);
-        Collections.sort(sortedUsers, new Comparator<User>() {
-
-            @Override
-            public int compare(User o1, User o2) {
-                return o1.getUsername().compareToIgnoreCase(o2.getUsername());
-            }
-
-        });
-        Set<UserGroup> selected = new HashSet<UserGroup>();
-        selected.add((UserGroup) selectedSubject);
-        createUserPermissionTrees(userGroupDataAccess.collectUsers(selected, isEnabled(Company.GROUP_HIERARCHY)), false);
+        createUserPermissionTrees(userGroupDataAccess.collectUsers((UserGroup) selectedSubject, isEnabled(Company.GROUP_HIERARCHY)), false);
         usersConfirmed = false;
     }
 
@@ -400,23 +390,21 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             if (action.equals("grant")) {
 
                 Set<Permission> grant = permissionHandling.getGrantable(userDataPermissions, selectedPermissions).get(0);
-                if (selectedSubject instanceof Subject) {
-                    performOperations((Subject) selectedSubject, permissions, new HashSet<Permission>(), grant);
-                } else {
-                    performOperations((Role) selectedSubject, permissions, new HashSet<Permission>(), grant);
-                }
+                // confirm group permissions
+                revokeAndGrant((UserGroup) selectedSubject, new HashSet<Permission>(), groupGrantedPermissions, false);
+                //confirm user permissions
+                performOperations(user, permissions, new HashSet<Permission>(), grant);
+
             } else {
                 if ("revoke".equals(action)) {
-                    
+
                     List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userDataPermissions, selectedPermissions, true);
                     Set<Permission> revoked = revoke.get(0);
                     Set<Permission> granted = revoke.get(2);
-
-                    if (selectedSubject instanceof Subject) {
-                        performOperations((Subject) selectedSubject, permissions, revoked, granted);
-                    } else {
-                        performOperations((Role) selectedSubject, permissions, revoked, granted);
-                    }
+                    //confirm group permissions
+                    revokeAndGrant((UserGroup) selectedSubject, groupRevokedPermissions, groupGrantedPermissions, false);
+                    //confirm user permissions
+                    performOperations(user, permissions, revoked, granted);
                 }
             }
         }
@@ -430,15 +418,6 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         }
         newUserPermissionRoot = new DefaultTreeNode();
 
-    }
-
-    private void collectUsers(UserGroup group, Set<User> users) {
-        for (User user : userGroupDataAccess.getUsersFor(group)) {
-            users.add(user);
-        }
-        for (UserGroup child : userGroupDataAccess.getGroupsForGroup(group)) {
-            collectUsers(child, users);
-        }
     }
 
     // wizard

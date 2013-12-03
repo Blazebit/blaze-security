@@ -65,7 +65,7 @@
 
 					<h:panelGroup layout="block" style="height:50px">
 						<p:commandButton value="Back" style="float:left" onclick="resourceWizard.back();" />
-						<p:commandButton value="Confirm" style="float:left" onclick="resourceWizard.next();" />
+						<p:commandButton value="Next" style="float:left" onclick="resourceWizard.next();" />
 					</h:panelGroup>
 				</p:tab>
 
@@ -121,7 +121,7 @@
 							action="#{groupResourcesBean.init()}" style="float:left"/>
 
 						<p:commandButton value="Confirm" style="float:left" action="#{groupResourcesBean.confirmUserPermissions}"
-							oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
+							oncomplete="successfulDialog.show();resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
 							rendered="#{userSession.selectedCompany.userLevelEnabled and groupResourcesBean.currentUserPermissionTreeRoot.childCount ne 0}" />
 					</h:panelGroup>
 				</p:tab>

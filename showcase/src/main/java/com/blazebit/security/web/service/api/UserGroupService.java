@@ -4,6 +4,7 @@
 package com.blazebit.security.web.service.api;
 
 import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 
 /**
@@ -32,5 +33,13 @@ public interface UserGroupService {
      * @param userGroup
      */
     public void delete(UserGroup userGroup);
+
+    public boolean addGroupToGroup(UserGroup userGroup1, UserGroup userGroup2);
+
+    public boolean addUserToGroup(User selectedUser, UserGroup userGroup);
+
+    public boolean removeUserFromGroup(User selectedUser, UserGroup userGroup);
+
+    boolean addUserToGroup(User authorizer, User selectedUser, UserGroup userGroup, boolean propagate);
 
 }

@@ -46,9 +46,17 @@ public interface UserGroupDataAccess {
 
     /**
      * 
-     * @param groups
+     * @param userGroup
      * @param inherit
      * @return users of groups
+     */
+    public List<User> collectUsers(UserGroup userGroup, boolean inherit);
+
+    /**
+     * 
+     * @param groups
+     * @param inherit
+     * @return
      */
     public List<User> collectUsers(Set<UserGroup> groups, boolean inherit);
 

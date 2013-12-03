@@ -30,7 +30,6 @@ import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserModel;
-import com.blazebit.security.web.service.api.RoleService;
 import com.blazebit.security.web.service.api.UserService;
 
 /**
@@ -47,8 +46,6 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
     private static final long serialVersionUID = 1L;
     @Inject
     private UserService userService;
-    @Inject
-    private RoleService roleService;
 
     private List<User> users = new ArrayList<User>();
     private List<UserModel> userList = new ArrayList<UserModel>();
@@ -279,12 +276,12 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
             if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                 // add new users + resources or add new group resources to users
                 executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
-                roleService.addSubjectToRole(user, getSelectedGroup());
+                userGroupService.addUserToGroup(user, getSelectedGroup());
             } else {
                 if (Marking.REMOVED.equals(userNodeModel.getMarking())) {
                     // remove user and remove unselected resources too
                     executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>());
-                    roleService.removeSubjectFromRole(user, getSelectedGroup());
+                    userGroupService.removeUserFromGroup(user, getSelectedGroup());
                 }
             }
         }

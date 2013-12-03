@@ -420,8 +420,8 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Carrier.class));
         securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, "contacts"));
         securityService.grant(admin, user1, getRemoveAction(), entityFieldFactory.createResource(Carrier.class, "contacts"));
+        
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
-        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Contact.class, "carrier"));
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class));
 
         Carrier carrier = new Carrier();
@@ -439,7 +439,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Carrier.class));
         securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, "contacts"));
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
-        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Contact.class, "carrier"));
+        
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class));
 
         Carrier carrier = new Carrier();

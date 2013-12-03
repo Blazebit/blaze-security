@@ -42,7 +42,6 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.ResourceNameFactory;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContext;
-import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.ResourceName;
 import com.blazebit.security.service.api.PropertyDataAccess;
@@ -241,22 +240,17 @@ public class ChangeInterceptor extends EmptyInterceptor {
         }
         UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
         ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-        // EntityResourceFactory entityFieldFactory = BeanProvider.getContextualReference(EntityResourceFactory.class);
         ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
         PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
-        PropertyDataAccess propertyDataAccess = BeanProvider.getContextualReference(PropertyDataAccess.class);
 
-        boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
-                                                        resourceNameFactory.createResource((IdHolder) entity, EntityField.EMPTY_FIELD));
-        if (!isGranted) {
-            throw new PermissionActionException("Entity " + entity + " is not permitted to be persisted by " + userContext.getUser());
-        }
         // check if collection relations have permission
         boolean isGrantedAddEntity = true;
-        boolean isGrantedUpdateRelatedEntity = true;
+        boolean isGrantedCreateRelatedEntity = true;
+        boolean foundNotEmptyField = false;
+
+        // check every field for create permission, if no field is filled out, check for entity create permission
         for (int i = 0; i < state.length; i++) {
             String fieldName = propertyNames[i];
-            // check only relations but dont check collection type @link #onCollectionRecreate)
             if (types[i].isCollectionType()) {
                 Collection<?> collection = (Collection<?>) state[i];
                 if (!collection.isEmpty()) {
@@ -268,19 +262,80 @@ public class ChangeInterceptor extends EmptyInterceptor {
                     }
                 }
             } else {
-                if (types[i].isAssociationType()) {
-                    // if value has been changed
-                    if (state[i] != null) {
-                        isGrantedUpdateRelatedEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
+                if (state[i] != null) {
+                    foundNotEmptyField = true;
+                    boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
+                                                                    resourceNameFactory.createResource((IdHolder) entity, fieldName));
+                    if (!isGranted) {
+                        throw new PermissionActionException("Entity " + entity + "'s field " + fieldName + " is not permitted to be persisted by " + userContext.getUser());
+                    }
+                    // check relations
+                    if (types[i].isAssociationType()) {
+                        isGrantedCreateRelatedEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
                                                                                    resourceNameFactory.createResource((IdHolder) entity, fieldName));
-                        if (!isGrantedUpdateRelatedEntity) {
+                        if (!isGrantedCreateRelatedEntity) {
                             throw new PermissionActionException("Entity " + entity + "'s field " + fieldName + " cannot be updated by " + userContext.getUser());
+                        }
+                        checkAssociation(entity, fieldName, types[i], ActionConstants.ADD, userContext, permissionService, resourceNameFactory, actionFactory);
+                    }
+
+                }
+            }
+        }
+        
+        if (!foundNotEmptyField) {
+            boolean isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.CREATE),
+                                                            resourceNameFactory.createResource((IdHolder) entity));
+            if (!isGranted) {
+                throw new PermissionActionException("Entity " + entity + " is not permitted to be persisted by " + userContext.getUser());
+            }
+        }
+        return super.onSave(entity, id, state, propertyNames, types);
+
+    }
+
+    private void checkAssociation(Object entity, String propertyName, Type type, ActionConstants action, UserContext userContext, PermissionService permissionService, ResourceNameFactory resourceNameFactory, ActionFactory actionFactory) {
+        Map<Class<?>, Tuple> toBeChecked = new HashMap<Class<?>, Tuple>();
+        // it can only be on collection types
+        ManyToOne manyToOne;
+        // look for annotation on getter level
+        manyToOne = ReflectionUtils.getGetter(entity.getClass(), propertyName).getAnnotation(ManyToOne.class);
+        if (manyToOne == null) {
+            // on field level
+            manyToOne = ReflectionUtils.getField(entity.getClass(), propertyName).getAnnotation(ManyToOne.class);
+        }
+
+        if (manyToOne != null) {
+            Object val = null;
+
+            try {
+                val = ReflectionUtils.getGetter(entity.getClass(), propertyName).invoke(entity);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
+            if (val != null) {
+                toBeChecked.put(type.getReturnedClass(), new Tuple(val, propertyName));
+            }
+
+        }
+
+        for (Map.Entry<Class<?>, Tuple> entry : toBeChecked.entrySet()) {
+            Class<?> c = entry.getKey();
+
+            for (Field f : ReflectionUtils.getInstanceFields(c)) {
+                OneToMany oneToMany;
+                if ((oneToMany = ReflectionUtils.getGetter(c, f.getName()).getAnnotation(OneToMany.class)) != null) {
+                    if (entity.getClass().isAssignableFrom(ReflectionUtils.getResolvedFieldTypeArguments(c, f)[0])
+                        && (oneToMany.mappedBy().isEmpty() ? true : oneToMany.mappedBy().equals(entry.getValue().fieldName))) {
+                        if (!permissionService.isGranted(userContext.getUser(), actionFactory.createAction(action),
+                                                         resourceNameFactory.createResource((IdHolder) entry.getValue().o, f.getName()))) {
+                            throw new PermissionActionException("Entity " + c + "'s field " + f.getName() + " cannot be " + action + "(e)d by " + userContext.getUser());
                         }
                     }
                 }
             }
         }
-        return super.onSave(entity, id, state, propertyNames, types);
 
     }
 
@@ -319,43 +374,14 @@ public class ChangeInterceptor extends EmptyInterceptor {
             throw new PermissionActionException("Entity " + entity + " is not permitted to be deleted by " + userContext.getUser());
         }
 
-        Map<Class<?>, Tuple> toBeChecked = new HashMap<Class<?>, Tuple>();
-
-        // TODO: use propertyNames and types instead
-        for (Field f : ReflectionUtils.getInstanceFields(entity.getClass())) {
-            ManyToOne annotation;
-            if ((annotation = ReflectionUtils.getGetter(entity.getClass(), f.getName()).getAnnotation(ManyToOne.class)) != null) {
-                Object val = null;
-
-                try {
-                    val = ReflectionUtils.getGetter(entity.getClass(), f.getName()).invoke(entity);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-
-                if (val != null) {
-                    toBeChecked.put(ReflectionUtils.getResolvedFieldType(entity.getClass(), f), new Tuple(val, f.getName()));
-                }
+        for (int i = 0; i < propertyNames.length; i++) {
+            String propertyName = propertyNames[i];
+            // it can only be on collection types
+            if (types[i].isAssociationType()) {
+                checkAssociation(entity, propertyName, types[i], ActionConstants.REMOVE, userContext, permissionService, resourceNameFactory, actionFactory);
             }
         }
 
-        for (Map.Entry<Class<?>, Tuple> entry : toBeChecked.entrySet()) {
-            Class<?> c = entry.getKey();
-
-            for (Field f : ReflectionUtils.getInstanceFields(c)) {
-                OneToMany annotation;
-                if ((annotation = ReflectionUtils.getGetter(c, f.getName()).getAnnotation(OneToMany.class)) != null) {
-                    if (entity.getClass().isAssignableFrom(ReflectionUtils.getResolvedFieldTypeArguments(c, f)[0])
-                        && (annotation.mappedBy().isEmpty() ? true : annotation.mappedBy().equals(entry.getValue().fieldName))) {
-                        if (!permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
-                                                         resourceNameFactory.createResource((IdHolder) entry.getValue().o, f.getName()))) {
-                            throw new PermissionActionException("Entity " + c + "'s field " + f.getName() + " cannot be removed by " + userContext.getUser());
-                        }
-                    }
-                }
-            }
-        }
         super.onDelete(entity, id, state, propertyNames, types);
     }
-
 }

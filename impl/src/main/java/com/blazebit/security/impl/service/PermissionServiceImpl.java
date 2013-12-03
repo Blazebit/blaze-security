@@ -103,6 +103,9 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         if (authorizer == null) {
             throw new IllegalArgumentException("Authorizer cannot be null");
         }
+        if (authorizer.equals(subject)) {
+            throw new IllegalArgumentException("Authorizer and subject cannot be the same");
+        }
         checkParameters(subject, action, resource);
         if (!isGranted(authorizer, getGrantAction(), resourceFactory.createResource(subject))) {
             throw new PermissionException(authorizer + " is not allowed to grant " + action + " to " + subject);
@@ -150,6 +153,9 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
             throw new IllegalArgumentException("Authorizer cannot be null");
         }
         checkParameters(subject, action, resource);
+        if (authorizer.equals(subject)) {
+            throw new IllegalArgumentException("Authorizer and subject cannot be the same");
+        }
         if (!isGranted(authorizer, getRevokeAction(), resourceFactory.createResource(subject))) {
             throw new PermissionException(authorizer + " is not allowed to revoke from " + subject);
         }

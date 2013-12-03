@@ -19,9 +19,9 @@ import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.utils.GroupPermissionHandlingUtils;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
-import com.blazebit.security.web.bean.model.UserGroupModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.bean.model.UserGroupModel;
 import com.blazebit.security.web.service.api.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 

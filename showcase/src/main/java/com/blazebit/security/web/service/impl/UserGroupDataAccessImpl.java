@@ -21,6 +21,13 @@ public class UserGroupDataAccessImpl implements UserGroupDataAccess {
     private EntityManager entityManager;
 
     @Override
+    public List<User> collectUsers(UserGroup group, boolean inherit) {
+        Set<UserGroup> groups = new HashSet<UserGroup>();
+        groups.add(group);
+        return collectUsers(groups, inherit);
+    }
+
+    @Override
     public List<User> collectUsers(Set<UserGroup> groups, boolean inherit) {
         Set<User> users = new HashSet<User>();
         if (!inherit) {
@@ -43,8 +50,8 @@ public class UserGroupDataAccessImpl implements UserGroupDataAccess {
         });
         return sortedUsers;
     }
-    
 
+    
     public void collectUsers(UserGroup group, Set<User> users) {
         for (User user : getUsersFor(group)) {
             users.add(user);

@@ -128,7 +128,7 @@
 
 					<p:commandButton value="Back" onclick="permissionWizard.back()" rendered="#{!resourceObjectBean.usersConfirmed}" />
 					<p:commandButton value="Confirm" action="#{resourceObjectBean.confirmUserPermissions}"
-						update=":form:objectResources" rendered="#{!resourceObjectBean.usersConfirmed}" />
+						update=":form:objectResources" rendered="#{!resourceObjectBean.usersConfirmed}" oncomplete="successfulDialog.show()"/>
 				</p:tab>
 			</p:wizard>
 

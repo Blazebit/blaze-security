@@ -100,8 +100,14 @@
 
 						<p:selectBooleanCheckbox value="#{contacts.selected}"
 							rendered="#{(securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'contacts') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'contacts')) and  securityBaseBean.isEnabled('OBJECT_LEVEL') and securityBaseBean.isEnabled('FIELD_LEVEL')}" />
-						<h:outputLabel value="Contacts" 
-							rendered="#{(securityBaseBean.isAuthorizedResource('GRANT', carrierBean.selectedCarrierModel.entity, 'contacts') or securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.selectedCarrierModel.entity, 'contacts') and  securityBaseBean.isEnabled('OBJECT_LEVEL')) and securityBaseBean.isEnabled('FIELD_LEVEL')}" />
+						<h:outputLabel value="Contacts" />
+
+						<p:dataList var="contact" value="#{carrierBean.contacts}"
+							rendered="#{not empty carrierBean.selectedCarrierModel.entity.id and securityBaseBean.isAuthorizedResource('READ', carrierBean.selectedCarrierModel.entity, 'contacts')}">
+							<p:column>
+								<h:outputText value="#{contact.entity.contactField}" />
+							</p:column>
+						</p:dataList>
 
 						<br />
 						<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
@@ -266,7 +272,7 @@
 			<h:panelGroup id="actions">
 				<p:commandButton value="grant" action="#{carrierBean.goToPermissions('grant')}"
 					rendered="#{securityBaseBean.isAuthorizedResource('GRANT', carrierBean.tabEntity) and securityBaseBean.isEnabled('OBJECT_LEVEL')}" />
-					
+
 				<p:commandButton value="revoke" action="#{carrierBean.goToPermissions('revoke')}"
 					rendered="#{securityBaseBean.isAuthorizedResource('REVOKE', carrierBean.tabEntity) and securityBaseBean.isEnabled('OBJECT_LEVEL')}" />
 			</h:panelGroup>

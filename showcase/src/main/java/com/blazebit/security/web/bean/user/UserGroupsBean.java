@@ -13,7 +13,6 @@ import java.util.Set;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.inject.Inject;
 
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
@@ -27,7 +26,6 @@ import com.blazebit.security.web.bean.GroupHandlerBaseBean;
 import com.blazebit.security.web.bean.PermissionView;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.UserGroupModel;
-import com.blazebit.security.web.service.api.RoleService;
 
 /**
  * 
@@ -38,9 +36,6 @@ import com.blazebit.security.web.service.api.RoleService;
 public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionView, Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    @Inject
-    private RoleService roleService;
 
     private List<Permission> userPermissions = new ArrayList<Permission>();
     private List<Permission> userDataPermissions = new ArrayList<Permission>();
@@ -138,8 +133,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         removedGroups = addedAndRemovedGroups.get(1);
 
         // get granted and revoked permissions from added and removed groups
-        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(getSelectedGroups(),
-                                                                                   isEnabled(Company.GROUP_HIERARCHY));
+        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(getSelectedGroups(), isEnabled(Company.GROUP_HIERARCHY));
         if (!isEnabled(Company.FIELD_LEVEL)) {
             granted = permissionHandling.getParentPermissions(granted);
         }
@@ -147,9 +141,9 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         if (!isEnabled(Company.OBJECT_LEVEL)) {
             granted = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(granted).get(0));
         }
-        
+
         Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removedGroups, isEnabled(Company.GROUP_HIERARCHY));
-        //TODO do the same as with the granted?
+        // TODO do the same as with the granted?
         revoked = permissionHandling.eliminateRevokeConflicts(granted, revoked);
 
         // get permissions which can be revoked from the user
@@ -179,8 +173,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         Set<Permission> removable = new HashSet<Permission>();
         removable.addAll(replaced);
         removable.addAll(currentRevoked);
-        currentPermissionTreeRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, removable, Marking.REMOVED,
-                                                               !isEnabled(Company.FIELD_LEVEL));
+        currentPermissionTreeRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, removable, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
 
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
@@ -196,8 +189,6 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
             newPermissionTreeRoot = getImmutablePermissionTree(currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
         }
     }
-
-   
 
     private Set<UserGroup> getSelectedGroups() {
         Set<UserGroup> ret = new HashSet<UserGroup>();
@@ -220,8 +211,7 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
      */
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced,
-                                                       !isEnabled(Company.FIELD_LEVEL));
+        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
     /**
@@ -232,10 +222,10 @@ public class UserGroupsBean extends GroupHandlerBaseBean implements PermissionVi
         executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, currentRevoked, currentReplaced);
 
         for (UserGroup group : removedGroups) {
-            roleService.removeSubjectFromRole(getSelectedUser(), group);
+            userGroupService.removeUserFromGroup(getSelectedUser(), group);
         }
         for (UserGroup group : addedGroups) {
-            roleService.addSubjectToRole(getSelectedUser(), group);
+            userGroupService.addUserToGroup(getSelectedUser(), group);
         }
         init();
     }

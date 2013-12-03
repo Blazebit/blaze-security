@@ -64,6 +64,7 @@ public class ResourceHandlingBaseBean extends GroupHandlerBaseBean {
                             createActionNode(action, actionFields.get(action), entityNode, entityField, selectedPermissions);
                         }
                     }
+
                     propagateNodePropertiesTo(entityNode);
                 }
                 propagateNodePropertiesTo(moduleNode);
@@ -89,18 +90,26 @@ public class ResourceHandlingBaseBean extends GroupHandlerBaseBean {
 
         DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
         actionNode.setExpanded(true);
-        // fields
-        createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
-        // lookup if entity is grantable
-        Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
-        if (found == null) {
-            // remove actionNode is entity cannot be granted
-            if (!isGranted(ActionConstants.GRANT, entityField)) {
+        if (!fields.isEmpty()) {
+            // fields
+            createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
+            //if no field could be attached => grant is not permitted, detach actionNode
+            if (actionNode.getChildCount() == 0) {
                 actionNode.setParent(null);
             }
         } else {
-            propagateNodePropertiesTo(actionNode);
+            // lookup if entity is grantable
+            Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+            if (found == null) {
+                // remove actionNode is entity cannot be granted
+                if (!isGranted(ActionConstants.GRANT, entityField)) {
+                    actionNode.setParent(null);
+                }
+            } else {
+                actionNode.setSelected(true);
+            }
         }
+        propagateNodePropertiesTo(actionNode);
     }
 
     /**

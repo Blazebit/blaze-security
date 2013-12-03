@@ -13,7 +13,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.security.Resource;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Party;
 import com.blazebit.security.web.bean.SecurityBaseBean;
@@ -45,7 +44,7 @@ public class PartyBean extends SecurityBaseBean {
         if (!StringUtils.isEmpty(newParty.getType())) {
             entityManager.persist(newParty);
 
-            Resource resource = createResource(newParty);
+            // Resource resource = createResource(newParty);
 
             // for (Action action :
             // actionImplicationProvider.getActionsImpledBy(actionFactory.createAction(ActionConstants.CREATE))) {

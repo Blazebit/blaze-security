@@ -101,6 +101,10 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     }
 
     protected List<Set<Permission>> executeRevokeAndGrant(Role role, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+        return executeRevokeAndGrant(role, current, selected, prevRevoked, prevReplaced, false);
+    }
+
+    protected List<Set<Permission>> executeRevokeAndGrant(Role role, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced, boolean simulate) {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
@@ -117,11 +121,15 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
         revoked.addAll(permissionHandling.getRevokableFromSelected(current, concat(current, selected)).get(0));
         Set<Permission> granted = permissionHandling.getGrantable(permissionHandling.removeAll(current, revoked), selected).get(0);
-        return performOperations(role, current, revoked, granted);
+        return performOperations(role, current, revoked, granted, simulate);
 
     }
 
     protected List<Set<Permission>> executeRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced) {
+        return executeRevokeAndGrant(subject, current, selected, prevRevoked, prevReplaced, false);
+    }
+
+    protected List<Set<Permission>> executeRevokeAndGrant(Subject subject, Collection<Permission> current, Set<Permission> selected, Set<Permission> prevRevoked, Set<Permission> prevReplaced, boolean simulate) {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
@@ -138,29 +146,48 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
         revoked.addAll(permissionHandling.getRevokableFromSelected(current, concat(current, selected)).get(0));
         Set<Permission> granted = permissionHandling.getGrantable(permissionHandling.removeAll(current, revoked), selected).get(0);
-        return performOperations(subject, current, revoked, granted);
+        return performOperations(subject, current, revoked, granted, simulate);
 
     }
 
     protected List<Set<Permission>> performOperations(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+        return performOperations(subject, current, revoked, granted, false);
+    }
+
+    protected List<Set<Permission>> performOperations(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted, boolean simulate) {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         Set<Permission> finalGranted = permissions.get(1);
+        return revokeAndGrant(subject, finalRevoked, finalGranted, simulate);
 
-        permissionService.revokeAndGrant(userSession.getUser(), subject, finalRevoked, finalGranted);
+    }
+
+    protected List<Set<Permission>> revokeAndGrant(Subject subject, Set<Permission> finalRevoked, Set<Permission> finalGranted, boolean simulate) {
+        if (simulate) {
+            permissionService.revokeAndGrant(userSession.getUser(), subject, finalRevoked, finalGranted);
+        }
 
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         ret.add(finalRevoked);
         ret.add(finalGranted);
         return ret;
-
     }
 
     protected List<Set<Permission>> performOperations(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+        return performOperations(role, current, revoked, granted, false);
+    }
+
+    protected List<Set<Permission>> performOperations(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted, boolean simulate) {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         Set<Permission> finalGranted = permissions.get(1);
-        permissionService.revokeAndGrant(userSession.getUser(), role, finalRevoked, finalGranted);
+        return revokeAndGrant(role, finalRevoked, finalGranted, simulate);
+    }
+
+    protected List<Set<Permission>> revokeAndGrant(Role role, Set<Permission> finalRevoked, Set<Permission> finalGranted, boolean simulate) {
+        if (!simulate) {
+            permissionService.revokeAndGrant(userSession.getUser(), role, finalRevoked, finalGranted);
+        }
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         ret.add(finalRevoked);
         ret.add(finalGranted);

@@ -15,7 +15,7 @@ import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.web.service.api.RoleService;
+import com.blazebit.security.web.service.api.UserGroupService;
 import com.blazebit.security.web.service.api.UserService;
 
 /**
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
     private PermissionManager permissionManager;
 
     @Inject
-    private RoleService roleService;
+    private UserGroupService userGroupService;
 
     @Override
     public User createUser(Company company, String name) {
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
     public void delete(User user) {
         User reloadedUser = loadUser(user);
         for (UserGroup userGroup : reloadedUser.getUserGroups()) {
-            roleService.removeSubjectFromRole(reloadedUser, userGroup);
+            userGroupService.removeUserFromGroup(reloadedUser, userGroup);
         }
         permissionManager.remove(reloadedUser.getAllPermissions());
         entityManager.remove(reloadedUser);
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> findUsers(Company company) {
         return entityManager
-            .createQuery("select user from " + User.class.getCanonicalName() + " user where user.company.id='" + company.getId() + "' order by user.id", User.class)
+            .createQuery("select user from " + User.class.getCanonicalName() + " user where user.username != 'superAdmin' and user.company.id='" + company.getId() + "' order by user.id", User.class)
             .getResultList();
     }
 

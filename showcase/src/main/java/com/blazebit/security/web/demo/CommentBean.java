@@ -38,7 +38,7 @@ public class CommentBean extends SecurityBaseBean {
 
     public void init() {
         List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userSession.getSelectedCompany().getId()).getResultList();
+                                                             + userSession.getSelectedCompany().getId(), Comment.class).getResultList();
         comments.clear();
         for (Comment c : result) {
             comments.add(new RowModel(c, "Comment-" + c.getText()));

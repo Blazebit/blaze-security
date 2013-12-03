@@ -38,13 +38,6 @@
 					</f:facet>
 				</p:column>
 			</p:dataTable>
-			<br />
-			Logged in <p:commandLink value="#{userSession.loggedInUser.username}"
-				action="#{userBean.selectUser(userSession.loggedInUser)}" process="@this" update=":form:tab" />
-			<br />
-			Acting as <p:commandLink value="#{userSession.user.username}" action="#{userBean.selectUser(userSession.user)}"
-				process="@this" update=":form:tab" />
-			<br />
 		</h:panelGroup>
 	</p:tab>
 </ui:composition>

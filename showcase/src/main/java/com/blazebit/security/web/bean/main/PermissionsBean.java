@@ -35,12 +35,16 @@ public class PermissionsBean implements Serializable {
 
     private List<PermissionModel> permissions = new ArrayList<PermissionModel>();
 
+    @SuppressWarnings("unchecked")
     public void initPermissions() {
-        List<Permission> ret = entityManager.createQuery("select p from " + SubjectPermission.class.getName() + " p order by p.id.subject.company.id, p.id.subject.username, p.id.entity, p.id.field").getResultList();
+        List<Permission> ret = entityManager.createQuery("select p from " + SubjectPermission.class.getName()
+                                                             + " p order by p.id.subject.company.id, p.id.subject.username, p.id.entity, p.id.field").getResultList();
         for (Permission p : ret) {
             permissions.add(new PermissionModel(p));
         }
-        ret = entityManager.createQuery("select p from " + RolePermission.class.getName() + " p order by p.id.subject.company.id,  p.id.subject.name, p.id.entity, p.id.field").getResultList();
+        ret = entityManager
+            .createQuery("select p from " + RolePermission.class.getName() + " p order by p.id.subject.company.id,  p.id.subject.name, p.id.entity, p.id.field")
+            .getResultList();
         for (Permission p : ret) {
             permissions.add(new PermissionModel(p));
         }
