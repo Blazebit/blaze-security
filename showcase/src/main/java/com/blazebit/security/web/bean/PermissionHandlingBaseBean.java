@@ -163,7 +163,7 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
     }
 
     protected List<Set<Permission>> revokeAndGrant(Subject subject, Set<Permission> finalRevoked, Set<Permission> finalGranted, boolean simulate) {
-        if (simulate) {
+        if (!simulate) {
             permissionService.revokeAndGrant(userSession.getUser(), subject, finalRevoked, finalGranted);
         }
 
