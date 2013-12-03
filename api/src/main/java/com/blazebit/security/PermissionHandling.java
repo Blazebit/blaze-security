@@ -179,4 +179,8 @@ public interface PermissionHandling {
      */
     public Set<Permission> getParentPermissions(Collection<Permission> permissions);
 
+    List<Set<Permission>> getSeparatedParentAndChildPermissions(Collection<Permission> permissions);
+
+    List<List<Permission>> getSeparatedPermissions(Collection<Permission> permissions);
+
 }

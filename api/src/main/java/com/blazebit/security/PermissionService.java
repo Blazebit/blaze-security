@@ -12,6 +12,8 @@
  */
 package com.blazebit.security;
 
+import java.util.Set;
+
 /**
  * 
  * @author Christian Beikov
@@ -40,6 +42,16 @@ public interface PermissionService {
     public void grant(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
 
     /**
+     * 
+     * @param authorizer
+     * @param subject
+     * @param permission
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void grant(Subject authorizer, Subject subject, Permission permission) throws PermissionException, PermissionActionException;
+
+    /**
      * authorizer revokes permission from subject to perform action on given resource
      * 
      * @param authorizer
@@ -50,6 +62,26 @@ public interface PermissionService {
      * @throws PermissionActionException
      */
     public void revoke(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param subject
+     * @param permission
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Subject subject, Permission permission) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param subject
+     * @param permissions
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Subject subject, Set<Permission> permissions) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -74,6 +106,38 @@ public interface PermissionService {
 
     /**
      * 
+     * @param authorizer
+     * @param role
+     * @param permission
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void grant(Subject authorizer, Role role, Permission permission) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permission
+     * @param propagateToUsers
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void grant(Subject authorizer, Role role, Permission permission, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permissions
+     * @param propagateToUsers
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void grant(Subject authorizer, Role role, Set<Permission> permissions, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
      * authorizer grants permission to role to perform action on given resource
      * 
      * @param authorizer
@@ -85,6 +149,16 @@ public interface PermissionService {
      * @throws PermissionActionException
      */
     public void grant(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permissions
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void grant(Subject authorizer, Role role, Set<Permission> permissions) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -111,6 +185,86 @@ public interface PermissionService {
      * @throws PermissionActionException
      */
     public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permission
+     * @param propagateToUsers
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Role role, Permission permission, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permission
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Role role, Permission permission) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permissions
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Role role, Set<Permission> permissions) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param permissions
+     * @param propagateToUsers
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Role role, Set<Permission> permissions, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param subject
+     * @param permissions
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void grant(Subject authorizer, Subject subject, Set<Permission> permissions) throws PermissionException, PermissionActionException;
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param revoke
+     * @param grant
+     */
+    public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant);
+
+    /**
+     * 
+     * @param authorizer
+     * @param role
+     * @param revoke
+     * @param grant
+     * @param propagate
+     */
+    public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant, boolean propagate);
+
+    /**
+     * 
+     * @param authorizer
+     * @param subject
+     * @param revoke
+     * @param grant
+     */
+    public void revokeAndGrant(Subject authorizer, Subject subject, Set<Permission> revoke, Set<Permission> grant);
 
     // /**
     // *

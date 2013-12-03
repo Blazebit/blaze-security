@@ -36,7 +36,7 @@
 
 			<p:tab id="groupPermissions" title="Permissions">
 
-				<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
+				<h:panelGrid columns="3" columnClasses="top,top,top">
 					<p:tree value="#{groupUsersBean.currentPermissionRoot}" var="permissionModel" id="currentUserPermissionTree"
 						selectionMode="checkbox">
 						<p:treeNode>
@@ -46,15 +46,18 @@
 					</p:tree>
 
 					<p:tree value="#{groupUsersBean.newPermissionRoot}" var="permissionModel" selectionMode="checkbox"
-						selection="#{groupUsersBean.selectedUserNodes}">
+						selection="#{groupUsersBean.selectedUserNodes}" propagateSelectionUp="false">
 						<p:ajax event="select" update=":form:tab:currentUserPermissionTree"
 							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
 						<p:ajax event="unselect" update=":form:tab:currentUserPermissionTree"
 							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
 						<p:treeNode>
-							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" />
+							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm"/>
+							<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade" rendered="#{not empty permissionModel.tooltip}"/>
 						</p:treeNode>
 					</p:tree>
+					
+					<my:permissionTree id="groupPermissionsTree2" bean="#{groupUsersBean}" label="Selected group permissions"/>
 				</h:panelGrid>
 
 				<h:panelGroup layout="block">

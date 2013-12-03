@@ -40,7 +40,7 @@ public abstract class GroupHandlerBaseBean extends PermissionTreeHandlingBaseBea
         DefaultTreeNode root = new DefaultTreeNode("root", null);
         DefaultTreeNode groupNode = root;
 
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
+        if (isEnabled(Company.GROUP_HIERARCHY)) {
             List<UserGroup> parents = new ArrayList<UserGroup>();
             UserGroup parent = selectedUserGroup.getParent();
             parents.add(selectedUserGroup);

@@ -211,13 +211,13 @@ public class SecurityBaseBean {
         // object permission can only be granted if object level is enabled
             case GRANT:
             case REVOKE:
-                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.OBJECT_LEVEL)) && (!(entityObject instanceof Subject) && !(entityObject instanceof Role))) {
+                if (!isEnabled(Company.OBJECT_LEVEL) && (!(entityObject instanceof Subject) && !(entityObject instanceof Role))) {
                     return false;
                 }
                 break;
             case ADD:
             case REMOVE:
-                if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+                if (!isEnabled(Company.FIELD_LEVEL)) {
                     return isAuthorizedResource(ActionConstants.UPDATE, entityObject);
                 }
                 break;

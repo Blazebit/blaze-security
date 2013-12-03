@@ -76,7 +76,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
 
     private void initPermissionTree() {
         this.permissionViewRoot = new DefaultTreeNode();
-        permissionViewRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        permissionViewRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, !isEnabled(Company.FIELD_LEVEL));
     }
 
     public String resourceWizardListener(FlowEvent event) {
@@ -92,7 +92,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
     public void processSelectedResources() {
         // read selected resources
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
-        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+        if (!isEnabled(Company.FIELD_LEVEL)) {
             // if field is level is not enabled but the user has field level permissions, these need to be marked as selected,
             // otherwise it would be taken as revoked
             selectedPermissions.addAll(permissionHandling.getSeparatedParentAndChildPermissions(userPermissions).get(1));
@@ -114,7 +114,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         Set<Permission> removedPermissions = new HashSet<Permission>(currentRevoked);
         removedPermissions.addAll(allReplaced);
         currentPermissionTreeRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, removedPermissions, Marking.REMOVED,
-                                                               !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                                                               !isEnabled(Company.FIELD_LEVEL));
 
         // modify current user permissions based on resource selection
         List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
@@ -123,8 +123,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         currentReplaced = permissionHandling.getReplacedByGranting(currentUserPermissions, granted);
         currentUserPermissions.removeAll(currentReplaced);
         currentUserPermissions.addAll(granted);
-        newPermissionTreeRoot = getMutablePermissionTree(currentUserPermissions, new ArrayList<Permission>(), granted, currentRevoked, Marking.NEW, Marking.REMOVED,
-                                                         !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        newPermissionTreeRoot = getMutablePermissionTree(currentUserPermissions, userDataPermissions, granted, currentRevoked, Marking.NEW, Marking.REMOVED,
+                                                         !isEnabled(Company.FIELD_LEVEL));
     }
 
     /**
@@ -144,7 +144,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean implements Permi
         // current selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced,
-                                                       !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                                                       !isEnabled(Company.FIELD_LEVEL));
     }
 
     public DefaultTreeNode getResourceRoot() {

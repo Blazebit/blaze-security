@@ -202,7 +202,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             Set<Permission> replaced = permissionHandling.getReplacedByGranting(currentDataPermissions, selectedPermissions);
 
             // build current tree
-            currentPermissionRoot = getImmutablePermissionTree(currentPermissions, currentDataPermissions, replaced, Marking.REMOVED);
+            currentPermissionRoot = getImmutablePermissionTree(currentPermissions, currentDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
             // build new tree -> show only new object permissions
             newPermissionRoot = getImmutablePermissionTree(new ArrayList<Permission>(), new ArrayList<Permission>(granted), granted, Marking.NEW);
         } else {
@@ -226,10 +226,11 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 revoked.addAll(toRevoke);
 
                 // build current tree
-                currentPermissionRoot = getImmutablePermissionTree(currentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.REMOVED);
+                currentPermissionRoot = getImmutablePermissionTree(currentPermissions, currentDataPermissions, new HashSet<Permission>(), Marking.REMOVED,
+                                                                   !isEnabled(Company.FIELD_LEVEL));
                 // build new tree -> show only new object permissions
                 newPermissionRoot = getImmutablePermissionTree(new ArrayList<Permission>(), new ArrayList<Permission>(concat(granted, revoked)), granted, revoked, Marking.NEW,
-                                                                Marking.REMOVED, false);
+                                                               Marking.REMOVED, false);
             }
         }
         // reset values
@@ -248,8 +249,12 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             Set<Permission> granted = permissionHandling.getGrantable(currentDataPermissions, selectedPermissions).get(0);
             super.setNotGranted(permissionHandling.getGrantable(currentDataPermissions, selectedPermissions).get(1));
 
-            for (Permission permission : granted) {
-                grant(permission);
+            if (selectedSubject instanceof Subject) {
+                Subject subject = (Subject) selectedSubject;
+                performOperations(subject, currentPermissions, new HashSet<Permission>(), granted);
+            } else {
+                Role role = (Role) selectedSubject;
+                performOperations(role, currentPermissions, new HashSet<Permission>(), granted);
             }
         } else {
             if (action.equals("revoke")) {
@@ -257,13 +262,14 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
                 Set<Permission> revoked = revoke.get(0);
                 Set<Permission> granted = revoke.get(2);
 
-                for (Permission permission : revoked) {
-                    revoke(permission);
+                if (selectedSubject instanceof Subject) {
+                    Subject subject = (Subject) selectedSubject;
+                    performOperations(subject, currentPermissions, revoked, granted);
+                } else {
+                    Role role = (Role) selectedSubject;
+                    performOperations(role, currentPermissions, revoked, granted);
                 }
 
-                for (Permission permission : granted) {
-                    grant(permission);
-                }
             }
         }
         // reset view
@@ -276,7 +282,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         // reset initial values
         confirmed = true;
 
-        if (isGroup() && !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+        if (isGroup() && !isEnabled(Company.USER_LEVEL)) {
             propagateChangesToUsers();
             confirmUserPermissions();
         }
@@ -297,7 +303,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         });
         Set<UserGroup> selected = new HashSet<UserGroup>();
         selected.add((UserGroup) selectedSubject);
-        createUserPermissionTrees(userGroupDataAccess.collectUsers(selected, Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))), false);
+        createUserPermissionTrees(userGroupDataAccess.collectUsers(selected, isEnabled(Company.GROUP_HIERARCHY)), false);
         usersConfirmed = false;
     }
 
@@ -333,11 +339,10 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         super.setNotGranted(grant.get(1));
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(userDataPermissions, selectedPermissions);
         // current permission tree
-        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED);
+        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
 
     }
 
- 
     private void createNewUserNode(User user, TreeNode root, boolean selectable) {
         TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
 
@@ -382,7 +387,7 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
 
                 // build new tree -> show only new object permissions
                 getImmutablePermissionTree(userNode, new ArrayList<Permission>(), new ArrayList<Permission>(concat(granted, revoked)), revoked, granted, Marking.REMOVED,
-                                         Marking.NEW, false);
+                                           Marking.NEW, false);
             }
         }
     }
@@ -395,23 +400,23 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
             if (action.equals("grant")) {
 
                 Set<Permission> grant = permissionHandling.getGrantable(userDataPermissions, selectedPermissions).get(0);
-                for (Permission permission : grant) {
-                    permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
+                if (selectedSubject instanceof Subject) {
+                    performOperations((Subject) selectedSubject, permissions, new HashSet<Permission>(), grant);
+                } else {
+                    performOperations((Role) selectedSubject, permissions, new HashSet<Permission>(), grant);
                 }
             } else {
                 if ("revoke".equals(action)) {
+                    
                     List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userDataPermissions, selectedPermissions, true);
                     Set<Permission> revoked = revoke.get(0);
                     Set<Permission> granted = revoke.get(2);
 
-                    for (Permission permission : revoked) {
-                        permissionService.revoke(userSession.getUser(), user, permission.getAction(), permission.getResource());
+                    if (selectedSubject instanceof Subject) {
+                        performOperations((Subject) selectedSubject, permissions, revoked, granted);
+                    } else {
+                        performOperations((Role) selectedSubject, permissions, revoked, granted);
                     }
-
-                    for (Permission permission : granted) {
-                        permissionService.grant(userSession.getUser(), user, permission.getAction(), permission.getResource());
-                    }
-
                 }
             }
         }
@@ -434,28 +439,6 @@ public class ResourceObjectBean extends PermissionTreeHandlingBaseBean {
         for (UserGroup child : userGroupDataAccess.getGroupsForGroup(group)) {
             collectUsers(child, users);
         }
-    }
-
-    private void grant(Permission p) {
-        if (selectedSubject instanceof Subject) {
-            permissionService.grant(userSession.getUser(), (Subject) selectedSubject, p.getAction(), p.getResource());
-        } else {
-            if (selectedSubject instanceof Role) {
-                permissionService.grant(userSession.getUser(), (Role) selectedSubject, p.getAction(), p.getResource());
-            }
-        }
-
-    }
-
-    private void revoke(Permission p) {
-        if (selectedSubject instanceof Subject) {
-            permissionService.revoke(userSession.getUser(), (Subject) selectedSubject, p.getAction(), p.getResource());
-        } else {
-            if (selectedSubject instanceof Role) {
-                permissionService.revoke(userSession.getUser(), (Role) selectedSubject, p.getAction(), p.getResource());
-            }
-        }
-
     }
 
     // wizard

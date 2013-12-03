@@ -154,8 +154,9 @@ public class CarrierBean extends SecurityBaseBean {
     }
 
     public void saveNewContact() {
+        ((Contact) selectedContactModel.getEntity()).setCarrier((Carrier) selectedCarrierModel.getEntity());
         entityManager.persist(selectedContactModel.getEntity());
-        ((Carrier) selectedCarrierModel.getEntity()).getContacts().add((Contact) selectedContactModel.getEntity());
+//        ((Carrier) selectedCarrierModel.getEntity()).getContacts().add((Contact) selectedContactModel.getEntity());
         Carrier selectedCarrier = entityManager.merge(((Carrier) selectedCarrierModel.getEntity()));
 
         List<Contact> allContacts = new ArrayList<Contact>(selectedCarrier.getContacts());
@@ -372,7 +373,7 @@ public class CarrierBean extends SecurityBaseBean {
             } else {
                 if ("partyTab".equals(tabIndex)) {
                     return new Party("Carrier");
-                }else{
+                } else {
                     if ("commentTab".equals(tabIndex)) {
                         return new Comment();
                     }

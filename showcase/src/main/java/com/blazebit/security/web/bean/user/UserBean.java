@@ -82,7 +82,7 @@ public class UserBean extends GroupHandlerBaseBean implements GroupView, Permiss
         List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
 
         this.permissionRoot = new DefaultTreeNode("root", null);
-        permissionRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        permissionRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, !isEnabled(Company.FIELD_LEVEL));
 
         List<UserGroup> groups = userGroupDataAccess.getGroupsForUser(selectedUser);
         this.groupRoot = buildGroupTree(groups);

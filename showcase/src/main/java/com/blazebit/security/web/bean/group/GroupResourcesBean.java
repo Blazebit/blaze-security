@@ -83,7 +83,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     }
 
     private void initPermissionTree() {
-        this.permissionViewRoot = initGroupPermissions(getSelectedGroup(), !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        this.permissionViewRoot = initGroupPermissions(getSelectedGroup(), !isEnabled(Company.FIELD_LEVEL));
     }
 
     public UserGroup getSelectedGroup() {
@@ -97,7 +97,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             if (event.getOldStep().equals("permissions") && !event.getNewStep().equals("resources")) {
                 confirmGroupPermissions();
 
-                // if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+                // if (!isEnabled(Company.USER_LEVEL)) {
                 // confirmUserPermissions();
                 // }
             }
@@ -111,7 +111,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
     public void processSelectedResources() {
         // get selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
-        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+        if (!isEnabled(Company.FIELD_LEVEL)) {
             // if field is level is not enabled but the user has field level permissions, these need to be marked as selected,
             // otherwise it would be taken as revoked
             selectedPermissions.addAll(permissionHandling.getSeparatedParentAndChildPermissions(groupPermissions).get(1));
@@ -140,13 +140,13 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         currentReplaced = permissionHandling.getReplacedByGranting(groupPermissions, granted);
         currentPermissions.removeAll(currentReplaced);
         currentPermissions.addAll(granted);
-        newPermissionTreeRoot = getMutablePermissionTree(currentPermissions, new ArrayList<Permission>(), granted, currentRevoked, Marking.NEW, Marking.REMOVED);
+        newPermissionTreeRoot = getMutablePermissionTree(currentPermissions, groupDataPermissions, granted, currentRevoked, Marking.NEW, Marking.REMOVED,
+                                                         !isEnabled(Company.FIELD_LEVEL));
     }
 
     public void rebuildCurrentGroupPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced,
-                                                       !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
     /**
@@ -165,9 +165,9 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         // show user propagation view
         Set<UserGroup> selected = new HashSet<UserGroup>();
         selected.add(getSelectedGroup());
-        buildUserPermissionTrees(userGroupDataAccess.collectUsers(selected, Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))), granted, revoked);
+        buildUserPermissionTrees(userGroupDataAccess.collectUsers(selected, isEnabled(Company.GROUP_HIERARCHY)), granted, revoked);
         // if user level is not enabled confirm user permissions immediately
-        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+        if (!isEnabled(Company.USER_LEVEL)) {
             confirmUserPermissions();
         }
     }
@@ -245,7 +245,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
         currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, currentReplaced));
         currentPermissions.addAll(grantable);
 
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+        if (isEnabled(Company.USER_LEVEL)) {
             getMutablePermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, currentRevoked, Marking.NEW, Marking.REMOVED);
         } else {
 
@@ -265,8 +265,7 @@ public class GroupResourcesBean extends ResourceHandlingBaseBean implements Perm
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> userPermissions = permissionManager.getPermissions(user);
             userNode.getChildren().clear();
-            rebuildCurrentTree(userNode, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user),
-                               !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+            rebuildCurrentTree(userNode, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user), !isEnabled(Company.FIELD_LEVEL));
         }
     }
 

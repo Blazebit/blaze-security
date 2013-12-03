@@ -17,7 +17,7 @@
 					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 						selection="#{resourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
 						<p:treeNode>
-							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission"/>
 						</p:treeNode>
 					</p:tree>
 
@@ -75,7 +75,7 @@
 
 					<h:panelGrid columns="2" columnClasses="top,top">
 						<h:panelGroup>
-						Current permissions <p:commandButton value="" icon="ui-icon-info" id="infoCurrent"
+						Current permissions <p:commandButton icon="ui-icon-info" id="infoCurrent"
 								oncomplete="notRevokedDialog.show()" update=":dialogs" />
 							<br />
 							RED entries will be revoked after confirmation 
@@ -89,7 +89,7 @@
 						</h:panelGroup>
 
 						<h:panelGroup>
-							New permissions <p:commandButton value="" icon="ui-icon-info" id="infoNew" oncomplete="notGrantedDialog.show()"
+							New permissions <p:commandButton  icon="ui-icon-info" id="infoNew" oncomplete="notGrantedDialog.show()"
 								update=":dialogs" />
 							<br />
 							GREEN and SELECTED entries will be granted after confirmation
@@ -149,7 +149,8 @@
 								<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
 									listener="#{resourcesBean.rebuildCurrentGroupPermissionTree}" />
 								<p:treeNode>
-									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" />
+									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" id="permission"/>
+									<p:tooltip for="permission" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -177,7 +178,8 @@
 						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentGroupUserPermissionTree"
 								rendered="#{resourcesBean.currentUserRoot.childCount ne 0}" selectionMode="checkbox">
 								<p:treeNode>
-									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" />
+									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission"/>
+									<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -195,7 +197,8 @@
 								<p:ajax event="unselect" update=":form:tab:currentGroupUserPermissionTree"
 									listener="#{resourcesBean.rebuildCurrentUserPermissionTree()}" />
 								<p:treeNode>
-									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" />
+									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission"/>
+									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

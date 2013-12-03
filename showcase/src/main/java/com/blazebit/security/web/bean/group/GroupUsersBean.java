@@ -66,19 +66,29 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
 
     public void init() {
         initUsers();
-        permissionTreeViewRoot = initGroupPermissions(getSelectedGroup(), !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        initPermissions();
+        // prepare permissions to grant or revoke
+        prepareGroupPermissions();
+    }
+
+    private void prepareGroupPermissions() {
         // get permissions based on hierarchy or not
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
-            Set<UserGroup> addedGroups = new HashSet<UserGroup>();
-            addedGroups.add(getSelectedGroup());
-            selectedGroupPermissions = groupPermissionHandlingUtils.getGroupPermissions(addedGroups);
-        } else {
-            selectedGroupPermissions = new HashSet<Permission>(permissionManager.getPermissions(getSelectedGroup()));
-        }
-        // if no field level enabled-> add only parent permissions
-        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+        Set<UserGroup> addedGroups = new HashSet<UserGroup>();
+        addedGroups.add(getSelectedGroup());
+        // normalized merge of all the permissions of the group hierarchy
+        selectedGroupPermissions = groupPermissionHandlingUtils.getGroupPermissions(addedGroups, isEnabled(Company.GROUP_HIERARCHY));
+        // TODO if no field level enabled-> add only parent permissions. is this a good solution?
+        if (!isEnabled(Company.FIELD_LEVEL)) {
             selectedGroupPermissions = permissionHandling.getParentPermissions(selectedGroupPermissions);
         }
+        // if object level is not enabled, just ignore object level permissions
+        if (!isEnabled(Company.OBJECT_LEVEL)) {
+            selectedGroupPermissions = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(selectedGroupPermissions).get(0));
+        }
+    }
+
+    private void initPermissions() {
+        permissionTreeViewRoot = initGroupPermissions(getSelectedGroup(), !isEnabled(Company.FIELD_LEVEL));
     }
 
     private void initUsers() {
@@ -136,7 +146,7 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
             }
         }
 
-        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+        if (!isEnabled(Company.USER_LEVEL)) {
             confirmPermissions();
         }
     }
@@ -159,10 +169,8 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
         // replaceable
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(concat(userPermissions, userDataPermissions),
                                                                             permissionHandling.getGrantable(userPermissions, selectedGroupPermissions).get(0));
-        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED,
-                                   !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
     }
-
 
     private void createCurrentPermissionTreeForRemovedUser(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         // group permissions will be revoked from user-> mark only revokables
@@ -176,23 +184,24 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
         userNode.setExpanded(true/* addedUser */);
         userNode.setSelectable(false);
         if (addedUser) {
-            createNewPermissionTreeForAddedUser(user, userNode, userPermissions);
+            createNewPermissionTreeForAddedUser(user, userNode, userPermissions, userDataPermissions);
         } else {
             createNewPermissionTreeForRemovedUser(user, userNode, userPermissions);
         }
         return userNode;
     }
 
-    private void createNewPermissionTreeForAddedUser(User user, DefaultTreeNode userNode, List<Permission> userPermissions) {
-        Set<Permission> granted = permissionHandling.getGrantable(userPermissions, selectedGroupPermissions).get(0);
+    private void createNewPermissionTreeForAddedUser(User user, DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
+        Set<Permission> granted = permissionHandling.getGrantable(concat(userPermissions, userDataPermissions), selectedGroupPermissions).get(0);
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(userPermissions, granted);
         Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
         currentPermissions.removeAll(replaced);
         currentPermissions.addAll(granted);
         currentReplacedUserMap.put(user, replaced);
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
-            getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), new ArrayList<Permission>(), granted, new HashSet<Permission>(), Marking.NEW,
-                                     Marking.REMOVED);
+        if (isEnabled(Company.USER_LEVEL)) {
+            getMutablePermissionTree(userNode, permissionHandling.getSeparatedPermissions(currentPermissions).get(0), permissionHandling
+                .getSeparatedPermissions(currentPermissions)
+                .get(1), granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
         } else {
             getImmutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), new ArrayList<Permission>(), granted, Marking.NEW);
             selectedUserNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserNodes, getSelectedNodes(userNode.getChildren()).toArray());
@@ -224,7 +233,7 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
 
         currentPermissions = new HashSet<Permission>(permissionHandling.removeAll(currentPermissions, impliedBy));
 
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+        if (isEnabled(Company.USER_LEVEL)) {
             getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), new ArrayList<Permission>(), granted, revoked, Marking.NEW, Marking.REMOVED);
         } else {
             List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
@@ -246,13 +255,11 @@ public class GroupUsersBean extends GroupHandlerBaseBean implements PermissionVi
             userNode.getChildren().clear();
             if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                 // this is an added or an existing user
-                rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user),
-                                   !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user), !isEnabled(Company.FIELD_LEVEL));
 
             } else {
                 // this is a removed user
-                rebuildCurrentTree(userNode, permissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>(),
-                                   !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                rebuildCurrentTree(userNode, permissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
             }
         }
     }

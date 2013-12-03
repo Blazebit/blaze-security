@@ -368,13 +368,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
      */
     @Override
     public Set<Permission> getParentPermissions(Collection<Permission> permissions) {
-        Set<Permission> ret = new HashSet<Permission>();
-        for (Permission permission : permissions) {
-            ret.add(permissionFactory.create(permission.getAction(), permission.getResource().getParent()));
-        }
-        return getNormalizedPermissions(ret);
+        return getNormalizedPermissions(resourceHandlingUtils.getParentPermissions(permissions));
     }
-    
+
     /**
      * Separates the parent and the child permissions of permission collection. Requirement: all permissions belong to the same
      * resource name.
@@ -382,6 +378,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
      * @param permissions
      * @return
      */
+    @Override
     public List<Set<Permission>> getSeparatedParentAndChildPermissions(Collection<Permission> permissions) {
         Set<Permission> parents = new HashSet<Permission>();
         Set<Permission> children = new HashSet<Permission>();
@@ -396,6 +393,18 @@ public class PermissionHandlingImpl implements PermissionHandling {
         ret.add(parents);
         ret.add(children);
         return ret;
+    }
+
+    /**
+     * Separates the parent and the child permissions of permission collection. Requirement: all permissions belong to the same
+     * resource name.
+     * 
+     * @param permissions
+     * @return
+     */
+    @Override
+    public List<List<Permission>> getSeparatedPermissions(Collection<Permission> permissions) {
+        return resourceHandlingUtils.getSeparatedPermissionsByResource(permissions);
     }
 
 }

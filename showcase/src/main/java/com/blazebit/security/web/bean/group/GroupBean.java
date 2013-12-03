@@ -66,7 +66,7 @@ public class GroupBean extends GroupHandlerBaseBean implements PermissionView, S
 
     private void initUserGroups() {
         // init groups tree
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
+        if (isEnabled(Company.GROUP_HIERARCHY)) {
             List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
             this.groupRoot = new DefaultTreeNode("", null);
             groupRoot.setExpanded(true);
@@ -94,7 +94,7 @@ public class GroupBean extends GroupHandlerBaseBean implements PermissionView, S
 
     public void saveGroup() {
         UserGroup newGroup = userGroupService.create(userSession.getSelectedCompany(), this.newGroup.getName());
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
+        if (isEnabled(Company.GROUP_HIERARCHY)) {
             if (isParentGroup()) {
                 newGroup.setParent(getSelectedGroup().getParent());
                 getSelectedGroup().setParent(newGroup);
@@ -144,7 +144,7 @@ public class GroupBean extends GroupHandlerBaseBean implements PermissionView, S
     private void initSelectedGroup() {
         userSession.setSelectedUserGroup(selectedGroup);
         this.users = userGroupDataAccess.getUsersFor(selectedGroup);
-        permissionRoot = initGroupPermissions(getSelectedGroup(), !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+        permissionRoot = initGroupPermissions(getSelectedGroup(), !isEnabled(Company.FIELD_LEVEL));
     }
 
     public void unselectGroup() {

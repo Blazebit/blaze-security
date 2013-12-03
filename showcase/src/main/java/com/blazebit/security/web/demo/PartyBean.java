@@ -50,7 +50,7 @@ public class PartyBean extends SecurityBaseBean {
             // for (Action action :
             // actionImplicationProvider.getActionsImpledBy(actionFactory.createAction(ActionConstants.CREATE))) {
             // //TODO what to do?
-            // if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.OBJECT_LEVEL))) {
+            // if (!isEnabled(Company.OBJECT_LEVEL))) {
             // EntityField entityField = (EntityField) resource;
             // resource = entityResourceFactory.createResource(entityField.getEntity());
             // }

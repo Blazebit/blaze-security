@@ -311,8 +311,6 @@ public class EntityFieldResourceHandlingUtils {
         return family;
     }
 
-  
-
     /**
      * separates permissions
      * 
@@ -332,6 +330,16 @@ public class EntityFieldResourceHandlingUtils {
         }
         ret.add(entities);
         ret.add(objects);
+        return ret;
+    }
+
+    public Set<Permission> getParentPermissions(Collection<Permission> permissions) {
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Permission permission : permissions) {
+            if (!actionUtils.getUpdateActionsForCollectionField().contains(permission.getAction())) {
+                ret.add(permissionFactory.create(permission.getAction(), permission.getResource().getParent()));
+            }
+        }
         return ret;
     }
 

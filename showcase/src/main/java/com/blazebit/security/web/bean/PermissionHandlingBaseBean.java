@@ -142,16 +142,13 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
     }
 
-    private List<Set<Permission>> performOperations(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+    protected List<Set<Permission>> performOperations(Subject subject, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
-        for (Permission permission : finalRevoked) {
-            permissionService.revoke(userSession.getUser(), subject, permission.getAction(), permission.getResource());
-        }
         Set<Permission> finalGranted = permissions.get(1);
-        for (Permission permission : finalGranted) {
-            permissionService.grant(userSession.getUser(), subject, permission.getAction(), permission.getResource());
-        }
+
+        permissionService.revokeAndGrant(userSession.getUser(), subject, finalRevoked, finalGranted);
+
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         ret.add(finalRevoked);
         ret.add(finalGranted);
@@ -159,16 +156,11 @@ public class PermissionHandlingBaseBean extends TreeHandlingBaseBean {
 
     }
 
-    private List<Set<Permission>> performOperations(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
+    protected List<Set<Permission>> performOperations(Role role, Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted) {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
-        for (Permission permission : finalRevoked) {
-            permissionService.revoke(userSession.getUser(), role, permission.getAction(), permission.getResource());
-        }
         Set<Permission> finalGranted = permissions.get(1);
-        for (Permission permission : finalGranted) {
-            permissionService.grant(userSession.getUser(), role, permission.getAction(), permission.getResource());
-        }
+        permissionService.revokeAndGrant(userSession.getUser(), role, finalRevoked, finalGranted);
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         ret.add(finalRevoked);
         ret.add(finalGranted);

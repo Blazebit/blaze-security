@@ -127,6 +127,24 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
     }
 
     @Override
+    public void grant(Subject authorizer, Subject subject, Permission permission) throws PermissionException, PermissionActionException {
+        if (permission == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        grant(authorizer, subject, permission.getAction(), permission.getResource());
+    }
+
+    @Override
+    public void grant(Subject authorizer, Subject subject, Set<Permission> permissions) throws PermissionException, PermissionActionException {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        for (Permission permission : permissions) {
+            grant(authorizer, subject, permission.getAction(), permission.getResource());
+        }
+    }
+
+    @Override
     public void revoke(Subject authorizer, Subject subject, Action action, Resource resource) throws PermissionException, PermissionActionException {
         if (authorizer == null) {
             throw new IllegalArgumentException("Authorizer cannot be null");
@@ -148,6 +166,24 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
             permissionManager.remove(permission);
         }
         permissionManager.flush();
+    }
+
+    @Override
+    public void revoke(Subject authorizer, Subject subject, Permission permission) throws PermissionException, PermissionActionException {
+        if (permission == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        revoke(authorizer, subject, permission.getAction(), permission.getResource());
+    }
+
+    @Override
+    public void revoke(Subject authorizer, Subject subject, Set<Permission> permissions) throws PermissionException, PermissionActionException {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        for (Permission permission : permissions) {
+            revoke(authorizer, subject, permission.getAction(), permission.getResource());
+        }
     }
 
     @Override
@@ -178,8 +214,25 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         if (authorizer == null) {
             throw new IllegalArgumentException("Authorizer cannot be null");
         }
-        checkParameters(role, action, resource);
         grant(authorizer, role, action, resource, false);
+    }
+
+    @Override
+    public void grant(Subject authorizer, Role role, Permission permission) throws PermissionException, PermissionActionException {
+        if (permission == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        grant(authorizer, role, permission.getAction(), permission.getResource(), false);
+    }
+
+    @Override
+    public void grant(Subject authorizer, Role role, Set<Permission> permissions) throws PermissionException, PermissionActionException {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        for (Permission permission : permissions) {
+            grant(authorizer, role, permission.getAction(), permission.getResource(), false);
+        }
     }
 
     @Override
@@ -245,12 +298,65 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
     }
 
     @Override
+    public void grant(Subject authorizer, Role role, Permission permission, boolean propagateToUsers) throws PermissionException, PermissionActionException {
+        if (permission == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        grant(authorizer, role, permission.getAction(), permission.getResource());
+    }
+
+    @Override
+    public void grant(Subject authorizer, Role role, Set<Permission> permissions, boolean propagateToUsers) throws PermissionException, PermissionActionException {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        for (Permission permission : permissions) {
+            grant(authorizer, role, permission.getAction(), permission.getResource());
+        }
+    }
+
+    @Override
+    public void revoke(Subject authorizer, Role role, Permission permission) throws PermissionException, PermissionActionException {
+        if (permission == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        revoke(authorizer, role, permission.getAction(), permission.getResource(), false);
+    }
+
+    @Override
+    public void revoke(Subject authorizer, Role role, Set<Permission> permissions) throws PermissionException, PermissionActionException {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        for (Permission permission : permissions) {
+            revoke(authorizer, role, permission.getAction(), permission.getResource(), false);
+        }
+    }
+
+    @Override
     public void revoke(Subject authorizer, Role role, Action action, Resource resource) throws PermissionException, PermissionActionException {
         if (authorizer == null) {
             throw new IllegalArgumentException("Authorizer cannot be null");
         }
-        checkParameters(role, action, resource);
         revoke(authorizer, role, action, resource, false);
+    }
+
+    @Override
+    public void revoke(Subject authorizer, Role role, Permission permission, boolean propagateToUsers) throws PermissionException, PermissionActionException {
+        if (permission == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
+        revoke(authorizer, role, permission.getAction(), permission.getResource(), propagateToUsers);
+    }
+
+    @Override
+    public void revoke(Subject authorizer, Role role, Set<Permission> permissions, boolean propagateToUsers) throws PermissionException, PermissionActionException {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permission cannot be null");
+        }
+        for (Permission permission : permissions) {
+            revoke(authorizer, role, permission.getAction(), permission.getResource(), propagateToUsers);
+        }
     }
 
     @Override
@@ -309,6 +415,48 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
             for (Role child : children) {
                 propagateRevokeToSubjects(authorizer, child, action, resource);
             }
+        }
+    }
+
+    @Override
+    public void revokeAndGrant(Subject authorizer, Subject subject, Set<Permission> revoke, Set<Permission> grant) {
+        if (revoke == null || grant == null) {
+            throw new IllegalArgumentException("Permissions cannot be null");
+        }
+        for (Permission permission : revoke) {
+            revoke(authorizer, subject, permission);
+        }
+
+        for (Permission permission : grant) {
+            grant(authorizer, subject, permission);
+        }
+    }
+
+    @Override
+    public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant) {
+        if (revoke == null || grant == null) {
+            throw new IllegalArgumentException("Permissions cannot be null");
+        }
+        for (Permission permission : revoke) {
+            revoke(authorizer, role, permission);
+        }
+
+        for (Permission permission : grant) {
+            grant(authorizer, role, permission);
+        }
+    }
+
+    @Override
+    public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant, boolean propagate) {
+        if (revoke == null || grant == null) {
+            throw new IllegalArgumentException("Permissions cannot be null");
+        }
+        for (Permission permission : revoke) {
+            revoke(authorizer, role, permission, propagate);
+        }
+
+        for (Permission permission : grant) {
+            grant(authorizer, role, permission, propagate);
         }
     }
 

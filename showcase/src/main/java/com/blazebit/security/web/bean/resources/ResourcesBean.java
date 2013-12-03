@@ -233,7 +233,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
         // current permission tree
         getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED,
-                                   !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                                   !isEnabled(Company.FIELD_LEVEL));
     }
 
     private void createNewUserNode(User user, TreeNode root, Set<Permission> selectedPermissions, List<Permission> userPermissions, boolean selectable) {
@@ -284,7 +284,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
             // current permission tree
             userNode.getChildren().clear();
             rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user),
-                               !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                               !isEnabled(Company.FIELD_LEVEL));
         }
     }
 
@@ -324,9 +324,9 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
     private Set<UserGroup> getSelectedGroups() {
         Set<UserGroup> ret = new HashSet<UserGroup>();
-        if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))) {
+        if (isEnabled(Company.GROUP_HIERARCHY)) {
             for (TreeNode treeNode : selectedGroupNodes) {
-                ret.add(((UserGroupModel) treeNode.getData()).getUserGroup());
+                ret.add((UserGroup) treeNode.getData());
             }
         } else {
             for (UserGroupModel model : groups) {
@@ -351,7 +351,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     private void createCurrentGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions, List<Permission> groupPermissions, List<Permission> groupDataPermissions) {
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(groupPermissions, selectedPermissions);
         getImmutablePermissionTree(groupNode, groupPermissions, groupDataPermissions, replaced, Marking.REMOVED,
-                                   !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                                   !isEnabled(Company.FIELD_LEVEL));
 
     }
 
@@ -387,11 +387,11 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
 
             List<Permission> permissions = groupPermissionMap.get(userGroup);
             // current selected permissions
-            Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes);
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
             groupNode.getChildren().clear();
             // add previously replaced permissions
             rebuildCurrentTree(groupNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedGroupMap.get(userGroup),
-                               !Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL)));
+                               !isEnabled(Company.FIELD_LEVEL));
         }
     }
 
@@ -418,10 +418,10 @@ public class ResourcesBean extends ResourceHandlingBaseBean implements Serializa
     private void prepareUserPropagationView(Set<UserGroup> selectedGroups) {
         currentReplacedUserMap.clear();
         createUserPermissionTreesAfterGroupConfirmation(userGroupDataAccess.collectUsers(selectedGroups,
-                                                                                         Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.GROUP_HIERARCHY))),
-                                                        Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL)));
+                                                                                         isEnabled(Company.GROUP_HIERARCHY)),
+                                                        isEnabled(Company.USER_LEVEL));
         // if user level is not enabled confirm user permissions immediately
-        if (!Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.USER_LEVEL))) {
+        if (!isEnabled(Company.USER_LEVEL)) {
             confirmUserPermissions();
         }
     }

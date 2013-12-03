@@ -106,21 +106,20 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                         // collection field resources are ALWAYS stored as entity field resources; all field childs selected
                         // then action node should be taken, if object resources specified action node should be taken
 
-                        // if (!permissionNodeData.getObjectInstances().isEmpty()) {
-                        // // add object resources if exist
-                        // for (EntityField instance : permissionNodeData.getObjectInstances()) {
-                        // Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(),
-                        // instance);
-                        // ret.add(actionPermission);
-                        // }
-                        // }
+                        if (!permissionNodeData.getObjectInstances().isEmpty()) {
+                            // add object resources if exist
+                            for (EntityField instance : permissionNodeData.getObjectInstances()) {
+                                Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), instance);
+                                ret.add(actionPermission);
+                            }
+                        } else {
+                            if (!actionUtils.getUpdateActionsForCollectionField().contains(permissionNodeData.getTarget())
+                                && allChildFieldsListed(permissionNode, ((TreeNodeModel) entityNode.getData()).getName())) {
 
-                        if (!actionUtils.getUpdateActionsForCollectionField().contains(permissionNodeData.getTarget())
-                            && allChildFieldsListed(permissionNode, ((TreeNodeModel) entityNode.getData()).getName())) {
-
-                            // add entity field resource
-                            Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget());
-                            ret.add(actionPermission);
+                                // add entity field resource
+                                Permission actionPermission = permissionFactory.create((EntityAction) permissionNodeData.getTarget(), (EntityField) entityNodeModel.getTarget());
+                                ret.add(actionPermission);
+                            }
                         }
                     }
                     break;
@@ -130,13 +129,17 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                     TreeNode actionEntityNode = actionNode.getParent();
 
                     if ((parentNode != null && actionEntityNode.getParent().getData().equals(parentNode.getData())) || parentNode == null) {
-                        // for (EntityField instance : permissionNodeData.getObjectInstances()) {
-                        // Permission fieldPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(),
-                        // instance);
-                        // ret.add(fieldPermission);
-                        // }
-                        Permission actionPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) permissionNodeData.getTarget());
-                        ret.add(actionPermission);
+
+                        if (!permissionNodeData.getObjectInstances().isEmpty()) {
+                            // add object resources if exist
+                            for (EntityField instance : permissionNodeData.getObjectInstances()) {
+                                Permission fieldPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), instance);
+                                ret.add(fieldPermission);
+                            }
+                        } else {
+                            Permission actionPermission = permissionFactory.create((EntityAction) actionNodeData.getTarget(), (EntityField) permissionNodeData.getTarget());
+                            ret.add(actionPermission);
+                        }
                     }
                     break;
                 default:
@@ -151,18 +154,8 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
         return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel);
     }
 
-    protected TreeNode getMutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
-
-        TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, false);
-    }
-
     protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
         return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, false);
-    }
-
-    protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
@@ -347,8 +340,17 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
             selectedPermissions.contains(permission) ? marking1 : Marking.NONE);
         fieldNodeModel.setEntityInstance((EntityField) permission.getResource());
         DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
+        // field resource: entity field or entity object field -> paint it blue, add tooltip, color might be overwritten
+
+        if (permission.getResource() instanceof EntityObjectField) {
+            fieldNodeModel.getObjectInstances().add((EntityObjectField) permission.getResource());
+            fieldNodeModel.setMarking(Marking.OBJECT);
+            fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+        }
+
         // mark and select permission on field level-> will be propagated upwards at the end
         if (permissionHandling.contains(selectedPermissions, permission)) {
+            fieldNodeModel.setMarking(marking1);
             fieldNode.setSelected(true);
             fieldNode.setSelectable(selectable);
         } else {
@@ -357,12 +359,6 @@ public class PermissionTreeHandlingBaseBean extends PermissionHandlingBaseBean {
                 fieldNodeModel.setMarking(marking2);
                 fieldNode.setSelectable(selectable);
             } else {
-                // field resource: entity field or entity object field -> paint it blue, add tooltip, color might be overwritten
-                if (permission.getResource() instanceof EntityObjectField) {
-                    fieldNodeModel.getObjectInstances().add((EntityObjectField) permission.getResource());
-                    fieldNodeModel.setMarking(Marking.OBJECT);
-                    fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-                }
                 // already existing permission for this resource
                 // fieldNode.setSelected(true);
                 fieldNode.setSelectable(false);

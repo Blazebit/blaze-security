@@ -54,7 +54,7 @@ public class ResourceHandlingBaseBean extends GroupHandlerBaseBean {
 
                     List<String> primitiveFields = new ArrayList<String>();
                     List<String> collectionFields = new ArrayList<String>();
-                    if (Boolean.valueOf(propertyDataAccess.getPropertyValue(Company.FIELD_LEVEL))) {
+                    if (isEnabled(Company.FIELD_LEVEL)) {
                         primitiveFields = resourceMetamodel.getPrimitiveFields(resourceName);
                         collectionFields = resourceMetamodel.getCollectionFields(resourceName);
                     }
