@@ -37,6 +37,7 @@ public class PermissionsBean implements Serializable {
 
     @SuppressWarnings("unchecked")
     public void initPermissions() {
+        permissions.clear();
         List<Permission> ret = entityManager.createQuery("select p from " + SubjectPermission.class.getName()
                                                              + " p order by p.id.subject.company.id, p.id.subject.username, p.id.entity, p.id.field").getResultList();
         for (Permission p : ret) {

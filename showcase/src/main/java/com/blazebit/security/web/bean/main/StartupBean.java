@@ -162,6 +162,7 @@ public class StartupBean {
             for (UserGroup gr : groups) {
                 if (!gr.getName().equals("Admin")) {
                     permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(gr)));
+                    permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(gr)));
                 }
             }
 
@@ -174,10 +175,7 @@ public class StartupBean {
             // permissionManager.save(permissionFactory.create(group, grantAction,
             // entityFieldFactory.createResource(CarrierGroup.class)));
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource("Carrier_Party")));
-
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(User.class)));
-            permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(UserGroup.class)));
-
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Party.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Contact.class)));

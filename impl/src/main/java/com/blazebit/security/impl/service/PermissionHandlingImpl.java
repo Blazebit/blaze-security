@@ -23,9 +23,6 @@ public class PermissionHandlingImpl implements PermissionHandling {
     @Inject
     private EntityFieldResourceHandlingUtils resourceHandlingUtils;
 
-    @Inject
-    private PermissionFactory permissionFactory;
-
     @Override
     public boolean contains(Collection<Permission> permissions, Permission permission) {
         return contains(permissions, permission, true);
@@ -217,7 +214,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
                             if (parentPermission != null) {
                                 // revoke parent entity
                                 revoked.add(parentPermission);
-                                granted.addAll(resourceHandlingUtils.getChildPermissionsOfParent(selectedPermission.getAction(), resource));
+                                granted.addAll(resourceHandlingUtils.getChildPermissions(selectedPermission.getAction(), resource));
                             } else {
                                 notRevoked.add(selectedPermission);
                             }

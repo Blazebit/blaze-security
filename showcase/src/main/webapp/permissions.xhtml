@@ -12,7 +12,7 @@
 
 	<h:body>
 		<h:form id="form">
-			<f:event listener="#{permissionsBean.initPermissions}" type="preRenderView" />
+
 
 			<p:menu>
 				<p:submenu label="Menu">
@@ -27,6 +27,7 @@
 			</p:menu>
 			<br />
 			<p:dataTable value="#{permissionsBean.permissions}" var="permission" style="width:100%">
+			   <f:event listener="#{permissionsBean.initPermissions}" type="preRenderComponent" />
 				<p:column sortBy="#{permission.entity.id.subject.company.name}"
 					filterBy="#{permission.entity.id.subject.company.name}">
 					<f:facet name="Company"></f:facet>

@@ -186,7 +186,7 @@ public class EntityFieldTest extends BaseTest<EntityFieldTest> {
 
     @Test
     public void test_applicable_entityField_action() {
-        assertFalse(documentEntityTitleField.isApplicable(getCreateAction()));
+        assertTrue(documentEntityTitleField.isApplicable(getCreateAction()));
         assertTrue(documentEntityTitleField.isApplicable(getUpdateAction()));
         assertFalse(documentEntityTitleField.isApplicable(getDeleteAction()));
 

@@ -34,7 +34,8 @@ import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
-import com.blazebit.security.impl.utils.GroupPermissionHandlingUtils;
+import com.blazebit.security.impl.service.resource.GroupPermissionHandling;
+import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 
 /**
  * 
@@ -48,9 +49,11 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
     @Inject
     private PermissionHandlingImpl permissionHandlingUtils;
     @Inject
-    private GroupPermissionHandlingUtils groupPermissionHandlingUtils;
+    private GroupPermissionHandling groupPermissionHandling;
     @Inject
     private PermissionFactory permissionFactory;
+    @Inject
+    private UserGroupDataAccess userGroupDataAcces;
 
     UserGroup userGroupE;
 
@@ -112,8 +115,8 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         Set<UserGroup> expectedRemoved = new HashSet<UserGroup>();
         expectedRemoved.add(userGroupB);
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         assertSetsEquals(expectedAdded, added);
         assertSetsEquals(expectedRemoved, removed);
@@ -140,8 +143,8 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         expectedRemoved.add(userGroupB);
         expectedRemoved.add(userGroupA);
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         assertSetsEquals(expectedAdded, added);
         assertSetsEquals(expectedRemoved, removed);
@@ -158,8 +161,8 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
 
         Set<UserGroup> expectedRemoved = new HashSet<UserGroup>();
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         assertSetsEquals(expectedAdded, added);
         assertSetsEquals(expectedRemoved, removed);
@@ -184,8 +187,8 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
 
         Set<UserGroup> expectedRemoved = new HashSet<UserGroup>();
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
         assertSetsEquals(expectedAdded, added);
         assertSetsEquals(expectedRemoved, removed);
@@ -220,14 +223,14 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         selectedGroups.add(userGroupA);
         selectedGroups.add(userGroupB);
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(added);
+        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
-        Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removed);
+        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -261,14 +264,14 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         selectedGroups.add(userGroupA);
         selectedGroups.add(userGroupB);
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(added);
+        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
 
-        Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removed);
+        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -301,14 +304,14 @@ public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHa
         selectedGroups.add(userGroupA);
         selectedGroups.add(userGroupB);
 
-        Set<UserGroup> added = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
-        Set<UserGroup> removed = groupPermissionHandlingUtils.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
+        Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
+        Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandlingUtils.getGroupPermissions(added);
+        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
-        Set<Permission> revoked = groupPermissionHandlingUtils.getGroupPermissions(removed);
+        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();

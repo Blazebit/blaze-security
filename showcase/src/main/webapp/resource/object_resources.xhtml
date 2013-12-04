@@ -51,7 +51,8 @@
 						</p:treeNode>
 					</p:tree>
 
-					<p:commandButton value="Next" onclick="permissionWizard.next()" rendered="#{resourceObjectBean.resourceRoot.childCount ne 0}"/>
+					<p:commandButton value="Next" onclick="permissionWizard.next()"
+						rendered="#{resourceObjectBean.resourceRoot.childCount ne 0}" />
 				</p:tab>
 
 				<p:tab id="confirmPermissions" title="Permissions">
@@ -89,10 +90,8 @@
 						</h:panelGroup>
 					</h:panelGrid>
 
-					<p:commandButton value="Confirm" update=":form:objectResources" rendered="#{!resourceObjectBean.confirmed}"
-						action="#{resourceObjectBean.confirmPermissions()}" style="float:left" />
-					<p:commandButton value="Next" onclick="permissionWizard.next()"
-						rendered="#{resourceObjectBean.confirmed and resourceObjectBean.group}" style="float:left" />
+					<p:commandButton value="#{resourceObjectBean.group ? 'Next' : 'Confirm'}" update=":form:objectResources" rendered="#{!resourceObjectBean.confirmed}"
+						action="#{resourceObjectBean.confirmPermissions()}" style="float:left" onclick="permissionWizard.next()" />
 				</p:tab>
 
 				<p:tab id="confirmUserPermissions" title="User permissions">
@@ -115,7 +114,8 @@
 						<h:panelGroup rendered="#{!resourceObjectBean.usersConfirmed}">
 						New permissions<p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()" update=":dialogs" />
 							<br />
-							<p:tree value="#{resourceObjectBean.newUserPermissionRoot}" var="permission" selection="#{resourceObjectBean.selectedUserPermissionNodes}"
+							<p:tree value="#{resourceObjectBean.newUserPermissionRoot}" var="permission"
+								selection="#{resourceObjectBean.selectedUserPermissionNodes}"
 								rendered="#{resourceObjectBean.newUserPermissionRoot.childCount ne 0}" selectionMode="checkbox">
 								<p:treeNode>
 									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
@@ -128,10 +128,12 @@
 
 					<p:commandButton value="Back" onclick="permissionWizard.back()" rendered="#{!resourceObjectBean.usersConfirmed}" />
 					<p:commandButton value="Confirm" action="#{resourceObjectBean.confirmUserPermissions}"
-						update=":form:objectResources" rendered="#{!resourceObjectBean.usersConfirmed}" oncomplete="successfulDialog.show()"/>
+						update=":form:objectResources" rendered="#{!resourceObjectBean.usersConfirmed}"
+						oncomplete="successfulDialog.show()" />
 				</p:tab>
 			</p:wizard>
-
+			<br />
+			<br />
 			<p:commandLink value="back..." action="#{resourceObjectBean.returnToPreviousPage}" />
 		</h:form>
 

@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.SortedMap;
 
 import javax.inject.Inject;
 
 import com.blazebit.security.Action;
 import com.blazebit.security.ActionFactory;
-import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 
 public class ActionUtils {

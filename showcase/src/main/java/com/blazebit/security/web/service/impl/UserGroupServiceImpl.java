@@ -18,8 +18,8 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.utils.GroupPermissionHandlingUtils;
-import com.blazebit.security.web.service.api.UserGroupDataAccess;
+import com.blazebit.security.impl.service.resource.GroupPermissionHandling;
+import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
@@ -116,7 +116,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Inject
-    private GroupPermissionHandlingUtils groupPermissionHandlingUtils;
+    private GroupPermissionHandling groupPermissionHandlingUtils;
 
     @Inject
     private PermissionService permissionService;

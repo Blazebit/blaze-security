@@ -8,7 +8,7 @@
 			<p:dataTable value="#{userGroupsBean.selectedGroupPermissions}" var="permission" paginator="true" rows="10">
 				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
 					<f:facet name="header">Resource</f:facet>
-                            #{permission.id.entity} #{permission.id.field}
+                            #{permission.id.entity} #{permission.id.field} #{permission.id.entityId}
                     </p:column>
 				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
 					<f:facet name="header">Action</f:facet>
@@ -22,7 +22,7 @@
 				<f:facet name="header">Permissions that cannot be granted</f:facet>
 				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
 					<f:facet name="header">Resource</f:facet>
-                            #{permission.id.entity} #{permission.id.field}
+                            #{permission.id.entity} #{permission.id.field} #{permission.id.entityId}
                     </p:column>
 				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
 					<f:facet name="header">Action</f:facet>
@@ -36,7 +36,7 @@
 				<f:facet name="header">Permissions that cannot be revoked</f:facet>
 				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
 					<f:facet name="header">Resource</f:facet>
-                            #{permission.id.entity} #{permission.id.field}
+                            #{permission.id.entity} #{permission.id.field} #{permission.id.entityId}
                     </p:column>
 				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
 					<f:facet name="header">Action</f:facet>

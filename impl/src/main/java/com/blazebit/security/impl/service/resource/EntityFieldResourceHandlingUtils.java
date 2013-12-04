@@ -212,7 +212,7 @@ public class EntityFieldResourceHandlingUtils {
      * @param resource
      * @return
      */
-    public Set<Permission> getChildPermissionsOfParent(Action action, Resource resource) {
+    public Set<Permission> getChildPermissions(Action action, Resource resource) {
         Set<Permission> grant = new HashSet<Permission>();
         EntityField entityField = (EntityField) resource;
         try {

@@ -15,15 +15,15 @@ import javax.persistence.PersistenceContext;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.web.bean.SecurityBaseBean;
+import com.blazebit.security.web.bean.base.SecurityBean;
+import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.RowModel;
-import com.blazebit.security.web.bean.resources.ResourceObjectBean;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
 @ViewScoped
 @Stateless
-public class PartyBean extends SecurityBaseBean {
+public class PartyBean extends SecurityBean {
 
     @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;

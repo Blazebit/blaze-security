@@ -22,18 +22,18 @@ import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.web.bean.SecurityBaseBean;
+import com.blazebit.security.web.bean.base.SecurityBean;
+import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.EditModel;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.FieldModel.Type;
 import com.blazebit.security.web.bean.model.RowModel;
-import com.blazebit.security.web.bean.resources.ResourceObjectBean;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
 @ViewScoped
 @Stateless
-public class CarrierBean extends SecurityBaseBean {
+public class CarrierBean extends SecurityBean {
 
     @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;

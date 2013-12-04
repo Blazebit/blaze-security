@@ -3,11 +3,10 @@
  */
 package com.blazebit.security.web.bean.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.EntityObjectField;
 
 /**
  * 
@@ -65,8 +64,9 @@ public class TreeNodeModel {
      * a treenode can represent multiple resources. more precisely multiple object resources, but we store every type of
      * referenced resource in this collection
      */
-    private Set<EntityObjectField> objectInstances = new HashSet<EntityObjectField>();
-    private EntityField entityInstance;
+    // private Set<EntityObjectField> objectInstances = new HashSet<EntityObjectField>();
+    //
+    private Set<TreeNodeModel> instances = new HashSet<TreeNodeModel>();
     /**
      * the content of the actual node
      */
@@ -80,11 +80,21 @@ public class TreeNodeModel {
      */
     private String tooltip;
 
+    private boolean selected;
+
     public TreeNodeModel(String name, ResourceType type, Object target) {
         this.name = name;
         this.type = type;
         this.target = target;
         this.marking = Marking.NONE;
+    }
+
+    public TreeNodeModel(String name, ResourceType type, Object target, boolean selected) {
+        this.name = name;
+        this.type = type;
+        this.target = target;
+        this.marking = Marking.NONE;
+        this.selected = selected;
     }
 
     public TreeNodeModel(String name, ResourceType type, Object target, Marking marking) {
@@ -129,10 +139,6 @@ public class TreeNodeModel {
     @Override
     public String toString() {
         return "TreeNodeModel [name=" + name + ", type=" + type + ", target=" + target + ", marking=" + marking + "]";
-    }
-
-    public boolean isMarked() {
-        return Marking.REMOVED.equals(this.getMarking()) || Marking.NEW.equals(this.getMarking());
     }
 
     public String getTooltip() {
@@ -186,20 +192,32 @@ public class TreeNodeModel {
         return true;
     }
 
-    public Set<EntityObjectField> getObjectInstances() {
-        return objectInstances;
+    // public Set<EntityObjectField> getObjectInstances() {
+    // return objectInstances;
+    // }
+    //
+    // public void setObjectInstances(Set<EntityObjectField> objectInstances) {
+    // this.objectInstances = objectInstances;
+    // }
+    
+    public Set<TreeNodeModel> getInstances() {
+        return instances;
     }
 
-    public void setObjectInstances(Set<EntityObjectField> objectInstances) {
-        this.objectInstances = objectInstances;
+    public List<TreeNodeModel> getNodeInstances() {
+        return new ArrayList<TreeNodeModel>(instances);
     }
 
-    public EntityField getEntityInstance() {
-        return entityInstance;
+    public void setInstances(Set<TreeNodeModel> instances) {
+        this.instances = instances;
     }
 
-    public void setEntityInstance(EntityField entityInstance) {
-        this.entityInstance = entityInstance;
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
 }

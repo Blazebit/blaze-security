@@ -17,8 +17,8 @@ import javax.inject.Inject;
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.web.bean.PermissionHandlingBaseBean;
-import com.blazebit.security.web.bean.UserSession;
+import com.blazebit.security.web.bean.base.PermissionHandlingBaseBean;
+import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.UserService;
 
@@ -59,7 +59,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
 
     public void logInAs(User user) throws IOException {
         userSession.setUser(user);
-        userSession.setAdmin(userService.findUser("admin", selectedCompany));
+        userSession.setAdmin(userService.findUser("superAdmin", selectedCompany));
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }

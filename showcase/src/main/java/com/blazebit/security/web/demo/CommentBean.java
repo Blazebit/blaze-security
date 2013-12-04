@@ -17,15 +17,15 @@ import com.blazebit.security.Resource;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.sample.Comment;
-import com.blazebit.security.web.bean.SecurityBaseBean;
+import com.blazebit.security.web.bean.base.SecurityBean;
+import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.RowModel;
-import com.blazebit.security.web.bean.resources.ResourceObjectBean;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named
 @ViewScoped
 @Stateless
-public class CommentBean extends SecurityBaseBean {
+public class CommentBean extends SecurityBean {
 
     @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;

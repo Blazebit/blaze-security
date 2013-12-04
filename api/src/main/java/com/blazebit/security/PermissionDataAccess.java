@@ -107,7 +107,6 @@ public interface PermissionDataAccess {
      */
     public boolean isGrantable(Role role, Action action, Resource resource);
 
-    
     /**
      * 
      * @param subject
@@ -125,7 +124,7 @@ public interface PermissionDataAccess {
      * @return set of permissions to be revoked when granting the given action and resource to the role
      */
     public Set<Permission> getRevokablePermissionsWhenGranting(Role role, Action action, Resource resource);
-    
+
     /**
      * 
      * @param permissions
@@ -163,11 +162,22 @@ public interface PermissionDataAccess {
      */
     public Permission findPermission(List<Permission> permissions, Action action, Resource resource);
 
-	Set<Permission> getImpliedBy(List<Permission> permissions, Action action,
-			Resource resource);
+    /**
+     * 
+     * @param permissions
+     * @param action
+     * @param resource
+     * @return
+     */
+    public Set<Permission> getImpliedBy(List<Permission> permissions, Action action, Resource resource);
 
-    
-
-    
+    /**
+     * 
+     * @param subject
+     * @param action
+     * @param resource
+     * @return
+     */
+    public Set<Permission> getImpliedBy(Subject subject, Action action, Resource resource);
 
 }

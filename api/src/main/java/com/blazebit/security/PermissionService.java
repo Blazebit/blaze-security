@@ -119,22 +119,22 @@ public interface PermissionService {
      * @param authorizer
      * @param role
      * @param permission
-     * @param propagateToUsers
+     * @param propagate
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public void grant(Subject authorizer, Role role, Permission permission, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+    public void grant(Subject authorizer, Role role, Permission permission, boolean propagate) throws PermissionException, PermissionActionException;
 
     /**
      * 
      * @param authorizer
      * @param role
      * @param permissions
-     * @param propagateToUsers
+     * @param propagate
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public void grant(Subject authorizer, Role role, Set<Permission> permissions, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+    public void grant(Subject authorizer, Role role, Set<Permission> permissions, boolean propagate) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -144,11 +144,11 @@ public interface PermissionService {
      * @param role
      * @param action
      * @param resource
-     * @param propagateToUsers
+     * @param propagate
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public void grant(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+    public void grant(Subject authorizer, Role role, Action action, Resource resource, boolean propagate) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -180,22 +180,22 @@ public interface PermissionService {
      * @param role
      * @param action
      * @param resource
-     * @param propagateToUsers
+     * @param propagate
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+    public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean propagate) throws PermissionException, PermissionActionException;
 
     /**
      * 
      * @param authorizer
      * @param role
      * @param permission
-     * @param propagateToUsers
+     * @param propagate
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public void revoke(Subject authorizer, Role role, Permission permission, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+    public void revoke(Subject authorizer, Role role, Permission permission, boolean propagate) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -222,11 +222,11 @@ public interface PermissionService {
      * @param authorizer
      * @param role
      * @param permissions
-     * @param propagateToUsers
+     * @param propagate
      * @throws PermissionException
      * @throws PermissionActionException
      */
-    public void revoke(Subject authorizer, Role role, Set<Permission> permissions, boolean propagateToUsers) throws PermissionException, PermissionActionException;
+    public void revoke(Subject authorizer, Role role, Set<Permission> permissions, boolean propagate) throws PermissionException, PermissionActionException;
 
     /**
      * 
@@ -265,6 +265,33 @@ public interface PermissionService {
      * @param grant
      */
     public void revokeAndGrant(Subject authorizer, Subject subject, Set<Permission> revoke, Set<Permission> grant);
+
+    /**
+     * 
+     * @param authorizer
+     * @param subject
+     * @param action
+     * @param resource
+     * @param force
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Subject subject, Action action, Resource resource, boolean force) throws PermissionException, PermissionActionException;
+
+    /**
+     * Revokes permissions for given action and resource, optionally forced and propagated to the subject of the role
+     * 
+     * @param authorizer
+     * @param role
+     * @param action
+     * @param resource
+     * @param force
+     * @param propagate
+     * @throws PermissionException
+     * @throws PermissionActionException
+     */
+    public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean force, boolean propagate) throws PermissionException,
+        PermissionActionException;
 
     // /**
     // *

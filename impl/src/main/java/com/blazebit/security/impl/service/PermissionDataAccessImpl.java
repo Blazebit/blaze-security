@@ -164,6 +164,12 @@ public class PermissionDataAccessImpl extends PermissionCheckBase implements Per
     }
 
     @Override
+    public Set<Permission> getImpliedBy(Subject subject, Action action, Resource resource) {
+        List<Permission> permissions = permissionManager.getPermissions(subject);
+        return getImpliedBy(permissions,action, resource);
+    }
+
+    @Override
     public Set<Permission> getRevokablePermissionsWhenGranting(List<Permission> permissions, Action action, Resource resource) {
         checkParameters(action, resource);
         return getReplaceablePermissions(permissions, action, resource);
