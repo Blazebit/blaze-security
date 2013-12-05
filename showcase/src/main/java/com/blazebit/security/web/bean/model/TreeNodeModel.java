@@ -136,9 +136,11 @@ public class TreeNodeModel {
         this.marking = marking;
     }
 
+    
+
     @Override
     public String toString() {
-        return "TreeNodeModel [name=" + name + ", type=" + type + ", target=" + target + ", marking=" + marking + "]";
+        return "TreeNodeModel [name=" + name + ", type=" + type + ", target=" + target + ", marking=" + marking + ", tooltip=" + tooltip + ", selected=" + selected + "]";
     }
 
     public String getTooltip() {

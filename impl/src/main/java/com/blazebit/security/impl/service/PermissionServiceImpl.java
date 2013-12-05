@@ -38,7 +38,7 @@ import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
-import com.blazebit.security.impl.service.resource.EntityFieldResourceHandlingUtils;
+import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling;
 import com.blazebit.security.service.api.PropertyDataAccess;
 import com.blazebit.security.spi.ActionImplicationProvider;
 
@@ -54,6 +54,7 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
 
     @Inject
     private ResourceFactory resourceFactory;
+
     @Inject
     private ActionFactory actionFactory;
 
@@ -68,9 +69,6 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
 
     @Inject
     private PropertyDataAccess propertyDataAccess;
-
-    @Inject
-    private EntityFieldResourceHandlingUtils resourceHandling;
 
     private List<ActionImplicationProvider> actionImplicationProviders;
 
@@ -179,19 +177,20 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
             }
             permissionManager.flush();
         } else {
+            // give it another try by revoking implying resources and granting permissions
             if (force) {
-                // give it another try by revoking implying resources and granting permissions
-                // if resource has a parent resource and subject own this parent resource -> revoke parent resource, grant rest
-                // of
-                // child resources
-                Permission parentPermission = permissionDataAccess.findPermission(subject, action, resource.getParent());
-                if (!resource.getParent().equals(this) && parentPermission != null) {
-                    Set<Permission> grant = resourceHandling.getChildPermissions(action, resource);
-                    Set<Permission> revoke = new HashSet<Permission>();
-                    revoke.add(parentPermission);
-                    revokeAndGrant(authorizer, subject, revoke, grant);
-                } else {
+
+                Set<Permission> toBeRevoked = new HashSet<Permission>();
+                toBeRevoked.add(permissionFactory.create(subject, action, resource));
+                List<Permission> currentPermissions = permissionManager.getPermissions(subject);
+
+                Set<Permission> revoke = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(0);
+                Set<Permission> grant = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(2);
+
+                if (revoke.isEmpty()) {
                     throw new PermissionActionException("Permission : " + subject + ", " + action + ", " + resource + " cannot be revoked");
+                } else {
+                    revokeAndGrant(authorizer, subject, revoke, grant);
                 }
             } else {
                 throw new PermissionActionException("Permission : " + subject + ", " + action + ", " + resource + " cannot be revoked");
@@ -417,15 +416,12 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
             permissionManager.flush();
         } else {
             if (force) {
-                // give it another try by revoking implying resources and granting permissions
-                // if resource has a parent resource and subject own this parent resource -> revoke parent resource, grant rest
-                // of
-                // child resources
-                Permission parentPermission = permissionDataAccess.findPermission(role, action, resource.getParent());
-                if (!resource.getParent().equals(this) && parentPermission != null) {
-                    Set<Permission> grant = resourceHandling.getChildPermissions(action, resource);
-                    Set<Permission> revoke = new HashSet<Permission>();
-                    revoke.add(parentPermission);
+                Set<Permission> toBeRevoked = new HashSet<Permission>();
+                toBeRevoked.add(permissionFactory.create(role, action, resource));
+                List<Permission> currentPermissions = permissionManager.getPermissions(role);
+                Set<Permission> revoke = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(0);
+                Set<Permission> grant = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(2);
+                if (!revoke.isEmpty()) {
                     revokeAndGrant(authorizer, role, revoke, grant);
                 } else {
                     throw new PermissionActionException("Permission : " + role + ", " + action + ", " + resource + " cannot be revoked");
@@ -436,12 +432,12 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         }
         // propagate changes to users
         if (propagate) {
-            propagateRevokeToSubjects(authorizer, role, action, resource);
+            propagateRevokeToSubjects(authorizer, role, action, resource, force);
         }
         permissionManager.flush();
     }
 
-    private void propagateRevokeToSubjects(Subject authorizer, Role root, Action action, Resource resource) {
+    private void propagateRevokeToSubjects(Subject authorizer, Role root, Action action, Resource resource, boolean force) {
         // revoke permission from all users of this role
         Collection<Subject> subjects = root.getSubjects();
         for (Subject subject : subjects) {
@@ -460,7 +456,7 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
         Collection<Role> children = root.getRoles();
         if (!children.isEmpty()) {
             for (Role child : children) {
-                propagateRevokeToSubjects(authorizer, child, action, resource);
+                propagateRevokeToSubjects(authorizer, child, action, resource, force);
             }
         }
     }

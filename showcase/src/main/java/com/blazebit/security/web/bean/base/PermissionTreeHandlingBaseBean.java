@@ -23,7 +23,8 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
-import com.blazebit.security.impl.service.resource.EntityFieldResourceHandlingUtils;
+import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling;
+import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling.PermissionFamily;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.util.Constants;
@@ -40,7 +41,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected EntityFieldResourceHandlingUtils resourceUtils;
+    protected EntityFieldResourceHandling resourceUtils;
 
     @Inject
     protected PermissionHandlingImpl permissionHandling;
@@ -77,8 +78,6 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         }
         return false;
     }
-
-   
 
     /**
      * 
@@ -284,9 +283,10 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         // create field nodes
         createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, permissionsByAction, actionNode, selectable, hideFieldLevel);
         createFieldNodes(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, dataPermissionsByAction, actionNode, selectable, hideFieldLevel);
-        // TODO what?????
-        // addRevokedFields(notSelectedPermissions, entity, entityField, permissionsByAction, actionNode);
-        // addRevokedFields(notSelectedPermissions, entity, entityField, dataPermissionsByAction, actionNode);
+
+        // add revoked field nodes
+        addRevokedFields(notSelectedPermissions, entity, entityField, permissionsByAction, actionNode);
+        addRevokedFields(notSelectedPermissions, entity, entityField, dataPermissionsByAction, actionNode);
 
         propagateNodePropertiesTo(actionNode);
     }
@@ -322,6 +322,8 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
             if (permission.getResource() instanceof EntityObjectField) {
                 TreeNodeModel instanceModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD, permission.getResource(),
                     permissionHandling.contains(selectedPermissions, permission));
+                instanceModel
+                    .setTooltip(permissionHandling.contains(selectedPermissions, permission) ? "New!" : (permissionHandling.contains(notSelectedPermissions, permission) ? "Removed!" : "Existing!"));
                 actionNodeModel.getInstances().add(instanceModel);
                 actionNodeModel.setMarking(Marking.OBJECT);
                 actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
@@ -333,7 +335,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 // mark it selected so that it will be processed
                 actionNode.setSelected(true);
             } else {
-                if (permissionHandling.contains(selectedPermissions, permission, false)) {
+                if (permissionHandling.contains(selectedPermissions, permission)) {
                     actionNodeModel.setMarking(selectedMarking);
                     actionNode.setSelected(true);
                     actionNode.setSelectable(selectable);
@@ -402,21 +404,17 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
     }
 
     private void addRevokedFields(Set<Permission> notSelectedPermissions, String entity, EntityField entityField, List<Permission> permissionsByAction, DefaultTreeNode actionNode) {
-        List<Permission> entityResource = resourceUtils.getSeparatedPermissionsByResource(permissionsByAction).get(0);
-        List<Permission> entityFieldResource = resourceUtils.getSeparatedPermissionsByResource(permissionsByAction).get(1);
-        // entity permission is revoked, but separate field permissions are granted
-        if ((!entityResource.isEmpty() && permissionHandling.contains(notSelectedPermissions, entityResource.get(0))) && !entityFieldResource.isEmpty()) {
-            try {
-                List<String> revokedFields = resourceMetamodel.getPrimitiveFields(entity);
-                for (String field : revokedFields) {
-                    if (!resourceUtils.findResourceWithField(entityFieldResource, field)) {
-                        TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityField.getChild(field), Marking.REMOVED);
-                        new DefaultTreeNode(fieldNodeModel, actionNode);
-                    }
+        PermissionFamily family = resourceUtils.getSeparatedParentAndChildEntityPermissions(permissionsByAction);
+        if (family.parent != null && permissionHandling.contains(notSelectedPermissions, family.parent) && !family.children.isEmpty()) {
+            // entity permission is revoked, but separate field permissions are granted
+            Set<Permission> children = resourceUtils.getChildPermissions(family.parent);
+            for (Permission child : children) {
+                if (!permissionHandling.contains(family.children, child)) {
+                    EntityField resource = (EntityField) child.getResource();
+                    TreeNodeModel fieldNodeModel = new TreeNodeModel(resource.getField(), TreeNodeModel.ResourceType.FIELD, resource, Marking.REMOVED);
+                    new DefaultTreeNode(fieldNodeModel, actionNode);
                 }
-            } catch (ClassNotFoundException e) {
             }
         }
     }
-
 }

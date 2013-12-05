@@ -36,7 +36,7 @@ import com.blazebit.security.impl.service.PermissionHandlingImpl;
  */
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 @Stateless
-public class PermissionHandlingUtilsTest extends BaseTest<PermissionHandlingUtilsTest> {
+public class PermissionHandlingTest extends BaseTest<PermissionHandlingTest> {
 
     private static final long serialVersionUID = 1L;
     @Inject

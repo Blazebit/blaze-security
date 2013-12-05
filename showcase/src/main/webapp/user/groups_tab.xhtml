@@ -94,14 +94,19 @@
 									listener="#{userGroupsBean.rebuildCurrentPermissionTree}" />
 								<p:treeNode>
 									<h:outputText id="permission" value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+
 									<p:tooltip for="permission" rendered="#{not empty newPermission.tooltip}">
-										<h:panelGroup>
 										#{newPermission.tooltip}
-										<ui:repeat value="#{newPermission.nodeInstances}" var="_instance">
-												<h:outputText value="#{_instance.tooltip}" />
-											</ui:repeat>
-										</h:panelGroup>
+										<ui:repeat var="_instance" value="#{newPermission.nodeInstances}">
+											<br/>
+											<h:outputText value="#{_instance.tooltip}" />
+										</ui:repeat>
 									</p:tooltip>
+
+
+
+
+
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

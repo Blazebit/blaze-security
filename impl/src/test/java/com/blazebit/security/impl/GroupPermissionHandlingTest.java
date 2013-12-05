@@ -43,7 +43,7 @@ import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
  */
 @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 @Stateless
-public class GroupPermissionHandlingUtilsTest extends BaseTest<GroupPermissionHandlingUtilsTest> {
+public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlingTest> {
 
     private static final long serialVersionUID = 1L;
     @Inject

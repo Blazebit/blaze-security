@@ -103,7 +103,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
             }
         } else {
             // lookup if entity is grantable
-            Permission found = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+            Permission found = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
             if (found == null) {
                 // remove actionNode is entity cannot be granted
                 if (!isGranted(ActionConstants.GRANT, entityField)) {
@@ -131,8 +131,8 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
             DefaultTreeNode fieldNode = new DefaultTreeNode(null, actionNode);
             TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityFieldWithField);
             // decide how field node should be marked (red/blue/green)
-            Permission foundWithField = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityFieldWithField), true);
-            Permission foundWithoutField = permissionHandling.findPermission(selectedPermissions, permissionFactory.create(entityAction, entityField), true);
+            Permission foundWithField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityFieldWithField);
+            Permission foundWithoutField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
 
             if (foundWithField != null || foundWithoutField != null) {
                 // entity object resources are blue

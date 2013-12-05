@@ -16,17 +16,6 @@ public interface PermissionHandling {
     public boolean contains(Collection<Permission> permissions, Permission permission);
 
     /**
-     * Special contains method for permissions. Subject check eliminated, concentrates on action and resource comparison with
-     * the option to ignore permission and data permission type match.
-     * 
-     * @param permissions
-     * @param permission
-     * @param resourceTypeMatch
-     * @return
-     */
-    public boolean contains(Collection<Permission> permissions, Permission permission, boolean resourceTypeMatch);
-
-    /**
      * special 'containsAll' method for permissions. subject check eliminated, concentrates on action and resource comparison.
      * 
      * @param permissions
@@ -43,15 +32,7 @@ public interface PermissionHandling {
      */
     public Set<Permission> eliminateRevokeConflicts(Set<Permission> granted, Set<Permission> revoked);
 
-    /**
-     * find permission (action and resource match) with optional resource type matching
-     * 
-     * @param permissions
-     * @param givenPermission
-     * @param resourceTypeMatch
-     * @return
-     */
-    public Permission findPermission(Collection<Permission> permissions, Permission givenPermission, boolean resourceTypeMatch);
+    Permission findPermission(Collection<Permission> permissions, Permission givenPermission);
 
     /**
      * Separates the grantable and the not grantable permissions of a collection considering the current permissions collection.
@@ -72,6 +53,13 @@ public interface PermissionHandling {
      * @return set of non redundant permissions
      */
     public Set<Permission> getNormalizedPermissions(Collection<Permission> permissions);
+
+    /**
+     * 
+     * @param permissions
+     * @return
+     */
+    public Set<Permission> getParentPermissions(Collection<Permission> permissions);
 
     /**
      * replaceable permissions when granting
@@ -118,6 +106,10 @@ public interface PermissionHandling {
      */
     public List<Set<Permission>> getRevokedAndGrantedAfterMerge(Collection<Permission> current, Set<Permission> revoked, Set<Permission> granted);
 
+    List<Set<Permission>> getSeparatedParentAndChildPermissions(Collection<Permission> permissions);
+
+    List<List<Permission>> getSeparatedPermissions(Collection<Permission> permissions);
+
     /**
      * decides whether any permission in the given collection implies given permission
      * 
@@ -143,25 +135,7 @@ public interface PermissionHandling {
      * @param permissionsToRemove
      * @return
      */
-    public Collection<Permission> remove(Collection<Permission> permissions, Permission permission, boolean resourceTypeMatch);
-
-    /**
-     * returns a new collection without the permissions which have matching action and resource of the given collection
-     * 
-     * @param permissions
-     * @param permissionsToRemove
-     * @return
-     */
     public Collection<Permission> removeAll(Collection<Permission> permissions, Collection<Permission> permissionsToRemove);
-
-    /**
-     * returns a new collection without the permissions which have matching action and resource of the given collection
-     * 
-     * @param permissions
-     * @param permissionsToRemove
-     * @return
-     */
-    public Collection<Permission> removeAll(Collection<Permission> permissions, Collection<Permission> permissionsToRemove, boolean resourceTypeMatch);
 
     /**
      * decides whether any permission in the given collection will be revoked when revoking given permission
@@ -171,16 +145,5 @@ public interface PermissionHandling {
      * @return
      */
     public boolean replaces(Collection<Permission> permissions, Permission givenPermission);
-
-    /**
-     * 
-     * @param permissions
-     * @return
-     */
-    public Set<Permission> getParentPermissions(Collection<Permission> permissions);
-
-    List<Set<Permission>> getSeparatedParentAndChildPermissions(Collection<Permission> permissions);
-
-    List<List<Permission>> getSeparatedPermissions(Collection<Permission> permissions);
 
 }

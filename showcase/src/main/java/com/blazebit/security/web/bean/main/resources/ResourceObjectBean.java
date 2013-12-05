@@ -38,6 +38,11 @@ import com.blazebit.security.web.util.WebUtil;
 @Stateless
 public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     @Inject
     private UserGroupDataAccess userGroupDataAccess;
 
@@ -89,9 +94,12 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
             DefaultTreeNode entityNode = new DefaultTreeNode(entityNodeModel, resourceRoot);
             entityNode.setExpanded(true);
-
-            createActionNodes(selectedActions, selectedObject, entityObjectResource, entityNode);
-            createActionNodes(selectedCollectionActions, selectedObject, entityObjectResource, entityNode);
+            for (EntityAction action : selectedActions) {
+                createActionNode(action, selectedObject, entityObjectResource, entityNode);
+            }
+            for (EntityAction action : selectedCollectionActions) {
+                createActionNode(action, selectedObject, entityObjectResource, entityNode);
+            }
 
             propagateNodePropertiesTo(entityNode);
         }
@@ -100,37 +108,37 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         }
     }
 
-    private void createActionNodes(List<EntityAction> selectedActions, RowModel selectedObject, EntityObjectField entityObjectResource, DefaultTreeNode entityNode) {
-        for (EntityAction action : selectedActions) {
-            TreeNodeModel actionNodeModel = new TreeNodeModel(action.getActionName(), ResourceType.ACTION, action);
-            DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
-            actionNode.setExpanded(true);
-            // fields
-            if (!selectedFields.isEmpty()) {
-                // selectedFields
-                List<String> fields;
-                if (actionUtils.getUpdateActionsForCollectionField().contains(action)) {
-                    fields = resourceMetamodel.getCollectionFields(selectedObject.getEntity().getClass());
-                } else {
-                    fields = resourceMetamodel.getPrimitiveFields(selectedObject.getEntity().getClass());
-                }
-                for (String field : fields) {
-                    EntityObjectField entityObjectFieldResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), field,
-                                                                                                                        selectedObject.getEntity().getId());
-                    TreeNodeModel fieldNodeModel = new TreeNodeModel(field, ResourceType.FIELD, entityObjectFieldResource);
-                    DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
+    private void createActionNode(EntityAction action, RowModel selectedObject, EntityObjectField entityObjectResource, DefaultTreeNode entityNode) {
 
-                    Permission permission = permissionFactory.create(action, entityObjectFieldResource);
-                    setFieldNodeProperties(field, fieldNode, permission);
-                }
+        TreeNodeModel actionNodeModel = new TreeNodeModel(action.getActionName(), ResourceType.ACTION, action);
+        DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
+        actionNode.setExpanded(true);
+        // fields
+        if (!selectedFields.isEmpty()) {
+            // selectedFields
+            List<String> fields;
+            if (actionUtils.getUpdateActionsForCollectionField().contains(action)) {
+                fields = resourceMetamodel.getCollectionFields(selectedObject.getEntity().getClass());
             } else {
-                // no fields, only action
-                Permission permission = permissionFactory.create(action, entityObjectResource);
-                setActionNodeProperties(action, actionNode, permission);
+                fields = resourceMetamodel.getPrimitiveFields(selectedObject.getEntity().getClass());
             }
+            for (String field : fields) {
+                EntityObjectField entityObjectFieldResource = (EntityObjectField) entityFieldFactory.createResource(selectedObject.getEntity().getClass(), field, selectedObject
+                    .getEntity()
+                    .getId());
+                TreeNodeModel fieldNodeModel = new TreeNodeModel(field, ResourceType.FIELD, entityObjectFieldResource);
+                DefaultTreeNode fieldNode = new DefaultTreeNode(fieldNodeModel, actionNode);
 
-            propagateSelectionUpwards(actionNode);
+                Permission permission = permissionFactory.create(action, entityObjectFieldResource);
+                setFieldNodeProperties(field, fieldNode, permission);
+            }
+        } else {
+            // no fields, only action
+            Permission permission = permissionFactory.create(action, entityObjectResource);
+            setActionNodeProperties(action, actionNode, permission);
         }
+
+        propagateSelectionUpwards(actionNode);
     }
 
     private void setActionNodeProperties(EntityAction action, DefaultTreeNode actionNode, Permission permission) {

@@ -16,14 +16,14 @@ import javax.inject.Inject;
 import com.blazebit.security.Action;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.Resource;
-import com.blazebit.security.impl.model.AbstractDataPermission;
+import com.blazebit.security.PermissionHandling;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
+import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
 
-public class EntityFieldResourceHandlingUtils {
+public class EntityFieldResourceHandling implements ResourceHandling {
 
     @Inject
     private ResourceMetamodel resourceMetamodel;
@@ -158,63 +158,18 @@ public class EntityFieldResourceHandlingUtils {
     }
 
     /**
-     * Looks up a permission with the given field in a list of permissions with the same resource name.
-     * 
-     * @param permissions
-     * @param field
-     * @return true if found.
-     */
-    public boolean findResourceWithField(Collection<Permission> permissions, String field) {
-        for (Permission permission : permissions) {
-            EntityField resource = (EntityField) permission.getResource();
-            if (field.equals(resource.getField())) {
-                return true;
-            }
-
-        }
-        return false;
-    }
-
-    /**
-     * find permission (action and resource match)
-     * 
-     * @param permissions
-     * @param givenPermission
-     * @param resourceTypeMatch
-     * @return
-     */
-    public Permission findPermission(Collection<Permission> permissions, Permission givenPermission) {
-        if (givenPermission == null) {
-            return null;
-        }
-        for (Permission permission : permissions) {
-            if (givenPermission.getAction().equals(permission.getAction())) {
-
-                if (givenPermission.getResource().getClass().equals(permission.getResource().getClass())) {
-                    if (givenPermission.getResource().equals(permission.getResource())) {
-                        return permission;
-                    }
-                } else {
-                    // different resource types, dont compare ID field, only the rest!
-                    if (((EntityField) permission.getResource()).getEntity().equals(((EntityField) givenPermission.getResource()).getEntity())
-                        && ((EntityField) permission.getResource()).getField().equals(((EntityField) givenPermission.getResource()).getField())) {
-                        return permission;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
      * 
      * @param action
      * @param resource
      * @return
      */
-    public Set<Permission> getChildPermissions(Action action, Resource resource) {
+    public Set<Permission> getChildPermissions(Permission parentPermission) {
         Set<Permission> grant = new HashSet<Permission>();
-        EntityField entityField = (EntityField) resource;
+        EntityField entityField = (EntityField) parentPermission.getResource();
+        Action action = parentPermission.getAction();
+        if (!entityField.getParent().equals(entityField)) {
+            throw new IllegalArgumentException("Permission must be a parent resource permission");
+        }
         try {
             List<String> fields = new ArrayList<String>();
             if (actionUtils.getUpdateActionsForCollectionField().contains(action)) {
@@ -226,67 +181,56 @@ public class EntityFieldResourceHandlingUtils {
             }
             // add rest of the fields
             for (String field : fields) {
-                if (!field.equals(entityField.getField())) {
-                    grant.add(permissionFactory.create(action, entityField.getParent().getChild(field)));
-                }
+                grant.add(permissionFactory.create(action, entityField.getChild(field)));
             }
         } catch (ClassNotFoundException e) {
         }
         return grant;
     }
 
-    /**
-     * if all fields present->merges permissions into entity permission
-     * 
-     * @param permissions
-     * @return
-     */
-    public Set<Permission> mergePermissions(Collection<Permission> permissions) {
-        Set<Permission> remove = new HashSet<Permission>();
-        Set<Permission> add = new HashSet<Permission>();
-
-        Set<Permission> ret = new HashSet<Permission>(permissions);
-
-        Map<String, List<Permission>> permissionsByEntity = groupPermissionsByResourceName(permissions);
-
-        for (String entity : permissionsByEntity.keySet()) {
-            Map<Action, List<Permission>> entityPermissionsByAction = groupResourcePermissionsByAction(permissionsByEntity.get(entity));
-
-            for (Action action : entityPermissionsByAction.keySet()) {
-                PermissionFamily permissionFamily = getSeparatedParentAndChildEntityPermissions(entityPermissionsByAction.get(action));
-                if (permissionFamily.parent != null) {
-                    // both entity resource and some or all entity fields exist -> merge into entity resource permission
-                    remove.addAll(permissionFamily.children);
-                } else {
-                    // all PRIMITIVE entity fields are listed -> merge into entity resource permission
-                    try {
-                        boolean foundMissingField = false;
-                        List<String> fields = resourceMetamodel.getPrimitiveFields(entity);
-                        for (String field : fields) {
-                            if (!findResourceWithField(permissionFamily.children, field)) {
-                                foundMissingField = true;
-                                break;
-                            }
-                        }
-                        if (!foundMissingField) {
-                            remove.addAll(permissionFamily.children);
-                            add.add(permissionFactory.create(action, permissionFamily.children.iterator().next().getResource().getParent()));
-                        }
-                    } catch (ClassNotFoundException e) {
-                        // cannot merge permissions
-                    }
-                }
-            }
-        }
-        ret.removeAll(remove);
-        ret.addAll(add);
-        return ret;
-    }
-
     public class PermissionFamily {
 
-        Permission parent;
-        Collection<Permission> children;
+        public Permission parent;
+        public Set<Permission> children = new HashSet<Permission>();
+
+        public PermissionFamily() {
+        }
+
+        public PermissionFamily(Permission parent, Set<Permission> children) {
+            this.parent = parent;
+            this.children = children;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((children == null) ? 0 : children.hashCode());
+            result = prime * result + ((parent == null) ? 0 : parent.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            PermissionFamily other = (PermissionFamily) obj;
+            if (children == null) {
+                if (other.children != null)
+                    return false;
+            } else if (!children.equals(other.children))
+                return false;
+            if (parent == null) {
+                if (other.parent != null)
+                    return false;
+            } else if (!parent.equals(other.parent))
+                return false;
+            return true;
+        }
 
     }
 
@@ -300,11 +244,20 @@ public class EntityFieldResourceHandlingUtils {
     public PermissionFamily getSeparatedParentAndChildEntityPermissions(Collection<Permission> permissions) {
         PermissionFamily family = new PermissionFamily();
         Set<Permission> children = new HashSet<Permission>();
-        for (Permission permission : permissions) {
-            if (permission.getResource().getParent().equals(this)) {
-                family.parent = permission;
-            } else {
-                children.add(permission);
+
+        if (!permissions.isEmpty()) {
+            String firstResourceName = ((EntityField) permissions.iterator().next().getResource()).getEntity();
+
+            for (Permission permission : permissions) {
+                String currentResourceName = ((EntityField) permission.getResource()).getEntity();
+                if (!currentResourceName.equals(firstResourceName)) {
+                    throw new IllegalArgumentException("Resourcenames must match");
+                }
+                if (permission.getResource().getParent().equals(permission.getResource())) {
+                    family.parent = permission;
+                } else {
+                    children.add(permission);
+                }
             }
         }
         family.children = children;
@@ -322,7 +275,7 @@ public class EntityFieldResourceHandlingUtils {
         List<Permission> entities = new ArrayList<Permission>();
         List<Permission> objects = new ArrayList<Permission>();
         for (Permission p : permissions) {
-            if (p instanceof AbstractDataPermission) {
+            if (p.getResource() instanceof EntityObjectField) {
                 objects.add(p);
             } else {
                 entities.add(p);
@@ -333,6 +286,11 @@ public class EntityFieldResourceHandlingUtils {
         return ret;
     }
 
+    /**
+     * 
+     * @param permissions
+     * @return
+     */
     public Set<Permission> getParentPermissions(Collection<Permission> permissions) {
         Set<Permission> ret = new HashSet<Permission>();
         for (Permission permission : permissions) {

@@ -619,7 +619,8 @@ public class PermissionServiceTest extends BaseTest<PermissionServiceTest> {
         permissionService.grant(admin, userGroupA, readAction, documentEntity.getChild("content"));
         permissionService.grant(admin, user1, readAction, documentEntity);
 
-        permissionService.revoke(admin, userGroupA, readAction, documentEntity.getChild("content"), true);
+        permissionService.revoke(admin, userGroupA, readAction, documentEntity.getChild("content"), true, true);
+        
         assertFalse(permissionService.isGranted(user1, readAction, documentEntity));
         assertFalse(permissionService.isGranted(user1, readAction, documentEntity.getChild("content")));
         assertTrue(permissionService.isGranted(user1, readAction, documentEntity.getChild("title")));
