@@ -18,8 +18,8 @@ public class GroupPermissionHandling {
     @Inject
     private PermissionHandlingImpl permissionHandling;
 
-    public Set<Permission> getGroupPermissions(Set<UserGroup> addedGroups) {
-        return getGroupPermissions(addedGroups, true);
+    public Set<Permission> getGroupPermissions(Set<UserGroup> groups) {
+        return getGroupPermissions(groups, true);
     }
 
     public Set<Permission> getGroupPermissions(Set<UserGroup> groups, boolean inherit) {

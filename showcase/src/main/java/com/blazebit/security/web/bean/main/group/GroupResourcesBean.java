@@ -164,7 +164,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
         List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, currentRevoked, currentReplaced, true);
         groupGranted = result.get(1);
-        groupRevoked = result.get(1);
+        groupRevoked = result.get(0);
         prepareUserPropagationView(groupGranted, groupRevoked);
         // reset
         init();

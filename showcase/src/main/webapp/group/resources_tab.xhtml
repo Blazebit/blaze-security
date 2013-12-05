@@ -72,7 +72,7 @@
 				<p:tab id="usersPermissions" title="Users">
 					<h:outputText value="No users found" rendered="#{groupResourcesBean.currentUserPermissionTreeRoot.childCount eq 0}" />
 
-					<h:panelGrid columns="3" columnClasses="top,top,top">
+					<h:panelGrid columns="2" columnClasses="top,top">
 
 						<h:panelGroup>
 						Current permissions <p:commandButton value="" icon="ui-icon-info" oncomplete="notRevokedDialog.show()"
@@ -106,12 +106,6 @@
 							</p:tree>
 						</h:panelGroup>
 
-						<h:panelGroup>
-							<br/>
-							Group permissions 
-							<my:permissionTree id="resetGroupPermissions" bean="#{groupResourcesBean}" />
-						</h:panelGroup>
-					
 					</h:panelGrid>
 
 
@@ -122,7 +116,7 @@
 
 						<p:commandButton value="Confirm" style="float:left" action="#{groupResourcesBean.confirmUserPermissions}"
 							oncomplete="successfulDialog.show();resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
-							rendered="#{userSession.selectedCompany.userLevelEnabled and groupResourcesBean.currentUserPermissionTreeRoot.childCount ne 0}" />
+							rendered="#{userSession.selectedCompany.userLevelEnabled}" />
 					</h:panelGroup>
 				</p:tab>
 			</p:wizard>

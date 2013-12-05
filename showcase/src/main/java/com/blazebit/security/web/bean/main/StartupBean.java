@@ -106,14 +106,32 @@ public class StartupBean {
                 permissionManager.save(permissionFactory.create(admin2, grantAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin3, grantAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin4, grantAction, entityFieldFactory.createResource(def.getResourceName())));
+
                 permissionManager.save(permissionFactory.create(superAdmin, revokeAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin2, revokeAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin3, revokeAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin4, revokeAction, entityFieldFactory.createResource(def.getResourceName())));
+
                 permissionManager.save(permissionFactory.create(superAdmin, readAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin2, readAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin3, readAction, entityFieldFactory.createResource(def.getResourceName())));
                 permissionManager.save(permissionFactory.create(admin4, readAction, entityFieldFactory.createResource(def.getResourceName())));
+
+                permissionManager.save(permissionFactory.create(superAdmin, updateAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin2, updateAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin3, updateAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin4, updateAction, entityFieldFactory.createResource(def.getResourceName())));
+
+                permissionManager.save(permissionFactory.create(superAdmin, createAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin2, createAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin3, createAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin4, createAction, entityFieldFactory.createResource(def.getResourceName())));
+
+                permissionManager.save(permissionFactory.create(superAdmin, deleteAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin2, deleteAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin3, deleteAction, entityFieldFactory.createResource(def.getResourceName())));
+                permissionManager.save(permissionFactory.create(admin4, deleteAction, entityFieldFactory.createResource(def.getResourceName())));
+
             }
 
             UserGroup adminGroup = userGroupService.create(company, "Admin");
@@ -137,7 +155,6 @@ public class StartupBean {
             userGroupService.addGroupToGroup(groups.get(3), groups.get(2));
 
             userGroupService.addGroupToGroup(groups.get(5), groups.get(4));
-
 
             UserGroup group = groups.get(0);
             permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(Company.class)));

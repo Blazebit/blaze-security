@@ -54,6 +54,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         if (!companies.isEmpty()) {
             setSelectedCompany(companyService.findCompanies().get(0));
             users = userService.findUsers(selectedCompany);
+            users.add(0, userService.findUser("superAdmin", selectedCompany));
         }
     }
 
@@ -94,6 +95,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         this.selectedCompany = selectedCompany;
         userSession.setSelectedCompany(selectedCompany);
         users = userService.findUsers(selectedCompany);
+        users.add(0, userService.findUser("superAdmin", selectedCompany));
     }
 
     public void changeCompany(ValueChangeEvent event) {

@@ -46,7 +46,7 @@
 					</p:tree>
 
 					<p:tree value="#{groupUsersBean.newPermissionRoot}" var="permissionModel" selectionMode="checkbox"
-						selection="#{groupUsersBean.selectedUserNodes}" propagateSelectionUp="false">
+						selection="#{groupUsersBean.selectedUserNodes}">
 						<p:ajax event="select" update=":form:tab:currentUserPermissionTree"
 							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
 						<p:ajax event="unselect" update=":form:tab:currentUserPermissionTree"

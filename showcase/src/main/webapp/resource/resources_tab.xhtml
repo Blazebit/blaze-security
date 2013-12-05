@@ -210,7 +210,7 @@
 
 							<p:commandButton value="Confirm" action="#{resourcesBean.confirmUserPermissions()}" style="float:left"
 								oncomplete="successfulDialog.show(); resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
-								rendered="#{resourcesBean.currentUserRoot.childCount ne 0 and userSession.selectedCompany.userLevelEnabled}" />
+								rendered="#{userSession.selectedCompany.userLevelEnabled}" />
 
 						</h:panelGroup>
 					</h:panelGrid>
