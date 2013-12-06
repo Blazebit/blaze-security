@@ -29,7 +29,7 @@
 			<my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
 		</h:panelGrid>
 
-		<h:panelGroup id="groupTree" rendered="#{not groupBean.deletedGroup}">
+		<h:panelGroup id="groupTree" rendered="#{not groupBean.deletedGroup and not groupBean.movedGroup}">
 			<h:outputText value="#{groupBean.parentGroup ? 'Add parent ' : 'Add child '}"
 				rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}" />
 
@@ -41,8 +41,21 @@
 			<p:commandButton value="Save" action="#{groupBean.saveGroup}"
 				rendered="#{groupBean.isAuthorizedResource('CREATE', newGroup)}" update=":form:tab:groupTree" />
 
+			<p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single" draggable="true" droppable="true"
+				selection="#{groupBean.selectedGroupTreeNode}" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}" >
+
+				<p:ajax event="select" update=":form:tab" partialSubmit="true" />
+			    <p:ajax event="dragdrop" listener="#{groupBean.onDragDrop}" update=":form:tab"/>  
+
+				<p:treeNode>
+					<f:facet name="header">Group name</f:facet>
+					<h:outputText value="#{group.name}" />
+				</p:treeNode>
+			</p:tree>
+			
 			<p:treeTable value="#{groupBean.groupRoot}" var="group" selectionMode="single"
 				selection="#{groupBean.selectedGroupTreeNode}" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+
 				<p:ajax event="select" update=":form:tab" partialSubmit="true" />
 
 				<p:column>
@@ -86,7 +99,7 @@
 
 		</h:panelGroup>
 
-		<h:panelGroup rendered="#{groupBean.deletedGroup}">
+		<h:panelGroup rendered="#{groupBean.deletedGroup or groupBean.movedGroup}">
 
 			<h:panelGrid columns="2" columnClasses="top,top">
 				<p:tree value="#{groupBean.currentPermissionRoot}" var="permissionModel" id="currentPermissionTree"
@@ -101,9 +114,9 @@
 				<p:tree value="#{groupBean.newPermissionRoot}" var="permissionModel" selectionMode="checkbox"
 					selection="#{groupBean.selectedUserNodes}">
 					<p:ajax event="select" update=":form:tab:currentPermissionTree"
-						listener="#{groupBean.rebuildCurrentPermissionTree}" />
+						listener="#{groupBean.rebuildCurrentPermissionTreeSelect}" />
 					<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
-						listener="#{groupBean.rebuildCurrentPermissionTree}" />
+						listener="#{groupBean.rebuildCurrentPermissionTreeUnselect}" />
 					<p:treeNode>
 						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm" />
 						<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"

@@ -269,6 +269,14 @@ public class ResourcesBean extends ResourceHandlingBaseBean {
         }
     }
 
+    public void rebuildCurrentUserPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentUserPermissionTree();
+    }
+
+    public void rebuildCurrentUserPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentUserPermissionTree();
+    }
+
     /**
      * rebuild user tree
      */
@@ -289,11 +297,11 @@ public class ResourcesBean extends ResourceHandlingBaseBean {
      * wizard step: confirm permissions for user
      */
     public void confirmUserPermissions() {
-        //first confirm group permissions
+        // first confirm group permissions
         for (UserGroup userGroup : grantedGroupPermissions.keySet()) {
             revokeAndGrant(userGroup, new HashSet<Permission>(), grantedGroupPermissions.get(userGroup), false);
         }
-        
+
         for (TreeNode userNode : newUserRoot.getChildren()) {
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);

@@ -245,6 +245,14 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         }
     }
 
+    public void rebuildCurrentPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentPermissionTree();
+    }
+
+    public void rebuildCurrentPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentPermissionTree();
+    }
+
     /**
      * listener for select unselect permissons in the new permission tree
      */

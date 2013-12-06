@@ -164,8 +164,12 @@ public class StartupBean {
             permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(UserGroup.class)));
             permissionManager.save(permissionFactory.create(group, deleteAction, entityFieldFactory.createResource(UserGroup.class)));
             permissionManager.save(permissionFactory.create(group, readAction, entityFieldFactory.createResource(UserGroup.class)));
+            
             permissionManager.save(permissionFactory.create(group, addAction, entityFieldFactory.createResource(UserGroup.class, "users")));
             permissionManager.save(permissionFactory.create(group, removeAction, entityFieldFactory.createResource(UserGroup.class, "users")));
+            
+            permissionManager.save(permissionFactory.create(group, addAction, entityFieldFactory.createResource(UserGroup.class, "userGroups")));
+            permissionManager.save(permissionFactory.create(group, removeAction, entityFieldFactory.createResource(UserGroup.class, "userGroups")));
             group = groups.get(2);
             permissionManager.save(permissionFactory.create(group, createAction, entityFieldFactory.createResource(User.class)));
             permissionManager.save(permissionFactory.create(group, updateAction, entityFieldFactory.createResource(User.class)));

@@ -128,7 +128,7 @@ public class TreeHandlingBaseBean extends SecurityBean {
             // if entityNode has no children remove it
             TreeNodeModel treeNodeModel = (TreeNodeModel) node.getData();
             if (ResourceType.ENTITY.equals(treeNodeModel.getType()) || ResourceType.MODULE.equals(treeNodeModel.getType())) {
-                node.setParent(null);
+                node.getParent().getChildren().remove(node);
             } else {
                 if (ResourceType.ACTION.equals(treeNodeModel.getType())) {
                     // if it a collection field action

@@ -52,9 +52,9 @@
 						<p:tree value="#{groupResourcesBean.newPermissionTreeRoot}" var="newPermission"
 								selection="#{groupResourcesBean.selectedGroupPermissionNodes}" selectionMode="checkbox">
 								<p:ajax event="select" update=":form:tab:currentGroupPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTree}" />
+									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeSelect}" />
 								<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTree}" />
+									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeUnselect}" />
 								<p:treeNode>
 									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
 								</p:treeNode>
@@ -97,9 +97,9 @@
 								selection="#{groupResourcesBean.selectedUserPermissionNodes}"
 								rendered="#{groupResourcesBean.newUserPermissionTreeRoot.childCount ne 0}">
 								<p:ajax event="select" update=":form:tab:currentResourceUserPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTree}" />
+									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeSelect}" />
 								<p:ajax event="unselect" update=":form:tab:currentResourceUserPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTree}" />
+									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
 								<p:treeNode>
 									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 								</p:treeNode>

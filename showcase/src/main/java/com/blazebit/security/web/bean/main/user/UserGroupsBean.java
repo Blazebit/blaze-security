@@ -13,9 +13,11 @@ import java.util.Set;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.primefaces.model.TreeNodeEvent;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
@@ -212,6 +214,14 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
     /**
      * listener for select unselect permissons in the new permission tree
      */
+    public void rebuildCurrentPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentPermissionTree();
+    }
+
+    public void rebuildCurrentPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentPermissionTree();
+    }
+
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced, !isEnabled(Company.FIELD_LEVEL));

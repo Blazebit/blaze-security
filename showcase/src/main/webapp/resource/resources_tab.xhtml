@@ -98,9 +98,9 @@
 								rendered="#{resourcesBean.newUserRoot.childCount ne 0}" selectionMode="checkbox"
 								selection="#{resourcesBean.selectedUserPermissionNodes}">
 								<p:ajax event="select" update=":form:tab:currentUserPermissionTree"
-									listener="#{resourcesBean.rebuildCurrentUserPermissionTree}" />
+									listener="#{resourcesBean.rebuildCurrentUserPermissionTreeSelect}" />
 								<p:ajax event="unselect" update=":form:tab:currentUserPermissionTree"
-									listener="#{resourcesBean.rebuildCurrentUserPermissionTree}" />
+									listener="#{resourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
 								<p:treeNode>
 									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
@@ -145,9 +145,9 @@
 							<p:tree value="#{resourcesBean.newGroupRoot}" var="newGroupRoot" selectionMode="checkbox"
 								selection="#{resourcesBean.selectedGroupPermissionNodes}">
 								<p:ajax event="select" update=":form:tab:currentGroupPermissionTree"
-									listener="#{resourcesBean.rebuildCurrentGroupPermissionTree}" />
+									listener="#{resourcesBean.rebuildCurrentGroupPermissionTreeSelect}" />
 								<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
-									listener="#{resourcesBean.rebuildCurrentGroupPermissionTree}" />
+									listener="#{resourcesBean.rebuildCurrentGroupPermissionTreeUnselect}" />
 								<p:treeNode>
 									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" id="permission"/>
 									<p:tooltip for="permission" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
@@ -193,9 +193,9 @@
 								rendered="#{resourcesBean.newUserRoot.childCount ne 0}" selection="#{resourcesBean.selectedUserPermissionNodes}"
 								selectionMode="checkbox">
 								<p:ajax event="select" update=":form:tab:currentGroupUserPermissionTree"
-									listener="#{resourcesBean.rebuildCurrentUserPermissionTree()}" />
+									listener="#{resourcesBean.rebuildCurrentUserPermissionTreeSelect}" />
 								<p:ajax event="unselect" update=":form:tab:currentGroupUserPermissionTree"
-									listener="#{resourcesBean.rebuildCurrentUserPermissionTree()}" />
+									listener="#{resourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
 								<p:treeNode>
 									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission"/>
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>

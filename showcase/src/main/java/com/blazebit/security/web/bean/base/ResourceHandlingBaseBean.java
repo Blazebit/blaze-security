@@ -91,29 +91,32 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
     private void createActionNode(Action action, List<String> fields, TreeNode entityNode, EntityField entityField, Collection<Permission> selectedPermissions) {
         EntityAction entityAction = (EntityAction) action;
         TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
-
-        DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
-        actionNode.setExpanded(true);
-        if (!fields.isEmpty()) {
-            // fields
-            createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
-            // if no field could be attached => grant is not permitted, detach actionNode
-            if (actionNode.getChildCount() == 0) {
-                actionNode.setParent(null);
-            }
-        } else {
-            // lookup if entity is grantable
-            Permission found = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
-            if (found == null) {
-                // remove actionNode is entity cannot be granted
-                if (!isGranted(ActionConstants.GRANT, entityField)) {
-                    actionNode.setParent(null);
+        if (isGranted(ActionConstants.GRANT, entityField)) {
+            DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
+            actionNode.setExpanded(true);
+            if (!fields.isEmpty()) {
+                // fields
+                createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
+                // if no field could be attached => grant is not permitted, detach actionNode
+                if (actionNode.getChildCount() == 0) {
+                    actionNode.getParent().getChildren().remove(actionNode);//setParent(null);
                 }
             } else {
-                actionNode.setSelected(true);
+                // lookup if entity is grantable
+                Permission found = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
+                if (found == null) {
+                    // remove actionNode is entity cannot be granted
+                    if (!isGranted(ActionConstants.GRANT, entityField)) {
+                        // actionNode.setParent(null);
+                        // actionNode = null;
+                        entityNode.getChildren().remove(actionNode);
+                    }
+                } else {
+                    actionNode.setSelected(true);
+                }
             }
+            propagateNodePropertiesTo(actionNode);
         }
-        propagateNodePropertiesTo(actionNode);
     }
 
     /**
@@ -128,33 +131,30 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
     private void createFieldNodes(List<String> fields, DefaultTreeNode actionNode, EntityAction entityAction, EntityField entityField, Collection<Permission> selectedPermissions) {
         for (String field : fields) {
             EntityField entityFieldWithField = entityField.getChild(field);
-            DefaultTreeNode fieldNode = new DefaultTreeNode(null, actionNode);
-            TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityFieldWithField);
-            // decide how field node should be marked (red/blue/green)
-            Permission foundWithField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityFieldWithField);
-            Permission foundWithoutField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
 
-            if (foundWithField != null || foundWithoutField != null) {
-                // entity object resources are blue
-                if ((foundWithField != null && foundWithField.getResource() instanceof EntityObjectField)
-                    || (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField)) {
-                    fieldNodeModel.setMarking(Marking.OBJECT);
-                    fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
-                } else {
-                    // field is selected=belongs to user -> check for revoke permission
-                    fieldNode.setSelected(true);
-                    fieldNode.setSelectable(isGranted(ActionConstants.REVOKE, entityField));
-                }
+            if (isGranted(ActionConstants.GRANT, entityFieldWithField)) {
+                DefaultTreeNode fieldNode = new DefaultTreeNode(null, actionNode);
+                TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityFieldWithField);
+                // decide how field node should be marked (red/blue/green)
+                Permission foundWithField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityFieldWithField);
+                Permission foundWithoutField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
 
-            } else {
-                // permission can be granted if logged in user has permission to do it
-                if (!isGranted(ActionConstants.GRANT, entityField)) {
-                    // fieldNode.setSelectable(isGranted(ActionConstants.GRANT, entityField));
-                    fieldNode.setParent(null);
+                if (foundWithField != null || foundWithoutField != null) {
+                    // entity object resources are blue
+                    if ((foundWithField != null && foundWithField.getResource() instanceof EntityObjectField)
+                        || (foundWithoutField != null && foundWithoutField.getResource() instanceof EntityObjectField)) {
+                        fieldNodeModel.setMarking(Marking.OBJECT);
+                        fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                    } else {
+                        // field is selected=belongs to user -> check for revoke permission
+                        fieldNode.setSelected(true);
+                        fieldNode.setSelectable(isGranted(ActionConstants.REVOKE, entityField));
+                    }
+
                 }
+                fieldNode.setData(fieldNodeModel);
+                fieldNode.setExpanded(true);
             }
-            fieldNode.setData(fieldNodeModel);
-            fieldNode.setExpanded(true);
         }
     }
 }

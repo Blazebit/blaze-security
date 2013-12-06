@@ -48,9 +48,9 @@
 					<p:tree value="#{groupUsersBean.newPermissionRoot}" var="permissionModel" selectionMode="checkbox"
 						selection="#{groupUsersBean.selectedUserNodes}">
 						<p:ajax event="select" update=":form:tab:currentUserPermissionTree"
-							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
+							listener="#{groupUsersBean.rebuildCurrentPermissionTreeSelect}" />
 						<p:ajax event="unselect" update=":form:tab:currentUserPermissionTree"
-							listener="#{groupUsersBean.rebuildCurrentPermissionTree}" />
+							listener="#{groupUsersBean.rebuildCurrentPermissionTreeUnselect}" />
 						<p:treeNode>
 							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm"/>
 							<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade" rendered="#{not empty permissionModel.tooltip}"/>

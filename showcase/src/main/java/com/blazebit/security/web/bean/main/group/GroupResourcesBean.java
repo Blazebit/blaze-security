@@ -151,6 +151,14 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
                                                          !isEnabled(Company.FIELD_LEVEL));
     }
 
+    public void rebuildCurrentGroupPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentGroupPermissionTree();
+    }
+
+    public void rebuildCurrentGroupPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentGroupPermissionTree();
+    }
+
     public void rebuildCurrentGroupPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
         currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced, !isEnabled(Company.FIELD_LEVEL));
@@ -266,6 +274,14 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
             newPermissionTreeRoot = getImmutablePermissionTree(userNode, currentPermissions, new ArrayList<Permission>(), grantable, Marking.NEW);
             selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()).toArray());
         }
+    }
+
+    public void rebuildCurrentUserPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentUserPermissionTree();
+    }
+
+    public void rebuildCurrentUserPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentUserPermissionTree();
     }
 
     public void rebuildCurrentUserPermissionTree() {

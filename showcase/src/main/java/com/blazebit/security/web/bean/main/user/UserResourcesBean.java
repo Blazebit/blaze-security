@@ -134,6 +134,15 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         init();
     }
 
+    public void rebuildCurrentPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentPermissionTree();
+    }
+
+    public void rebuildCurrentPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentPermissionTree();
+    }
+
+    
     /**
      * changes after wizard step1, before confirm. listener for select unselect permissons in the new permission tree
      */
