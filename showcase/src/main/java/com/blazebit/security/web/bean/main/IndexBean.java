@@ -15,8 +15,11 @@ import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 
 import com.blazebit.security.PermissionManager;
+import com.blazebit.security.PermissionService;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.web.bean.base.PermissionHandlingBaseBean;
 import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
@@ -47,6 +50,9 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
 
     @Inject
     private CompanyService companyService;
+
+    @Inject
+    private PermissionService permissionService;
 
     @PostConstruct
     public void init() {

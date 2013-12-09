@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -9,17 +10,31 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>blaze-security-showcase</artifactId>
-	<packaging>war</packaging>
+	<artifactId>blaze-auth</artifactId>
+	<packaging>jar</packaging>
 
-	<name>Blazebit Security Reference Implementation Showcase</name>
+	<name>Blazebit Security Reference Implementation</name>
+	<url>http://blazebit.com/security</url>
+	<description>The reference implementation for the Blazebit Security API.</description>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.16</version>
+			</plugin>
+		</plugins>
+	</build>
 
 	<repositories>
-		<repository>
-			<id>prime-repo</id>
-			<name>Prime Repo</name>
-			<url>http://repository.primefaces.org</url>
-		</repository>
 		<repository>
 			<id>apache-m2-snapshot</id>
 			<name>Apache Snapshot Repository</name>
@@ -41,64 +56,50 @@
 		</repository>
 	</repositories>
 
+
 	<dependencies>
-		<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-web-api</artifactId>
-			<version>6.0</version>
-			<scope>provided</scope>
-		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-commons-test</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blaze-auth</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blaze-cbav</artifactId> -->
-		<!-- <version>0.1.6</version> -->
-		<!-- <scope>provided</scope> -->
-		<!-- </dependency> -->
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blaze-security-api</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-security-impl</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.openejb</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>6.0-5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-common-utils</artifactId>
 			<version>0.1.6-SNAPSHOT</version>
+
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blaze-apt-utils</artifactId>
-			<version>0.1.6-SNAPSHOT</version>
+			<groupId>org.jacorb</groupId>
+			<artifactId>jacorb</artifactId>
+			<version>3.3</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.deltaspike.core</groupId>
-			<artifactId>deltaspike-core-api</artifactId>
-			<version>0.4</version>
+			<groupId>org.jboss.as</groupId>
+			<artifactId>jboss-as-web</artifactId>
+			<version>7.2.0.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.deltaspike.core</groupId>
-			<artifactId>deltaspike-core-impl</artifactId>
-			<version>0.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.primefaces</groupId>
-			<artifactId>primefaces</artifactId>
-			<version>4.0</version>
-		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.jboss.javaee</groupId> -->
+		<!-- <artifactId>jboss-jaspi-api</artifactId> -->
+		<!-- <version>1.0.0.GA</version> -->
+		<!-- </dependency> -->
+
+
 
 	</dependencies>
 

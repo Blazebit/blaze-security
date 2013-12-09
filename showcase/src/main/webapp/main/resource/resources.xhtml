@@ -34,16 +34,16 @@
 
 			<p:menu rendered="#{not empty userSession.user}">
 				<p:submenu label="Menu">
-					<p:menuitem value="Start" url="../index.xhtml" />
-					<p:menuitem value="Users" url="/user/users.xhtml" />
-					<p:menuitem value="Groups" url="/group/groups.xhtml" />
+					<p:menuitem value="Start" url="../../index.xhtml" />
+					<p:menuitem value="Users" url="/main/user/users.xhtml" />
+					<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
 
 				</p:submenu>
 			</p:menu>
 
 			<p:tabView id="tab" rendered="#{not empty userSession.user}"
 				style="width:100%;height:100%;" dynamic="true" cache="false" >
-				<ui:include src="/resource/resources_tab.xhtml" />
+				<ui:include src="/main/resource/resources_tab.xhtml" />
 			</p:tabView>
 
 		</h:form>

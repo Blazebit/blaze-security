@@ -42,44 +42,30 @@
 				rendered="#{groupBean.isAuthorizedResource('CREATE', newGroup)}" update=":form:tab:groupTree" />
 
 			<p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single" draggable="true" droppable="true"
-				selection="#{groupBean.selectedGroupTreeNode}" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}" >
+				style="width:100%" selection="#{groupBean.selectedGroupTreeNode}"
+				rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
 
 				<p:ajax event="select" update=":form:tab" partialSubmit="true" />
-			    <p:ajax event="dragdrop" listener="#{groupBean.onDragDrop}" update=":form:tab"/>  
+				<p:ajax event="dragdrop" listener="#{groupBean.onDragDrop}" update=":form:tab" />
 
 				<p:treeNode>
 					<f:facet name="header">Group name</f:facet>
-					<h:outputText value="#{group.name}" />
+					<h:outputText value="#{group.name}" style="width:120px;display:inline-block" />
+					<h:panelGroup layout="block">
+						<p:commandButton icon="ui-icon-carat-1-n" action="#{groupBean.selectGroup(group)}"
+							rendered="#{securityBaseBean.isAuthorizedResource('CREATE', groupBean.newGroup)}" update=":form:tab">
+							<f:setPropertyActionListener target="#{groupBean.parentGroup}" value="true" />
+						</p:commandButton>
+						<p:commandButton icon="ui-icon-carat-1-s" action="#{groupBean.selectGroup(group)}"
+							rendered="#{securityBaseBean.isAuthorizedResource('CREATE', groupBean.newGroup)}" update=":form:tab">
+							<f:setPropertyActionListener target="#{groupBean.parentGroup}" value="false" />
+						</p:commandButton>
+
+						<p:commandButton value="Delete" rendered="#{groupBean.isAuthorizedResource('DELETE', group)}"
+							action="#{groupBean.deleteGroup(group)}" update=":form:tab" />
+					</h:panelGroup>
 				</p:treeNode>
 			</p:tree>
-			
-			<p:treeTable value="#{groupBean.groupRoot}" var="group" selectionMode="single"
-				selection="#{groupBean.selectedGroupTreeNode}" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
-
-				<p:ajax event="select" update=":form:tab" partialSubmit="true" />
-
-				<p:column>
-					<f:facet name="header">Group name</f:facet>
-					<h:outputText value="#{group.name}" />
-				</p:column>
-
-				<p:column>
-					<f:facet name="header">Action</f:facet>
-
-					<p:commandButton value="Add parent" action="#{groupBean.selectGroup(group)}"
-						rendered="#{securityBaseBean.isAuthorizedResource('CREATE', groupBean.newGroup)}" update=":form:tab">
-						<f:setPropertyActionListener target="#{groupBean.parentGroup}" value="true" />
-					</p:commandButton>
-					<p:commandButton value="Add child" action="#{groupBean.selectGroup(group)}"
-						rendered="#{securityBaseBean.isAuthorizedResource('CREATE', groupBean.newGroup)}" update=":form:tab">
-						<f:setPropertyActionListener target="#{groupBean.parentGroup}" value="false" />
-					</p:commandButton>
-
-					<p:commandButton value="Delete" rendered="#{groupBean.isAuthorizedResource('DELETE', group)}"
-						action="#{groupBean.deleteGroup(group)}" update=":form:tab" />
-
-				</p:column>
-			</p:treeTable>
 
 			<p:dataTable value="#{groupBean.groups}" var="group" rendered="#{not securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
 				<p:column>

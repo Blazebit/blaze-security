@@ -72,6 +72,20 @@ public class PermissionManagerImpl implements PermissionManager {
 
     @SuppressWarnings("unchecked")
     @Override
+    public List<String> getPermissionResources(Subject subject) {
+        if (subject == null) {
+            throw new IllegalArgumentException("Subject cannot be null");
+        }
+        return entityManager
+            .createQuery("SELECT distinct permission.id.entity FROM "
+                             + SubjectPermission.class.getName()
+                             + " permission WHERE permission.id.subject = :subject and (permission.id.actionName='UPDATE' or permission.id.actionName='READ') ORDER BY permission.id.entity")
+            .setParameter("subject", subject)
+            .getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public List<Permission> getPermissions(Role role) {
         if (role == null) {
             throw new IllegalArgumentException("Role cannot be null");

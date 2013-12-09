@@ -20,6 +20,7 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 
 import org.apache.deltaspike.core.util.ServiceUtils;
 

@@ -18,9 +18,10 @@
 
 	<h:body>
 		<h:form id="form">
+
 			<h:panelGroup rendered="#{not empty userSession.user}">
 				<h3>
-					Logged in as #{userSession.user.username}. Login as a
+					Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
 					<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
 				</h3>
 			</h:panelGroup>
@@ -31,18 +32,19 @@
 
 			<p:menu rendered="#{not empty userSession.user}">
 				<p:submenu label="Menu">
-					<p:menuitem value="Start" url="../index.xhtml" />
-					<p:menuitem value="Users" url="/user/users.xhtml" />
-					<p:menuitem value="Resources" url="/resource/resources.xhtml" />
+					<p:menuitem value="Start" url="../../index.xhtml" />
+					<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
+					<p:menuitem value="Resources" url="/main/resource/resources.xhtml" />
+
 				</p:submenu>
 			</p:menu>
 
 			<p:tabView id="tab" rendered="#{not empty userSession.user}" style="width:100%;height:100%;" dynamic="true"
 				cache="false">
-				<c:set var="sessionGroup" value="#{userSession.selectedUserGroup}" />
-				<ui:include src="/group/groups_tab.xhtml" />
-				<ui:include src="/group/users_tab.xhtml" />
-				<ui:include src="/group/resources_tab.xhtml" />
+				<c:set var="sessionUser" value="#{userSession.selectedUser}" />
+				<ui:include src="/main/user/users_tab.xhtml" />
+				<ui:include src="/main/user/groups_tab.xhtml" />
+				<ui:include src="/main/user/resources_tab.xhtml" />
 			</p:tabView>
 
 		</h:form>

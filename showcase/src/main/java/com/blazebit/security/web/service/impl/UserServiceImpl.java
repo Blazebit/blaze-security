@@ -56,9 +56,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findUsers(Company company) {
-        return entityManager
-            .createQuery("select user from " + User.class.getCanonicalName() + " user where user.username != 'superAdmin' and user.company.id='" + company.getId() + "' order by user.id", User.class)
-            .getResultList();
+        return entityManager.createQuery("select user from " + User.class.getCanonicalName() + " user where user.username != 'superAdmin' and user.company.id='" + company.getId()
+                                             + "' order by user.id", User.class).getResultList();
     }
 
     @Override
@@ -72,11 +71,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findUser(String username, Company company) {
         try {
-            return entityManager.createQuery("select u from " + User.class.getCanonicalName() + " u where u.username='" + username + "' and u.company.id=" + company.getId(),
-                                             User.class).getSingleResult();
+            return entityManager.createQuery("select u from " + User.class.getCanonicalName() + " u where u.username='" + username + "'"
+                                                 + (company != null ? " and u.company.id=" + company.getId() : ""), User.class).getSingleResult();
         } catch (NoResultException nre) {
             return null;
         }
     }
 
+    @Override
+    public User saveUser(User user) {
+        User mergedUser = entityManager.merge(user);
+        entityManager.flush();
+        return mergedUser;
+    }
 }

@@ -73,4 +73,6 @@ public interface PermissionManager {
      */
     public void flush();
 
+    List<String> getPermissionResources(Subject subject);
+
 }

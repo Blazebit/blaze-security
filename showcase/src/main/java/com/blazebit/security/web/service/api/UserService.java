@@ -23,4 +23,6 @@ public interface UserService {
     public User findUser(String username, Company company);
 
     public List<User> findUsers(Company company);
+
+    public User saveUser(User loggedinCustomer);
 }
