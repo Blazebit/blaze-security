@@ -15,14 +15,14 @@ import javax.security.auth.message.module.ServerAuthModule;
  * {@link ServerAuthModule} (SAM) that we're after.
  * 
  */
-public class TestServerAuthConfig implements ServerAuthConfig {
+public class ShowcaseServerAuthConfig implements ServerAuthConfig {
 
     private String layer;
     private String appContext;
     private CallbackHandler handler;
     private Map<String, String> providerProperties;
 
-    public TestServerAuthConfig(String layer, String appContext, CallbackHandler handler, Map<String, String> providerProperties) {
+    public ShowcaseServerAuthConfig(String layer, String appContext, CallbackHandler handler, Map<String, String> providerProperties) {
         this.layer = layer;
         this.appContext = appContext;
         this.handler = handler;
@@ -37,7 +37,7 @@ public class TestServerAuthConfig implements ServerAuthConfig {
     @Override
     public ServerAuthContext getAuthContext(String authContextID, Subject serviceSubject, @SuppressWarnings("rawtypes") Map properties) throws AuthException {
 
-        return new TestServerAuthContext(handler);
+        return new MainServerAuthContext(handler);
     }
 
     // ### The methods below mostly just return what has been passed into the

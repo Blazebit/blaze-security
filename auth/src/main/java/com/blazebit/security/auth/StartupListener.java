@@ -14,7 +14,7 @@ public class StartupListener implements ServletContextListener {
         // We need to specify for which layer we're doing the registration, which needs to be the constant "HttpServlet" for the
         // Servlet Container Profile.
         // appContext = null, which means we're doing the registration for all applications running on the server.
-        factory.registerConfigProvider(new TestAuthConfigProvider(), "HttpServlet", null, "The test");
+        factory.registerConfigProvider(new ShowcaseAuthConfigProvider(), "HttpServlet", null, "The test");
     }
 
     @Override

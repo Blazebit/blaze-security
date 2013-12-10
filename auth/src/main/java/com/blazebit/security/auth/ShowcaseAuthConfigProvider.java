@@ -10,14 +10,14 @@ import javax.security.auth.message.config.ClientAuthConfig;
 import javax.security.auth.message.config.ServerAuthConfig;
 
 
-public class TestAuthConfigProvider implements AuthConfigProvider {
+public class ShowcaseAuthConfigProvider implements AuthConfigProvider {
     
     private static final String
         CALLBACK_HANDLER_PROPERTY_NAME = "authconfigprovider.client.callbackhandler";
  
     private Map<String, String> providerProperties;
  
-    public TestAuthConfigProvider() {
+    public ShowcaseAuthConfigProvider() {
     }
  
     /**
@@ -26,7 +26,7 @@ public class TestAuthConfigProvider implements AuthConfigProvider {
      * @param properties
      * @param factory
      */
-    public TestAuthConfigProvider(Map<String, String> properties,
+    public ShowcaseAuthConfigProvider(Map<String, String> properties,
             AuthConfigFactory factory) {
         this.providerProperties = properties;
  
@@ -50,7 +50,7 @@ public class TestAuthConfigProvider implements AuthConfigProvider {
     public ServerAuthConfig getServerAuthConfig(String layer,
             String appContext, CallbackHandler handler) throws AuthException,
             SecurityException {
-        return new TestServerAuthConfig(layer, appContext,
+        return new ShowcaseServerAuthConfig(layer, appContext,
                 handler == null ? createDefaultCallbackHandler() : handler,
                 providerProperties);
     }
