@@ -4,6 +4,7 @@
 package com.blazebit.security.web.bean.main.resources;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +25,7 @@ import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
-import com.blazebit.security.web.bean.base.ResourceHandlingBaseBean;
+import com.blazebit.security.web.bean.base.ResourceGroupHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
@@ -34,7 +35,7 @@ import com.blazebit.security.web.service.api.UserService;
 
 @ViewScoped
 @ManagedBean(name = "resourcesBean")
-public class ResourcesBean extends ResourceHandlingBaseBean {
+public class ResourcesBean extends ResourceGroupHandlingBaseBean {
 
     private static final long serialVersionUID = 1L;
 
@@ -70,7 +71,7 @@ public class ResourcesBean extends ResourceHandlingBaseBean {
     private Map<User, List<Permission>> userPermissionMap = new HashMap<User, List<Permission>>();
     private Map<UserGroup, List<Permission>> groupPermissionMap = new HashMap<UserGroup, List<Permission>>();
 
-    private Map<User, Set<Permission>> currentReplacedUserMap = new HashMap<User, Set<Permission>>();
+    
     private Map<UserGroup, Set<Permission>> currentReplacedGroupMap = new HashMap<UserGroup, Set<Permission>>();
 
     public void init() {
@@ -423,35 +424,12 @@ public class ResourcesBean extends ResourceHandlingBaseBean {
             grantedGroupPermissions.put(userGroup, finalGranted);
         }
 
-        prepareUserPropagationView(selectedGroups);
-    }
-
-    private void prepareUserPropagationView(Set<UserGroup> selectedGroups) {
-        currentReplacedUserMap.clear();
-        createUserPermissionTreesAfterGroupConfirmation(userGroupDataAccess.collectUsers(selectedGroups, isEnabled(Company.GROUP_HIERARCHY)), isEnabled(Company.USER_LEVEL));
-        // if user level is not enabled confirm user permissions immediately
-        if (!isEnabled(Company.USER_LEVEL)) {
-            confirmUserPermissions();
-        }
-    }
-
-    private void createUserPermissionTreesAfterGroupConfirmation(List<User> selectedUsers, boolean selectable) {
         currentUserRoot = new DefaultTreeNode();
         newUserRoot = new DefaultTreeNode();
-        for (User user : selectedUsers) {
-            List<UserGroup> groupsOfUser = userGroupDataAccess.getGroupsForUser(user);
-            Set<Permission> selectedPermissions = new HashSet<Permission>();
-            for (UserGroup userGroup : groupsOfUser) {
-                if (grantedGroupPermissions.containsKey(userGroup)) {
-                    selectedPermissions.addAll(grantedGroupPermissions.get(userGroup));
-                }
-            }
-            List<Permission> permissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
-            List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
-            selectedPermissions = permissionHandling.getNormalizedPermissions(selectedPermissions);
-            createCurrentUserNode(user, currentUserRoot, selectedPermissions, userPermissions, userDataPermissions);
-            createNewUserNode(user, newUserRoot, selectedPermissions, userPermissions, selectable);
+        prepareUserPropagationView(selectedGroups, grantedGroupPermissions, Collections.<UserGroup, Set<Permission>>emptyMap(), currentUserRoot, newUserRoot,
+                                   selectedUserPermissionNodes);
+        if (!isEnabled(Company.USER_LEVEL)) {
+            confirmUserPermissions();
         }
     }
 

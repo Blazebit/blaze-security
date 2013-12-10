@@ -61,6 +61,24 @@ public class UserGroupDataAccessImpl implements UserGroupDataAccess {
     }
 
     @Override
+    public Set<UserGroup> collectGroups(User user, boolean inherit) {
+        Set<UserGroup> ret = new HashSet<UserGroup>();
+        List<UserGroup> groupsForUser = getGroupsForUser(user);
+        for (UserGroup group : groupsForUser) {
+            ret.add(group);
+            
+            if (inherit) {
+                UserGroup parent = group.getParent();
+                while (parent != null) {
+                    ret.add(parent);
+                    parent = parent.getParent();
+                }
+            }
+        }
+        return ret;
+    }
+
+    @Override
     public List<UserGroup> getGroupsForUser(User user) {
         return entityManager
             .createQuery("select groups from " + User.class.getCanonicalName() + " user JOIN user.userGroups groups where user.id= :userId order by groups.name", UserGroup.class)

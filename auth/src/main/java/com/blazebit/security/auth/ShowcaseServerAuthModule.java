@@ -31,6 +31,7 @@ import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 
 /**
  * The actual Server Authentication Module AKA SAM.
+ * http://arjan-tijms.blogspot.co.at/2012/11/implementing-container-authentication.html
  * 
  */
 public class ShowcaseServerAuthModule implements ServerAuthModule {
@@ -45,13 +46,14 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
         this.requestPolicy = requestPolicy;
     }
 
+    // TODO http://docs.oracle.com/javaee/6/tutorial/doc/gjiie.html#gircj Programatic authentication needed?
+    // TODO examples for other validateRequests: https://java.net/projects/nobis/sources/git/show/Nobis/authentication
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
         HttpServletRequest request = (HttpServletRequest) messageInfo.getRequestMessage();
         HttpServletResponse response = (HttpServletResponse) messageInfo.getResponseMessage();
 
         System.out.println("Session = " + request.getSession().getId());
-        System.out.println("\n\n**** validateRequest ****\n\n");
 
         if (requestPolicy.isMandatory()) {
             Principal userPrincipal = request.getUserPrincipal();
@@ -80,14 +82,14 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
                     // present and perform actual authentication, or in absence of those
                     // ask the user in some way to authenticate.
 
-                    // Create a handler to add the caller principal (AKA
-                    // user principal)
-                    // This will be the name of the principal returned by e.g.
-                    // HttpServletRequest#getUserPrincipal
                     PasswordValidationCallback pvcb = new PasswordValidationCallback(clientSubject, user.getUsername(), user.getPassword() != null ? user
                         .getPassword()
                         .toCharArray() : "".toCharArray());
 
+                    // Create a handler to add the caller principal (AKA
+                    // user principal)
+                    // This will be the name of the principal returned by e.g.
+                    // HttpServletRequest#getUserPrincipal
                     CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, user.getUsername());
 
                     List<UserGroup> groups = userGroupDataAccess.getGroupsForUser(user);

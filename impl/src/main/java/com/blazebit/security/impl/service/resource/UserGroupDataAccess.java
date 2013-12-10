@@ -54,6 +54,13 @@ public interface UserGroupDataAccess {
 
     /**
      * 
+     * @param user
+     * @return
+     */
+    public Set<UserGroup> collectGroups(User user, boolean ingerit);
+
+    /**
+     * 
      * @param groups
      * @param inherit
      * @return
