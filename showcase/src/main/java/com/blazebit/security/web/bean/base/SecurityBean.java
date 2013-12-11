@@ -25,6 +25,7 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.el.utils.ELUtils;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
@@ -43,10 +44,10 @@ import com.blazebit.security.web.bean.model.SubjectModel;
 import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.service.api.UserService;
 
-@Named(value="securityBaseBean")
+@Named(value = "securityBaseBean")
 @ViewScoped
 @Stateless
-public class SecurityBean  implements Serializable{
+public class SecurityBean implements Serializable {
 
     /**
      * 
@@ -61,8 +62,6 @@ public class SecurityBean  implements Serializable{
     @Inject
     private ResourceFactory resourceFactory;
     @Inject
-    protected UserSession userSession;
-    @Inject
     protected ResourceMetamodel resourceMetamodel;
     @Inject
     protected PropertyDataAccess propertyDataAccess;
@@ -72,6 +71,10 @@ public class SecurityBean  implements Serializable{
     private UserGroupDataAccess userGroupDataAccess;
     @Inject
     private ActionUtils actionUtils;
+    @Inject
+    private UserContext userContext;
+    @Inject
+    protected UserSession userSession;
     // WELD-001408 Unsatisfied dependencies for type [ResourceNameFactory] with qualifiers [@Default] at injection point
     // [[field] @Inject private com.blazebit.security.web.bean.SecurityBaseBean.resourceNameFactory]
     // TODO why???
@@ -269,7 +272,7 @@ public class SecurityBean  implements Serializable{
     }
 
     protected boolean isGranted(ActionConstants actionConstant, Resource resource) {
-        return permissionService.isGranted(userSession.getUser(), actionFactory.createAction(actionConstant), resource);
+        return permissionService.isGranted(userContext.getUser(), actionFactory.createAction(actionConstant), resource);
     }
 
     public Object getSelectedSubject() {

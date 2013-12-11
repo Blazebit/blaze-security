@@ -15,7 +15,6 @@ import javax.security.auth.message.MessageInfo;
 import javax.security.auth.message.MessagePolicy;
 import javax.security.auth.message.callback.CallerPrincipalCallback;
 import javax.security.auth.message.callback.GroupPrincipalCallback;
-import javax.security.auth.message.callback.PasswordValidationCallback;
 import javax.security.auth.message.config.ServerAuthContext;
 import javax.security.auth.message.module.ServerAuthModule;
 import javax.servlet.http.HttpServletRequest;
@@ -24,9 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
 import com.blazebit.security.PermissionManager;
-import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.service.resource.UserDataAccess;
 import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 
 /**
@@ -46,51 +45,23 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
         this.requestPolicy = requestPolicy;
     }
 
-    // TODO http://docs.oracle.com/javaee/6/tutorial/doc/gjiie.html#gircj Programatic authentication needed?
     // TODO examples for other validateRequests: https://java.net/projects/nobis/sources/git/show/Nobis/authentication
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
         HttpServletRequest request = (HttpServletRequest) messageInfo.getRequestMessage();
-        HttpServletResponse response = (HttpServletResponse) messageInfo.getResponseMessage();
-
-        System.out.println("Session = " + request.getSession().getId());
-
         if (requestPolicy.isMandatory()) {
             Principal userPrincipal = request.getUserPrincipal();
             if (userPrincipal != null) {
-                // Authenticate a received service request. This method is called to transform the mechanism-specific request
-                // message
-                // acquired by calling getRequestMessage (on messageInfo) into the validated application message to be returned
-                // to the
-                // message processing runtime. If the received message is a (mechanism-specific) meta-message, the method
-                // implementation
-                // must attempt to transform the meta-message into a corresponding mechanism-specific response message, or to
-                // the
-                // validated application request message. The runtime will bind a validated application message into the the
-                // corresponding service invocation.
-
-                // login??
-
-            } else {
-                // logged in
-                UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
                 PermissionManager permissionManager = BeanProvider.getContextualReference(PermissionManager.class);
                 UserGroupDataAccess userGroupDataAccess = BeanProvider.getContextualReference(UserGroupDataAccess.class);
-                User user = userContext.getUser();
+                UserDataAccess userDataAccess = BeanProvider.getContextualReference(UserDataAccess.class);
+                User user = userDataAccess.findUser(Integer.valueOf(userPrincipal.getName()));
                 if (user != null) {
-                    // Normally we would check here for authentication credentials being
-                    // present and perform actual authentication, or in absence of those
-                    // ask the user in some way to authenticate.
-
-                    PasswordValidationCallback pvcb = new PasswordValidationCallback(clientSubject, user.getUsername(), user.getPassword() != null ? user
-                        .getPassword()
-                        .toCharArray() : "".toCharArray());
-
                     // Create a handler to add the caller principal (AKA
                     // user principal)
                     // This will be the name of the principal returned by e.g.
                     // HttpServletRequest#getUserPrincipal
-                    CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, user.getUsername());
+                    CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, String.valueOf(user.getId()));
 
                     List<UserGroup> groups = userGroupDataAccess.getGroupsForUser(user);
                     List<String> resourceNames = permissionManager.getPermissionResources(user);
@@ -107,18 +78,17 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
                     // principal and the
                     // role in an application server specific way to the JAAS Subject.
                     try {
-                        handler.handle(new Callback[] { callerPrincipalCallback, groupPrincipalCallback, pvcb });
+                        handler.handle(new Callback[] { callerPrincipalCallback, groupPrincipalCallback });
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (UnsupportedCallbackException ee) {
                         ee.printStackTrace();
                     }
-                    // Extra: wrap response -> in secureResponse unwrap it
-                    // https://github.com/arjantijms/jaspic-capabilities-test/blob/master/wrapping/src/main/java/org/omnifaces/jaspictest/sam/TestWrappingServerAuthModule.java
                     return AuthStatus.SUCCESS;
                 }
             }
         } else {
+            // if requestPolicy is not mandatory, everything OK
             return AuthStatus.SUCCESS;
         }
 

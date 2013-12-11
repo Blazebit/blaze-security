@@ -11,15 +11,19 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+
+import org.jboss.as.web.security.JBossGenericPrincipal;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
-import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.web.bean.base.PermissionHandlingBaseBean;
 import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
@@ -64,9 +68,31 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         }
     }
 
-    public void logInAs(User user) throws IOException {
+    public void logInAs(User user) {
         userSession.setUser(user);
         userSession.setAdmin(userService.findUser("superAdmin", selectedCompany));
+        // programatic login
+        FacesContext context = FacesContext.getCurrentInstance();
+        ExternalContext externalContext = context.getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+
+        if (request.getUserPrincipal() == null) {
+            try {
+                request.login(String.valueOf(user.getId()), "AAA" /* user.getPassword() */);
+                System.out.println("Logged in: " + request.getUserPrincipal().getName());
+            } catch (ServletException e) {
+                System.err.println("Login failed!");
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                request.logout();
+                logInAs(user);
+            } catch (ServletException e) {
+                System.err.println("Logout failed!");
+                e.printStackTrace();
+            }
+        }
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
@@ -114,4 +140,5 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         userSession.setSelectedCompany(company);
         userSession.getUser().setCompany(company);
     }
+
 }

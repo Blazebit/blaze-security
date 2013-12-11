@@ -41,6 +41,8 @@ public class UserSession implements Serializable {
         }
         return secondLoggedInUser;
     }
+    
+    
 
     public void setUser(User user) {
         this.user = user;

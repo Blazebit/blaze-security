@@ -19,18 +19,18 @@
 	<h:body>
 		<h:form id="form">
 
-			<h:panelGroup rendered="#{not empty userSession.user}">
+			<h:panelGroup rendered="#{not empty webUserContext.user}">
 				<h3>
-					Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
+					Logged in as #{userSession.loggedInUser.username} Acting as #{webUserContext.user.username}. Login as a
 					<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
 				</h3>
 			</h:panelGroup>
-			<h:panelGroup rendered="#{empty userSession.user}">
-				<h:outputLink value="../index.xhtml">Login first!!</h:outputLink>
+			<h:panelGroup rendered="#{empty webUserContext.user}">
+				<h:outputLink value="../../index.xhtml">Login first!!</h:outputLink>
 			</h:panelGroup>
 
 
-			<p:menu rendered="#{not empty userSession.user}">
+			<p:menu rendered="#{not empty webUserContext.user}">
 				<p:submenu label="Menu">
 					<p:menuitem value="Start" url="../../index.xhtml" />
 					<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
@@ -39,7 +39,7 @@
 				</p:submenu>
 			</p:menu>
 
-			<p:tabView id="tab" rendered="#{not empty userSession.user}" style="width:100%;height:100%;" dynamic="true"
+			<p:tabView id="tab" rendered="#{not empty webUserContext.user}" style="width:100%;height:100%;" dynamic="true"
 				cache="false">
 				<c:set var="sessionUser" value="#{userSession.selectedUser}" />
 				<ui:include src="/main/user/users_tab.xhtml" />

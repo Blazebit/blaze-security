@@ -4,11 +4,15 @@
 package com.blazebit.security.web.context;
 
 import javax.enterprise.context.RequestScoped;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.service.resource.UserDataAccess;
+import com.blazebit.security.web.service.api.UserService;
 
 /**
  * 
@@ -22,12 +26,16 @@ public class WebUserContext implements UserContext {
      * 
      */
     private static final long serialVersionUID = 1L;
+    
     @Inject
-    private UserSession userSession;
+    private UserDataAccess userDataAccess;
 
     @Override
     public User getUser() {
-        return userSession.getUser();
+        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        User user = userDataAccess.findUser(Integer.valueOf(request.getUserPrincipal().getName()));
+        return user;
+        // return userSession.getUser();
     }
 
 }

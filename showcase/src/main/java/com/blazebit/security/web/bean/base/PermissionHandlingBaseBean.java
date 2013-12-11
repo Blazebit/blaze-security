@@ -29,6 +29,7 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
+import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
 import com.blazebit.security.impl.utils.ActionUtils;
@@ -53,6 +54,8 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
     protected PermissionFactory permissionFactory;
     @Inject
     protected UserSession userSession;
+    @Inject
+    protected UserContext userContext;
     @Inject
     protected PermissionDataAccess permissionDataAccess;
     @Inject
@@ -196,12 +199,12 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         Set<Permission> finalGranted = permissions.get(1);
-        return revokeAndGrant(userSession.getUser(), subject, finalRevoked, finalGranted, simulate);
+        return revokeAndGrant(userContext.getUser(), subject, finalRevoked, finalGranted, simulate);
 
     }
 
     protected List<Set<Permission>> revokeAndGrant(Subject subject, Set<Permission> finalRevoked, Set<Permission> finalGranted) {
-        return revokeAndGrant(userSession.getUser(), subject, finalRevoked, finalGranted, false);
+        return revokeAndGrant(userContext.getUser(), subject, finalRevoked, finalGranted, false);
     }
 
     protected List<Set<Permission>> revokeAndGrant(Subject authorizer, Subject subject, Set<Permission> finalRevoked, Set<Permission> finalGranted) {
@@ -232,7 +235,7 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
 
     protected List<Set<Permission>> revokeAndGrant(Role role, Set<Permission> finalRevoked, Set<Permission> finalGranted, boolean simulate) {
         if (!simulate) {
-            permissionService.revokeAndGrant(userSession.getUser(), role, finalRevoked, finalGranted);
+            permissionService.revokeAndGrant(userContext.getUser(), role, finalRevoked, finalGranted);
         }
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         ret.add(finalRevoked);

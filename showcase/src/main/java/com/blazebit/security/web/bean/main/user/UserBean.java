@@ -4,6 +4,11 @@
 package com.blazebit.security.web.bean.main.user;
 
 import java.io.IOException;
+import java.security.CodeSource;
+import java.security.PermissionCollection;
+import java.security.Policy;
+import java.security.Principal;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,13 +18,17 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
+import javax.security.auth.Subject;
+import javax.security.jacc.PolicyContext;
+import javax.security.jacc.PolicyContextException;
+import javax.security.jacc.WebRoleRefPermission;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
@@ -51,18 +60,32 @@ public class UserBean extends GroupHandlingBaseBean {
     public void backToIndex() throws IOException {
         userSession.setUser(null);
         ((HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false)).invalidate();
-        FacesContext.getCurrentInstance().getExternalContext().redirect("../index.xhtml");
+        FacesContext.getCurrentInstance().getExternalContext().redirect("../../index.xhtml");
         FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
     // loads all users, excludes logged in user
     @PostConstruct
-    public void init() {
+    public void init() throws PolicyContextException {
         users = userService.findUsers(userSession.getSelectedCompany());
-        users.remove(userSession.getUser());
+        users.remove(userContext.getUser());
         if (getSelectedUser() != null) {
             selectUser(getSelectedUser());
         }
+
+        // test JACC
+
+        Policy policy = Policy.getPolicy();
+        HttpServletRequest request = (HttpServletRequest) PolicyContext.getContext(HttpServletRequest.class.getName());
+        Principal principal = request.getUserPrincipal();
+
+        CodeSource cs = new CodeSource(null, (java.security.cert.Certificate[]) null);
+        Principal principals[] = new Principal[] { principal };
+        ProtectionDomain pd = new ProtectionDomain(cs, null, null, principals);
+
+        PermissionCollection pc = policy.getPermissions(pd);
+        pc.implies(new WebRoleRefPermission("a", "b"));
+
     }
 
     // first tab: select user -> display groups and permissions of selected user
@@ -89,13 +112,7 @@ public class UserBean extends GroupHandlingBaseBean {
     public void saveUser() {
         userService.createUser(userSession.getSelectedCompany(), newUser.getUsername());
         users = userService.findUsers(userSession.getSelectedCompany());
-        users.remove(userSession.getUser());
-    }
-
-    public void saveUser(User user) {
-        if (user.equals(getSelectedUser())) {
-            userSession.setUser(null);
-        }
+        users.remove(userContext.getUser());
     }
 
     public void deleteUser(User user) {
@@ -104,7 +121,7 @@ public class UserBean extends GroupHandlingBaseBean {
         }
         userService.delete(user);
         users = userService.findUsers(userSession.getSelectedCompany());
-        users.remove(userSession.getUser());
+        users.remove(userContext.getUser());
     }
 
     public User getSelectedUser() {
