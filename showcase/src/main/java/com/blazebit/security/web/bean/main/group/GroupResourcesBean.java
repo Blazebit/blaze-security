@@ -4,7 +4,6 @@
 package com.blazebit.security.web.bean.main.group;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,7 +20,6 @@ import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.base.ResourceGroupHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
-import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 
 /**
  * 
@@ -50,8 +48,8 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
     // permissionview
     private TreeNode permissionViewRoot;
     // group
-    private Set<Permission> currentRevoked;
-    private Set<Permission> currentReplaced;
+    private Set<Permission> revokable;
+    private Set<Permission> replacable;
     private Set<Permission> groupGranted;
     private Set<Permission> groupRevoked;
 
@@ -111,30 +109,19 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
         }
         // get revoked permissions
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(groupPermissions, selectedPermissions);
-        currentRevoked = revoke.get(0);
+        revokable = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
         // get granted permissions
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(groupPermissions, currentRevoked), selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(groupPermissions, revokable), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
 
         // get replaced permissions
-        Set<Permission> allReplaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
+        replacable = permissionHandling.getReplacedByGranting(allPermissions, granted);
 
-        // current permission tree without the revoked ones
-        Set<Permission> removedPermissions = new HashSet<Permission>(currentRevoked);
-        removedPermissions.addAll(allReplaced);
-        currentPermissionTreeRoot = getImmutablePermissionTree(groupPermissions, groupDataPermissions, removedPermissions, Marking.REMOVED);
-
-        // modify current group permissions based on resource selection
-        List<Permission> currentPermissions = new ArrayList<Permission>(groupPermissions);
-
-        // new permission tree without the revoked but with the granted ones
-        currentReplaced = permissionHandling.getReplacedByGranting(groupPermissions, granted);
-        currentPermissions.removeAll(currentReplaced);
-        currentPermissions.addAll(granted);
-        newPermissionTreeRoot = getMutablePermissionTree(currentPermissions, groupDataPermissions, granted, currentRevoked, Marking.NEW, Marking.REMOVED,
-                                                         !isEnabled(Company.FIELD_LEVEL));
+        currentPermissionTreeRoot = buildCurrentUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL));
+        newPermissionTreeRoot = buildNewUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL),
+                                                 true);
     }
 
     public void rebuildCurrentGroupPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
@@ -147,7 +134,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
 
     public void rebuildCurrentGroupPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced, !isEnabled(Company.FIELD_LEVEL));
+        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, revokable, replacable, !isEnabled(Company.FIELD_LEVEL));
     }
 
     /**
@@ -156,7 +143,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
      */
     public void confirmGroupPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-        List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, currentRevoked, currentReplaced, true);
+        List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, revokable, replacable, true);
         groupGranted = result.get(1);
         groupRevoked = result.get(0);
         currentUserPermissionTreeRoot = new DefaultTreeNode();
@@ -180,7 +167,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> userPermissions = permissionManager.getPermissions(user);
             userNode.getChildren().clear();
-            rebuildCurrentTree(userNode, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user), !isEnabled(Company.FIELD_LEVEL));
+            rebuildCurrentTree(userNode, userPermissions, selectedPermissions, revokables.get(user), replacables.get(user), !isEnabled(Company.FIELD_LEVEL));
         }
     }
 
@@ -197,7 +184,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
 
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             // confirm users
-            executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), currentReplacedUserMap.get(user));
+            executeRevokeAndGrant(user, userPermissions, selectedPermissions, revokables.get(user), replacables.get(user));
 
         }
         init();

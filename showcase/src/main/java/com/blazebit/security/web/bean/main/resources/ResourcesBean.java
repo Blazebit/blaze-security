@@ -252,7 +252,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         super.setNotGranted(grant.get(1));
 
         Set<Permission> replacedByGranting = permissionHandling.getReplacedByGranting(userPermissions, selectedPermissions);
-        currentReplacedUserMap.put(user, replacedByGranting);
+        replacables.put(user, replacedByGranting);
 
         // modify current user permissions based on resource selection
         List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
@@ -289,7 +289,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             // current permission tree
             userNode.getChildren().clear();
-            rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user), !isEnabled(Company.FIELD_LEVEL));
+            rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), replacables.get(user), !isEnabled(Company.FIELD_LEVEL));
         }
     }
 
@@ -308,7 +308,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
             List<Permission> allPermissions = permissionManager.getPermissions(user);
             List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
             // now confirm groups and users
-            executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
+            executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), replacables.get(user));
         }
         init();
     }
