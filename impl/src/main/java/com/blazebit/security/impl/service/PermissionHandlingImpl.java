@@ -323,8 +323,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
     }
 
     /**
-     * Separates the parent and the child permissions of permission collection. Requirement: all permissions belong to the same
-     * resource name.
+     * Separates the parent and the child permissions of permission collection. 
      * 
      * @param permissions
      * @return
@@ -334,7 +333,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
         Set<Permission> parents = new HashSet<Permission>();
         Set<Permission> children = new HashSet<Permission>();
         for (Permission permission : permissions) {
-            if (permission.getResource().getParent().equals(this)) {
+            if (permission.getResource().getParent().equals(permission.getResource())) {
                 parents.add(permission);
             } else {
                 children.add(permission);
