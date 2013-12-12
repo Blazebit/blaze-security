@@ -80,13 +80,13 @@ public class WebJASPIAuthenticator extends AuthenticatorBase {
         // have we already authenticated someone?
         Principal principal = request.getUserPrincipal();
         String ssoId = (String) request.getNote(Constants.REQ_SSOID_NOTE);
-//        if (principal != null) {
-//            WebLogger.WEB_SECURITY_LOGGER.tracef("Already authenticated '%s'", principal.getName());
-//            // associate the session with any existing SSO session
-//            if (ssoId != null)
-//                associate(ssoId, request.getSessionInternal(true));
-//            return (true);
-//        }
+        if (principal != null) {
+            WebLogger.WEB_SECURITY_LOGGER.tracef("Already authenticated '%s'", principal.getName());
+            // associate the session with any existing SSO session
+            if (ssoId != null)
+                associate(ssoId, request.getSessionInternal(true));
+            //return (true);
+        }
 
         if ("BASIC".equalsIgnoreCase(authMethod) || "FORM".equalsIgnoreCase(authMethod)) {
             // is there an SSO session against which we can try to reauthenticate?

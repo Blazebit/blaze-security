@@ -10,6 +10,7 @@ import java.security.Policy;
 import java.security.Principal;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -18,10 +19,8 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
-import javax.security.auth.Subject;
 import javax.security.jacc.PolicyContext;
 import javax.security.jacc.PolicyContextException;
-import javax.security.jacc.WebRoleRefPermission;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -74,7 +73,6 @@ public class UserBean extends GroupHandlingBaseBean {
         }
 
         // test JACC
-
         Policy policy = Policy.getPolicy();
         HttpServletRequest request = (HttpServletRequest) PolicyContext.getContext(HttpServletRequest.class.getName());
         Principal principal = request.getUserPrincipal();
@@ -84,7 +82,14 @@ public class UserBean extends GroupHandlingBaseBean {
         ProtectionDomain pd = new ProtectionDomain(cs, null, null, principals);
 
         PermissionCollection pc = policy.getPermissions(pd);
-        pc.implies(new WebRoleRefPermission("a", "b"));
+        Enumeration permissions = pc.elements();
+        while (permissions.hasMoreElements()) {
+
+            java.security.Permission permission = (java.security.Permission) permissions.nextElement();
+
+            System.out.println(permission.getName()+" "+permission.getActions());
+        }
+        // pc.implies(new WebRoleRefPermission("a", "b"));
 
     }
 

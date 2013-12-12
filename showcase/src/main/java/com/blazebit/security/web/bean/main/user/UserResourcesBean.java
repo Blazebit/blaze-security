@@ -19,7 +19,6 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.web.bean.base.ResourceHandlingBaseBean;
-import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 
 /**
  * 
@@ -37,8 +36,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
     private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
     private TreeNode[] selectedResourceNodes = new TreeNode[] {};
 
-    private TreeNode newPermissionTreeRoot;
-    private TreeNode currentPermissionTreeRoot;
+    private TreeNode newPermissionTreeRoot = new DefaultTreeNode();
+    private TreeNode currentPermissionTreeRoot = new DefaultTreeNode();
 
     private List<Permission> userPermissions = new ArrayList<Permission>();
     private List<Permission> userDataPermissions = new ArrayList<Permission>();
@@ -48,8 +47,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
 
     private TreeNode permissionViewRoot;
 
-    private Set<Permission> currentReplaced = new HashSet<Permission>();
-    private Set<Permission> currentRevoked = new HashSet<Permission>();
+    private Set<Permission> replaced = new HashSet<Permission>();
+    private Set<Permission> revokable = new HashSet<Permission>();
 
     public void init() {
         initPermissions();
@@ -97,31 +96,19 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         }
         // check what has been revoked
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(userPermissions, selectedPermissions);
-        currentRevoked = revoke.get(0);
+        revokable = revoke.get(0);
         super.setNotRevoked(revoke.get(1));
 
         // remove revoked permissions from current permission list so we can check what can be granted after revoking
         // check what has been granted
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, currentRevoked), selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revokable), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         super.setNotGranted(grant.get(1));
 
-        Set<Permission> allReplaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
+        replaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
 
-        // current permission tree
-        Set<Permission> removedPermissions = new HashSet<Permission>(currentRevoked);
-        removedPermissions.addAll(allReplaced);
-        currentPermissionTreeRoot = getImmutablePermissionTree(userPermissions, userDataPermissions, removedPermissions, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
-
-        // modify current user permissions based on resource selection
-        List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
-
-        // new permission tree without the replaced but with the granted + revoked ones, marked properly
-        currentReplaced = permissionHandling.getReplacedByGranting(currentUserPermissions, granted);
-        currentUserPermissions.removeAll(currentReplaced);
-        currentUserPermissions.addAll(granted);
-        newPermissionTreeRoot = getMutablePermissionTree(currentUserPermissions, userDataPermissions, granted, currentRevoked, Marking.NEW, Marking.REMOVED,
-                                                         !isEnabled(Company.FIELD_LEVEL));
+        currentPermissionTreeRoot = buildCurrentUserTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
+        newPermissionTreeRoot = buildNewUserTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
     }
 
     /**
@@ -130,7 +117,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
      */
     public void confirmPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, currentRevoked, currentReplaced);
+        executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, revokable, replaced);
         init();
     }
 
@@ -142,14 +129,13 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         rebuildCurrentPermissionTree();
     }
 
-    
     /**
      * changes after wizard step1, before confirm. listener for select unselect permissons in the new permission tree
      */
     public void rebuildCurrentPermissionTree() {
         // current selected permissions
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, currentRevoked, currentReplaced, !isEnabled(Company.FIELD_LEVEL));
+        currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
     public DefaultTreeNode getResourceRoot() {

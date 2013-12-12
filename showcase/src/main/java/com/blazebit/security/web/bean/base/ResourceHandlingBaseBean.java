@@ -91,7 +91,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
     private void createActionNode(Action action, List<String> fields, TreeNode entityNode, EntityField entityField, Collection<Permission> selectedPermissions) {
         EntityAction entityAction = (EntityAction) action;
         TreeNodeModel actionNodeModel = new TreeNodeModel(entityAction.getActionName(), TreeNodeModel.ResourceType.ACTION, entityAction);
-        if (isGranted(ActionConstants.GRANT, entityField)) {
+        if (isGranted(ActionConstants.GRANT, entityField) || isGranted(ActionConstants.REVOKE, entityField)) {
             DefaultTreeNode actionNode = new DefaultTreeNode(actionNodeModel, entityNode);
             actionNode.setExpanded(true);
             if (!fields.isEmpty()) {
@@ -99,20 +99,21 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                 createFieldNodes(fields, actionNode, entityAction, entityField, selectedPermissions);
                 // if no field could be attached => grant is not permitted, detach actionNode
                 if (actionNode.getChildCount() == 0) {
-                    actionNode.getParent().getChildren().remove(actionNode);//setParent(null);
+                    actionNode.getParent().getChildren().remove(actionNode);// setParent(null);
                 }
             } else {
                 // lookup if entity is grantable
                 Permission found = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
                 if (found == null) {
                     // remove actionNode is entity cannot be granted
-                    if (!isGranted(ActionConstants.GRANT, entityField)) {
+                    if (!isGranted(ActionConstants.GRANT, entityField) && !isGranted(ActionConstants.REVOKE, entityField)) {
                         // actionNode.setParent(null);
                         // actionNode = null;
                         entityNode.getChildren().remove(actionNode);
                     }
                 } else {
                     actionNode.setSelected(true);
+                    actionNode.setSelectable(isGranted(ActionConstants.REVOKE, entityField));
                 }
             }
             propagateNodePropertiesTo(actionNode);
@@ -132,7 +133,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
         for (String field : fields) {
             EntityField entityFieldWithField = entityField.getChild(field);
 
-            if (isGranted(ActionConstants.GRANT, entityFieldWithField)) {
+            if (isGranted(ActionConstants.GRANT, entityFieldWithField) || isGranted(ActionConstants.REVOKE, entityFieldWithField)) {
                 DefaultTreeNode fieldNode = new DefaultTreeNode(null, actionNode);
                 TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityFieldWithField);
                 // decide how field node should be marked (red/blue/green)

@@ -188,6 +188,7 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(userPermissions);
         Set<Permission> currentReplaced = permissionHandling.getReplacedByGranting(userPermissions, grantable);
+
         currentReplacedUserMap.put(user, currentReplaced);
         currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, currentReplaced));
         currentPermissions.addAll(grantable);

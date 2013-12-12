@@ -31,7 +31,6 @@
  </security-constraint>
  <login-config>
   <auth-method>BASIC</auth-method>
-  <realm-name>Admin</realm-name>
  </login-config>
  <security-role>
   <role-name>User</role-name>

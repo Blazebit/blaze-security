@@ -73,15 +73,14 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-common-utils</artifactId>
 			<version>0.1.6-SNAPSHOT</version>
-
 		</dependency>
 		<dependency>
 			<groupId>org.jacorb</groupId>
@@ -93,6 +92,12 @@
 			<artifactId>jboss-as-web</artifactId>
 			<version>7.2.0.Final</version>
 		</dependency>
+		<dependency>
+			<groupId>org.picketbox</groupId>
+			<artifactId>picketbox</artifactId>
+			<version>4.0.20.Beta2</version>
+		</dependency>
+
 		<!-- <dependency> -->
 		<!-- <groupId>org.jboss.javaee</groupId> -->
 		<!-- <artifactId>jboss-jaspi-api</artifactId> -->

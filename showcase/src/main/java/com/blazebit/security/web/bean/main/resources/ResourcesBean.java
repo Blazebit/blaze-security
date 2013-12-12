@@ -71,7 +71,6 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
     private Map<User, List<Permission>> userPermissionMap = new HashMap<User, List<Permission>>();
     private Map<UserGroup, List<Permission>> groupPermissionMap = new HashMap<UserGroup, List<Permission>>();
 
-    
     private Map<UserGroup, Set<Permission>> currentReplacedGroupMap = new HashMap<UserGroup, Set<Permission>>();
 
     public void init() {

@@ -161,7 +161,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
                 selectedPermissions.add(permission);
                 if (permissionHandling.getRevokableFromRevoked(currentDataPermissions, selectedPermissions, true).get(0).isEmpty()) {
                     actionNode.getParent().getChildren().remove(actionNode);
-                    //actionNode.setParent(null);
+                    // actionNode.setParent(null);
                 } else {
                     // if (permissionHandlingUtils.contains(currentDataPermissions, permission) ||
                     // permissionHandlingUtils.replaces(currentDataPermissions, permission)) {
@@ -176,7 +176,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
     private void setFieldNodeProperties(String field, DefaultTreeNode fieldNode, Permission permission) {
         if (this.action.equals("grant")) {
             if (permissionHandling.implies(currentPermissions, permission)) {
-                //fieldNode.setParent(null);
+                // fieldNode.setParent(null);
                 fieldNode.getParent().getChildren().remove(fieldNode);
             } else {
                 if (permissionHandling.implies(currentDataPermissions, permission)) {
@@ -193,7 +193,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
                 Set<Permission> selectedPermissions = new HashSet<Permission>();
                 selectedPermissions.add(permission);
                 if (permissionHandling.getRevokableFromRevoked(currentDataPermissions, selectedPermissions, true).get(0).isEmpty()) {
-                    //fieldNode.setParent(null);
+                    // fieldNode.setParent(null);
                     fieldNode.getParent().getChildren().remove(fieldNode);
                 } else {
                     if (selectedFields.contains(new FieldModel(field))) {

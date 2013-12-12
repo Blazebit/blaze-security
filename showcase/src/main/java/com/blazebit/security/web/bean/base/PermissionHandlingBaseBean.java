@@ -120,6 +120,7 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
             }
         }
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(allPermissions, selectedPermissions);
+        
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(userPermissions, concat(userPermissions, selectedPermissions));
         revoked.addAll(revoke.get(0));
         setNotRevoked(revoke.get(1));
@@ -199,6 +200,7 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         Set<Permission> finalGranted = permissions.get(1);
+        Subject authorizer = userContext.getUser();
         return revokeAndGrant(userContext.getUser(), subject, finalRevoked, finalGranted, simulate);
 
     }
@@ -213,6 +215,9 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
 
     protected List<Set<Permission>> revokeAndGrant(Subject authorizer, Subject subject, Set<Permission> finalRevoked, Set<Permission> finalGranted, boolean simulate) {
         if (!simulate) {
+            if (subject.equals(authorizer)) {
+                authorizer = userSession.getAdmin();
+            }
             permissionService.revokeAndGrant(authorizer, subject, finalRevoked, finalGranted);
         }
 

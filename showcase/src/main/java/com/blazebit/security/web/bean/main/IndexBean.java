@@ -17,8 +17,7 @@ import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-
-import org.jboss.as.web.security.JBossGenericPrincipal;
+import javax.servlet.http.HttpSession;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.PermissionService;
@@ -95,6 +94,14 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         }
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
+    }
+
+    public void logout() {
+        HttpSession session = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        FacesContext.getCurrentInstance().getApplication().getNavigationHandler().handleNavigation(FacesContext.getCurrentInstance(), null, "/index.xhtml");
     }
 
     public void beUser(User user) throws IOException {

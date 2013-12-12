@@ -10,11 +10,16 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import com.blazebit.security.Action;
+import com.blazebit.security.ActionFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionHandling;
+import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Resource;
+import com.blazebit.security.Subject;
+import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling;
 import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling.PermissionFamily;
 
@@ -28,6 +33,33 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Inject
     private PermissionFactory permissionFactory;
+
+    @Inject
+    private UserContext userContext;
+
+    @Inject
+    private PermissionManager permissionManager;
+
+    @Inject
+    private ActionFactory actionFactory;
+
+    private Action getGrantAction() {
+        return actionFactory.createAction(ActionConstants.GRANT);
+    }
+
+    private Action getRevokeAction() {
+        return actionFactory.createAction(ActionConstants.REVOKE);
+    }
+
+    private boolean isGranted(Subject subject, Action action, Resource resource) {
+        List<Permission> permissions = permissionManager.getPermissions(subject);
+        for (Permission permission : permissions) {
+            if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean contains(Collection<Permission> permissions, Permission permission) {
@@ -83,12 +115,18 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public List<Set<Permission>> getGrantable(Collection<Permission> permissions, Collection<Permission> toBeGranted) {
+        return getGrantable(userContext.getUser(), permissions, toBeGranted);
+    }
+
+    @Override
+    public List<Set<Permission>> getGrantable(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeGranted) {
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         Set<Permission> granted = new HashSet<Permission>();
         Set<Permission> notGranted = new HashSet<Permission>();
 
         for (Permission selectedPermission : toBeGranted) {
-            if (permissionDataAccess.isGrantable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+            if (isGranted(authorizer, getGrantAction(), selectedPermission.getResource())
+                && permissionDataAccess.isGrantable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
                 granted.add(selectedPermission);
             } else {
                 notGranted.add(selectedPermission);
@@ -157,11 +195,17 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public Set<Permission> getReplacedByGranting(Collection<Permission> permissions, Collection<Permission> granted) {
+        return getReplacedByGranting(userContext.getUser(), permissions, granted);
+    }
+
+    @Override
+    public Set<Permission> getReplacedByGranting(Subject authorizer, Collection<Permission> permissions, Collection<Permission> granted) {
         Set<Permission> revoked = new HashSet<Permission>();
 
         for (Permission selectedPermission : granted) {
-            revoked.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
-                                                                                    selectedPermission.getResource()));
+            Set<Permission> toRevoke = permissionDataAccess.getRevokablePermissionsWhenGranting(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
+                                                                                                selectedPermission.getResource());
+            revoked.addAll(toRevoke);
         }
         return revoked;
     }
@@ -178,13 +222,19 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
+        return getRevokableFromRevoked(userContext.getUser(), permissions, toBeRevoked);
+    }
+
+    @Override
+    public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
 
         Set<Permission> revoked = new HashSet<Permission>();
         Set<Permission> notRevoked = new HashSet<Permission>();
 
         for (Permission selectedPermission : toBeRevoked) {
-            if (permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+            if (isGranted(authorizer, getRevokeAction(), selectedPermission.getResource())
+                && permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
                 revoked.add(selectedPermission);
             } else {
                 notRevoked.add(selectedPermission);
@@ -197,6 +247,11 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
+        return getRevokableFromRevoked(userContext.getUser(), permissions, toBeRevoked, force);
+    }
+
+    @Override
+    public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
         if (!force) {
             return getRevokableFromRevoked(permissions, toBeRevoked);
         } else {
@@ -207,29 +262,44 @@ public class PermissionHandlingImpl implements PermissionHandling {
             Set<Permission> granted = new HashSet<Permission>();
 
             for (Permission selectedPermission : toBeRevoked) {
-                if (permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+                if (isGranted(authorizer, getRevokeAction(), selectedPermission.getResource())
+                    && permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
                     revoked.addAll(permissionDataAccess.getRevokablePermissionsWhenRevoking(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
                                                                                             selectedPermission.getResource()));
                 } else {
-                    if (findPermission(granted, selectedPermission) != null) {
-                        granted = new HashSet<Permission>(remove(granted, selectedPermission));
-                    } else {
-                        Resource resource = selectedPermission.getResource();
-                        if (!resource.getParent().equals(resource)) {
-                            // if parent permission present
-                            Permission parentPermission = permissionDataAccess.findPermission(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
-                                                                                              resource.getParent());
-                            if (parentPermission != null) {
-                                // revoke parent entity
-                                revoked.add(parentPermission);
-                                Set<Permission> childPermissions = resourceHandlingUtils.getChildPermissions(parentPermission);
-                                childPermissions = new HashSet<Permission>(remove(childPermissions, selectedPermission));
-                                granted.addAll(childPermissions);
+                    if (isGranted(authorizer, getRevokeAction(), selectedPermission.getResource())) {
+                        if (findPermission(granted, selectedPermission) != null) {
+                            granted = new HashSet<Permission>(remove(granted, selectedPermission));
+                        } else {
+                            Resource resource = selectedPermission.getResource();
+                            if (!resource.getParent().equals(resource)) {
+                                // if parent permission present
+                                Permission parentPermission = permissionDataAccess.findPermission(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
+                                                                                                  resource.getParent());
+                                if (parentPermission != null) {
+                                    // revoke parent entity
+
+                                    Set<Permission> childPermissions = resourceHandlingUtils.getChildPermissions(parentPermission);
+                                    childPermissions = new HashSet<Permission>(remove(childPermissions, selectedPermission));
+
+                                    boolean notAllowed = false;
+                                    for (Permission childPermission : childPermissions) {
+                                        if (!isGranted(authorizer, getGrantAction(), childPermission.getResource())) {
+                                            notAllowed = true;
+                                        }
+                                        if (!notAllowed) {
+                                            granted.addAll(childPermissions);
+                                            revoked.add(parentPermission);
+                                        } else {
+                                            notRevoked.add(selectedPermission);
+                                        }
+                                    }
+                                } else {
+                                    notRevoked.add(selectedPermission);
+                                }
                             } else {
                                 notRevoked.add(selectedPermission);
                             }
-                        } else {
-                            notRevoked.add(selectedPermission);
                         }
                     }
 
@@ -323,7 +393,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
     }
 
     /**
-     * Separates the parent and the child permissions of permission collection. 
+     * Separates the parent and the child permissions of permission collection.
      * 
      * @param permissions
      * @return

@@ -49,7 +49,7 @@
 					<p:selectBooleanCheckbox id="groupHierarchyLevel" value="#{userSession.selectedCompany.groupHierarchyEnabled}" />
 					<br />
 					
-					<p:commandButton value="Save configuration" action="#{indexBean.saveCompanyConfiguration()}" update=":form"  rendered="#{not empty userContext.user}"/>
+					<p:commandButton value="Save configuration" action="#{indexBean.saveCompanyConfiguration()}" update=":form"/>
 				</h:panelGroup>
 
 

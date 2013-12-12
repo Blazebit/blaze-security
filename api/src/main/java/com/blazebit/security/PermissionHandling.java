@@ -36,7 +36,7 @@ public interface PermissionHandling {
 
     /**
      * Separates the grantable and the not grantable permissions of a collection considering the current permissions collection.
-     * Selected permissions may contain already existing permissions.
+     * Selected permissions may contain already existing permissions or logged in user does not have grant rights
      * 
      * @param user
      * @param permissions
@@ -44,6 +44,17 @@ public interface PermissionHandling {
      * @return
      */
     public List<Set<Permission>> getGrantable(Collection<Permission> permissions, Collection<Permission> toBeGranted);
+
+    /**
+     * * Separates the grantable and the not grantable permissions of a collection considering the current permissions
+     * collection. Selected permissions may contain already existing permissions or authorizer does not have grant rights
+     * 
+     * @param authorizer
+     * @param permissions
+     * @param toBeGranted
+     * @return
+     */
+    public List<Set<Permission>> getGrantable(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeGranted);
 
     /**
      * Merges child permissions into parent permissions if all child permissions are given and eliminates permissions that imply
@@ -62,7 +73,8 @@ public interface PermissionHandling {
     public Set<Permission> getParentPermissions(Collection<Permission> permissions);
 
     /**
-     * replaceable permissions when granting
+     * Returns a collection of permissions that can be removed when granting the given collection of permissions. Not granted
+     * permissions are the ones that the logged in user cannot grant
      * 
      * @param user
      * @param permissions
@@ -145,5 +157,42 @@ public interface PermissionHandling {
      * @return
      */
     public boolean replaces(Collection<Permission> permissions, Permission givenPermission);
+
+    /**
+     * * Returns a collection of permissions that can be revoked, a collection that must be granted when the previous permission
+     * collection is revoked, and a collection of not revokable permisssions, either because of the existing permissions or
+     * because of missing revoke rights of the authorizer
+     * 
+     * @param authorizer
+     * @param permissions
+     * @param toBeRevoked
+     * @param force
+     * @return
+     */
+    public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force);
+
+    /**
+     * Returns a collection of permissions that can be revoked, a collection that must be granted when the previous permission
+     * collection is revoked, and a collection of not revokable permisssions, either because of the existing permissions or
+     * because of missing revoke rights of the authorizer
+     * 
+     * @param authorizer
+     * @param permissions
+     * @param toBeRevoked
+     * @return
+     */
+    public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked);
+
+    /**
+     * 
+     * * Returns a collection of permissions that can be removed when granting the given collection of permissions. Not granted
+     * permissions are the ones that the authorizer cannot grant
+     * 
+     * @param authorizer
+     * @param permissions
+     * @param granted
+     * @return
+     */
+    public Set<Permission> getReplacedByGranting(Subject authorizer, Collection<Permission> permissions, Collection<Permission> granted);
 
 }

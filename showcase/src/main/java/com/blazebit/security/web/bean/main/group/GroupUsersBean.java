@@ -56,8 +56,8 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
     private Set<Permission> selectedGroupPermissions = new HashSet<Permission>();
 
     private TreeNode[] selectedUserNodes = new TreeNode[] {};
-    private Map<User, Set<Permission>> currentReplacedUserMap = new HashMap<User, Set<Permission>>();
-    private Map<User, Set<Permission>> currentRevokedUserMap = new HashMap<User, Set<Permission>>();
+    private Map<User, Set<Permission>> replacables = new HashMap<User, Set<Permission>>();
+    private Map<User, Set<Permission>> revokables = new HashMap<User, Set<Permission>>();
 
     public void init() {
         initUsers();
@@ -72,9 +72,8 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         addedGroups.add(getSelectedGroup());
         // normalized merge of all the permissions of the group hierarchy
         selectedGroupPermissions = groupPermissionHandling.getGroupPermissions(addedGroups, isEnabled(Company.GROUP_HIERARCHY));
-        // TODO if no field level enabled-> add only parent permissions. is this a good solution?
         if (!isEnabled(Company.FIELD_LEVEL)) {
-            selectedGroupPermissions = permissionHandling.getParentPermissions(selectedGroupPermissions);
+            selectedGroupPermissions = permissionHandling.getSeparatedParentAndChildPermissions(selectedGroupPermissions).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Company.OBJECT_LEVEL)) {
@@ -102,7 +101,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
      * @return
      */
     public String userWizardListener(FlowEvent event) {
-        if (event.getOldStep().equals("users")) {
+        if (!event.getOldStep().equals(event.getNewStep()) && event.getOldStep().equals("users")) {
             processSelectedUsers();
         }
         return event.getNewStep();
@@ -113,6 +112,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
      */
     private void processSelectedUsers() {
         currentPermissionRoot = new DefaultTreeNode();
+
         newPermissionRoot = new DefaultTreeNode();
 
         for (UserModel userModel : userList) {
@@ -152,25 +152,27 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         userNode.setExpanded(true/* addedUser */);
         userNode.setSelectable(false);
         if (addedUser) {
-            createCurrentPermissionTreeForAddedUser(userNode, userPermissions, userDataPermissions);
+            createCurrentPermissionTreeForAddedUser(user, userNode, userPermissions, userDataPermissions);
         } else {
             createCurrentPermissionTreeForRemovedUser(userNode, userPermissions, userDataPermissions);
         }
         return userNode;
     }
 
-    private void createCurrentPermissionTreeForAddedUser(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
+    private void createCurrentPermissionTreeForAddedUser(User user, DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         // added user receives new permissions from groups -> mark only
         // replaceable
-        Set<Permission> replaced = permissionHandling.getReplacedByGranting(concat(userPermissions, userDataPermissions),
-                                                                            permissionHandling.getGrantable(userPermissions, selectedGroupPermissions).get(0));
-        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
+        Set<Permission> granted = permissionHandling.getGrantable(concat(userPermissions, userDataPermissions), selectedGroupPermissions).get(0);
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(concat(userPermissions, userDataPermissions), granted);
+        replacables.put(user, replaced);
+
+        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
     private void createCurrentPermissionTreeForRemovedUser(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         // group permissions will be revoked from user-> mark only revokables
         Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(userPermissions, selectedGroupPermissions, true).get(0);
-        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, revoked, Marking.REMOVED);
+        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), revoked, new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
     }
 
     private TreeNode createNewUserNode(TreeNode permissionRoot, User user, List<Permission> userPermissions, List<Permission> userDataPermissions, boolean addedUser) {
@@ -189,27 +191,11 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
     private void createNewPermissionTreeForAddedUser(User user, DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         Set<Permission> granted = permissionHandling.getGrantable(concat(userPermissions, userDataPermissions), selectedGroupPermissions).get(0);
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(userPermissions, granted);
-
-        Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
-        currentPermissions.removeAll(replaced);
-        currentPermissions.addAll(permissionHandling.getSeparatedPermissions(granted).get(0));
-
-        Set<Permission> currentDataPermissions = new HashSet<Permission>(userDataPermissions);
-        replaced.addAll(permissionHandling.getReplacedByGranting(userDataPermissions, granted));
-        currentDataPermissions.removeAll(replaced);
-        currentDataPermissions.addAll(permissionHandling.getSeparatedPermissions(granted).get(1));
-
-        currentReplacedUserMap.put(user, replaced);
-
-        if (isEnabled(Company.USER_LEVEL)) {
-            getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), new ArrayList<Permission>(currentDataPermissions), granted,
-                                     new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
-        } else {
-            getImmutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), new ArrayList<Permission>(), granted, Marking.NEW);
-            selectedUserNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserNodes, getSelectedNodes(userNode.getChildren()).toArray());
-        }
+        buildNewUserTree(userNode, userPermissions, userDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL),
+                         isEnabled(Company.USER_LEVEL));
     }
 
+    // TODO simplify? how?
     private void createNewPermissionTreeForRemovedUser(User user, DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(concat(userPermissions, userDataPermissions), selectedGroupPermissions, true).get(0);
         Set<Permission> granted = permissionHandling.getRevokableFromRevoked(concat(userPermissions, userDataPermissions), selectedGroupPermissions, true).get(2);
@@ -227,7 +213,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         }
         revoked = new HashSet<Permission>(permissionHandling.removeAll(revoked, impliedBy));
         revoked.addAll(toRevoke);
-        currentRevokedUserMap.put(user, revoked);
+        revokables.put(user, revoked);
 
         Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
         currentPermissions.addAll(granted);
@@ -238,10 +224,10 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         if (isEnabled(Company.USER_LEVEL)) {
             getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), userDataPermissions, granted, revoked, Marking.NEW, Marking.REMOVED);
         } else {
-            List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
-            currentUserPermissions = (List<Permission>) permissionHandling.removeAll(currentUserPermissions, revoked);
+            Set<Permission> currentUserPermissions = new HashSet<Permission>(userPermissions);
+            currentUserPermissions = new HashSet<Permission>(permissionHandling.removeAll(currentUserPermissions, revoked));
             currentUserPermissions.addAll(granted);
-            getImmutablePermissionTree(userNode, currentUserPermissions, new ArrayList<Permission>(), new HashSet<Permission>(currentUserPermissions), Marking.NONE);
+            getImmutablePermissionTree(userNode, new ArrayList<Permission>(currentUserPermissions), new ArrayList<Permission>(), currentUserPermissions, Marking.NONE);
         }
     }
 
@@ -265,11 +251,11 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
             userNode.getChildren().clear();
             if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                 // this is an added or an existing user
-                rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user), !isEnabled(Company.FIELD_LEVEL));
+                rebuildCurrentTree(userNode, permissions, selectedPermissions, new HashSet<Permission>(), replacables.get(user), !isEnabled(Company.FIELD_LEVEL));
 
             } else {
                 // this is a removed user
-                rebuildCurrentTree(userNode, permissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
+                rebuildCurrentTree(userNode, permissions, selectedPermissions, revokables.get(user), new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
             }
         }
     }
@@ -288,16 +274,17 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
 
             if (Marking.NEW.equals(userNodeModel.getMarking()) || Marking.NONE.equals(userNodeModel.getMarking())) {
                 // add new users + resources or add new group resources to users
-                executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), currentReplacedUserMap.get(user));
+                executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), replacables.get(user));
                 userGroupService.addUserToGroup(user, getSelectedGroup());
             } else {
                 if (Marking.REMOVED.equals(userNodeModel.getMarking())) {
                     // remove user and remove unselected resources too
-                    executeRevokeAndGrant(user, userPermissions, selectedPermissions, currentRevokedUserMap.get(user), new HashSet<Permission>());
+                    executeRevokeAndGrant(user, userPermissions, selectedPermissions, revokables.get(user), new HashSet<Permission>());
                     userGroupService.removeUserFromGroup(user, getSelectedGroup());
                 }
             }
         }
+        initUsers();
     }
 
     public UserGroup getSelectedGroup() {
