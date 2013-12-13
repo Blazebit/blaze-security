@@ -132,7 +132,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         Set<UserGroup> groups = new HashSet<UserGroup>();
         groups.add(userGroup);
         Set<Permission> permissions = groupPermissionHandlingUtils.getGroupPermissions(groups, true);
-        Set<Permission> grant = permissionHandling.getGrantable(permissionManager.getPermissions(selectedUser), permissions).get(0);
+        Set<Permission> grant = permissionHandling.getGrantable(authorizer, permissionManager.getPermissions(selectedUser), permissions).get(0);
         permissionService.grant(authorizer, selectedUser, grant);
         return propagate;
 

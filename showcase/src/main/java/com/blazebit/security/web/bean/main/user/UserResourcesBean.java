@@ -97,13 +97,13 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         // check what has been revoked
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(userPermissions, selectedPermissions);
         revokable = revoke.get(0);
-        super.setNotRevoked(revoke.get(1));
+        dialogBean.setNotRevoked(revoke.get(1));
 
         // remove revoked permissions from current permission list so we can check what can be granted after revoking
         // check what has been granted
         List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revokable), selectedPermissions);
         Set<Permission> granted = grant.get(0);
-        super.setNotGranted(grant.get(1));
+        dialogBean.setNotGranted(grant.get(1));
 
         replaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
 

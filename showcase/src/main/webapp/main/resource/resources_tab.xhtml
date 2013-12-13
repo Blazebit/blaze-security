@@ -13,11 +13,11 @@
 
 				<p:tab id="resources" title="Resources">
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
-
+					Resources<br/>
 					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 						selection="#{resourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
 						<p:treeNode>
-							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission"/>
+							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission" />
 						</p:treeNode>
 					</p:tree>
 
@@ -54,7 +54,7 @@
 							<p:dataTable value="#{resourcesBean.groups}" var="group"
 								rendered="#{not securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
 								<p:column>
-									<p:selectBooleanCheckbox value="#{group.selected}"/>
+									<p:selectBooleanCheckbox value="#{group.selected}" />
 									<h:outputText value="#{group.userGroup.name}" />
 								</p:column>
 							</p:dataTable>
@@ -75,8 +75,8 @@
 
 					<h:panelGrid columns="2" columnClasses="top,top">
 						<h:panelGroup>
-						Current permissions <p:commandButton icon="ui-icon-info" id="infoCurrent"
-								oncomplete="notRevokedDialog.show()" update=":dialogs" />
+						Current permissions <p:commandButton icon="ui-icon-info" id="infoCurrent" oncomplete="notRevokedDialog.show()"
+								update=":dialogs" />
 							<br />
 							RED entries will be revoked after confirmation 
 						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentUserPermissionTree"
@@ -89,7 +89,7 @@
 						</h:panelGroup>
 
 						<h:panelGroup>
-							New permissions <p:commandButton  icon="ui-icon-info" id="infoNew" oncomplete="notGrantedDialog.show()"
+							New permissions <p:commandButton icon="ui-icon-info" id="infoNew" oncomplete="notGrantedDialog.show()"
 								update=":dialogs" />
 							<br />
 							GREEN and SELECTED entries will be granted after confirmation
@@ -114,7 +114,7 @@
 							<p:commandButton value="Back" style="float:left"
 								oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
 								rendered="#{resourcesBean.currentUserRoot.childCount eq 0}" />
-							<p:commandButton value="Confirm" action="#{resourcesBean.confirmUserPermissions()}" style="float:left"
+							<p:commandButton value="Confirm" action="#{resourcesBean.confirmPermissions()}" style="float:left"
 								process="@this" oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
 								rendered="#{resourcesBean.currentUserRoot.childCount ne 0}" />
 						</h:panelGroup>
@@ -149,7 +149,7 @@
 								<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
 									listener="#{resourcesBean.rebuildCurrentGroupPermissionTreeUnselect}" />
 								<p:treeNode>
-									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" id="permission"/>
+									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -178,7 +178,7 @@
 						<p:tree value="#{resourcesBean.currentUserRoot}" var="currentUserRoot" id="currentGroupUserPermissionTree"
 								rendered="#{resourcesBean.currentUserRoot.childCount ne 0}" selectionMode="checkbox">
 								<p:treeNode>
-									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission"/>
+									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -197,7 +197,7 @@
 								<p:ajax event="unselect" update=":form:tab:currentGroupUserPermissionTree"
 									listener="#{resourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
 								<p:treeNode>
-									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission"/>
+									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -208,9 +208,8 @@
 							<p:commandButton value="Back" oncomplete="resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
 								action="#{resourcesBean.init()}" style="float:left" />
 
-							<p:commandButton value="Confirm" action="#{resourcesBean.confirmUserPermissions()}" style="float:left"
-								oncomplete="successfulDialog.show(); resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)"
-								rendered="#{userSession.selectedCompany.userLevelEnabled}" />
+							<p:commandButton value="Confirm" action="#{resourcesBean.confirmPermissions()}" style="float:left"
+								oncomplete="successfulDialog.show(); resourceWizard.loadStep (resourceWizard.cfg.steps [0], true)" />
 
 						</h:panelGroup>
 					</h:panelGrid>

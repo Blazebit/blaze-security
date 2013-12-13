@@ -23,7 +23,7 @@
 					<h:panelGrid columns="2" columnClasses="top,top" style="width:100%">
 
 						<h:panelGroup layout="block">
-
+							Groups
 							<p:tree value="#{userGroupsBean.groupRoot}" propagateSelectionDown="false" propagateSelectionUp="false"
 								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group"
 								rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
@@ -50,15 +50,17 @@
 
 							</p:dataTable>
 							<br />
-							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" />
+							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" update=":dialogs"/>
 						</h:panelGroup>
-
-						<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
+						<h:panelGroup>
+							Permissions
+							<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
+						</h:panelGroup>
 					</h:panelGrid>
 				</p:tab>
 
 				<p:tab id="groupPermissions" title="Permissions">
-					<h:panelGrid columns="2" columnClasses="top, top" style="width:80%">
+					<h:panelGrid columns="2" columnClasses="top, top">
 						<h:panelGroup>
 					    Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
 							<br />

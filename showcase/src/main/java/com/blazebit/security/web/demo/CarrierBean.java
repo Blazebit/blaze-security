@@ -325,7 +325,7 @@ public class CarrierBean extends SecurityBean {
             }
         }
         resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
-        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
+        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/main/resource/object_resources.xhtml", false);
 
     }
 

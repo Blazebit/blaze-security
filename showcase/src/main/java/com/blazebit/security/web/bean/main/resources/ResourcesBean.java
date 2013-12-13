@@ -66,12 +66,10 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
 
     private Integer activeTabIndex = 0;
     // helper to store granted group permissions
-    private Map<UserGroup, Set<Permission>> grantedGroupPermissions = new HashMap<UserGroup, Set<Permission>>();
-
     private Map<User, List<Permission>> userPermissionMap = new HashMap<User, List<Permission>>();
+    private Map<UserGroup, Set<Permission>> grantedGroupPermissions = new HashMap<UserGroup, Set<Permission>>();
     private Map<UserGroup, List<Permission>> groupPermissionMap = new HashMap<UserGroup, List<Permission>>();
-
-    private Map<UserGroup, Set<Permission>> currentReplacedGroupMap = new HashMap<UserGroup, Set<Permission>>();
+    private Map<UserGroup, Set<Permission>> groupReplaceables = new HashMap<UserGroup, Set<Permission>>();
 
     public void init() {
         try {
@@ -114,7 +112,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
                     if (event.getNewStep().equals("")) {
                         return "subject";
                     }
-                    confirmGroupPermissions();
+                    processGroupPermissions();
                     return "groupUserPermissions";
                 }
             }
@@ -132,6 +130,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
     }
 
     private void initUsers() {
+        userPermissionMap.clear();
         List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
         userList.clear();
         for (User user : allUsers) {
@@ -141,6 +140,9 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
     }
 
     private void initUserGroups() {
+        grantedGroupPermissions.clear();
+        groupReplaceables.clear();
+        groupPermissionMap.clear();
         List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
         this.groupRoot = new DefaultTreeNode("", null);
         groupRoot.setExpanded(true);
@@ -194,79 +196,41 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         // create user trees
         currentUserRoot = new DefaultTreeNode();
         newUserRoot = new DefaultTreeNode();
+
         for (User user : selectedUsers) {
-
-            List<Permission> permissions = userPermissionMap.get(user);
-            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
-            List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
-
-            createCurrentUserNode(user, currentUserRoot, selectedResourcePermissions, userPermissions, userDataPermissions);
-            // if authorizer was able to select users they are selectable, no need to check for user level enabled
-            createNewUserNode(user, newUserRoot, selectedResourcePermissions, userPermissions, true);
+            createUserNodes(user, currentUserRoot, newUserRoot, selectedResourcePermissions);
         }
-
         return true;
     }
 
-    private void createCurrentUserNode(User user, TreeNode root, Set<Permission> selectedPermissions, List<Permission> userPermissions, List<Permission> userDataPermissions) {
+    private void createUserNodes(User user, TreeNode currentRoot, TreeNode newRoot, Set<Permission> selectedPermissions) {
+
+        List<Permission> permissions = userPermissionMap.get(user);
+        List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
+        List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
         TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
 
-        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, root);
+        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, currentRoot);
         userNode.setExpanded(true);
         userNode.setSelectable(false);
-
-        createCurrentUserPermissionNode(user, userNode, selectedPermissions, userPermissions, userDataPermissions);
-
-    }
-
-    private void createCurrentUserPermissionNode(User user, DefaultTreeNode userNode, Set<Permission> selectedPermissions, List<Permission> userPermissions, List<Permission> userDataPermissions) {
-
-        List<Set<Permission>> grant = permissionHandling.getGrantable(userPermissions, selectedPermissions);
-        super.setNotGranted(grant.get(1));
-
-        List<Permission> permissions = new ArrayList<Permission>();
-        permissions.addAll(userPermissions);
-        permissions.addAll(userDataPermissions);
-
-        Set<Permission> replaced = permissionHandling.getReplacedByGranting(permissions, selectedPermissions);
-
-        // current permission tree
-        getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
-    }
-
-    private void createNewUserNode(User user, TreeNode root, Set<Permission> selectedPermissions, List<Permission> userPermissions, boolean selectable) {
-        TreeNodeModel userNodeModel = new TreeNodeModel(user.getUsername(), ResourceType.USER, user);
-
-        DefaultTreeNode userNode = new DefaultTreeNode(userNodeModel, root);
-        userNode.setExpanded(true);
-        userNode.setSelectable(false);
-
-        createNewUserPermissionNode(user, userNode, selectedPermissions, userPermissions, selectable);
-    }
-
-    private void createNewUserPermissionNode(User user, DefaultTreeNode userNode, Set<Permission> selectedPermissions, List<Permission> userPermissions, boolean selectable) {
 
         List<Set<Permission>> grant = permissionHandling.getGrantable(userPermissions, selectedPermissions);
         Set<Permission> granted = grant.get(0);
-        // TODO fix this to put it per user
-        super.setNotGranted(grant.get(1));
+        dialogBean.setNotGranted(grant.get(1));
+        dialogBean.setNotRevoked(new HashSet<Permission>());
 
-        Set<Permission> replacedByGranting = permissionHandling.getReplacedByGranting(userPermissions, selectedPermissions);
-        replacables.put(user, replacedByGranting);
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(permissions, granted);
+        replacables.put(user, replaced);
 
-        // modify current user permissions based on resource selection
-        List<Permission> currentUserPermissions = new ArrayList<Permission>(userPermissions);
-        // new permission tree without the replaced but with the granted + revoked ones, marked properly
-        currentUserPermissions.removeAll(replacedByGranting);
-        currentUserPermissions.addAll(granted);
+        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
 
-        if (selectable) {
-            getMutablePermissionTree(userNode, currentUserPermissions, new ArrayList<Permission>(), granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
-        } else {
-            // workaround because if tree is not displayed the selected nodes are not set
-            getImmutablePermissionTree(userNode, currentUserPermissions, new ArrayList<Permission>(), granted, Marking.NEW);
-            selectedUserPermissionNodes = (TreeNode[]) ArrayUtils.addAll(selectedUserPermissionNodes, getSelectedNodes(userNode.getChildren()).toArray());
-        }
+        DefaultTreeNode newUserNode = new DefaultTreeNode(userNodeModel, newRoot);
+        newUserNode.setExpanded(true);
+        newUserNode.setSelectable(false);
+
+        buildNewUserTree(newUserNode, userPermissions, userDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL),
+                         isEnabled(Company.USER_LEVEL));
+
     }
 
     public void rebuildCurrentUserPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
@@ -293,10 +257,31 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         }
     }
 
+    public void rebuildCurrentGroupPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        rebuildCurrentGroupPermissionTree();
+    }
+
+    public void rebuildCurrentGroupPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        rebuildCurrentGroupPermissionTree();
+    }
+
+    public void rebuildCurrentGroupPermissionTree() {
+        for (TreeNode groupNode : currentGroupRoot.getChildren()) {
+            UserGroup userGroup = (UserGroup) ((TreeNodeModel) groupNode.getData()).getTarget();
+
+            List<Permission> permissions = groupPermissionMap.get(userGroup);
+            // current selected permissions
+            Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
+            groupNode.getChildren().clear();
+            // add previously replaced permissions
+            rebuildCurrentTree(groupNode, permissions, selectedPermissions, new HashSet<Permission>(), groupReplaceables.get(userGroup), !isEnabled(Company.FIELD_LEVEL));
+        }
+    }
+
     /**
      * wizard step: confirm permissions for user
      */
-    public void confirmUserPermissions() {
+    public void confirmPermissions() {
         // first confirm group permissions
         for (UserGroup userGroup : grantedGroupPermissions.keySet()) {
             revokeAndGrant(userGroup, new HashSet<Permission>(), grantedGroupPermissions.get(userGroup), false);
@@ -322,15 +307,38 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         newGroupRoot = new DefaultTreeNode();
 
         for (UserGroup userGroup : getSelectedGroups()) {
-
-            List<Permission> allPermissions = groupPermissionMap.get(userGroup);
-            List<Permission> groupPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
-            List<Permission> groupDataPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(1);
-
-            createCurrentGroupNode(currentGroupRoot, userGroup, groupPermissions, groupDataPermissions);
-            createNewGroupNode(newGroupRoot, userGroup, groupPermissions);
+            createGroupNodes(userGroup, currentGroupRoot, newGroupRoot, selectedResourcePermissions);
         }
         return true;
+    }
+
+    private void createGroupNodes(UserGroup group, TreeNode currentRoot, TreeNode newRoot, Set<Permission> selectedPermissions) {
+
+        List<Permission> permissions = groupPermissionMap.get(group);
+        List<Permission> groupPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
+        List<Permission> groupDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
+        TreeNodeModel userNodeModel = new TreeNodeModel(group.getName(), ResourceType.USERGROUP, group);
+
+        DefaultTreeNode groupNode = new DefaultTreeNode(userNodeModel, currentRoot);
+        groupNode.setExpanded(true);
+        groupNode.setSelectable(false);
+
+        List<Set<Permission>> grant = permissionHandling.getGrantable(groupPermissions, selectedPermissions);
+        Set<Permission> granted = grant.get(0);
+        dialogBean.setNotGranted(grant.get(1));
+        dialogBean.setNotRevoked(new HashSet<Permission>());
+
+        Set<Permission> replaced = permissionHandling.getReplacedByGranting(permissions, granted);
+        groupReplaceables.put(group, replaced);
+
+        buildCurrentUserTree(groupNode, groupPermissions, groupDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
+
+        DefaultTreeNode newGroupNode = new DefaultTreeNode(userNodeModel, newRoot);
+        newGroupNode.setExpanded(true);
+        newGroupNode.setSelectable(false);
+
+        buildNewUserTree(newGroupNode, groupPermissions, groupDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL), true);
+
     }
 
     private Set<UserGroup> getSelectedGroups() {
@@ -350,63 +358,8 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         return ret;
     }
 
-    private void createCurrentGroupNode(TreeNode root, UserGroup userGroup, List<Permission> groupPermissions, List<Permission> groupDataPermissions) {
-        TreeNodeModel groupNodeModel = new TreeNodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
-
-        DefaultTreeNode currentGroupNode = new DefaultTreeNode(groupNodeModel, currentGroupRoot);
-        currentGroupNode.setExpanded(true);
-        currentGroupNode.setSelectable(false);
-
-        createCurrentGroupPermissionNode(currentGroupNode, selectedResourcePermissions, groupPermissions, groupDataPermissions);
-    }
-
-    private void createCurrentGroupPermissionNode(DefaultTreeNode groupNode, Set<Permission> selectedPermissions, List<Permission> groupPermissions, List<Permission> groupDataPermissions) {
-        Set<Permission> replaced = permissionHandling.getReplacedByGranting(groupPermissions, selectedPermissions);
-        getImmutablePermissionTree(groupNode, groupPermissions, groupDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
-
-    }
-
-    private void createNewGroupNode(TreeNode root, UserGroup userGroup, List<Permission> groupPermissions) {
-        TreeNodeModel groupNodeModel = new TreeNodeModel(userGroup.getName(), ResourceType.USERGROUP, userGroup);
-
-        DefaultTreeNode newGroupNode = new DefaultTreeNode(groupNodeModel, newGroupRoot);
-        newGroupNode.setExpanded(true);
-        newGroupNode.setSelectable(false);
-
-        createNewGroupPermissionNode(userGroup, newGroupNode, selectedResourcePermissions, groupPermissions);
-    }
-
-    private void createNewGroupPermissionNode(UserGroup userGroup, DefaultTreeNode groupNode, Set<Permission> selectedPermissions, List<Permission> groupPermissions) {
-        List<Set<Permission>> grant = permissionHandling.getGrantable(groupPermissions, selectedPermissions);
-        Set<Permission> granted = grant.get(0);
-        // TODO fix this to put it per group
-        super.setNotGranted(grant.get(1));
-
-        Set<Permission> currentReplaced = permissionHandling.getReplacedByGranting(groupPermissions, granted);
-        currentReplacedGroupMap.put(userGroup, currentReplaced);
-        // modify current user permissions based on resource selection
-        List<Permission> currentGroupPermissions = new ArrayList<Permission>(groupPermissions);
-        // new permission tree without the replaced but with the granted + revoked ones, marked properly
-        currentGroupPermissions.removeAll(currentReplaced);
-        currentGroupPermissions.addAll(granted);
-        getMutablePermissionTree(groupNode, currentGroupPermissions, new ArrayList<Permission>(), granted, new HashSet<Permission>(), Marking.NEW, Marking.REMOVED);
-    }
-
-    public void rebuildCurrentGroupPermissionTree() {
-        for (TreeNode groupNode : currentGroupRoot.getChildren()) {
-            UserGroup userGroup = (UserGroup) ((TreeNodeModel) groupNode.getData()).getTarget();
-
-            List<Permission> permissions = groupPermissionMap.get(userGroup);
-            // current selected permissions
-            Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
-            groupNode.getChildren().clear();
-            // add previously replaced permissions
-            rebuildCurrentTree(groupNode, permissions, selectedPermissions, new HashSet<Permission>(), currentReplacedGroupMap.get(userGroup), !isEnabled(Company.FIELD_LEVEL));
-        }
-    }
-
     // confirm groups
-    public void confirmGroupPermissions() {
+    public void processGroupPermissions() {
         Set<UserGroup> selectedGroups = new HashSet<UserGroup>();
         for (TreeNode groupNode : newGroupRoot.getChildren()) {
             UserGroup userGroup = (UserGroup) ((TreeNodeModel) groupNode.getData()).getTarget();
@@ -416,8 +369,8 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
             List<Permission> groupPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(0);
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes, groupNode);
 
-            Set<Permission> finalGranted = executeRevokeAndGrant(userGroup, groupPermissions, selectedPermissions, new HashSet<Permission>(),
-                                                                 currentReplacedGroupMap.get(userGroup), true).get(1);
+            Set<Permission> finalGranted = executeRevokeAndGrant(userGroup, groupPermissions, selectedPermissions, new HashSet<Permission>(), groupReplaceables.get(userGroup),
+                                                                 true).get(1);
 
             // to be propagated to users
             grantedGroupPermissions.put(userGroup, finalGranted);
@@ -427,9 +380,6 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         newUserRoot = new DefaultTreeNode();
         prepareUserPropagationView(selectedGroups, grantedGroupPermissions, Collections.<UserGroup, Set<Permission>>emptyMap(), currentUserRoot, newUserRoot,
                                    selectedUserPermissionNodes);
-        if (!isEnabled(Company.USER_LEVEL)) {
-            confirmUserPermissions();
-        }
     }
 
     public void userGroupTabChange() {

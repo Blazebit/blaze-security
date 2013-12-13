@@ -166,13 +166,13 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(concat(userPermissions, userDataPermissions), granted);
         replacables.put(user, replaced);
 
-        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
+        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
     private void createCurrentPermissionTreeForRemovedUser(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         // group permissions will be revoked from user-> mark only revokables
         Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(userPermissions, selectedGroupPermissions, true).get(0);
-        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), revoked, new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
+        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, revoked, new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
     }
 
     private TreeNode createNewUserNode(TreeNode permissionRoot, User user, List<Permission> userPermissions, List<Permission> userDataPermissions, boolean addedUser) {

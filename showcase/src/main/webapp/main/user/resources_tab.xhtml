@@ -18,15 +18,20 @@
 					</p>
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
 					<h:panelGrid columns="2" columnClasses="top,top">
+						<h:panelGroup>
+						Resources
 						<p:tree value="#{userResourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
-							selection="#{userResourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
-							<p:treeNode>
-								<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission" />
-								<p:tooltip for="permission" rendered="#{not empty _resource.tooltip}">#{_resource.tooltip}</p:tooltip>
-							</p:treeNode>
-						</p:tree>
-
-						<my:permissionTree id="resourcesPermissions" bean="#{userResourcesBean}" />
+								selection="#{userResourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
+								<p:treeNode>
+									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission" />
+									<p:tooltip for="permission" rendered="#{not empty _resource.tooltip}">#{_resource.tooltip}</p:tooltip>
+								</p:treeNode>
+							</p:tree>
+						</h:panelGroup>
+						<h:panelGroup>
+							Permissions
+							<my:permissionTree id="resourcesPermissions" bean="#{userResourcesBean}" />
+						</h:panelGroup>
 					</h:panelGrid>
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
 				</p:tab>
@@ -34,20 +39,22 @@
 				<p:tab id="permissions" title="Permissions">
 					<h:panelGrid columns="2" columnClasses="top">
 						<h:panelGroup>
-							Current permissions <p:commandButton value="" icon="ui-icon-info" id="infoCurrent" oncomplete="notRevokedDialog.show()" update=":dialogs"/><br/>
+							Current permissions <p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
+							<br />
 							RED entries will be revoked after confirmation 
 							<p:tree value="#{userResourcesBean.currentPermissionTreeRoot}" var="currentPermission"
 								id="currentResourcePermissionTree" selectionMode="checkbox">
 								<p:treeNode>
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="perm" />
-									<p:tooltip for="perm"  showEffect="fade" hideEffect="fade" rendered="#{not empty currentPermission.tooltip}" >
-									<h:outputText value="#{currentPermission.tooltip}" escape="false" />
+									<p:tooltip for="perm" showEffect="fade" hideEffect="fade" rendered="#{not empty currentPermission.tooltip}">
+										<h:outputText value="#{currentPermission.tooltip}" escape="false" />
 									</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 						<h:panelGroup>
-							New permissions <p:commandButton value="" icon="ui-icon-info" id="infoNew" oncomplete="notGrantedDialog.show()" update=":dialogs"/><br/>
+							New permissions <p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()" update=":dialogs" />
+							<br />
 							GREEN and SELECTED entries will be granted after confirmation
 						
 							<p:tree value="#{userResourcesBean.newPermissionTreeRoot}" var="newPermission" selectionMode="checkbox"
@@ -57,13 +64,14 @@
 								<p:ajax event="unselect" update=":form:tab:currentResourcePermissionTree, :dialogs"
 									listener="#{userResourcesBean.rebuildCurrentPermissionTreeUnselect}" />
 								<p:treeNode>
-									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm"/>
-									<p:tooltip for="perm" value="#{newPermission.tooltip}" showEffect="fade" hideEffect="fade" rendered="#{not empty newPermission.tooltip}"/>
+									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm" />
+									<p:tooltip for="perm" value="#{newPermission.tooltip}" showEffect="fade" hideEffect="fade"
+										rendered="#{not empty newPermission.tooltip}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 					</h:panelGrid>
-					
+
 					<h:panelGroup layout="block" style="height:50px">
 						<p:commandButton value="Back" onclick="resourceWizard.back();" style="float:left" />
 						<p:commandButton value="Confirm" style="float:left" action="#{userResourcesBean.confirmPermissions}"

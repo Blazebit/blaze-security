@@ -57,13 +57,13 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         return getImmutablePermissionTree(permissions, dataPermissions, concat(replaced, revokable), Marking.REMOVED, hideFieldLevel);
     }
 
-    protected TreeNode buildCurrentUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
+    protected TreeNode buildCurrentUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
         return getImmutablePermissionTree(root, permissions, dataPermissions, concat(replaced, revokable), Marking.REMOVED, hideFieldLevel);
     }
 
-    protected TreeNode buildNewUserTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean userLevelEnabled) {
+    protected TreeNode buildNewUserTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
         TreeNode root = new DefaultTreeNode();
-        return buildNewUserTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, userLevelEnabled);
+        return buildNewUserTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, mutable);
     }
 
     protected TreeNode buildNewUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean userLevelEnabled) {
@@ -377,23 +377,23 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 actionNode.setSelectable(false);
                 // mark it selected so that it will be processed
                 actionNode.setSelected(true);
-            } else {
-                if (permissionHandling.contains(selectedPermissions, permission)) {
-                    actionNodeModel.setMarking(selectedMarking);
-                    actionNode.setSelected(true);
-                    actionNode.setSelectable(selectable);
+            }
+            if (permissionHandling.contains(selectedPermissions, permission)) {
+                actionNodeModel.setMarking(selectedMarking);
+                actionNode.setSelected(true);
+                actionNode.setSelectable(selectable);
 
+            } else {
+                if (permissionHandling.contains(notSelectedPermissions, permission)) {
+                    actionNode.setSelected(false);
+                    actionNodeModel.setMarking(notSelectedMarking);
+                    actionNode.setSelectable(selectable);
                 } else {
-                    if (permissionHandling.contains(notSelectedPermissions, permission)) {
-                        actionNode.setSelected(false);
-                        actionNodeModel.setMarking(notSelectedMarking);
-                        actionNode.setSelectable(selectable);
-                    } else {
-                        // already existing entity permission
-                        // actionNode.setSelected(true);
-                        actionNode.setSelectable(false);
-                    }
+                    // already existing entity permission
+                    // actionNode.setSelected(true);
+                    actionNode.setSelectable(false);
                 }
+
             }
         }
 

@@ -151,28 +151,27 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
         Set<Permission> revoked = revoke.get(0);
         revokables.put(user, revoked);
-        super.setNotRevoked(revoke.get(1));
+        dialogBean.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
         List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revoked), grantedPermissions);
         Set<Permission> grantable = grant.get(0);
-        super.setNotGranted(grant.get(1));
-
+        dialogBean.setNotGranted(grant.get(1));
+        
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);
-        // TODO merge needed?
         grantable = permissionHandling.getNormalizedPermissions(grantable);
 
         // current permission tree
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(concat(userPermissions, userDataPermissions), grantable);
-        replacables.put(user, revoked);
+        replacables.put(user, replaced);
         Set<Permission> removable = new HashSet<Permission>();
         removable.addAll(replaced);
         removable.addAll(revoked);
 
         switch (type) {
             case CURRENT:
-                buildCurrentUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
+                buildCurrentUserTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
                 break;
             case NEW:
                 buildNewUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));

@@ -120,6 +120,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public List<Set<Permission>> getGrantable(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeGranted) {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
         Set<Permission> granted = new HashSet<Permission>();
         Set<Permission> notGranted = new HashSet<Permission>();
@@ -200,6 +203,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public Set<Permission> getReplacedByGranting(Subject authorizer, Collection<Permission> permissions, Collection<Permission> granted) {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
         Set<Permission> revoked = new HashSet<Permission>();
 
         for (Permission selectedPermission : granted) {
@@ -227,6 +233,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
         List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
 
         Set<Permission> revoked = new HashSet<Permission>();
@@ -252,6 +261,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
+        if (authorizer == null) {
+            throw new IllegalArgumentException("Authorizer cannot be null");
+        }
         if (!force) {
             return getRevokableFromRevoked(permissions, toBeRevoked);
         } else {

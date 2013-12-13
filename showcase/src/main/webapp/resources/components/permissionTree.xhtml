@@ -9,12 +9,6 @@
 </cc:interface>
 
 <cc:implementation>
-	<h:panelGroup id="permissionPanelGroup" layout="block">
-		
-		<h4>
-			#{cc.attrs.label}
-		</h4>
-		
 		<p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission"
 			rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}" selectionMode="checkbox">
 			<p:treeNode>
@@ -23,6 +17,6 @@
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>
 		</p:tree>
-	</h:panelGroup>
+	
 </cc:implementation>
 </html>

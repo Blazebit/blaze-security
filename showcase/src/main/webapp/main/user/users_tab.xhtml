@@ -9,7 +9,7 @@
 			<h3>Selected user: #{userBean.selectedUser.username}</h3>
 
 			<h:panelGroup style="height:200px;overflow:auto;" layout="block">
-				<h:panelGrid columns="2" width="50%" columnClasses="top,top">
+				<h:panelGrid columns="2" columnClasses="top,top">
 					<h:panelGroup>
 				Groups
 				<my:groupTree bean="#{userBean}" hierarchyEnabled="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}" />

@@ -211,7 +211,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         if ("grant".equals(action)) {
 
             Set<Permission> granted = permissionHandling.getGrantable(allPermissions, selectedPermissions).get(0);
-            super.setNotGranted(permissionHandling.getGrantable(allPermissions, selectedPermissions).get(1));
+            dialogBean.setNotGranted(permissionHandling.getGrantable(allPermissions, selectedPermissions).get(1));
 
             Set<Permission> replaced = permissionHandling.getReplacedByGranting(currentDataPermissions, selectedPermissions);
 
@@ -261,7 +261,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         if (action.equals("grant")) {
 
             Set<Permission> granted = permissionHandling.getGrantable(currentDataPermissions, selectedPermissions).get(0);
-            super.setNotGranted(permissionHandling.getGrantable(currentDataPermissions, selectedPermissions).get(1));
+            dialogBean.setNotGranted(permissionHandling.getGrantable(currentDataPermissions, selectedPermissions).get(1));
 
             if (selectedSubject instanceof Subject) {
                 Subject subject = (Subject) selectedSubject;
@@ -337,7 +337,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         List<Permission> userDataPermissions = resourceUtils.getSeparatedPermissionsByResource(permissions).get(1);
 
         List<Set<Permission>> grant = permissionHandling.getGrantable(userDataPermissions, selectedPermissions);
-        super.setNotGranted(grant.get(1));
+        dialogBean.setNotGranted(grant.get(1));
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(userDataPermissions, selectedPermissions);
         // current permission tree
         getImmutablePermissionTree(userNode, userPermissions, userDataPermissions, replaced, Marking.REMOVED, !isEnabled(Company.FIELD_LEVEL));
@@ -364,7 +364,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
         if (action.equals("grant")) {
             List<Set<Permission>> grant = permissionHandling.getGrantable(userDataPermissions, selectedPermissions);
             Set<Permission> granted = grant.get(0);
-            super.setNotGranted(grant.get(1));
+            dialogBean.setNotGranted(grant.get(1));
 
             getImmutablePermissionTree(userNode, new ArrayList<Permission>(), new ArrayList<Permission>(granted), granted, Marking.NEW);
         } else {

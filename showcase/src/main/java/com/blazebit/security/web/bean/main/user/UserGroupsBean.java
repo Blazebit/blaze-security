@@ -31,7 +31,7 @@ import com.blazebit.security.web.bean.model.UserGroupModel;
 @ViewScoped
 @ManagedBean(name = "userGroupsBean")
 public class UserGroupsBean extends GroupHandlingBaseBean {
-
+    
     private static final long serialVersionUID = 1L;
 
     private List<Permission> userPermissions = new ArrayList<Permission>();
@@ -137,12 +137,12 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         // get permissions which can be revoked from the user
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(allPermissions, revoked, true);
         revokable = revoke.get(0);
-        super.setNotRevoked(revoke.get(1));
+        dialogBean.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
         List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(allPermissions, revokable), granted);
         Set<Permission> grantable = grant.get(0);
-        super.setNotGranted(grant.get(1));
+        dialogBean.setNotGranted(grant.get(1));
 
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);

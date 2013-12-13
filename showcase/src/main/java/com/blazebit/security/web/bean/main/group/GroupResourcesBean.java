@@ -41,15 +41,16 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
     private TreeNode newPermissionTreeRoot;
     private TreeNode currentPermissionTreeRoot;
     private TreeNode[] selectedGroupPermissionNodes = new TreeNode[] {};
-    // wizard 3 step
+    // wizard 3 step - propagation
     private DefaultTreeNode currentUserPermissionTreeRoot;
     private DefaultTreeNode newUserPermissionTreeRoot;
     private TreeNode[] selectedUserPermissionNodes = new TreeNode[] {};
     // permissionview
     private TreeNode permissionViewRoot;
-    // group
+    // group - initial revoke and replace. needed for rebuild and confirm.
     private Set<Permission> revokable;
     private Set<Permission> replacable;
+    // result of granting and revoking for groups. propagate these!
     private Set<Permission> groupGranted;
     private Set<Permission> groupRevoked;
 
@@ -77,20 +78,12 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
         this.permissionViewRoot = initGroupPermissions(getSelectedGroup(), !isEnabled(Company.FIELD_LEVEL));
     }
 
-    public UserGroup getSelectedGroup() {
-        return userSession.getSelectedUserGroup();
-    }
-
     public String resourceWizardListener(FlowEvent event) {
         if (event.getOldStep().equals("resources")) {
             processSelectedResources();
         } else {
             if (event.getOldStep().equals("permissions") && !event.getNewStep().equals("resources")) {
-                confirmGroupPermissions();
-
-                // if (!isEnabled(Company.USER_LEVEL)) {
-                // confirmUserPermissions();
-                // }
+                processGroupPermissions();
             }
         }
         return event.getNewStep();
@@ -110,18 +103,17 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
         // get revoked permissions
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(groupPermissions, selectedPermissions);
         revokable = revoke.get(0);
-        super.setNotRevoked(revoke.get(1));
+        dialogBean.setNotRevoked(revoke.get(1));
         // get granted permissions
         List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(groupPermissions, revokable), selectedPermissions);
         Set<Permission> granted = grant.get(0);
-        super.setNotGranted(grant.get(1));
+        dialogBean.setNotGranted(grant.get(1));
 
         // get replaced permissions
         replacable = permissionHandling.getReplacedByGranting(allPermissions, granted);
-
+        // build trees
         currentPermissionTreeRoot = buildCurrentUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL));
-        newPermissionTreeRoot = buildNewUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL),
-                                                 true);
+        newPermissionTreeRoot = buildNewUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL), true);
     }
 
     public void rebuildCurrentGroupPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
@@ -141,16 +133,15 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
      * confirm button when adding permissions to user
      * 
      */
-    public void confirmGroupPermissions() {
+    public void processGroupPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedGroupPermissionNodes);
         List<Set<Permission>> result = executeRevokeAndGrant(getSelectedGroup(), groupPermissions, selectedPermissions, revokable, replacable, true);
         groupGranted = result.get(1);
         groupRevoked = result.get(0);
         currentUserPermissionTreeRoot = new DefaultTreeNode();
         newUserPermissionTreeRoot = new DefaultTreeNode();
+        //show user view
         prepareUserPropagationView(getSelectedGroup(), groupGranted, groupRevoked, currentUserPermissionTreeRoot, newUserPermissionTreeRoot, selectedUserPermissionNodes);
-        // reset
-        init();
     }
 
     public void rebuildCurrentUserPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
@@ -172,9 +163,10 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
     }
 
     // confirm button for users
-    public void confirmUserPermissions() {
+    public void confirmPermissions() {
         // confirm groups
         revokeAndGrant(getSelectedGroup(), groupRevoked, groupGranted, false);
+        // iterate through users
         for (TreeNode userNode : newUserPermissionTreeRoot.getChildren()) {
             TreeNodeModel userNodeModel = (TreeNodeModel) userNode.getData();
             User user = (User) userNodeModel.getTarget();
@@ -187,6 +179,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
             executeRevokeAndGrant(user, userPermissions, selectedPermissions, revokables.get(user), replacables.get(user));
 
         }
+        // reset
         init();
     }
 
@@ -244,6 +237,10 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
 
     public void setSelectedGroupPermissionNodes(TreeNode[] selectedGroupPermissionNodes) {
         this.selectedGroupPermissionNodes = selectedGroupPermissionNodes;
+    }
+
+    public UserGroup getSelectedGroup() {
+        return userSession.getSelectedUserGroup();
     }
 
 }

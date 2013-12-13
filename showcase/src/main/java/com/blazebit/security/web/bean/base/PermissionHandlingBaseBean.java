@@ -5,8 +5,6 @@ package com.blazebit.security.web.bean.base;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,10 +28,10 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.impl.context.UserContext;
-import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
 import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
+import com.blazebit.security.web.bean.main.DialogBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.context.UserSession;
 
@@ -74,9 +72,8 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
     protected ResourceMetamodel resourceMetamodel;
     @Inject
     protected PermissionHandlingImpl permissionHandling;
-
-    private List<Permission> notGranted = new ArrayList<Permission>();
-    private List<Permission> notRevoked = new ArrayList<Permission>();
+    @Inject
+    protected DialogBean dialogBean;
 
     /**
      * 
@@ -120,11 +117,10 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
             }
         }
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(allPermissions, selectedPermissions);
-        
+
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(userPermissions, concat(userPermissions, selectedPermissions));
         revoked.addAll(revoke.get(0));
-        setNotRevoked(revoke.get(1));
-        setNotGranted(new HashSet<Permission>());
+        dialogBean.setNotRevoked(revoke.get(1));
 
         Set<Permission> removablePermissions = new HashSet<Permission>();
         removablePermissions.addAll(revoked);
@@ -200,7 +196,6 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         List<Set<Permission>> permissions = permissionHandling.getRevokedAndGrantedAfterMerge(current, revoked, granted);
         Set<Permission> finalRevoked = permissions.get(0);
         Set<Permission> finalGranted = permissions.get(1);
-        Subject authorizer = userContext.getUser();
         return revokeAndGrant(userContext.getUser(), subject, finalRevoked, finalGranted, simulate);
 
     }
@@ -246,41 +241,6 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         ret.add(finalRevoked);
         ret.add(finalGranted);
         return ret;
-    }
-
-    public List<Permission> getNotGranted() {
-        return this.notGranted;
-    }
-
-    public void setNotGranted(Set<Permission> notGranted) {
-        List<Permission> ret = new ArrayList<Permission>(notGranted);
-        Collections.sort(ret, new Comparator<Permission>() {
-
-            @Override
-            public int compare(Permission o1, Permission o2) {
-                return ((EntityField) o1.getResource()).getEntity().compareToIgnoreCase(((EntityField) o1.getResource()).getEntity());
-            }
-
-        });
-        this.notGranted = ret;
-
-    }
-
-    public List<Permission> getNotRevoked() {
-        return notRevoked;
-    }
-
-    public void setNotRevoked(Set<Permission> notRevoked) {
-        List<Permission> ret = new ArrayList<Permission>(notRevoked);
-        Collections.sort(ret, new Comparator<Permission>() {
-
-            @Override
-            public int compare(Permission o1, Permission o2) {
-                return ((EntityField) o1.getResource()).getEntity().compareToIgnoreCase(((EntityField) o1.getResource()).getEntity());
-            }
-
-        });
-        this.notRevoked = ret;
     }
 
 }

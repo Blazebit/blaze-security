@@ -18,11 +18,11 @@
 		</p:dialog>
 
 		<p:dialog id="notGrantedDialogId" widgetVar="notGrantedDialog">
-			<p:dataTable value="#{permissionHandlingBaseBean.notGranted}" var="permission" paginator="true" rows="10">
+			<p:dataTable value="#{dialogBean.notGranted}" var="permission" paginator="true" rows="10">
 				<f:facet name="header">Permissions that cannot be granted</f:facet>
 				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
 					<f:facet name="header">Resource</f:facet>
-                            #{permission.id.entity} #{permission.id.field} #{permission.id.entityId}
+                            #{dialogBean.displayPermission(permission)}
                     </p:column>
 				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
 					<f:facet name="header">Action</f:facet>
@@ -32,11 +32,11 @@
 		</p:dialog>
 
 		<p:dialog id="notRevokedDialogId" widgetVar="notRevokedDialog">
-			<p:dataTable value="#{permissionHandlingBaseBean.notRevoked}" var="permission" paginator="true" rows="10">
+			<p:dataTable value="#{dialogBean.notRevoked}" var="permission" paginator="true" rows="10">
 				<f:facet name="header">Permissions that cannot be revoked</f:facet>
 				<p:column filterBy="#{permission.id.entity}" sortBy="#{permission.id.entity}">
 					<f:facet name="header">Resource</f:facet>
-                            #{permission.id.entity} #{permission.id.field} #{permission.id.entityId}
+						#{dialogBean.displayPermission(permission)}
                     </p:column>
 				<p:column filterBy="#{permission.id.actionName}" sortBy="#{permission.id.actionName}">
 					<f:facet name="header">Action</f:facet>

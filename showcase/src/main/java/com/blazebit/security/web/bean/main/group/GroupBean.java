@@ -342,12 +342,12 @@ public class GroupBean extends GroupHandlingBaseBean {
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(allPermissions, groupRevoked, true);
         Set<Permission> revoked = revoke.get(0);
         initialRevoke.put(user, revoked);
-        super.setNotRevoked(revoke.get(1));
+        dialogBean.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
         List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(allPermissions, revoked), groupGranted);
         Set<Permission> grantable = grant.get(0);
-        super.setNotGranted(grant.get(1));
+        dialogBean.setNotGranted(grant.get(1));
 
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);
@@ -358,7 +358,7 @@ public class GroupBean extends GroupHandlingBaseBean {
 
         switch (type) {
             case CURRENT:
-                return buildCurrentUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
+                return buildCurrentUserTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
             case NEW:
                 return buildNewUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL),
                                         isEnabled(Company.USER_LEVEL));
