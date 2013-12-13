@@ -15,7 +15,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -27,7 +26,6 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 import com.blazebit.security.web.bean.base.ResourceGroupHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
-import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserGroupModel;
 import com.blazebit.security.web.bean.model.UserModel;
@@ -71,7 +69,18 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
     private Map<UserGroup, List<Permission>> groupPermissionMap = new HashMap<UserGroup, List<Permission>>();
     private Map<UserGroup, Set<Permission>> groupReplaceables = new HashMap<UserGroup, Set<Permission>>();
 
+    private String filter;
+
+    public void filterTree() {
+        try {
+            resourceRoot = getResourceTree(filter);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error in resource name provider!");
+        }
+    }
+
     public void init() {
+        filter = "";
         try {
             resourceRoot = getResourceTree();
         } catch (ClassNotFoundException e) {
@@ -222,7 +231,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(permissions, granted);
         replacables.put(user, replaced);
 
-        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
+        buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
 
         DefaultTreeNode newUserNode = new DefaultTreeNode(userNodeModel, newRoot);
         newUserNode.setExpanded(true);
@@ -331,7 +340,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(permissions, granted);
         groupReplaceables.put(group, replaced);
 
-        buildCurrentUserTree(groupNode, groupPermissions, groupDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
+        buildCurrentPermissionTree(groupNode, groupPermissions, groupDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
 
         DefaultTreeNode newGroupNode = new DefaultTreeNode(userNodeModel, newRoot);
         newGroupNode.setExpanded(true);
@@ -466,6 +475,14 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
 
     public void setGroups(List<UserGroupModel> groups) {
         this.groups = groups;
+    }
+
+    public String getFilter() {
+        return filter;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
     }
 
 }

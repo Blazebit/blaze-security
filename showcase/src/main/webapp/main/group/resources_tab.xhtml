@@ -19,11 +19,25 @@
 						<p:tree value="#{groupResourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 								selection="#{groupResourcesBean.selectedResourceNodes}" propagateSelectionDown="true"
 								propagateSelectionUp="true">
-								<p:treeNode>
-									<h:outputText value="#{_resource.name}" />
+
+								<p:treeNode type="module" icon="ui-icon-document">
+									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+								</p:treeNode>
+
+								<p:treeNode type="entity" icon="ui-icon-image">
+									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+								</p:treeNode>
+
+								<p:treeNode type="action" icon="ui-icon-cart">
+									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+								</p:treeNode>
+
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
+
 						<h:panelGroup>
 							Permissions
 							<my:permissionTree id="resourcesPermissions" bean="#{groupResourcesBean}" />
@@ -45,6 +59,9 @@
 								<p:treeNode>
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
 								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
+								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
@@ -52,13 +69,16 @@
 						New permissions
 							<br />
 							GREEN and SELECTED entries will be granted after confirmation
-						<p:tree value="#{groupResourcesBean.newPermissionTreeRoot}" var="newPermission"
+							<p:tree value="#{groupResourcesBean.newPermissionTreeRoot}" var="newPermission" 
 								selection="#{groupResourcesBean.selectedGroupPermissionNodes}" selectionMode="checkbox">
 								<p:ajax event="select" update=":form:tab:currentGroupPermissionTree"
 									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeSelect}" />
 								<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
 									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeUnselect}" />
 								<p:treeNode>
+									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
 									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
@@ -88,6 +108,9 @@
 								<p:treeNode>
 									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
+								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
@@ -103,6 +126,9 @@
 								<p:ajax event="unselect" update=":form:tab:currentResourceUserPermissionTree"
 									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
 								<p:treeNode>
+									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
 									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 								</p:treeNode>
 							</p:tree>

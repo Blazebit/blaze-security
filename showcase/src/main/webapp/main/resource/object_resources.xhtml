@@ -49,6 +49,11 @@
 							<p:tooltip for="resourceEntry" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
 								showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
 						</p:treeNode>
+						<p:treeNode type="object" icon="ui-icon-contact">
+							<h:outputText value="#{resourceEntry.name}" style="#{resourceEntry.marking.style}" id="resourceEntry1" />
+							<p:tooltip for="resourceEntry1" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
+								showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
+						</p:treeNode>
 					</p:tree>
 
 					<p:commandButton value="Next" onclick="permissionWizard.next()"
@@ -69,6 +74,11 @@
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
 							</p:tree>
 							<h:outputText value="No permissions available"
 								rendered="#{resourceObjectBean.currentPermissionRoot.childCount eq 0}" />
@@ -83,6 +93,11 @@
 								<p:treeNode>
 									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
@@ -104,6 +119,11 @@
 								rendered="#{resourceObjectBean.currentUserPermissionRoot.childCount ne 0}" id="currentUserPermissionTree"
 								selectionMode="checkbox">
 								<p:treeNode>
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
 									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
@@ -118,6 +138,11 @@
 								selection="#{resourceObjectBean.selectedUserPermissionNodes}"
 								rendered="#{resourceObjectBean.newUserPermissionRoot.childCount ne 0}" selectionMode="checkbox">
 								<p:treeNode>
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode icon="ui-icon-contact" type="object">
 									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />

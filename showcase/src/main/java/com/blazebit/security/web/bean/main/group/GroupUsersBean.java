@@ -49,6 +49,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
     private List<UserModel> userList = new ArrayList<UserModel>();
 
     private DefaultTreeNode newPermissionRoot;
+    private DefaultTreeNode newObjectPermissionRoot;
     private DefaultTreeNode currentPermissionRoot;
 
     private DefaultTreeNode permissionTreeViewRoot;
@@ -56,6 +57,8 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
     private Set<Permission> selectedGroupPermissions = new HashSet<Permission>();
 
     private TreeNode[] selectedUserNodes = new TreeNode[] {};
+    private TreeNode[] selectedObjectUserNodes = new TreeNode[] {};
+    
     private Map<User, Set<Permission>> replacables = new HashMap<User, Set<Permission>>();
     private Map<User, Set<Permission>> revokables = new HashMap<User, Set<Permission>>();
 
@@ -166,13 +169,13 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(concat(userPermissions, userDataPermissions), granted);
         replacables.put(user, replaced);
 
-        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
+        buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
     private void createCurrentPermissionTreeForRemovedUser(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         // group permissions will be revoked from user-> mark only revokables
         Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(userPermissions, selectedGroupPermissions, true).get(0);
-        buildCurrentUserTree(userNode, userPermissions, userDataPermissions, revoked, new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
+        buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, new HashSet<Permission>(), !isEnabled(Company.FIELD_LEVEL));
     }
 
     private TreeNode createNewUserNode(TreeNode permissionRoot, User user, List<Permission> userPermissions, List<Permission> userDataPermissions, boolean addedUser) {
@@ -313,6 +316,22 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
 
     public void setSelectedUserNodes(TreeNode[] selectedUserNodes) {
         this.selectedUserNodes = selectedUserNodes;
+    }
+
+    public TreeNode[] getSelectedObjectUserNodes() {
+        return selectedObjectUserNodes;
+    }
+
+    public void setSelectedObjectUserNodes(TreeNode[] selectedObjectUserNodes) {
+        this.selectedObjectUserNodes = selectedObjectUserNodes;
+    }
+
+    public DefaultTreeNode getNewObjectPermissionRoot() {
+        return newObjectPermissionRoot;
+    }
+
+    public void setNewObjectPermissionRoot(DefaultTreeNode newObjectPermissionRoot) {
+        this.newObjectPermissionRoot = newObjectPermissionRoot;
     }
 
 }

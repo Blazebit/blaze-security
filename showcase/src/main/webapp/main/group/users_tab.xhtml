@@ -47,6 +47,11 @@
 								<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 									rendered="#{not empty permissionModel.tooltip}" />
 							</p:treeNode>
+							<p:treeNode type="object" icon="ui-icon-contact">
+								<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm1" />
+								<p:tooltip for="perm1" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
+									rendered="#{not empty permissionModel.tooltip}" />
+							</p:treeNode>
 						</p:tree>
 					</h:panelGroup>
 					<h:panelGroup>
@@ -60,6 +65,11 @@
 							<p:treeNode>
 								<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm" />
 								<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
+									rendered="#{not empty permissionModel.tooltip}" />
+							</p:treeNode>
+							<p:treeNode type="object" icon="ui-icon-contact">
+								<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm1" />
+								<p:tooltip for="perm1" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 									rendered="#{not empty permissionModel.tooltip}" />
 							</p:treeNode>
 						</p:tree>

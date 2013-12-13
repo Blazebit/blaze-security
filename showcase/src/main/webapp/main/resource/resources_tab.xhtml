@@ -13,12 +13,29 @@
 
 				<p:tab id="resources" title="Resources">
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
-					Resources<br/>
-					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
+					<br />Resources<br />
+					Resource name: <h:inputText value="#{resourcesBean.filter}" />
+					<p:commandButton value="filter" action="#{resourcesBean.filterTree}" update=":form:tab:resourceTree" global="true" />
+
+					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox" id="resourceTree"
 						selection="#{resourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
-						<p:treeNode>
-							<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission" />
+
+						<p:treeNode type="module" icon="ui-icon-document">
+							<h:outputText value="#{_resource.name}" />
 						</p:treeNode>
+
+						<p:treeNode type="entity" icon="ui-icon-image">
+							<h:outputText value="#{_resource.name}" />
+						</p:treeNode>
+
+						<p:treeNode type="action" icon="ui-icon-cart">
+							<h:outputText value="#{_resource.name}" />
+						</p:treeNode>
+
+						<p:treeNode type="field" icon="ui-icon-document-b">
+							<h:outputText value="#{_resource.name}" />
+						</p:treeNode>
+
 					</p:tree>
 
 					<p:commandButton value="Next" onclick="resourceWizard.next();" />
@@ -85,6 +102,10 @@
 									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
+								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
@@ -104,6 +125,10 @@
 								<p:treeNode>
 									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -132,7 +157,12 @@
 						<p:tree value="#{resourcesBean.currentGroupRoot}" var="currentGroupRoot" selectionMode="checkbox"
 								id="currentGroupPermissionTree">
 								<p:treeNode>
-									<h:outputText value="#{currentGroupRoot.name}" style="#{currentGroupRoot.marking.style}" />
+									<h:outputText value="#{currentGroupRoot.name}" style="#{currentGroupRoot.marking.style}" id="permissions1"/>
+									<p:tooltip for="permission1" rendered="#{not empty currentGroupRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{currentGroupRoot.name}" style="#{currentGroupRoot.marking.style}" id="permission1"/> 
+									<p:tooltip for="permission1" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -151,6 +181,10 @@
 								<p:treeNode>
 									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{newGroupRoot.name}" style="#{newGroupRoot.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -181,6 +215,10 @@
 									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{currentUserRoot.name}" style="#{currentUserRoot.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
+								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
@@ -199,6 +237,10 @@
 								<p:treeNode>
 									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText value="#{newUserRoot.name}" style="#{newUserRoot.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

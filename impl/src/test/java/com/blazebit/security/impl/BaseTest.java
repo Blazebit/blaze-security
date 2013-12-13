@@ -76,7 +76,7 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
     @Inject
     protected PermissionManager permissionManager;
     @Inject
-    private UserContextMock userContext;
+    protected UserContextMock userContext;
 
     // users
     protected User admin;

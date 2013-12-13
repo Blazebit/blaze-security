@@ -22,12 +22,26 @@
 						Resources
 						<p:tree value="#{userResourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox"
 								selection="#{userResourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
-								<p:treeNode>
-									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" id="permission" />
-									<p:tooltip for="permission" rendered="#{not empty _resource.tooltip}">#{_resource.tooltip}</p:tooltip>
+
+								<p:treeNode type="module" icon="ui-icon-document">
+									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
+
+								<p:treeNode type="entity" icon="ui-icon-image">
+									<h:outputText value="#{_resource.name}" />
+								</p:treeNode>
+
+								<p:treeNode type="action" icon="ui-icon-cart">
+									<h:outputText value="#{_resource.name}" />
+								</p:treeNode>
+
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{_resource.name}" />
+								</p:treeNode>
+
 							</p:tree>
 						</h:panelGroup>
+
 						<h:panelGroup>
 							Permissions
 							<my:permissionTree id="resourcesPermissions" bean="#{userResourcesBean}" />
@@ -45,6 +59,12 @@
 							<p:tree value="#{userResourcesBean.currentPermissionTreeRoot}" var="currentPermission"
 								id="currentResourcePermissionTree" selectionMode="checkbox">
 								<p:treeNode>
+									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="perm1" />
+									<p:tooltip for="perm1" showEffect="fade" hideEffect="fade" rendered="#{not empty currentPermission.tooltip}">
+										<h:outputText value="#{currentPermission.tooltip}" escape="false" />
+									</p:tooltip>
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="perm" />
 									<p:tooltip for="perm" showEffect="fade" hideEffect="fade" rendered="#{not empty currentPermission.tooltip}">
 										<h:outputText value="#{currentPermission.tooltip}" escape="false" />
@@ -64,6 +84,11 @@
 								<p:ajax event="unselect" update=":form:tab:currentResourcePermissionTree, :dialogs"
 									listener="#{userResourcesBean.rebuildCurrentPermissionTreeUnselect}" />
 								<p:treeNode>
+									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm1" />
+									<p:tooltip for="perm1" value="#{newPermission.tooltip}" showEffect="fade" hideEffect="fade"
+										rendered="#{not empty newPermission.tooltip}" />
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
 									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm" />
 									<p:tooltip for="perm" value="#{newPermission.tooltip}" showEffect="fade" hideEffect="fade"
 										rendered="#{not empty newPermission.tooltip}" />

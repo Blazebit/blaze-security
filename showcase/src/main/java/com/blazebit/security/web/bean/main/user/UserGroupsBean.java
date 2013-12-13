@@ -4,6 +4,7 @@
 package com.blazebit.security.web.bean.main.user;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
+import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.UserGroupModel;
 
 /**
@@ -31,7 +33,7 @@ import com.blazebit.security.web.bean.model.UserGroupModel;
 @ViewScoped
 @ManagedBean(name = "userGroupsBean")
 public class UserGroupsBean extends GroupHandlingBaseBean {
-    
+
     private static final long serialVersionUID = 1L;
 
     private List<Permission> userPermissions = new ArrayList<Permission>();
@@ -57,10 +59,14 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
     // compare 2 permission trees
     private TreeNode currentPermissionTreeRoot = new DefaultTreeNode();
     private TreeNode newPermissionTreeRoot = new DefaultTreeNode();
+    private TreeNode newObjectPermissionTreeRoot = new DefaultTreeNode();
     // select from the new permission tree
     private TreeNode[] selectedPermissionNodes = new TreeNode[] {};
+    private TreeNode[] selectedObjectPermissionNodes = new TreeNode[] {};
 
     private Map<UserGroup, List<Permission>> groupPermissionsMap = new HashMap<UserGroup, List<Permission>>();
+
+    private boolean permissionTreeSwitch;
 
     public void init() {
         initUserGroups();
@@ -151,9 +157,14 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         // current permission tree
         replaced = permissionHandling.getReplacedByGranting(allPermissions, grantable);
 
-        currentPermissionTreeRoot = buildCurrentUserTree(userPermissions, userDataPermissions, grantable, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
-        newPermissionTreeRoot = buildNewUserTree(userPermissions, userDataPermissions, grantable, revokable, replaced, !isEnabled(Company.FIELD_LEVEL),
-                                                 isEnabled(Company.USER_LEVEL));
+        currentPermissionTreeRoot = buildCurrentPermissionTree(userPermissions, userDataPermissions, grantable, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
+
+        newPermissionTreeRoot = buildNewPermissionTree(userPermissions, Collections.<Permission>emptyList(),
+                                                       new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(0)), revokable, replaced,
+                                                       !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+        newObjectPermissionTreeRoot = buildNewDataPermissionTree(Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(permissionHandling
+            .getSeparatedPermissions(grantable)
+            .get(1)), revokable, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
     }
 
     private Set<Permission> getPermissionsToRevoke(Set<Permission> granted) {
@@ -202,15 +213,31 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
      * listener for select unselect permissons in the new permission tree
      */
     public void rebuildCurrentPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {
+        TreeNode selectedNode = event.getTreeNode();
+        selectChildrenInstances(selectedNode, true);
         rebuildCurrentPermissionTree();
     }
 
+    private void selectChildrenInstances(TreeNode selectedNode, boolean select) {
+        TreeNodeModel model = (TreeNodeModel) selectedNode.getData();
+        for (TreeNodeModel instance : model.getInstances()) {
+            instance.setSelected(select);
+        }
+        for (TreeNode child : selectedNode.getChildren()) {
+            selectChildrenInstances(child, select);
+        }
+
+    }
+
     public void rebuildCurrentPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
+        TreeNode selectedNode = event.getTreeNode();
+        selectChildrenInstances(selectedNode, false);
         rebuildCurrentPermissionTree();
     }
 
     public void rebuildCurrentPermissionTree() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
+        selectedPermissions.addAll(getSelectedPermissions(selectedObjectPermissionNodes));
         currentPermissionTreeRoot = rebuildCurrentTree(allPermissions, selectedPermissions, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
     }
 
@@ -219,6 +246,7 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
      */
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
+        selectedPermissions.addAll(getSelectedPermissions(selectedObjectPermissionNodes));
         executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, revokable, replaced);
 
         for (UserGroup group : removedGroups) {
@@ -248,10 +276,6 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
 
     public User getSelectedUser() {
         return userSession.getSelectedUser();
-    }
-
-    public UserGroup getSelectedGroup() {
-        return selectedGroup;
     }
 
     public TreeNode getCurrentPermissionTreeRoot() {
@@ -289,6 +313,30 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
 
     public void setGroups(List<UserGroupModel> groups) {
         this.groups = groups;
+    }
+
+    public boolean isPermissionTreeSwitch() {
+        return permissionTreeSwitch;
+    }
+
+    public void setPermissionTreeSwitch(boolean permissionTreeSwitch) {
+        this.permissionTreeSwitch = permissionTreeSwitch;
+    }
+
+    public TreeNode getNewObjectPermissionTreeRoot() {
+        return newObjectPermissionTreeRoot;
+    }
+
+    public void setNewObjectPermissionTreeRoot(TreeNode newObjectPermissionTreeRoot) {
+        this.newObjectPermissionTreeRoot = newObjectPermissionTreeRoot;
+    }
+
+    public TreeNode[] getSelectedObjectPermissionNodes() {
+        return selectedObjectPermissionNodes;
+    }
+
+    public void setSelectedObjectPermissionNodes(TreeNode[] selectedObjectPermissionNodes) {
+        this.selectedObjectPermissionNodes = selectedObjectPermissionNodes;
     }
 
 }

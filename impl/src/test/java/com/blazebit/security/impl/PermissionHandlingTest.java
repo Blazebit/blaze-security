@@ -27,7 +27,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.security.Permission;
+import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
+import com.blazebit.security.PermissionManager;
+import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
 
 /**
@@ -43,6 +46,10 @@ public class PermissionHandlingTest extends BaseTest<PermissionHandlingTest> {
     private PermissionHandlingImpl permissionHandlingUtils;
     @Inject
     private PermissionFactory permissionFactory;
+    @Inject
+    private PermissionDataAccess permissionDataAccess;
+    @Inject
+    private PermissionManager permissionManager;
 
     @Before
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -582,6 +589,51 @@ public class PermissionHandlingTest extends BaseTest<PermissionHandlingTest> {
 
     }
 
+    // check grant and revoke too
+    @Test
+    public void test_getGranted4() {
+        // remove document grant
+        permissionManager.remove(permissionDataAccess.findPermission(userContext.getUser(), grantAction, documentEntity));
+
+        Set<Permission> currentPermissions = new HashSet<Permission>();
+
+        Set<Permission> toGrant = new HashSet<Permission>();
+        toGrant.add(permissionFactory.create(updateAction, documentEntity));
+
+        Set<Permission> granted = new HashSet<Permission>();
+
+        Set<Permission> notGranted = new HashSet<Permission>();
+        notGranted.add(permissionFactory.create(updateAction, documentEntity));
+
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(1));
+
+    }
+
+    @Test
+    public void test_getGranted5() {
+        // remove document grant
+        permissionManager.remove(permissionDataAccess.findPermission(userContext.getUser(), grantAction, documentEntity));
+
+        Set<Permission> currentPermissions = new HashSet<Permission>();
+        currentPermissions.add(permissionFactory.create(updateAction, documentEntityTitleField));
+
+        Set<Permission> toGrant = new HashSet<Permission>();
+        toGrant.add(permissionFactory.create(updateAction, documentEntityContentField));
+
+        Set<Permission> granted = new HashSet<Permission>();
+
+        Set<Permission> notGranted = new HashSet<Permission>();
+        notGranted.add(permissionFactory.create(updateAction, documentEntityContentField));
+
+        Set<Permission> replaced = new HashSet<Permission>();
+
+        assertSetsEquals(granted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(0));
+        assertSetsEquals(notGranted, permissionHandlingUtils.getGrantable(currentPermissions, toGrant).get(1));
+        assertSetsEquals(replaced, permissionHandlingUtils.getReplacedByGranting(currentPermissions, toGrant));
+
+    }
+
     // Resources->Users
     @Test
     public void test_grant_resource_to_users1() {
@@ -606,7 +658,7 @@ public class PermissionHandlingTest extends BaseTest<PermissionHandlingTest> {
     }
 
     @Test
-    public void test_grant_resource_to_users2() {
+    public void test_grant_resource_to_user4() {
 
         Set<Permission> currentPermissions = new HashSet<Permission>();
         currentPermissions.add(permissionFactory.create(updateAction, documentEntityContentField));
@@ -852,6 +904,50 @@ public class PermissionHandlingTest extends BaseTest<PermissionHandlingTest> {
         assertSetsEquals(granted, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(1));
         assertSetsEquals(revoked, permissionHandlingUtils.getRevokedAndGrantedAfterMerge(currentPermissions, revoked, granted).get(0));
 
+    }
+
+    @Test
+    public void test_getRevoked6() {
+        permissionManager.remove(permissionDataAccess.findPermission(userContext.getUser(), revokeAction, documentEntity));
+
+        Set<Permission> currentPermissions = new HashSet<Permission>();
+        currentPermissions.add(permissionFactory.create(readAction, documentEntity));
+        currentPermissions.add(permissionFactory.create(updateAction, documentEntity));
+
+        Set<Permission> selectedPermissions = new HashSet<Permission>();
+        selectedPermissions.add(permissionFactory.create(readAction, documentEntity));
+
+        Set<Permission> revoked = new HashSet<Permission>();
+
+        Set<Permission> notRevoked = new HashSet<Permission>();
+        notRevoked.add(permissionFactory.create(updateAction, documentEntity));
+
+        assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
+
+        assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(1));
+    }
+
+    @Test
+    public void test_getRevoked7() {
+        permissionManager.remove(permissionDataAccess.findPermission(userContext.getUser(), revokeAction, documentEntity));
+
+        Set<Permission> currentPermissions = new HashSet<Permission>();
+        currentPermissions.add(permissionFactory.create(readAction, documentEntityContentField));
+        currentPermissions.add(permissionFactory.create(updateAction, documentEntityTitleField));
+        currentPermissions.add(permissionFactory.create(updateAction, emailEntity));
+
+        Set<Permission> selectedPermissions = new HashSet<Permission>();
+
+        Set<Permission> revoked = new HashSet<Permission>();
+        revoked.add(permissionFactory.create(updateAction, emailEntity));
+
+        Set<Permission> notRevoked = new HashSet<Permission>();
+        notRevoked.add(permissionFactory.create(readAction, documentEntityContentField));
+        notRevoked.add(permissionFactory.create(updateAction, documentEntityTitleField));
+
+        assertSetsEquals(revoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(0));
+
+        assertSetsEquals(notRevoked, permissionHandlingUtils.getRevokableFromSelected(currentPermissions, selectedPermissions).get(1));
     }
 
     // Combined granting, revoking and replacing - Scenarios

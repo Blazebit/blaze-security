@@ -24,15 +24,13 @@
 
 						<h:panelGroup layout="block">
 							Groups
+							
+							
 							<p:tree value="#{userGroupsBean.groupRoot}" propagateSelectionDown="false" propagateSelectionUp="false"
 								selectionMode="checkbox" selection="#{userGroupsBean.selectedGroupNodes}" var="group"
-								rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+								rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}" id="groupTree">
 								<p:treeNode type="default">
 									<h:outputText value="#{group.userGroup.name}" />
-									<p:commandLink oncomplete="permissionDialog.show()" update=":dialogs" process="@this">
-										<f:setPropertyActionListener target="#{userGroupsBean.selectedGroup}" value="#{group.userGroup}" />
-										<h:outputText value=" (permissions)" />
-									</p:commandLink>
 								</p:treeNode>
 							</p:tree>
 
@@ -50,7 +48,7 @@
 
 							</p:dataTable>
 							<br />
-							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" update=":dialogs"/>
+							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" update=":dialogs" />
 						</h:panelGroup>
 						<h:panelGroup>
 							Permissions
@@ -70,6 +68,10 @@
 							<p:tree value="#{userGroupsBean.currentPermissionTreeRoot}" var="currentPermission" id="currentPermissionTree"
 								rendered="#{userGroupsBean.currentPermissionTreeRoot.childCount ne 0}" selectionMode="checkbox">
 								<p:treeNode>
+									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
+								</p:treeNode>
+								
+								<p:treeNode type="object" icon="ui-icon-contact">
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" id="permission" />
 									<p:tooltip for="permission" rendered="#{not empty currentPermission.tooltip}">#{currentPermission.tooltip}</p:tooltip>
 								</p:treeNode>
@@ -78,8 +80,7 @@
 							<h:panelGroup layout="block" style="height:50px">
 								<p:commandButton value="Back" onclick="groupWizard.back();" style="float:left" />
 								<p:commandButton value="Confirm" style="float:left" action="#{userGroupsBean.confirm}" process="@this"
-									update=":form:tab:groupPermissionsTree:permissionPanelGroup"
-									oncomplete="groupWizard.loadStep (groupWizard.cfg.steps [0], true)" />
+									update=":form:tab:groupPermissionsTree" oncomplete="groupWizard.loadStep (groupWizard.cfg.steps [0], true)" />
 							</h:panelGroup>
 						</h:panelGroup>
 
@@ -88,29 +89,50 @@
 								alt="Not granted" />
 							<br />
 							GREEN and SELECTED entries will be granted after confirmation
-							<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="newPermissionTree"
-								selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox">
-								<p:ajax event="select" update=":form:tab:currentPermissionTree"
-									listener="#{userGroupsBean.rebuildCurrentPermissionTreeSelect}"/>
-								<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
-									listener="#{userGroupsBean.rebuildCurrentPermissionTreeUnselect}" />
-								<p:treeNode>
-									<h:outputText id="permission" value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+							<br />
 
-									<p:tooltip for="permission" rendered="#{not empty newPermission.tooltip}">
+
+							<h:panelGroup id="trees">
+								<p:tree value="#{userGroupsBean.newPermissionTreeRoot}" var="newPermission" id="permissionTree"
+									selection="#{userGroupsBean.selectedPermissionNodes}" selectionMode="checkbox">
+
+									<p:ajax event="select" update=":form:tab:currentPermissionTree"
+										listener="#{userGroupsBean.rebuildCurrentPermissionTreeSelect}" />
+									<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
+										listener="#{userGroupsBean.rebuildCurrentPermissionTreeUnselect}" />
+
+									<p:treeNode>
+										<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" id="perm1" />
+										<p:tooltip for="perm1" rendered="#{not empty newPermission.tooltip}">
 										#{newPermission.tooltip}
-										<ui:repeat var="_instance" value="#{newPermission.nodeInstances}">
-											<br/>
-											<h:outputText value="#{_instance.tooltip}" />
-										</ui:repeat>
 									</p:tooltip>
+									</p:treeNode>
+								</p:tree>
 
+								<p:tree value="#{userGroupsBean.newObjectPermissionTreeRoot}" var="newPermission" id="objectPermissionTree"
+									selection="#{userGroupsBean.selectedObjectPermissionNodes}" selectionMode="checkbox">
 
+									<p:ajax event="select" update=":form:tab:currentPermissionTree"
+										listener="#{userGroupsBean.rebuildCurrentPermissionTreeSelect}" />
+									<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
+										listener="#{userGroupsBean.rebuildCurrentPermissionTreeUnselect}" />
 
+									<p:treeNode type="object" icon="ui-icon-contact">
+										<h:outputText id="permission1"
+											value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
+											style="#{newPermission.marking.style}" />
 
+										<p:tooltip for="permission1" rendered="#{not empty newPermission.tooltip}">
+										#{newPermission.tooltip}</p:tooltip>
 
-								</p:treeNode>
-							</p:tree>
+									</p:treeNode>
+
+									<p:treeNode>
+										<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+									</p:treeNode>
+								</p:tree>
+							</h:panelGroup>
+
 						</h:panelGroup>
 
 					</h:panelGrid>

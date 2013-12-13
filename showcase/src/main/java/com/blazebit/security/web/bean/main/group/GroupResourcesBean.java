@@ -112,8 +112,8 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
         // get replaced permissions
         replacable = permissionHandling.getReplacedByGranting(allPermissions, granted);
         // build trees
-        currentPermissionTreeRoot = buildCurrentUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL));
-        newPermissionTreeRoot = buildNewUserTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL), true);
+        currentPermissionTreeRoot = buildCurrentPermissionTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL));
+        newPermissionTreeRoot = buildNewPermissionTree(groupPermissions, groupDataPermissions, granted, revokable, replacable, !isEnabled(Company.FIELD_LEVEL), true);
     }
 
     public void rebuildCurrentGroupPermissionTreeSelect(org.primefaces.event.NodeSelectEvent event) {

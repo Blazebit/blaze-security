@@ -107,8 +107,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
 
         replaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
 
-        currentPermissionTreeRoot = buildCurrentUserTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
-        newPermissionTreeRoot = buildNewUserTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+        currentPermissionTreeRoot = buildCurrentPermissionTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
+        newPermissionTreeRoot = buildNewPermissionTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
     }
 
     /**

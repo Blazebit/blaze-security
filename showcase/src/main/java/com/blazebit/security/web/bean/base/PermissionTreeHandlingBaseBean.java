@@ -5,10 +5,12 @@ package com.blazebit.security.web.bean.base;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 
 import javax.inject.Inject;
 
@@ -53,21 +55,55 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
     @Inject
     protected EntityResourceFactory entityFieldFactory;
 
-    protected TreeNode buildCurrentUserTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
+    protected TreeNode buildCurrentPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
         return getImmutablePermissionTree(permissions, dataPermissions, concat(replaced, revokable), Marking.REMOVED, hideFieldLevel);
     }
 
-    protected TreeNode buildCurrentUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
+    protected TreeNode buildCurrentPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
         return getImmutablePermissionTree(root, permissions, dataPermissions, concat(replaced, revokable), Marking.REMOVED, hideFieldLevel);
     }
 
-    protected TreeNode buildNewUserTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
+    protected TreeNode buildNewPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
         TreeNode root = new DefaultTreeNode();
         return buildNewUserTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, mutable);
     }
 
-    protected TreeNode buildNewUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean userLevelEnabled) {
+    protected TreeNode buildNewDataPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
+        TreeNode root = new DefaultTreeNode();
+        return buildNewDataPermissionTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, mutable);
+    }
 
+    protected TreeNode buildNewDataPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
+        // new permission tree
+        List<Permission> currentDataPermissions = new ArrayList<Permission>(dataPermissions);
+        currentDataPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentDataPermissions, concat(replaced, revokable)));
+
+        // existing
+        SortedMap<String, List<Permission>> entityPermissions = resourceUtils.groupPermissionsByResourceName(currentDataPermissions);
+        for (String entity : entityPermissions.keySet()) {
+            List<Permission> permissionsByEntity = entityPermissions.get(entity);
+            createEntityNode(root, Collections.EMPTY_SET, Collections.EMPTY_SET, Marking.NONE, Marking.NONE, entity, permissionsByEntity, Collections.EMPTY_LIST, mutable,
+                             hideFieldLevel);
+        }
+        // granted
+        entityPermissions = resourceUtils.groupPermissionsByResourceName(grantable);
+        for (String entity : entityPermissions.keySet()) {
+            List<Permission> permissionsByEntity = entityPermissions.get(entity);
+            createEntityNode(root, new HashSet<Permission>(permissionsByEntity), Collections.EMPTY_SET, Marking.NEW, Marking.NONE, entity, permissionsByEntity,
+                             Collections.EMPTY_LIST, mutable, hideFieldLevel);
+
+        }
+        // revoked
+        entityPermissions = resourceUtils.groupPermissionsByResourceName(revokable);
+        for (String entity : entityPermissions.keySet()) {
+            List<Permission> permissionsByEntity = entityPermissions.get(entity);
+            createEntityNode(root, Collections.EMPTY_SET, new HashSet<Permission>(permissionsByEntity), Marking.NONE, Marking.REMOVED, entity, permissionsByEntity,
+                             Collections.EMPTY_LIST, mutable, hideFieldLevel);
+        }
+        return root;
+    }
+
+    protected TreeNode buildNewUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean userLevelEnabled) {
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(permissions);
         // the mutable permission tree shows the removed permissions too, therefore remove only the replaced ones
@@ -345,6 +381,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 if (hideFieldLevel) {
                     ((TreeNodeModel) actionNode.getData()).setMarking(Marking.OBJECT);
                     ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_FIELDS);
+                    actionNode.setType("object");
                     adjustActionNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permissionsByField, selectable);
                 } else {
                     createFieldNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permissionsByField, selectable);
@@ -370,6 +407,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 actionNodeModel.getInstances().add(instanceModel);
                 actionNodeModel.setMarking(Marking.OBJECT);
                 actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                actionNode.setType("object");
                 // object level permission cannot be optionally granted or revoked.they are just displayed for info and will be
                 // granted or revoked implicitly. TODO find a better solution! at this point there could be 3 object level
                 // permissions on the same treenode: 1 in added state, 1 in to be removed state and 1 in existing state. this
@@ -418,6 +456,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 fieldNodeModel.getInstances().add(instanceModel);
                 fieldNodeModel.setMarking(Marking.OBJECT);
                 fieldNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                fieldNode.setType("object");
                 // object level permission cannot be optionally granted or revoked.they are just displayed for info and will be
                 // granted or revoked implicitly. TODO find a better solution! at this point there could be 3 object level
                 // permissions on the same treenode: 1 in added state, 1 in to be removed state and 1 in existing state. this

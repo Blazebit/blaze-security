@@ -73,22 +73,22 @@ public class UserBean extends GroupHandlingBaseBean {
         }
 
         // test JACC
-        Policy policy = Policy.getPolicy();
-        HttpServletRequest request = (HttpServletRequest) PolicyContext.getContext(HttpServletRequest.class.getName());
-        Principal principal = request.getUserPrincipal();
-
-        CodeSource cs = new CodeSource(null, (java.security.cert.Certificate[]) null);
-        Principal principals[] = new Principal[] { principal };
-        ProtectionDomain pd = new ProtectionDomain(cs, null, null, principals);
-
-        PermissionCollection pc = policy.getPermissions(pd);
-        Enumeration permissions = pc.elements();
-        while (permissions.hasMoreElements()) {
-
-            java.security.Permission permission = (java.security.Permission) permissions.nextElement();
-
-            System.out.println(permission.getName()+" "+permission.getActions());
-        }
+        // Policy policy = Policy.getPolicy();
+        // HttpServletRequest request = (HttpServletRequest) PolicyContext.getContext(HttpServletRequest.class.getName());
+        // Principal principal = request.getUserPrincipal();
+        //
+        // CodeSource cs = new CodeSource(null, (java.security.cert.Certificate[]) null);
+        // Principal principals[] = new Principal[] { principal };
+        // ProtectionDomain pd = new ProtectionDomain(cs, null, null, principals);
+        //
+        // PermissionCollection pc = policy.getPermissions(pd);
+        // Enumeration permissions = pc.elements();
+        // while (permissions.hasMoreElements()) {
+        //
+        // java.security.Permission permission = (java.security.Permission) permissions.nextElement();
+        //
+        // System.out.println(permission.getName()+" "+permission.getActions());
+        // }
         // pc.implies(new WebRoleRefPermission("a", "b"));
 
     }

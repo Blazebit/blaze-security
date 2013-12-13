@@ -358,7 +358,7 @@ public class GroupBean extends GroupHandlingBaseBean {
 
         switch (type) {
             case CURRENT:
-                return buildCurrentUserTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
+                return buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
             case NEW:
                 return buildNewUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL),
                                         isEnabled(Company.USER_LEVEL));

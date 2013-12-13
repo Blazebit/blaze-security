@@ -6,17 +6,14 @@
 	<p:tab id="userGroups" title="Groups" disabled="#{empty userSession.selectedUserGroup}">
 
 		<f:event listener="#{groupBean.init}" type="javax.faces.event.PreRenderComponentEvent" />
-
-
+		<h3>
+			Selected group: #{userSession.selectedUserGroup.name}
+			<p:commandButton action="#{groupBean.unselectGroup}" update=":form:tab" value="X"
+				rendered="#{not empty userSession.selectedUserGroup}" process="@this" />
+		</h3>
 
 		<h:panelGrid columns="2" columnClasses="top,top">
-
 			<h:panelGroup>
-				<h3>
-					Selected group: #{userSession.selectedUserGroup.name}
-					<p:commandButton action="#{groupBean.unselectGroup}" update=":form:tab" value="X"
-						rendered="#{not empty userSession.selectedUserGroup}" process="@this" />
-				</h3>
 				<p:dataTable value="#{groupBean.users}" var="user">
 					<f:facet name="header">Users of #{userSession.selectedUserGroup.name}</f:facet>
 					<p:column>
@@ -26,7 +23,10 @@
 				</p:dataTable>
 			</h:panelGroup>
 
-			<my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions" />
+			<h:panelGroup>
+				Permissions
+				<my:permissionTree id="groupPermissionTableComp" bean="#{groupBean}" tableId="groups_userPermissions"/>
+			</h:panelGroup>
 		</h:panelGrid>
 
 		<h:panelGroup id="groupTree" rendered="#{not groupBean.deletedGroup and not groupBean.movedGroup}">
@@ -95,6 +95,11 @@
 						<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 							rendered="#{not empty permissionModel.tooltip}" />
 					</p:treeNode>
+					<p:treeNode type="object" icon="ui-icon-contact">
+						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm1" />
+						<p:tooltip for="perm1" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
+							rendered="#{not empty permissionModel.tooltip}" />
+					</p:treeNode>
 				</p:tree>
 
 				<p:tree value="#{groupBean.newPermissionRoot}" var="permissionModel" selectionMode="checkbox"
@@ -103,9 +108,14 @@
 						listener="#{groupBean.rebuildCurrentPermissionTreeSelect}" />
 					<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
 						listener="#{groupBean.rebuildCurrentPermissionTreeUnselect}" />
-					<p:treeNode>
+					<p:treeNode type="object" icon="ui-icon-contact">
 						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm" />
 						<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
+							rendered="#{not empty permissionModel.tooltip}" />
+					</p:treeNode>
+					<p:treeNode>
+						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm1" />
+						<p:tooltip for="perm1" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 							rendered="#{not empty permissionModel.tooltip}" />
 					</p:treeNode>
 				</p:tree>

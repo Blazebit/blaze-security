@@ -171,7 +171,7 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
 
         switch (type) {
             case CURRENT:
-                buildCurrentUserTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
+                buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
                 break;
             case NEW:
                 buildNewUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
