@@ -56,6 +56,16 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         initResourceTree();
     }
 
+    private String filter;
+
+    public void filterTree() {
+        try {
+            resourceRoot = getResourceTree(filter);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error in resource name provider!");
+        }
+    }
+
     private void initResourceTree() {
         try {
             resourceRoot = getResourceTree(userPermissions);
@@ -108,7 +118,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         replaced = permissionHandling.getReplacedByGranting(allPermissions, granted);
 
         currentPermissionTreeRoot = buildCurrentPermissionTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL));
-        newPermissionTreeRoot = buildNewPermissionTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+        newPermissionTreeRoot = buildNewPermissionTree(userPermissions, userDataPermissions, granted, revokable, replaced, !isEnabled(Company.FIELD_LEVEL),
+                                                       isEnabled(Company.USER_LEVEL));
     }
 
     /**
@@ -117,7 +128,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
      */
     public void confirmPermissions() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
-        executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, revokable, replaced);
+        executeRevokeAndGrant(getSelectedUser(), allPermissions, selectedPermissions, revokable, replaced);
         init();
     }
 
@@ -180,6 +191,14 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
 
     public void setSelectedResourceNodes(TreeNode[] selectedResourceNodes) {
         this.selectedResourceNodes = selectedResourceNodes;
+    }
+
+    public String getFilter() {
+        return filter;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
     }
 
 }

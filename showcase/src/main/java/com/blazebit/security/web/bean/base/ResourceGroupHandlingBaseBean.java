@@ -157,7 +157,7 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
         List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revoked), grantedPermissions);
         Set<Permission> grantable = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
-        
+
         Set<Permission> additionalGranted = revoke.get(2);
         grantable.addAll(additionalGranted);
         grantable = permissionHandling.getNormalizedPermissions(grantable);
@@ -174,7 +174,8 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
                 buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
                 break;
             case NEW:
-                buildNewUserTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+                buildNewPermissionTree(userNode, userPermissions, userDataPermissions, grantable, revoked, replaced, !isEnabled(Company.FIELD_LEVEL),
+                                       isEnabled(Company.USER_LEVEL), true);
                 break;
 
         }

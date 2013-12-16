@@ -176,7 +176,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
 
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             // confirm users
-            executeRevokeAndGrant(user, userPermissions, selectedPermissions, revokables.get(user), replacables.get(user));
+            executeRevokeAndGrant(user, allPermissions, selectedPermissions, revokables.get(user), replacables.get(user));
 
         }
         // reset

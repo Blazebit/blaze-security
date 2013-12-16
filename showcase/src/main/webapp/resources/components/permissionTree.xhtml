@@ -16,7 +16,7 @@
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>
 			<p:treeNode>
-				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"  style="#{permission.marking.style}" id="perm" />
+				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"  style="#{permission.marking.style}" id="perm" />
 				<p:tooltip for="perm" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>

@@ -161,10 +161,12 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
 
         newPermissionTreeRoot = buildNewPermissionTree(userPermissions, Collections.<Permission>emptyList(),
                                                        new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(0)), revokable, replaced,
-                                                       !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+                                                       !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL), false);
         newObjectPermissionTreeRoot = buildNewDataPermissionTree(Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(permissionHandling
-            .getSeparatedPermissions(grantable)
-            .get(1)), revokable, replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+                                                                     .getSeparatedPermissions(grantable)
+                                                                     .get(1)), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revokable).get(1)), replaced,
+                                                                 !isEnabled(Company.FIELD_LEVEL),
+                                                                 isEnabled(Company.USER_LEVEL));
     }
 
     private Set<Permission> getPermissionsToRevoke(Set<Permission> granted) {
@@ -218,17 +220,6 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         rebuildCurrentPermissionTree();
     }
 
-    private void selectChildrenInstances(TreeNode selectedNode, boolean select) {
-        TreeNodeModel model = (TreeNodeModel) selectedNode.getData();
-        for (TreeNodeModel instance : model.getInstances()) {
-            instance.setSelected(select);
-        }
-        for (TreeNode child : selectedNode.getChildren()) {
-            selectChildrenInstances(child, select);
-        }
-
-    }
-
     public void rebuildCurrentPermissionTreeUnselect(org.primefaces.event.NodeUnselectEvent event) {
         TreeNode selectedNode = event.getTreeNode();
         selectChildrenInstances(selectedNode, false);
@@ -247,7 +238,7 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
     public void confirm() {
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedPermissionNodes);
         selectedPermissions.addAll(getSelectedPermissions(selectedObjectPermissionNodes));
-        executeRevokeAndGrant(getSelectedUser(), userPermissions, selectedPermissions, revokable, replaced);
+        executeRevokeAndGrant(getSelectedUser(), allPermissions, selectedPermissions, revokable, replaced);
 
         for (UserGroup group : removedGroups) {
             userGroupService.removeUserFromGroup(getSelectedUser(), group);

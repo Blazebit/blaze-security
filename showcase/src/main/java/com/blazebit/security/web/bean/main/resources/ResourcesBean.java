@@ -237,8 +237,8 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         newUserNode.setExpanded(true);
         newUserNode.setSelectable(false);
 
-        buildNewUserTree(newUserNode, userPermissions, userDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL),
-                         isEnabled(Company.USER_LEVEL));
+        buildNewPermissionTree(newUserNode, userPermissions, userDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL),
+                               isEnabled(Company.USER_LEVEL), true);
 
     }
 
@@ -300,9 +300,8 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
             User user = (User) ((TreeNodeModel) userNode.getData()).getTarget();
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
             // now confirm groups and users
-            executeRevokeAndGrant(user, userPermissions, selectedPermissions, new HashSet<Permission>(), replacables.get(user));
+            executeRevokeAndGrant(user, allPermissions, selectedPermissions, new HashSet<Permission>(), replacables.get(user));
         }
         init();
     }
@@ -346,7 +345,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         newGroupNode.setExpanded(true);
         newGroupNode.setSelectable(false);
 
-        buildNewUserTree(newGroupNode, groupPermissions, groupDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL), true);
+        buildNewPermissionTree(newGroupNode, groupPermissions, groupDataPermissions, granted, new HashSet<Permission>(), replaced, !isEnabled(Company.FIELD_LEVEL), true, true);
 
     }
 

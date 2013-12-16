@@ -55,6 +55,17 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
     @Inject
     protected EntityResourceFactory entityFieldFactory;
 
+    protected void selectChildrenInstances(TreeNode selectedNode, boolean select) {
+        TreeNodeModel model = (TreeNodeModel) selectedNode.getData();
+        for (TreeNodeModel instance : model.getInstances()) {
+            instance.setSelected(select);
+        }
+        for (TreeNode child : selectedNode.getChildren()) {
+            selectChildrenInstances(child, select);
+        }
+
+    }
+
     protected TreeNode buildCurrentPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel) {
         return getImmutablePermissionTree(permissions, dataPermissions, concat(replaced, revokable), Marking.REMOVED, hideFieldLevel);
     }
@@ -65,7 +76,12 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
 
     protected TreeNode buildNewPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
         TreeNode root = new DefaultTreeNode();
-        return buildNewUserTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, mutable);
+        return buildNewPermissionTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, mutable, true);
+    }
+
+    protected TreeNode buildNewPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable, boolean addEmptyMessage) {
+        TreeNode root = new DefaultTreeNode();
+        return buildNewPermissionTree(root, permissions, dataPermissions, grantable, revokable, replaced, hideFieldLevel, mutable, addEmptyMessage);
     }
 
     protected TreeNode buildNewDataPermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
@@ -103,7 +119,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         return root;
     }
 
-    protected TreeNode buildNewUserTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean userLevelEnabled) {
+    protected TreeNode buildNewPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean userLevelEnabled, boolean addEmptyMessage) {
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(permissions);
         // the mutable permission tree shows the removed permissions too, therefore remove only the replaced ones
@@ -116,10 +132,10 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         currentDataPermissions.addAll(permissionHandling.getSeparatedPermissions(grantable).get(1));
 
         if (userLevelEnabled) {
-            return getMutablePermissionTree(root, currentPermissions, currentDataPermissions, grantable, revokable, Marking.NEW, Marking.REMOVED, hideFieldLevel);
+            return getMutablePermissionTree(root, currentPermissions, currentDataPermissions, grantable, revokable, Marking.NEW, Marking.REMOVED, hideFieldLevel, addEmptyMessage);
         } else {
             currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, concat(replaced, revokable)));
-            return getImmutablePermissionTree(root, currentPermissions, currentDataPermissions, grantable, Marking.NEW, hideFieldLevel);
+            return getImmutablePermissionTree(root, currentPermissions, currentDataPermissions, grantable, Marking.NEW, hideFieldLevel, addEmptyMessage);
         }
     }
 
@@ -231,76 +247,85 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
 
     protected TreeNode getMutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel, true);
     }
 
     protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, false);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, false, true);
     }
 
     protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel, true);
+    }
+
+    protected TreeNode getMutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel, boolean addEmptyMessage) {
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, true, hideFieldLevel,
+                                 addEmptyMessage);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, false);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, false, true);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, hideFieldLevel, true);
     }
 
     protected TreeNode getImmutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, false);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, false, true);
     }
 
     protected TreeNode getImmutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean hideFieldLevel) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, false, hideFieldLevel, true);
     }
 
     protected TreeNode getImmutablePermissionTree(DefaultTreeNode groupNode, List<Permission> permissions, List<Permission> dataPermissions) {
-        return getPermissionTree(groupNode, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, false);
+        return getPermissionTree(groupNode, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, false, true);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, false);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, false, true);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking, boolean hideFieldLevel) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, hideFieldLevel, true);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions, boolean hideFieldLevel) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, hideFieldLevel, true);
     }
 
     protected TreeNode getImmutablePermissionTree(List<Permission> permissions, List<Permission> dataPermissions) {
         TreeNode root = new DefaultTreeNode();
-        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, false);
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, false, true);
     }
 
     protected TreeNode getImmutablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, false);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, false, true);
     }
 
     protected TreeNode getImmutablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Marking selectedMarking, boolean hideFieldLevel) {
-        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selectedPermissions, new HashSet<Permission>(), selectedMarking, Marking.NONE, false, hideFieldLevel, true);
     }
 
     protected TreeNode getImmutablePermissionTree(DefaultTreeNode root, List<Permission> permissions, List<Permission> dataPermissions, boolean hideFieldLevel) {
-        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, new HashSet<Permission>(), new HashSet<Permission>(), Marking.NONE, Marking.NONE, false, hideFieldLevel, true);
     }
 
     protected TreeNode getImmutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selected, Marking marking, boolean hideFieldLevel) {
-        return getPermissionTree(root, permissions, dataPermissions, selected, new HashSet<Permission>(), marking, Marking.NONE, false, hideFieldLevel);
+        return getPermissionTree(root, permissions, dataPermissions, selected, new HashSet<Permission>(), marking, Marking.NONE, false, hideFieldLevel, true);
     }
 
-    private TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean selectable, boolean hideFieldLevel) {
+    protected TreeNode getImmutablePermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selected, Marking marking, boolean hideFieldLevel, boolean addEmptyMessage) {
+        return getPermissionTree(root, permissions, dataPermissions, selected, new HashSet<Permission>(), marking, Marking.NONE, false, hideFieldLevel, addEmptyMessage);
+    }
+
+    private TreeNode getPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> selectedPermissions, Set<Permission> notSelectedPermissions, Marking selectedMarking, Marking notSelectedMarking, boolean selectable, boolean hideFieldLevel, boolean addEmptyMessage) {
         // group permissions by entity
         Map<String, List<Permission>> permissionMapByEntity = resourceUtils.groupPermissionsByResourceName(permissions);
         Map<String, List<Permission>> dataPermissionMapByEntity = resourceUtils.groupPermissionsByResourceName(dataPermissions);
@@ -322,7 +347,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
             createEntityNode(root, selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, entity, new ArrayList<Permission>(), permissionsByEntity,
                              selectable, hideFieldLevel);
         }
-        if (root.getChildCount() == 0) {
+        if (addEmptyMessage && root.getChildCount() == 0) {
             new DefaultTreeNode(new TreeNodeModel("No permissions available", null, null), root).setSelectable(false);
         }
         return root;
@@ -464,22 +489,21 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 fieldNode.setSelectable(false);
                 // mark it selected so that it will be processed
                 fieldNode.setSelected(true);
+            }
+            // mark and select permission on field level-> will be propagated upwards at the end
+            if (isNewPermission) {
+                fieldNodeModel.setMarking(marking1);
+                fieldNode.setSelected(true);
+                fieldNode.setSelectable(selectable);
             } else {
-                // mark and select permission on field level-> will be propagated upwards at the end
-                if (isNewPermission) {
-                    fieldNodeModel.setMarking(marking1);
-                    fieldNode.setSelected(true);
+                if (isRemovedPermission) {
+                    fieldNode.setSelected(false);
+                    fieldNodeModel.setMarking(marking2);
                     fieldNode.setSelectable(selectable);
                 } else {
-                    if (isRemovedPermission) {
-                        fieldNode.setSelected(false);
-                        fieldNodeModel.setMarking(marking2);
-                        fieldNode.setSelectable(selectable);
-                    } else {
-                        // already existing permission for this resource
-                        // fieldNode.setSelected(true);
-                        fieldNode.setSelectable(false);
-                    }
+                    // already existing permission for this resource
+                    // fieldNode.setSelected(true);
+                    fieldNode.setSelectable(false);
                 }
             }
         }
