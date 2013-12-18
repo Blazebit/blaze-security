@@ -1,12 +1,6 @@
 package com.blazebit.security.auth;
 
-import static org.jboss.web.JasperMessages.MESSAGES;
-
-import java.io.File;
-import java.io.FilePermission;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Policy;
@@ -24,10 +18,7 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import javax.security.jacc.PolicyContext;
-import javax.security.jacc.PolicyContextException;
 import javax.security.jacc.WebUserDataPermission;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
@@ -37,7 +28,6 @@ import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.service.resource.UserDataAccess;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 
 public class ShowcaseLoginModule implements LoginModule {
 

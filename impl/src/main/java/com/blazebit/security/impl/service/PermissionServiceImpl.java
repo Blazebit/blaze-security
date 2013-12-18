@@ -20,7 +20,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.validation.constraints.NotNull;
 
 import org.apache.deltaspike.core.util.ServiceUtils;
 
@@ -38,8 +37,8 @@ import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.Role;
 import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.Company;
-import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling;
 import com.blazebit.security.service.api.PropertyDataAccess;
 import com.blazebit.security.spi.ActionImplicationProvider;
 
@@ -73,15 +72,27 @@ public class PermissionServiceImpl extends PermissionCheckBase implements Permis
 
     private List<ActionImplicationProvider> actionImplicationProviders;
 
+    @Inject
+    private UserContext userContext;
+
     @PostConstruct
     private void init() {
         actionImplicationProviders = ServiceUtils.loadServiceImplementations(ActionImplicationProvider.class);
     }
 
     @Override
+    public boolean isGranted(Action action, Resource resource) {
+        return isGranted(userContext.getUser(), action, resource);
+    }
+
+    @Override
     public boolean isGranted(Subject subject, Action action, Resource resource) {
         checkParameters(subject, action, resource);
         List<Permission> permissions = permissionManager.getPermissions(subject);
+        return isGranted(permissions, action, resource);
+    }
+
+    private boolean isGranted(List<Permission> permissions, Action action, Resource resource) {
         for (Permission permission : permissions) {
             if (permission.getAction().implies(action) && permission.getResource().implies(resource)) {
                 return true;

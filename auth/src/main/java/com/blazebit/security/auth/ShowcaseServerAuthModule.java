@@ -1,8 +1,6 @@
 package com.blazebit.security.auth;
 
 import java.io.IOException;
-import java.security.Principal;
-import java.util.List;
 import java.util.Map;
 
 import javax.security.auth.Subject;
@@ -20,13 +18,8 @@ import javax.security.auth.message.module.ServerAuthModule;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.deltaspike.core.api.provider.BeanProvider;
+import org.apache.catalina.realm.GenericPrincipal;
 
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.service.resource.UserDataAccess;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 
 /**
  * The actual Server Authentication Module AKA SAM.
@@ -48,44 +41,30 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
     // TODO examples for other validateRequests: https://java.net/projects/nobis/sources/git/show/Nobis/authentication
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
-        HttpServletRequest request = (HttpServletRequest) messageInfo.getRequestMessage();
         if (requestPolicy.isMandatory()) {
-            Principal userPrincipal = request.getUserPrincipal();
+            GenericPrincipal userPrincipal = (GenericPrincipal) clientSubject.getPrincipals().iterator().next(); //request.getUserPrincipal();
+            
             if (userPrincipal != null) {
-                PermissionManager permissionManager = BeanProvider.getContextualReference(PermissionManager.class);
-                UserGroupDataAccess userGroupDataAccess = BeanProvider.getContextualReference(UserGroupDataAccess.class);
-                UserDataAccess userDataAccess = BeanProvider.getContextualReference(UserDataAccess.class);
-                User user = userDataAccess.findUser(Integer.valueOf(userPrincipal.getName()));
-                if (user != null) {
-                    // Create a handler to add the caller principal (AKA
-                    // user principal)
-                    // This will be the name of the principal returned by e.g.
-                    // HttpServletRequest#getUserPrincipal
-                    CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, String.valueOf(user.getId()));
+                // Create a handler to add the caller principal (AKA
+                // user principal)
+                // This will be the name of the principal returned by e.g.
+                // HttpServletRequest#getUserPrincipal
+                CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, userPrincipal);
+                // Create a handler to add the groups
+                // This is what e.g. HttpServletRequest#isUserInRole and @RolesAllowed test for
+                GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, userPrincipal.getRoles());
 
-                    List<UserGroup> groups = userGroupDataAccess.getGroupsForUser(user);
-                    List<String> resourceNames = permissionManager.getPermissionResources(user);
-
-                    for (UserGroup userGroup : groups) {
-                        resourceNames.add(userGroup.getName());
-                    }
-
-                    // Create a handler to add the groups
-                    // This is what e.g. HttpServletRequest#isUserInRole and @RolesAllowed test for
-                    GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, resourceNames.toArray(new String[resourceNames.size()]));
-
-                    // Execute the handlers we created above. This will typically add the
-                    // principal and the
-                    // role in an application server specific way to the JAAS Subject.
-                    try {
-                        handler.handle(new Callback[] { callerPrincipalCallback, groupPrincipalCallback });
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedCallbackException ee) {
-                        ee.printStackTrace();
-                    }
-                    return AuthStatus.SUCCESS;
+                // Execute the handlers we created above. This will typically add the
+                // principal and the
+                // role in an application server specific way to the JAAS Subject.
+                try {
+                    handler.handle(new Callback[] { callerPrincipalCallback, groupPrincipalCallback });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (UnsupportedCallbackException ee) {
+                    ee.printStackTrace();
                 }
+                return AuthStatus.SUCCESS;
             }
         } else {
             // if requestPolicy is not mandatory, everything OK

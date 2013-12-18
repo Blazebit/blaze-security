@@ -113,7 +113,9 @@ public class WebJASPIAuthenticator extends AuthenticatorBase {
         WebJASPICallbackHandler cbh = new WebJASPICallbackHandler();
         ServerAuthenticationManager sam = getServerAuthenticationManager();
         String appContext = request.getLocalName() + " " + request.getContextPath();
+        //use subject to fetch identity and roles
         Subject clientSubject = new Subject();
+        clientSubject.getPrincipals().add(request.getPrincipal());
         if (sam != null) {
             result = sam.isValid(messageInfo, clientSubject, messageLayer, appContext, cbh);
         }

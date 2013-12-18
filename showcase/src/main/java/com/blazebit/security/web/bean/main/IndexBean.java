@@ -77,7 +77,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
 
         if (request.getUserPrincipal() == null) {
             try {
-                request.login(String.valueOf(user.getId()), "AAA" /* user.getPassword() */);
+                request.login(String.valueOf(user.getId()), null /* user.getPassword() */);
                 System.out.println("Logged in: " + request.getUserPrincipal().getName());
             } catch (ServletException e) {
                 System.err.println("Login failed!");

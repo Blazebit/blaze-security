@@ -175,9 +175,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 
     private void setFieldNodeProperties(String field, DefaultTreeNode fieldNode, Permission permission) {
         if (this.action.equals("grant")) {
+            // hide if implied by entity field permissions. why? TODO
             if (permissionHandling.implies(currentPermissions, permission)) {
                 // fieldNode.setParent(null);
                 fieldNode.getParent().getChildren().remove(fieldNode);
+                //fieldNode.setSelectable(false);
             } else {
                 if (permissionHandling.implies(currentDataPermissions, permission)) {
                     fieldNode.setSelectable(false);

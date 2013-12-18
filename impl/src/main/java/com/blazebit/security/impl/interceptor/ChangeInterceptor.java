@@ -102,7 +102,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
         PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
         boolean isGranted = changedPropertyNames.isEmpty();
         for (String propertyName : changedPropertyNames) {
-            isGranted = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.UPDATE),
+            isGranted = permissionService.isGranted(actionFactory.createAction(ActionConstants.UPDATE),
                                                     resourceNameFactory.createResource((IdHolder) entity, propertyName));
             if (!isGranted) {
                 break;
@@ -156,12 +156,12 @@ public class ChangeInterceptor extends EmptyInterceptor {
             // if there is a difference between oldValues and newValues
             if (!oldValues.isEmpty()) {
                 // if something remained
-                isGrantedToRemove = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.REMOVE),
+                isGrantedToRemove = permissionService.isGranted(actionFactory.createAction(ActionConstants.REMOVE),
                                                                 resourceNameFactory.createResource((IdHolder) entity, fieldName));
             }
             newValues.removeAll(retained);
             if (!newValues.isEmpty()) {
-                isGrantedToAdd = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                isGrantedToAdd = permissionService.isGranted(actionFactory.createAction(ActionConstants.ADD),
                                                              resourceNameFactory.createResource((IdHolder) entity, fieldName));
             }
 
@@ -255,7 +255,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
                 Collection<?> collection = (Collection<?>) state[i];
                 if (!collection.isEmpty()) {
                     // elements have been added
-                    isGrantedAddEntity = permissionService.isGranted(userContext.getUser(), actionFactory.createAction(ActionConstants.ADD),
+                    isGrantedAddEntity = permissionService.isGranted(actionFactory.createAction(ActionConstants.ADD),
                                                                      resourceNameFactory.createResource((IdHolder) entity, fieldName));
                     if (!isGrantedAddEntity) {
                         throw new PermissionActionException("Element to Entity " + entity + "'s collection " + fieldName + " cannot be added by " + userContext.getUser());

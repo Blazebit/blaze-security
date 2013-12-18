@@ -28,6 +28,14 @@ public interface PermissionService {
      * @return true if subject has permission to perform action on resource
      */
     public boolean isGranted(Subject subject, Action action, Resource resource);
+    
+    /**
+     * 
+     * @param action
+     * @param resource
+     * @return true if logged in user has permission to perform action on resource
+     */
+    public boolean isGranted(Action action, Resource resource);
 
     /**
      * authorizer grants permission to subject to perform action on given resource
@@ -292,6 +300,8 @@ public interface PermissionService {
      */
     public void revoke(Subject authorizer, Role role, Action action, Resource resource, boolean force, boolean propagate) throws PermissionException,
         PermissionActionException;
+
+
 
     // /**
     // *

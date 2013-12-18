@@ -79,7 +79,7 @@ public class PermissionManagerImpl implements PermissionManager {
         return entityManager
             .createQuery("SELECT distinct permission.id.entity FROM "
                              + SubjectPermission.class.getName()
-                             + " permission WHERE permission.id.subject = :subject and (permission.id.actionName='UPDATE' or permission.id.actionName='READ') ORDER BY permission.id.entity")
+                             + " permission WHERE permission.id.subject = :subject ORDER BY permission.id.entity")
             .setParameter("subject", subject)
             .getResultList();
     }

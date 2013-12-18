@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIViewRoot;
@@ -42,6 +43,7 @@ import com.blazebit.security.web.service.api.UserGroupService;
  */
 @ManagedBean(name = "groupBean")
 @ViewScoped
+@RolesAllowed("UserGroup")
 public class GroupBean extends GroupHandlingBaseBean {
 
     /**

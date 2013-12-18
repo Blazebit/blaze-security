@@ -24,6 +24,11 @@
 				</p:submenu>
 			</p:menu>
 			<br />
+			
+			<p:commandButton value="jacc" update=":form:jacc"/><br/>
+			<h:panelGroup id="jacc">
+				<h:outputText value="#{permissionsBean.testJacc()}" escape="false"/>
+			</h:panelGroup>
 			<p:dataTable value="#{permissionsBean.permissions}" var="permission" style="width:100%">
 			   <f:event listener="#{permissionsBean.initPermissions}" type="preRenderComponent" />
 				<p:column sortBy="#{permission.entity.id.subject.company.name}"

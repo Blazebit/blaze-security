@@ -28,6 +28,8 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
+import com.blazebit.security.auth.impl.JaccPermissionProvider;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
@@ -47,6 +49,9 @@ public class UserBean extends GroupHandlingBaseBean {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private JaccPermissionProvider permissionProvider;
 
     private List<User> users = new ArrayList<User>();
     private User selectedUser;
@@ -71,26 +76,7 @@ public class UserBean extends GroupHandlingBaseBean {
         if (getSelectedUser() != null) {
             selectUser(getSelectedUser());
         }
-
-        // test JACC
-        // Policy policy = Policy.getPolicy();
-        // HttpServletRequest request = (HttpServletRequest) PolicyContext.getContext(HttpServletRequest.class.getName());
-        // Principal principal = request.getUserPrincipal();
-        //
-        // CodeSource cs = new CodeSource(null, (java.security.cert.Certificate[]) null);
-        // Principal principals[] = new Principal[] { principal };
-        // ProtectionDomain pd = new ProtectionDomain(cs, null, null, principals);
-        //
-        // PermissionCollection pc = policy.getPermissions(pd);
-        // Enumeration permissions = pc.elements();
-        // while (permissions.hasMoreElements()) {
-        //
-        // java.security.Permission permission = (java.security.Permission) permissions.nextElement();
-        //
-        // System.out.println(permission.getName()+" "+permission.getActions());
-        // }
-        // pc.implies(new WebRoleRefPermission("a", "b"));
-
+        permissionProvider.getUserRoles();
     }
 
     // first tab: select user -> display groups and permissions of selected user
