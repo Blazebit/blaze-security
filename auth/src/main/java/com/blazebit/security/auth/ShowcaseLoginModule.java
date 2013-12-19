@@ -57,8 +57,8 @@ public class ShowcaseLoginModule implements LoginModule {
 
             String userId = nameCallback.getName();
             char[] pass = passwordCallback.getPassword();
+            
             // TODO validate!
-            initSecurity(userId);
             authenticated = true;
         } catch (IOException e) {
             throw new LoginException(e.getMessage());
@@ -66,40 +66,6 @@ public class ShowcaseLoginModule implements LoginModule {
             throw new LoginException(e.getMessage());
         }
         return authenticated;
-    }
-
-    private void initSecurity(final String userId) {
-
-        // Setup the PermissionCollection for this web app context
-        // based on the permissions configured for the root of the
-        // web app context directory, then add a file read permission
-        // for that directory.
-        Policy policy = Policy.getPolicy();
-        if (policy != null) {
-            CodeSource codeSource = new CodeSource(null, (Certificate[]) null);
-            Principal principals[] = new Principal[] { new Principal() {
-
-                @Override
-                public String getName() {
-                    return userId;
-                }
-            } };
-            ProtectionDomain pd = new ProtectionDomain(codeSource, null, null, principals);
-            PermissionCollection permissionCollection = policy.getPermissions(pd);
-            PermissionManager permissionManager = BeanProvider.getContextualReference(PermissionManager.class);
-
-            UserDataAccess userDataAccess = BeanProvider.getContextualReference(UserDataAccess.class);
-            User user = userDataAccess.findUser(Integer.valueOf(userId));
-            if (user != null) {
-                List<Permission> permissions = permissionManager.getPermissions(user);
-                for (Permission permission : permissions) {
-                    WebUserDataPermission webudp = new WebUserDataPermission(((EntityField) permission.getResource()).getEntity(),
-                        ((EntityAction) permission.getAction()).getActionName());
-                    permissionCollection.add(webudp);
-                }
-            }
-
-        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.blazebit.security.auth;
+package com.blazebit.security.auth.jaspic;
 
 import java.util.Map;
 

@@ -27,7 +27,7 @@ import com.blazebit.security.impl.model.ResourceName;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Document", module = "Document management")
+@ResourceName(name = "Document", module = "DM")
 public class Document implements Serializable, IdHolder {
 
     /**

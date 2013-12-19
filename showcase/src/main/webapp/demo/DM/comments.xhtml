@@ -79,7 +79,7 @@
 			<h:panelGroup id="actions">
 				<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
 					panelStyle="width:220px" valueChangeListener="#{commentBean.selectAction}"
-					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and (securityBaseBean.isAuthorizedResource('GRANT', commentBean.tabEntity) or commentBean.isAuthorizedResource('REVOKE', commentBean.tabEntityClass))}">
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and (securityBaseBean.isAuthorizedResource('GRANT', commentBean.tabEntity) or commentBean.isAuthorizedResource('REVOKE', commentBean.tabEntity))}">
 					<f:selectItems value="#{commentBean.entityActions}" var="action" itemLabel="#{action.actionName}"
 						itemValue="#{action.actionName}" />
 				</p:selectCheckboxMenu>

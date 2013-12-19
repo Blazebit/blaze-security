@@ -9,18 +9,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.jboss.logging.Logger;
+
 import com.blazebit.security.PermissionManager;
-import com.blazebit.security.PermissionService;
+import com.blazebit.security.auth.model.Credentials;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.web.bean.base.PermissionHandlingBaseBean;
@@ -35,6 +41,8 @@ import com.blazebit.security.web.service.api.UserService;
 @ManagedBean(name = "indexBean")
 @ViewScoped
 public class IndexBean extends PermissionHandlingBaseBean implements Serializable {
+
+    protected Logger log = Logger.getLogger(IndexBean.class);
 
     /**
      * 
@@ -55,7 +63,11 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
     private CompanyService companyService;
 
     @Inject
-    private PermissionService permissionService;
+    @RequestScoped
+    private LoginContext loginContext;
+
+    @Inject
+    private Credentials credentials;
 
     @PostConstruct
     public void init() {
@@ -77,21 +89,36 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
 
         if (request.getUserPrincipal() == null) {
             try {
-                request.login(String.valueOf(user.getId()), null /* user.getPassword() */);
-                System.out.println("Logged in: " + request.getUserPrincipal().getName());
-            } catch (ServletException e) {
-                System.err.println("Login failed!");
+                credentials.setLogin(String.valueOf(user.getId()));
+                credentials.setPassword("");
+                // request.login(credentials.getLogin(), credentials.getPassword());
+                loginContext.login();
+                System.out.println(loginContext.getSubject().getPrincipals().iterator().next().getName());
+                request.authenticate((HttpServletResponse) externalContext.getResponse());
+                log.info("Logged in  " + credentials.getLogin());
+
+                System.out.println(request.isUserInRole("DM"));
+            } catch (LoginException e) {
+                log.error("Login " + credentials.getLogin() + " failed", e);
+            } catch (ServletException e1) {
+                log.error("Login " + credentials.getLogin() + " failed", e1);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         } else {
             try {
-                request.logout();
+                loginContext.logout();
+                // request.logout();
                 logInAs(user);
-            } catch (ServletException e) {
-                System.err.println("Logout failed!");
-                e.printStackTrace();
+            } catch (LoginException e) {
+                log.error("Logout " + request.getUserPrincipal() + " failed");
+
+                // } catch (ServletException e) {
+                // log.error("Logout " + request.getUserPrincipal() + " failed");
             }
         }
+        // dont redirect
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }

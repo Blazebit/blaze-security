@@ -1,4 +1,4 @@
-package com.blazebit.security.auth;
+package com.blazebit.security.auth.jaspic;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.LoginContext;
 import javax.security.auth.message.AuthException;
 import javax.security.auth.message.AuthStatus;
 import javax.security.auth.message.MessageInfo;
@@ -14,6 +15,10 @@ import javax.security.auth.message.MessagePolicy.TargetPolicy;
 import javax.security.auth.message.ServerAuth;
 import javax.security.auth.message.config.ServerAuthContext;
 import javax.security.auth.message.module.ServerAuthModule;
+
+import org.apache.deltaspike.core.api.provider.BeanProvider;
+
+import com.blazebit.security.auth.impl.LoginContextProducer;
 
 /**
  * The Server Authentication Context is an extra (required) indirection between the Application Server and the actual Server
@@ -44,20 +49,7 @@ public class MainServerAuthContext implements ServerAuthContext {
 
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
-        for (ServerAuthModule serverAuthModule : serverAuthModules) {
-            AuthStatus result = serverAuthModule.validateRequest(messageInfo, clientSubject, serviceSubject);
-
-            // jaspi spec p 88
-            if (result == AuthStatus.SUCCESS) {
-                continue;
-            }
-            if (result == AuthStatus.SEND_SUCCESS || result == AuthStatus.SEND_CONTINUE || result == AuthStatus.FAILURE) {
-                return result;
-            }
-
-            throw new AuthException("Invalid AuthStatus " + result + " from server auth module validateRequest: " + serverAuthModule);
-        }
-        return AuthStatus.SUCCESS;
+        return serverAuthModule.validateRequest(messageInfo, clientSubject, serviceSubject);
     }
 
     @Override

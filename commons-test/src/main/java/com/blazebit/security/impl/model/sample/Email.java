@@ -27,7 +27,7 @@ import com.blazebit.security.impl.model.ResourceName;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Email", module = "Document management")
+@ResourceName(name = "Email", module = "DM")
 public class Email implements Serializable, IdHolder {
 
     /**

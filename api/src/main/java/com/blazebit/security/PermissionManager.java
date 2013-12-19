@@ -14,6 +14,7 @@ package com.blazebit.security;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 
@@ -74,5 +75,7 @@ public interface PermissionManager {
     public void flush();
 
     List<String> getPermissionResources(Subject subject);
+
+    Set<String> getPermissionModules(Subject subject);
 
 }

@@ -25,13 +25,16 @@ public class WebUserContext implements UserContext {
      * 
      */
     private static final long serialVersionUID = 1L;
-    
+
     @Inject
     private UserDataAccess userDataAccess;
 
     @Override
     public User getUser() {
         HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        if (request.getUserPrincipal() == null) {
+            throw new SecurityException("No logged in user");
+        }
         User user = userDataAccess.findUser(Integer.valueOf(request.getUserPrincipal().getName()));
         return user;
         // return userSession.getUser();

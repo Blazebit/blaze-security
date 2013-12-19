@@ -13,9 +13,12 @@
 package com.blazebit.security.impl.model;
 
 import java.io.Serializable;
+import java.security.Principal;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Vector;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
@@ -181,6 +184,26 @@ public class UserGroup implements Role, Serializable, IdHolder {
     @Transient
     public Collection<Role> getRoles() {
         return (Collection<Role>) (Collection<?>) userGroups;
+    }
+
+    @Override
+    public boolean addMember(Principal user) {
+        return getSubjects().add((Subject) user);
+    }
+
+    @Override
+    public boolean removeMember(Principal user) {
+        return getSubjects().remove((Subject) user);
+    }
+
+    @Override
+    public boolean isMember(Principal member) {
+        return getSubjects().contains((Subject) member);
+    }
+
+    @Override
+    public Enumeration<? extends Principal> members() {
+        return new Vector<Subject>(getSubjects()).elements();
     }
 
 }

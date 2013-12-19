@@ -12,13 +12,14 @@
  */
 package com.blazebit.security;
 
+import java.security.Principal;
 import java.util.Collection;
 
 /**
  * 
  * @author Christian Beikov
  */
-public interface Subject {
+public interface Subject extends Principal{
 
     public Collection<Role> getRoles();
 

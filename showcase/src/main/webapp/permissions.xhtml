@@ -13,24 +13,8 @@
 	<h:body>
 		<h:form id="form">
 
-
-			<p:menu>
-				<p:submenu label="Menu">
-					<p:menuitem value="Users" url="/main/user/users.xhtml" />
-					<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
-					<p:menuitem value="Resources" url="/main/resource/resources.xhtml" />
-					<p:menuitem value="Carriers" url="/main/demo/carriers.xhtml" />
-					<p:menuitem value="Comments" url="/main/demo/comments.xhtml" />
-				</p:submenu>
-			</p:menu>
-			<br />
-			
-			<p:commandButton value="jacc" update=":form:jacc"/><br/>
-			<h:panelGroup id="jacc">
-				<h:outputText value="#{permissionsBean.testJacc()}" escape="false"/>
-			</h:panelGroup>
 			<p:dataTable value="#{permissionsBean.permissions}" var="permission" style="width:100%">
-			   <f:event listener="#{permissionsBean.initPermissions}" type="preRenderComponent" />
+				<f:event listener="#{permissionsBean.initPermissions}" type="preRenderComponent" />
 				<p:column sortBy="#{permission.entity.id.subject.company.name}"
 					filterBy="#{permission.entity.id.subject.company.name}">
 					<f:facet name="Company"></f:facet>

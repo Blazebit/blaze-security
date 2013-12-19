@@ -26,41 +26,73 @@
 		<error-code>403</error-code>
 		<location>/error.xhtml</location>
 	</error-page>
-	
+
 	<error-page>
-		<exception-type>com.blazebit.security.PermissionException.class</exception-type>
+		<exception-type>com.blazebit.security.PermissionException</exception-type>
 		<location>/error.xhtml</location>
 	</error-page>
-	
+
 	<error-page>
-		<exception-type>com.blazebit.security.PermissionActionException.class</exception-type>
+		<exception-type>com.blazebit.security.PermissionActionException</exception-type>
 		<location>/error.xhtml</location>
 	</error-page>
 
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>Main</web-resource-name>
-			<url-pattern>/main/user/*</url-pattern>
+			<url-pattern>/main/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
-			<role-name>User</role-name>
-			<role-name>UserGroup</role-name>
+			<role-name>Core</role-name>
 		</auth-constraint>
 	</security-constraint>
 
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>Carrier</web-resource-name>
-			<url-pattern>/main/demo/carriers.xhtml</url-pattern>
+			<url-pattern>/demo/Carrier/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>Carrier</role-name>
 		</auth-constraint>
 	</security-constraint>
-
-	<login-config>
-		<auth-method>BASIC</auth-method>
-	</login-config>
 	
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>Core</web-resource-name>
+			<url-pattern>/demo/Core/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>Core</role-name>
+		</auth-constraint>
+	</security-constraint>
 	
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>DM</web-resource-name>
+			<url-pattern>/demo/DM/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>DM</role-name>
+		</auth-constraint>
+	</security-constraint>
+	
+	<!-- Security roles referenced by this web application -->
+	<security-role>
+		<role-name>Core</role-name>
+	</security-role>
+	<security-role>
+		<role-name>DM</role-name>
+	</security-role>
+	<security-role>
+		<role-name>Carrier</role-name>
+	</security-role>
+	
+<!-- 	<servlet> -->
+<!-- 		<servlet-name>AServlet</servlet-name> -->
+<!-- 		<security-role-ref> -->
+<!-- 			<role-name>Carrier</role-name> -->
+<!-- 			<role-link>Carrier2</role-link> -->
+<!-- 		</security-role-ref> -->
+<!-- 	</servlet> -->
 </web-app>

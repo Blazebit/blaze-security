@@ -1,4 +1,4 @@
-package com.blazebit.security.auth;
+package com.blazebit.security.auth.jaspic;
 
 import javax.security.auth.message.config.AuthConfigFactory;
 import javax.servlet.ServletContextEvent;

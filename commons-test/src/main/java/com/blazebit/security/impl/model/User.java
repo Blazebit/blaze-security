@@ -13,7 +13,6 @@
 package com.blazebit.security.impl.model;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -162,6 +161,12 @@ public class User implements Subject, Serializable, IdHolder {
     @Transient
     public Set<Role> getRoles() {
         return new HashSet<Role>(userGroups);
+    }
+
+    @Override
+    @Transient
+    public String getName() {
+        return String.valueOf(id);
     }
 
 }

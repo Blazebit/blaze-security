@@ -14,7 +14,9 @@
 package com.blazebit.security.impl.service;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -27,6 +29,7 @@ import com.blazebit.security.RolePermission;
 import com.blazebit.security.Subject;
 import com.blazebit.security.SubjectPermission;
 import com.blazebit.security.impl.context.Security;
+import com.blazebit.security.metamodel.ResourceMetamodel;
 
 /**
  * 
@@ -38,6 +41,9 @@ public class PermissionManagerImpl implements PermissionManager {
     @Inject
     @Security
     private EntityManager entityManager;
+
+    @Inject
+    private ResourceMetamodel resourceMetaModel;
 
     @Override
     public <P extends Permission> P save(P permission) {
@@ -77,11 +83,20 @@ public class PermissionManagerImpl implements PermissionManager {
             throw new IllegalArgumentException("Subject cannot be null");
         }
         return entityManager
-            .createQuery("SELECT distinct permission.id.entity FROM "
-                             + SubjectPermission.class.getName()
+            .createQuery("SELECT distinct permission.id.entity FROM " + SubjectPermission.class.getName()
                              + " permission WHERE permission.id.subject = :subject ORDER BY permission.id.entity")
             .setParameter("subject", subject)
             .getResultList();
+    }
+
+    @Override
+    public Set<String> getPermissionModules(Subject subject) {
+        Set<String> ret = new HashSet<String>();
+        List<String> resources = getPermissionResources(subject);
+        for (String resource : resources) {
+            ret.add(resourceMetaModel.getModuleForResource(resource));
+        }
+        return ret;
     }
 
     @SuppressWarnings("unchecked")

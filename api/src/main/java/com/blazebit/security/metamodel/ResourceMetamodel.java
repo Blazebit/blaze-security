@@ -73,4 +73,6 @@ public interface ResourceMetamodel {
      * @return
      */
     public List<String> getFields(Class<?> entityClass);
+
+    public String getModuleForResource(String resource);
 }

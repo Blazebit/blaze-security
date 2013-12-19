@@ -29,7 +29,7 @@ import com.blazebit.security.impl.model.User;
  * @author cuszk
  */
 @Entity
-@ResourceName(name = "Comment", module = "Document management")
+@ResourceName(name = "Comment", module = "DM")
 public class Comment implements IdHolder, Serializable {
 
     /**

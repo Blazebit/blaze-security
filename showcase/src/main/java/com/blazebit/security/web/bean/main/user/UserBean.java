@@ -17,6 +17,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIViewRoot;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.security.jacc.PolicyContext;
@@ -28,7 +29,7 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
-import com.blazebit.security.auth.impl.JaccPermissionProvider;
+import com.blazebit.security.auth.provider.JaccPermissionProvider;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
@@ -76,7 +77,6 @@ public class UserBean extends GroupHandlingBaseBean {
         if (getSelectedUser() != null) {
             selectUser(getSelectedUser());
         }
-        permissionProvider.getUserRoles();
     }
 
     // first tab: select user -> display groups and permissions of selected user

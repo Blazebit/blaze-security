@@ -20,30 +20,12 @@ import java.util.Collection;
  * 
  * @author Christian Beikov
  */
-public interface Role extends Principal, Group{
-
-    /**
-     * 
-     * @return collection of all the permissions of a role
-     */
-    public Collection<Permission> getAllPermissions();
+public interface Module extends Principal, Group {
 
     /**
      * 
      * @return subjects of a role
      */
-    public Collection<Subject> getSubjects();
-
-    /**
-     * 
-     * @return children roles
-     */
-    public Collection<Role> getRoles();
-
-    /**
-     * 
-     * @return
-     */
-    public Role getParent();
+    public Collection<Principal> getMembers();
 
 }

@@ -62,6 +62,16 @@ public class ResourceMetamodelProducer {
             }
 
             @Override
+            public String getModuleForResource(String resource) {
+                for (ResourceDefinition def : getResourceDefinitions().keySet()) {
+                    if (def.getResourceName().equals(resource)) {
+                        return def.getModuleName();
+                    }
+                }
+                throw new IllegalArgumentException("Resource name " + resource + " is not inside a module!");
+            }
+
+            @Override
             public String getEntityClassNameByResourceName(String resourceName) {
                 for (ResourceDefinition resourceDefinition : getResourceDefinitions().keySet()) {
                     if (resourceDefinition.getResourceName().equals(resourceName)) {
