@@ -1,7 +1,8 @@
 package com.blazebit.security.auth.impl;
 
 import java.net.URISyntaxException;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
@@ -11,6 +12,8 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author blep Date: 16/02/12 Time: 07:28
  */
@@ -19,6 +22,8 @@ public class LoginContextProducer {
     // ======================================
     // = Attributes =
     // ======================================
+
+    protected Logger log = Logger.getLogger(LoginContextProducer.class);
 
     @Inject
     private SimpleCallbackHandler callbackHandler;
@@ -30,7 +35,8 @@ public class LoginContextProducer {
     @Produces
     public LoginContext produceLoginContext(@LoginConfigFile String loginConfigFileName, @LoginModuleName final String loginModuleName) throws LoginException, URISyntaxException {
 
-        //System.setProperty("java.security.auth.login.config", new File(LoginContextProducer.class.getResource(loginConfigFileName).getFile()).getPath());
+        // System.setProperty("java.security.auth.login.config", new
+        // File(LoginContextProducer.class.getResource(loginConfigFileName).getFile()).getPath());
 
         try {
             return new LoginContext(loginModuleName, null, callbackHandler, new Configuration() {
@@ -38,13 +44,15 @@ public class LoginContextProducer {
                 @Override
                 public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
                     AppConfigurationEntry[] entry = new AppConfigurationEntry[1];
-                    entry[0] = new AppConfigurationEntry("com.blazebit.security.auth."+loginModuleName, LoginModuleControlFlag.REQUIRED, Collections.EMPTY_MAP);
+                    Map<String, String> options = new HashMap<String, String>();
+                    options.put("password-stacking", "useFirstPass");
+                    entry[0] = new AppConfigurationEntry(loginModuleName, LoginModuleControlFlag.REQUIRED, options);
                     return entry;
                 }
 
             });
         } catch (Exception e) {
-            System.out.println("ouch!!!");
+            log.error("Failed to create login context!", e);
             return null;
         }
     }

@@ -5,17 +5,21 @@ package com.blazebit.security.web.bean.main;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
+import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
@@ -63,7 +67,7 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
     private CompanyService companyService;
 
     @Inject
-    @RequestScoped
+    @SessionScoped
     private LoginContext loginContext;
 
     @Inject
@@ -80,47 +84,57 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
     }
 
     public void logInAs(User user) {
+        credentials.setLogin(String.valueOf(user.getId()));
+        credentials.setPassword("");
+
         userSession.setUser(user);
         userSession.setAdmin(userService.findUser("superAdmin", selectedCompany));
+
         // programatic login
         FacesContext context = FacesContext.getCurrentInstance();
         ExternalContext externalContext = context.getExternalContext();
         HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
 
-        if (request.getUserPrincipal() == null) {
+        if (loginContext.getSubject() == null) {
             try {
-                credentials.setLogin(String.valueOf(user.getId()));
-                credentials.setPassword("");
                 // request.login(credentials.getLogin(), credentials.getPassword());
                 loginContext.login();
-                System.out.println(loginContext.getSubject().getPrincipals().iterator().next().getName());
-                request.authenticate((HttpServletResponse) externalContext.getResponse());
-                log.info("Logged in  " + credentials.getLogin());
-
-                System.out.println(request.isUserInRole("DM"));
+                if (loginContext.getSubject() != null) {
+                    userSession.setSubject(loginContext.getSubject());
+                    // test validateRequest
+                    request.authenticate((HttpServletResponse) externalContext.getResponse());
+                    log.info("Logged in  " + getLoggedInPrincipal(loginContext.getSubject()));
+                } else {
+                    throw new LoginException("Failed to get logged in subject");
+                }
             } catch (LoginException e) {
                 log.error("Login " + credentials.getLogin() + " failed", e);
             } catch (ServletException e1) {
                 log.error("Login " + credentials.getLogin() + " failed", e1);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (IOException e2) {
+                log.error("Login " + credentials.getLogin() + " failed", e2);
             }
         } else {
             try {
                 loginContext.logout();
-                // request.logout();
                 logInAs(user);
             } catch (LoginException e) {
                 log.error("Logout " + request.getUserPrincipal() + " failed");
-
-                // } catch (ServletException e) {
-                // log.error("Logout " + request.getUserPrincipal() + " failed");
             }
         }
         // dont redirect
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
+    }
+
+    private String getLoggedInPrincipal(Subject subject) {
+        Set<Principal> principals = subject.getPrincipals();
+        Principal principal = principals.iterator().next();
+        if (subject != null && !principals.isEmpty() && principal != null) {
+            return principal.getName();
+        } else {
+            return null;
+        }
     }
 
     public void logout() {

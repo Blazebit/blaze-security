@@ -5,6 +5,8 @@ package com.blazebit.security.impl.context;
 
 import java.io.Serializable;
 
+import javax.security.auth.Subject;
+
 import com.blazebit.security.impl.model.User;
 
 /**
@@ -26,5 +28,7 @@ public interface UserContext extends Serializable {
      * @return the user entity representing the logged user.
      */
     public User getUser();
+
+    public Subject getSubject();
 
 }

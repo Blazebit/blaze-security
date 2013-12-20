@@ -24,7 +24,7 @@
 
 	<error-page>
 		<error-code>403</error-code>
-		<location>/error.xhtml</location>
+		<location>/accessDenied.xhtml</location>
 	</error-page>
 
 	<error-page>

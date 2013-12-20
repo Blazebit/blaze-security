@@ -7,6 +7,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 
 import com.blazebit.security.impl.context.UserContext;
@@ -27,6 +28,9 @@ public class WebUserContext implements UserContext {
     private static final long serialVersionUID = 1L;
 
     @Inject
+    private UserSession userSession;
+
+    @Inject
     private UserDataAccess userDataAccess;
 
     @Override
@@ -38,6 +42,11 @@ public class WebUserContext implements UserContext {
         User user = userDataAccess.findUser(Integer.valueOf(request.getUserPrincipal().getName()));
         return user;
         // return userSession.getUser();
+    }
+
+    @Override
+    public Subject getSubject() {
+        return userSession.getSubject();
     }
 
 }

@@ -2,7 +2,7 @@
 <jboss-web xmlns="http://www.jboss.com/xml/ns/javaee"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="https://raw.github.com/jboss/metadata/master/web/src/main/resources/schema/jboss-web_8_0.xsd">
-	<security-domain>other</security-domain>
+	<security-domain>mySecurityDomain</security-domain>
 	<valve>  
       <class-name>org.jboss.as.web.security.jaspi.WebJASPIAuthenticator</class-name>  
    </valve> 

@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
+import javax.security.auth.Subject;
 
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
@@ -30,6 +31,15 @@ public class UserSession implements Serializable {
     private User secondLoggedInUser;
     private Company company;
     private User admin;
+    private Subject subject;
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
+    }
+
+    public Subject getSubject() {
+        return subject;
+    }
 
     public User getLoggedInUser() {
         return user;
@@ -41,8 +51,6 @@ public class UserSession implements Serializable {
         }
         return secondLoggedInUser;
     }
-    
-    
 
     public void setUser(User user) {
         this.user = user;

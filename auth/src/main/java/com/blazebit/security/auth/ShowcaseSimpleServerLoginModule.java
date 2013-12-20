@@ -18,7 +18,6 @@ import javax.security.auth.spi.LoginModule;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.apache.log4j.Logger;
-import org.jboss.security.SimpleGroup;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Subject;
@@ -32,10 +31,12 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
 
     private Subject user;
     private boolean loginOk;
+
     private javax.security.auth.Subject subject;
-    private boolean useFirstPass;
     private Map sharedState;
     private CallbackHandler callbackHandler;
+    // read options
+    private boolean useFirstPass;
 
     private char[] credential;
 
@@ -44,66 +45,73 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         this.subject = subject;
         this.sharedState = sharedState;
         this.callbackHandler = callbackHandler;
-        // init
-        useFirstPass = true;
+        String passwordStacking = (String) options.get("password-stacking");
+        if (passwordStacking != null) {
+            this.useFirstPass = passwordStacking.equals("useFirstPass");
+        }
+    
     }
 
     @Override
     public boolean login() throws LoginException {
         loginOk = false;
+
         // If useFirstPass is true, look for the shared password
         if (useFirstPass == true) {
-            try {
-                Object identity = sharedState.get("javax.security.auth.login.name");
-                Object credential = sharedState.get("javax.security.auth.login.password");
-                if (identity != null && credential != null) {
-                    loginOk = true;
-                    // Setup our view of the user
-                    Object username = identity;
-                    // if (username instanceof Principal)
-                    // identity = (Principal) username;
-                    // else {
-                    String name = username.toString();
-                    try {
-                        identity = createIdentity(name);
-                    } catch (Exception e) {
-                        LoginException le = new LoginException("Failed to create subject!");
-                        throw le;
-                        // }
+            // Setup our view of the user
+            Object sharedUsername = sharedState.get("javax.security.auth.login.name");
+            Object sharedPassword = sharedState.get("javax.security.auth.login.password");
+            if (sharedUsername != null && sharedPassword != null) {
+                if (sharedUsername instanceof Principal) {
+                    String name = ((Principal) sharedUsername).getName();
+                    if (name != null) {
+                        user = (Subject) createIdentity(name);
+                        if (user == null) {
+                            throw new LoginException("Unable to create identity from given principal");
+                        }
+                    } else {
+                        throw new LoginException("Unable to create identity from given principal");
                     }
-                    Object password = credential;
-                    if (password instanceof char[])
-                        credential = (char[]) password;
-                    else if (password != null) {
-                        String tmp = password.toString();
+                    if (sharedPassword instanceof char[])
+                        credential = (char[]) sharedPassword;
+                    else if (sharedPassword != null) {
+                        String tmp = sharedPassword.toString();
                         credential = tmp.toCharArray();
+                        loginOk = true;
+                        return true;
                     }
-                    return true;
                 }
-                // retry??
-                loginOk = false;
+            } else {
+                // no shared state
                 String[] info = getUsernameAndPassword();
-                String username = info[0];
+                final String username = info[0];
                 String password = info[1];
 
                 // validate the retrieved username and password.
                 if (validateUsernameAndPassword(username, password)) {
+                    user = (Subject) createIdentity(username);
+                    if (user != null) {
 
-                    if (useFirstPass == true) { // Add the principal and password to the shared state map
-                        sharedState.put("javax.security.auth.login.name", username);
-                        sharedState.put("javax.security.auth.login.password", password);
-                        user = (Subject) createIdentity(username);
-                        if (user != null) {
-                            loginOk = true;
-                            return true;
+                        if (useFirstPass == true) { // Add the principal and password to the shared state map
+                            sharedState.put("javax.security.auth.login.name", new Principal() {
+
+                                @Override
+                                public String getName() {
+                                    return username;
+                                }
+                            });
+
+                            sharedState.put("javax.security.auth.login.password", password);
                         }
+                        loginOk = true;
+                        return true;
                     }
+
                 }
-                // Else, fall through and perform the login
-            } catch (Exception e) { // Dump the exception and continue
-                log.error("Login failed", e);
             }
+
         }
+
         return false;
 
     }
@@ -174,7 +182,7 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         return validatePassword(password, null);
     }
 
-    protected Principal createIdentity(String userId) throws Exception {
+    protected Principal createIdentity(String userId) {
         UserDataAccess userDataAccess = BeanProvider.getContextualReference(UserDataAccess.class);
         User user = userDataAccess.findUser(Integer.valueOf(userId));
         return user;

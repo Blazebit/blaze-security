@@ -2,11 +2,12 @@ package com.blazebit.security.auth.jaspic;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.message.AuthException;
 import javax.security.auth.message.AuthStatus;
 import javax.security.auth.message.MessageInfo;
@@ -16,9 +17,7 @@ import javax.security.auth.message.ServerAuth;
 import javax.security.auth.message.config.ServerAuthContext;
 import javax.security.auth.message.module.ServerAuthModule;
 
-import org.apache.deltaspike.core.api.provider.BeanProvider;
-
-import com.blazebit.security.auth.impl.LoginContextProducer;
+import com.blazebit.security.auth.ShowcaseSimpleServerLoginModule;
 
 /**
  * The Server Authentication Context is an extra (required) indirection between the Application Server and the actual Server
@@ -38,6 +37,8 @@ public class MainServerAuthContext implements ServerAuthContext {
         // use the one existing authentication module.
         serverAuthModule = new ShowcaseServerAuthModule();
         MessagePolicy policy = new MessagePolicy(new TargetPolicy[] {}, true);
+        Map<String, String> options = new HashMap<String, String>();
+        options.put("login-module-delegate", ShowcaseSimpleServerLoginModule.class.getName());
         serverAuthModule.initialize(policy, policy, handler, Collections.<String, String>emptyMap());
         serverAuthModules.add(serverAuthModule);
     }

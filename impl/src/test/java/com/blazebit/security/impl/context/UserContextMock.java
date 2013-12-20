@@ -3,7 +3,10 @@
  */
 package com.blazebit.security.impl.context;
 
+import java.security.Principal;
+
 import javax.enterprise.context.RequestScoped;
+import javax.security.auth.Subject;
 
 import com.blazebit.security.impl.model.User;
 
@@ -39,4 +42,16 @@ public class UserContextMock implements UserContext {
 
     }
 
+    @Override
+    public Subject getSubject() {
+        Subject subject = new Subject();
+        subject.getPrincipals().add(new Principal() {
+
+            @Override
+            public String getName() {
+                return String.valueOf(user.getId());
+            }
+        });
+        return subject;
+    }
 }
