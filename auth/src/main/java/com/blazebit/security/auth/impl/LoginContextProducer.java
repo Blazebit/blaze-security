@@ -50,9 +50,7 @@ public class LoginContextProducer implements Serializable {
         return loginContext;
     }
 
-    // @Produces
     public LoginContext createLoginContext(String loginConfigFileName, final String loginModuleName) throws LoginException, URISyntaxException {
-        // Subject subject = loginContext != null ? loginContext.getSubject() : null;
         // System.setProperty("java.security.auth.login.config", new
         // File(LoginContextProducer.class.getResource(loginConfigFileName).getFile()).getPath());
         try {

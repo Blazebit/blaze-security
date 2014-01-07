@@ -95,7 +95,7 @@ public class IndexBean implements Serializable {
                 loginContext.login();
                 if (loginContext.getSubject() != null) {
                     // userSession.setSubject(loginContext.getSubject());
-                    // invoke authenticate, because it sets the request user principal and the roles
+                    // invoke authenticate, because it sets the request user principal and the roles. not a must, only for test!
                     // request.authenticate((HttpServletResponse) externalContext.getResponse());
                     log.info("Logged in  " + getLoggedInPrincipal(loginContext.getSubject()));
 
@@ -112,8 +112,9 @@ public class IndexBean implements Serializable {
                 // log.error("Login " + credentials.getLogin() + " failed", e2);
             }
         } else {
-//            logout();
-//            logInAs(user);
+            // Logout needs session invalidate before this method call. cannot invoke logout here, or produce new login context!
+            // logout();
+            // logInAs(user);
             // try {
             // // LoginModule's logout. Clears subject and roles.
             // loginContext.logout();
