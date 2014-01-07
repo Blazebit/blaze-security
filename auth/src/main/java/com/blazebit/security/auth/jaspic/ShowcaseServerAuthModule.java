@@ -66,23 +66,11 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
 
         if (requestPolicy.isMandatory()) {
-            UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
-            //LoginContext inject NOT WORKING
+            //UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
             LoginContext loginContext = BeanProvider.getContextualReference(LoginContext.class);
-            // bean lookup, NOT WORKING
-//            BeanManager beanManager = BeanProvider.getContextualReference(BeanManager.class);
-//            Set<Bean<?>> beans = beanManager.getBeans(LoginContext.class, new AnnotationLiteral<Any>() {
-//            });
-//            for (Bean<?> bean : beans) {
-//
-//                CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
-//                beanManager.getReference(bean, bean.getBeanClass(), creationalContext);
-//
-//            }
-            
-            
-            // Subject subject = loginContext.getSubject();
-            Subject subject = userContext.getSubject();
+
+            Subject subject = loginContext.getSubject();
+            //Subject subject = userContext.getSubject();
 
             if (subject != null) {
                 CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, getUser(subject));

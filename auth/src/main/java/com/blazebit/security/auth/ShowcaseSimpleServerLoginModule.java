@@ -49,7 +49,7 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         if (passwordStacking != null) {
             this.useFirstPass = passwordStacking.equals("useFirstPass");
         }
-    
+
     }
 
     @Override
@@ -192,7 +192,7 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
     public boolean commit() throws LoginException {
         if (loginOk == false)
             return false;
-
+        subject.getPrincipals().clear();
         Set<Principal> principals = subject.getPrincipals();
         Principal identity = getIdentity();
         principals.add(identity);
@@ -267,15 +267,22 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
 
     @Override
     public boolean logout() throws LoginException {
-        Group[] groups = this.getRoleSets();
-        subject.getPrincipals().remove(groups[0]);
-        Principal identity = getIdentity();
-        Set<Principal> principals = subject.getPrincipals();
-        principals.remove(identity);
-        Group callerGroup = getCallerPrincipalGroup(principals);
-        if (callerGroup != null)
-            principals.remove(callerGroup);
-        // Remove any added Groups...
+        // reset shared state
+        if (useFirstPass) {
+            sharedState.put("javax.security.auth.login.name", null);
+            sharedState.put("javax.security.auth.login.password", null);
+        }
+        // Group[] groups = this.getRoleSets();
+        subject.getPrincipals().clear();
+        subject = new javax.security.auth.Subject();
+        // subject.getPrincipals().remove(groups[0]);
+        // Principal identity = getIdentity();
+        // Set<Principal> principals = subject.getPrincipals();
+        // principals.remove(identity);
+        // Group callerGroup = getCallerPrincipalGroup(principals);
+        // if (callerGroup != null)
+        // principals.remove(callerGroup);
+        // // Remove any added Groups...
         return true;
     }
 

@@ -66,4 +66,11 @@ public class UserModule implements Module {
         return name;
     }
 
+    @Override
+    public String toString() {
+        return "UserModule [name=" + name + ", members=" + members + "]";
+    }
+    
+    
+
 }

@@ -1,6 +1,7 @@
 package com.blazebit.security.auth.impl;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -18,7 +19,7 @@ import com.blazebit.security.auth.model.Credentials;
  */
 
 @Named
-public class SimpleCallbackHandler implements CallbackHandler {
+public class SimpleCallbackHandler implements CallbackHandler, Serializable {
 
     // ======================================
     // = Attributes =

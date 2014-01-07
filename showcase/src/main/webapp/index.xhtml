@@ -13,9 +13,9 @@
 	<h:body>
 		<h:form id="form">
 			<h:panelGrid columns="4" columnClasses="top,top,top,top">
-				
+
 				<p:menu>
-					<p:submenu label="Menu" >
+					<p:submenu label="Menu">
 						<p:menuitem value="Users" url="/main/user/users.xhtml" />
 						<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
 						<p:menuitem value="Resources" url="/main/resource/resources.xhtml" />
@@ -25,7 +25,7 @@
 						<p:menuitem value="Permissions" url="/permissions.xhtml" />
 					</p:submenu>
 				</p:menu>
-				
+
 				<p:dataTable value="#{indexBean.companies}" var="company" style="width:20%">
 					<p:column>
 						<f:facet name="header">Name</f:facet>
@@ -33,9 +33,9 @@
 						<h:outputText value="( selected )" rendered="#{company eq userSession.selectedCompany}" />
 					</p:column>
 				</p:dataTable>
-				
+
 				<h:panelGroup>
-					Selected company: #{userSession.selectedCompany.name}<br/>
+					Selected company: #{userSession.selectedCompany.name}<br />
 					<h:outputLabel value="Field level" for="fieldLevel" />
 					<p:selectBooleanCheckbox id="fieldLevel" value="#{userSession.selectedCompany.fieldLevelEnabled}" />
 					<br />
@@ -48,8 +48,8 @@
 					<h:outputLabel value="Group hierarchy" for="groupHierarchyLevel" />
 					<p:selectBooleanCheckbox id="groupHierarchyLevel" value="#{userSession.selectedCompany.groupHierarchyEnabled}" />
 					<br />
-					
-					<p:commandButton value="Save configuration" action="#{indexBean.saveCompanyConfiguration()}" update=":form"/>
+
+					<p:commandButton value="Save configuration" action="#{indexBean.saveCompanyConfiguration()}" update=":form" />
 				</h:panelGroup>
 
 
@@ -73,6 +73,9 @@
 							<p:commandLink value="reset" action="#{indexBean.reset(user)}" process="@this" update="@form" />
 						</p:column>
 					</p:dataTable>
+					<p:commandLink value="logout" action="#{indexBean.logout}" rendered="#{userSession.loggedInUser ne null}"
+						process="@this" update=":form" />
+
 				</h:panelGroup>
 			</h:panelGrid>
 

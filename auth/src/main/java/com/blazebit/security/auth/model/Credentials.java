@@ -1,5 +1,7 @@
 package com.blazebit.security.auth.model;
 
+import java.io.Serializable;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Named;
 
@@ -11,7 +13,7 @@ import javax.inject.Named;
 
 @Named
 @RequestScoped
-public class Credentials {
+public class Credentials implements Serializable {
 
     // ======================================
     // =             Attributes             =

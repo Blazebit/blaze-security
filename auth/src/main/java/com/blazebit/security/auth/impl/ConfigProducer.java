@@ -1,10 +1,17 @@
 package com.blazebit.security.auth.impl;
 
+import java.io.Serializable;
+
 import javax.enterprise.inject.Produces;
 
 import com.blazebit.security.auth.ShowcaseSimpleServerLoginModule;
 
-public class ConfigProducer {
+public class ConfigProducer implements Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
     @LoginModuleName
     @Produces

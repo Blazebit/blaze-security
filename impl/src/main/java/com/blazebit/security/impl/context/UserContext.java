@@ -29,6 +29,4 @@ public interface UserContext extends Serializable {
      */
     public User getUser();
 
-    public Subject getSubject();
-
 }

@@ -44,9 +44,4 @@ public class WebUserContext implements UserContext {
         // return userSession.getUser();
     }
 
-    @Override
-    public Subject getSubject() {
-        return userSession.getSubject();
-    }
-
 }

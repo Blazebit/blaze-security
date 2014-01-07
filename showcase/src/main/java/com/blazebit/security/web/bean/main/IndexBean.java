@@ -84,47 +84,51 @@ public class IndexBean implements Serializable {
         credentials.setLogin(String.valueOf(user.getId()));
         credentials.setPassword("");
 
-        userSession.setUser(user);
-        userSession.setAdmin(userService.findUser("superAdmin", selectedCompany));
-
         // programatic login
         FacesContext context = FacesContext.getCurrentInstance();
         ExternalContext externalContext = context.getExternalContext();
         HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
 
-        if (loginContext.getSubject() == null && request.getUserPrincipal() == null) {
+        if (getLoggedInPrincipal(loginContext.getSubject()) == null) {
             try {
                 // request.login(credentials.getLogin(), credentials.getPassword());
                 loginContext.login();
                 if (loginContext.getSubject() != null) {
-                    userSession.setSubject(loginContext.getSubject());
-                    // must invoke authenticate, because it sets the request user principal and the roles
-                    request.authenticate((HttpServletResponse) externalContext.getResponse());
+                    // userSession.setSubject(loginContext.getSubject());
+                    // invoke authenticate, because it sets the request user principal and the roles
+                    // request.authenticate((HttpServletResponse) externalContext.getResponse());
                     log.info("Logged in  " + getLoggedInPrincipal(loginContext.getSubject()));
+
+                    userSession.setUser(user);
+                    userSession.setAdmin(userService.findUser("superAdmin", selectedCompany));
                 } else {
                     throw new LoginException("Failed to get logged in subject");
                 }
             } catch (LoginException e) {
                 log.error("Login " + credentials.getLogin() + " failed", e);
-            } catch (ServletException e1) {
-                log.error("Login " + credentials.getLogin() + " failed", e1);
-            } catch (IOException e2) {
-                log.error("Login " + credentials.getLogin() + " failed", e2);
+                // } catch (ServletException e1) {
+                // log.error("Login " + credentials.getLogin() + " failed", e1);
+                // } catch (IOException e2) {
+                // log.error("Login " + credentials.getLogin() + " failed", e2);
             }
         } else {
-            try {
-                // logout clear the user principal
-                request.logout();
-                // LoginModule's logout not working because LoginContext's subject is NULL.
-                // loginContext.logout();
-                logInAs(user);
-                // } catch (LoginException e) {
-                // log.error("Logout " + request.getUserPrincipal() + " failed", e);
-            } catch (ServletException e) {
-                log.error("Logout " + request.getUserPrincipal() + " failed", e);
-            }
+//            logout();
+//            logInAs(user);
+            // try {
+            // // LoginModule's logout. Clears subject and roles.
+            // loginContext.logout();
+            // // logout clear the user principal
+            // request.logout();
+            // FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
+            // logInAs(user);
+            // } catch (LoginException e) {
+            // log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            // } catch (ServletException e) {
+            // log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            // }
         }
         // dont redirect
+
         // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
         // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
@@ -143,10 +147,25 @@ public class IndexBean implements Serializable {
     }
 
     public void logout() {
-        HttpSession session = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
+        FacesContext context = FacesContext.getCurrentInstance();
+        ExternalContext externalContext = context.getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+        try {
+            // LoginModule's logout. Clears subject and roles.
+            loginContext.logout();
+            // logout clear the user principal
+            request.logout();
+        } catch (LoginException e) {
+            log.error("Logout " + request.getUserPrincipal() + " failed", e);
+        } catch (ServletException e) {
+            log.error("Logout " + request.getUserPrincipal() + " failed", e);
+        }
+        HttpSession session = (HttpSession) externalContext.getSession(false);
         if (session != null) {
             session.invalidate();
         }
+        userSession.setUser(null);
+        userSession.setAdmin(null);
         FacesContext.getCurrentInstance().getApplication().getNavigationHandler().handleNavigation(FacesContext.getCurrentInstance(), null, "/index.xhtml");
     }
 

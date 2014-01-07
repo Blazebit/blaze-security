@@ -31,15 +31,6 @@ public class UserSession implements Serializable {
     private User secondLoggedInUser;
     private Company company;
     private User admin;
-    private Subject subject;
-
-    public void setSubject(Subject subject) {
-        this.subject = subject;
-    }
-
-    public Subject getSubject() {
-        return subject;
-    }
 
     public User getLoggedInUser() {
         return user;
