@@ -3,17 +3,22 @@ package com.blazebit.security.auth.jaspic;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.util.AnnotationLiteral;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.LoginContext;
 import javax.security.auth.message.AuthException;
 import javax.security.auth.message.AuthStatus;
 import javax.security.auth.message.MessageInfo;
@@ -22,11 +27,9 @@ import javax.security.auth.message.callback.CallerPrincipalCallback;
 import javax.security.auth.message.callback.GroupPrincipalCallback;
 import javax.security.auth.message.config.ServerAuthContext;
 import javax.security.auth.message.module.ServerAuthModule;
-import javax.security.auth.spi.LoginModule;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.catalina.connector.Request;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
 import com.blazebit.security.impl.context.UserContext;
@@ -61,9 +64,24 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
 
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
+
         if (requestPolicy.isMandatory()) {
             UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
-
+            //LoginContext inject NOT WORKING
+            LoginContext loginContext = BeanProvider.getContextualReference(LoginContext.class);
+            // bean lookup, NOT WORKING
+//            BeanManager beanManager = BeanProvider.getContextualReference(BeanManager.class);
+//            Set<Bean<?>> beans = beanManager.getBeans(LoginContext.class, new AnnotationLiteral<Any>() {
+//            });
+//            for (Bean<?> bean : beans) {
+//
+//                CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
+//                beanManager.getReference(bean, bean.getBeanClass(), creationalContext);
+//
+//            }
+            
+            
+            // Subject subject = loginContext.getSubject();
             Subject subject = userContext.getSubject();
 
             if (subject != null) {

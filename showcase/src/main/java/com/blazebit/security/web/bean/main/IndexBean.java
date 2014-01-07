@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
@@ -33,7 +31,6 @@ import com.blazebit.security.PermissionManager;
 import com.blazebit.security.auth.model.Credentials;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.web.bean.base.PermissionHandlingBaseBean;
 import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.UserService;
@@ -43,8 +40,8 @@ import com.blazebit.security.web.service.api.UserService;
  * @author cuszk
  */
 @ManagedBean(name = "indexBean")
-@ViewScoped
-public class IndexBean extends PermissionHandlingBaseBean implements Serializable {
+@SessionScoped
+public class IndexBean implements Serializable {
 
     protected Logger log = Logger.getLogger(IndexBean.class);
 
@@ -95,13 +92,13 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
         ExternalContext externalContext = context.getExternalContext();
         HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
 
-        if (loginContext.getSubject() == null) {
+        if (loginContext.getSubject() == null && request.getUserPrincipal() == null) {
             try {
                 // request.login(credentials.getLogin(), credentials.getPassword());
                 loginContext.login();
                 if (loginContext.getSubject() != null) {
                     userSession.setSubject(loginContext.getSubject());
-                    // test validateRequest
+                    // must invoke authenticate, because it sets the request user principal and the roles
                     request.authenticate((HttpServletResponse) externalContext.getResponse());
                     log.info("Logged in  " + getLoggedInPrincipal(loginContext.getSubject()));
                 } else {
@@ -116,10 +113,15 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
             }
         } else {
             try {
-                loginContext.logout();
+                // logout clear the user principal
+                request.logout();
+                // LoginModule's logout not working because LoginContext's subject is NULL.
+                // loginContext.logout();
                 logInAs(user);
-            } catch (LoginException e) {
-                log.error("Logout " + request.getUserPrincipal() + " failed");
+                // } catch (LoginException e) {
+                // log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            } catch (ServletException e) {
+                log.error("Logout " + request.getUserPrincipal() + " failed", e);
             }
         }
         // dont redirect
@@ -128,13 +130,16 @@ public class IndexBean extends PermissionHandlingBaseBean implements Serializabl
     }
 
     private String getLoggedInPrincipal(Subject subject) {
-        Set<Principal> principals = subject.getPrincipals();
-        Principal principal = principals.iterator().next();
-        if (subject != null && !principals.isEmpty() && principal != null) {
-            return principal.getName();
-        } else {
-            return null;
+        if (subject != null) {
+            Set<Principal> principals = subject.getPrincipals();
+            if (!principals.isEmpty()) {
+                Principal principal = principals.iterator().next();
+                if (principal != null) {
+                    return principal.getName();
+                }
+            }
         }
+        return null;
     }
 
     public void logout() {
