@@ -13,14 +13,11 @@
 package com.blazebit.security.impl.model.sample;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 
 import com.blazebit.security.IdHolder;
 import com.blazebit.security.impl.model.ResourceName;

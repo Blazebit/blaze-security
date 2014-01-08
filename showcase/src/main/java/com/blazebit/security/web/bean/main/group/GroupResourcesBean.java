@@ -172,7 +172,7 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
             User user = (User) userNodeModel.getTarget();
 
             List<Permission> allPermissions = permissionManager.getPermissions(user);
-            List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
+            //List<Permission> userPermissions = resourceUtils.getSeparatedPermissionsByResource(allPermissions).get(0);
 
             Set<Permission> selectedPermissions = getSelectedPermissions(selectedUserPermissionNodes, userNode);
             // confirm users

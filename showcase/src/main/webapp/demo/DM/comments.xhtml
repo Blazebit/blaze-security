@@ -21,7 +21,7 @@
 		<h:form id="form">
 			<h3>
 				Logged in as #{userSession.loggedInUser.username} Acting as #{userSession.user.username}. Login as a
-				<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
+				<p:commandLink value="different user..." action="#{indexBean.logout()}" process="@this" />
 			</h3>
 
 			<h:panelGroup id="subjects">

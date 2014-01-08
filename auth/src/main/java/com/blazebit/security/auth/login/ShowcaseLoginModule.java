@@ -1,13 +1,6 @@
-package com.blazebit.security.auth;
+package com.blazebit.security.auth.login;
 
 import java.io.IOException;
-import java.security.CodeSource;
-import java.security.PermissionCollection;
-import java.security.Policy;
-import java.security.Principal;
-import java.security.ProtectionDomain;
-import java.security.cert.Certificate;
-import java.util.List;
 import java.util.Map;
 
 import javax.security.auth.Subject;
@@ -18,17 +11,8 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import javax.security.jacc.WebUserDataPermission;
 
-import org.apache.deltaspike.core.api.provider.BeanProvider;
-
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.impl.model.EntityAction;
-import com.blazebit.security.impl.model.EntityField;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.service.resource.UserDataAccess;
-
+@Deprecated
 public class ShowcaseLoginModule implements LoginModule {
 
     Subject subject;

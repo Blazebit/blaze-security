@@ -1,4 +1,4 @@
-package com.blazebit.security.auth;
+package com.blazebit.security.auth.login;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -24,7 +24,12 @@ import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserModule;
 import com.blazebit.security.impl.service.resource.UserDataAccess;
-
+/**
+ * inspired from Jboss's org.jboss.security.auth.spi.SimpleServerLoginModule
+ * 
+ * @author cuszk
+ *
+ */
 public class ShowcaseSimpleServerLoginModule implements LoginModule {
 
     protected Logger log = Logger.getLogger(ShowcaseSimpleServerLoginModule.class);
@@ -274,15 +279,10 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         }
         // Group[] groups = this.getRoleSets();
         subject.getPrincipals().clear();
-        subject = new javax.security.auth.Subject();
-        // subject.getPrincipals().remove(groups[0]);
-        // Principal identity = getIdentity();
-        // Set<Principal> principals = subject.getPrincipals();
-        // principals.remove(identity);
-        // Group callerGroup = getCallerPrincipalGroup(principals);
-        // if (callerGroup != null)
-        // principals.remove(callerGroup);
-        // // Remove any added Groups...
+        subject.getPrincipals().clear();
+        subject.getPublicCredentials().clear();
+        subject.getPrivateCredentials().clear();
+        //subject = new javax.security.auth.Subject();
         return true;
     }
 

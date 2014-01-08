@@ -15,7 +15,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -243,9 +242,9 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         currentDataPermissions = new HashSet<Permission>(permissionHandling.removeAll(currentDataPermissions, impliedBy));
 
         if (isEnabled(Company.USER_LEVEL)) {
-            getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), Collections.EMPTY_LIST, granted, revoked, Marking.NEW, Marking.REMOVED,
+            getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), Collections.<Permission>emptyList(), granted, revoked, Marking.NEW, Marking.REMOVED,
                                      !isEnabled(Company.FIELD_LEVEL), false);
-            buildNewDataPermissionTree(userObjectNode, Collections.EMPTY_LIST, new ArrayList<Permission>(currentDataPermissions), granted, revoked, Collections.EMPTY_SET,
+            buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), new ArrayList<Permission>(currentDataPermissions), granted, revoked, Collections.<Permission>emptySet(),
                                        !isEnabled(Company.FIELD_LEVEL), true);
         } else {
             Set<Permission> currentUserPermissions = new HashSet<Permission>(userPermissions);

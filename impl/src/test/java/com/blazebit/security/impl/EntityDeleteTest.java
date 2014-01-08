@@ -12,6 +12,7 @@
  */
 package com.blazebit.security.impl;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import javax.ejb.Stateless;
@@ -153,6 +154,17 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         assertNull(entityManager.find(TestCarrier.class, carrier.getId()));
     }
 
+    
+
+    @Test
+    public void test_delete_entity_with_primitive_field_with_object_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class, carrier.getId()));
+
+        self.get().remove(carrier);
+
+        assertNull(entityManager.find(TestCarrier.class, carrier.getId()));
+    }
+
     // one2one
     @Test
     public void test_delete_entity_with_one_to_one_field_no_cascade() {
@@ -161,6 +173,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         self.get().remove(carrierWithParty);
 
         assertNull(entityManager.find(TestCarrier.class, carrierWithParty.getId()));
+        assertNotNull(entityManager.find(Party.class, carrierWithParty.getParty().getId()));
     }
 
     @Test(expected = PermissionActionException.class)
@@ -179,6 +192,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         self.get().remove(carrierWithPartyCascade);
 
         assertNull(entityManager.find(TestCarrier.class, carrierWithPartyCascade.getId()));
+        assertNull(entityManager.find(Party.class, carrierWithPartyCascade.getPartyWithCascade().getId()));
     }
 
     @Test(expected = PermissionActionException.class)
@@ -196,6 +210,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         self.get().remove(carrierWithContacts);
 
         assertNull(entityManager.find(TestCarrier.class, carrierWithContacts.getId()));
+        assertNotNull(entityManager.find(Contact.class, carrierWithContacts.getContacts().iterator().next().getId()));
     }
 
     @Test(expected = PermissionActionException.class)
@@ -229,6 +244,7 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
         self.get().remove(carrierWithGroups);
 
         assertNull(entityManager.find(TestCarrier.class, carrierWithGroups.getId()));
+        assertNotNull(entityManager.find(CarrierGroup.class, carrierWithGroups.getGroups().iterator().next().getId()));
     }
 
     @Test(expected = PermissionActionException.class)
@@ -238,8 +254,8 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
     @Test
     public void test_delete_entity_with_many_to_many_field_cascade() {
-        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(CarrierTeam.class));
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(TestCarrier.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(CarrierTeam.class));
 
         self.get().remove(carrierWithTeams);
 
@@ -406,6 +422,13 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
         assertNull(entityManager.find(TestCarrier.class, carrierWithEmailCascade.getId()));
     }
+    
+    @Test(expected = PermissionActionException.class)
+    public void test_delete_entity_with_many_to_one_field_cascade_with_no_delete_party_entity_permission() {
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(carrierWithEmailCascade));
+        
+        self.get().remove(carrierWithEmailCascade);
+    }
 
     @Test(expected = PermissionActionException.class)
     public void test_delete_entity_with_many_to_one_field_cascade_with_wrong_entity_object_permission() {
@@ -433,13 +456,39 @@ public class EntityDeleteTest extends BaseTest<EntityDeleteTest> {
 
         self.get().remove(contact);
     }
+  
+    
+    @Test
+    public void test_delete_contact_from_carrier_field_level_disabled() {
+        setUserContext(admin);
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Carrier.class));
+        securityService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Carrier.class));
+        
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class));
+        
+        
+
+        setUserContext(user1);
+        Carrier carrier = new Carrier();
+        self.get().persist(carrier);
+
+        Contact contact = new Contact();
+        contact.setCarrier(carrier);
+        self.get().persist(contact);
+
+        self.get().remove(contact);
+    }
 
     @Test(expected = PermissionActionException.class)
     public void test_delete_contact_from_carrier_not_allowed() {
         securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Carrier.class));
         securityService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(Carrier.class, "contacts"));
-        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
         
+        securityService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
         securityService.grant(admin, user1, getDeleteAction(), entityFieldFactory.createResource(Contact.class));
 
         Carrier carrier = new Carrier();

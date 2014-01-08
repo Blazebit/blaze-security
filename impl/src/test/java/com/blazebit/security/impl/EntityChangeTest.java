@@ -209,8 +209,6 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         setUserContext(user1);
         carrier.getPartyWithCascade().setPartyField1("party_field_1_changed");
         carrier = (TestCarrier) self.get().merge(carrier);
-
-        assertEquals(entityManager.find(TestCarrier.class, carrier.getId()).getPartyWithCascade().getPartyField1(), "party_field_1_changed");
     }
 
     @Test
@@ -310,6 +308,59 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
         assertEquals("field_1", carrier.getContacts().iterator().next().getContactField());
     }
+    
+    
+    @Test
+    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission_without_field_level() {
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        Contact newContact=new Contact();
+        newContact.setContactField("changed_contact_field");
+        self.get().persist(newContact);
+        
+        carrier.getContacts().add(newContact);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(2, carrier.getContacts().size());
+
+    }
+    
+    @Test
+    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission() {
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        setUserContext(user1);
+
+        Contact newContact = new Contact();
+        self.get().persist(newContact);
+        carrier.getContacts().add(newContact);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(2, carrier.getContacts().size());
+
+    }
+
+    
+    @Test
+    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission_Without_field_level() {
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+
+        Contact newContact = new Contact();
+        self.get().persist(newContact);
+        carrier.getContacts().add(newContact);
+        carrier = (TestCarrier) self.get().merge(carrier);
+
+        assertEquals(2, carrier.getContacts().size());
+
+    }
 
     @Test
     public void test_change_one_to_many_field_cascade_with_entity_permission() {
@@ -332,6 +383,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals("changed_title", carrier.getDocuments().iterator().next().getTitle());
 
     }
+    
 
     @Test(expected = PermissionActionException.class)
     public void test_change_one_to_many_field_cascade_with_wrong_entity_field_permission() {
@@ -410,38 +462,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     }
 
-    @Test
-    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission() {
-        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
-        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
-        setUserContext(user1);
-
-        Contact newContact = new Contact();
-        self.get().persist(newContact);
-        carrier.getContacts().add(newContact);
-        carrier = (TestCarrier) self.get().merge(carrier);
-
-        assertEquals(2, carrier.getContacts().size());
-
-    }
-
-    
-    @Test
-    public void test_change_one_to_many_no_cascade_add_new_with_entity_field_permission_Without_field_level() {
-        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
-        user1.getCompany().setFieldLevelEnabled(false);
-        self.get().merge(user1.getCompany());
-        setUserContext(user1);
-
-        Contact newContact = new Contact();
-        self.get().persist(newContact);
-        carrier.getContacts().add(newContact);
-        carrier = (TestCarrier) self.get().merge(carrier);
-
-        assertEquals(2, carrier.getContacts().size());
-
-    }
+ 
 
     // without add permission
     @Test(expected = PermissionActionException.class)
@@ -468,9 +489,8 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     @Test
     public void test_change_one_to_many_add_new_with_entity_object_permission() {
-        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, carrier.getId()));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
-        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts"));
+        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "contacts", carrier.getId()));
         setUserContext(user1);
 
         Contact newContact = new Contact();
@@ -540,7 +560,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
     }
 
     @Test
-    public void test_change_many_to_many_add_new_with_entity_field_permission() {
+    public void test_change_many_to_many_no_cascade_add_new_with_entity_field_permission() {
         permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "groups"));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class));
 
@@ -553,6 +573,20 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         assertEquals(2, carrier.getGroups().size());
     }
 
+    @Test
+    public void test_change_many_to_many_add_with_update_permission() {
+        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
+        setUserContext(user1);
+        CarrierGroup g2 = new CarrierGroup();
+        self.get().persist(g2);
+        
+        carrier.getGroups().add(g2);
+        carrier = (TestCarrier) self.get().merge(carrier);
+    }
+    
     @Test(expected = PermissionActionException.class)
     public void test_change_many_to_many_add_new_not_permitted() {
         permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
@@ -561,6 +595,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         setUserContext(user1);
         CarrierGroup g2 = new CarrierGroup();
         self.get().persist(g2);
+        
         carrier.getGroups().add(g2);
         carrier = (TestCarrier) self.get().merge(carrier);
     }
@@ -578,7 +613,6 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     @Test
     public void test_change_many_to_one_cascade() {
-        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Email.class));
         setUserContext(user1);
 
@@ -590,7 +624,6 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
     @Test
     public void test_change_many_to_one_cascade_with_field_permissions() {
-        permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(TestCarrier.class, "emailWithCascade"));
         permissionService.grant(admin, user1, getUpdateAction(), entityFieldFactory.createResource(Email.class, "subject"));
         setUserContext(user1);
 
@@ -613,6 +646,18 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
         carrier = (TestCarrier) self.get().merge(carrier);
 
         assertEquals("Changed_Email_Subject", carrier.getEmail().getSubject());
+    }
+    
+    @Test(expected=PermissionActionException.class)
+    public void test_change_many_to_one_no_cascade_without_entity_update_permission() {
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
+        setUserContext(user1);
+
+        Email newEmail = new Email();
+        newEmail.setSubject("Changed_Email_Subject");
+        carrier.setEmail(newEmail);
+        self.get().persist(newEmail);
+        carrier = (TestCarrier) self.get().merge(carrier);
     }
 
     @Test

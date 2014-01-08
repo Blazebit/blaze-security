@@ -7,13 +7,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.util.AnnotationLiteral;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -32,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
-import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserModule;
 import com.blazebit.security.impl.service.resource.UserDataAccess;
@@ -66,11 +59,14 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
 
         if (requestPolicy.isMandatory()) {
-            //UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
+            // UserContext session bean. Requires additional code to store the current logged in subject
+            // UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
+            // LoginContext is produced per session
             LoginContext loginContext = BeanProvider.getContextualReference(LoginContext.class);
 
+            // get subject
+            // Subject subject = userContext.getSubject();
             Subject subject = loginContext.getSubject();
-            //Subject subject = userContext.getSubject();
 
             if (subject != null) {
                 CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, getUser(subject));

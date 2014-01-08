@@ -21,7 +21,7 @@
 			<h:panelGroup rendered="#{not empty userSession.user}">
 				<h3>
 					Logged in as #{userSession.user.username}. Login as a
-					<p:commandLink value="different user..." action="#{userBean.backToIndex()}" process="@this" />
+					<p:commandLink value="different user..." action="#{indexBean.logout()}" process="@this" />
 				</h3>
 			</h:panelGroup>
 			<h:panelGroup rendered="#{empty userSession.user}">
@@ -50,8 +50,17 @@
 								showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
 						</p:treeNode>
 						<p:treeNode type="object" icon="ui-icon-contact">
-							<h:outputText value="#{resourceEntry.name}" style="#{resourceEntry.marking.style}" id="resourceEntry1" />
+							<h:outputText
+								value="#{resourceEntry.name} #{resourceEntry.nodeInstances.size() gt 0  ? '('.concat(resourceEntry.nodeInstances.size()).concat(')') : ''}"
+								style="#{resourceEntry.marking.style}" id="resourceEntry1" />
 							<p:tooltip for="resourceEntry1" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
+								showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
+						</p:treeNode>
+						<p:treeNode type="field" icon="ui-icon-document-b">
+							<h:outputText
+								value="#{resourceEntry.name} #{resourceEntry.nodeInstances.size() gt 0  ? '('.concat(resourceEntry.nodeInstances.size()).concat(')') : ''}"
+								style="#{resourceEntry.marking.style}" id="resourceEntry2" />
+							<p:tooltip for="resourceEntry2" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
 								showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
 						</p:treeNode>
 					</p:tree>
@@ -75,8 +84,17 @@
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+										style="#{permission.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText
+										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+										style="#{permission.marking.style}" id="permission2" />
+									<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
@@ -96,8 +114,17 @@
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+										style="#{permission.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText
+										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+										style="#{permission.marking.style}" id="permission2" />
+									<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
@@ -105,8 +132,9 @@
 						</h:panelGroup>
 					</h:panelGrid>
 
-					<p:commandButton value="#{resourceObjectBean.group ? 'Next' : 'Confirm'}" update=":form:objectResources" rendered="#{!resourceObjectBean.confirmed}"
-						action="#{resourceObjectBean.confirmPermissions()}" style="float:left" onclick="permissionWizard.next()" />
+					<p:commandButton value="#{resourceObjectBean.group ? 'Next' : 'Confirm'}" update=":form:objectResources"
+						rendered="#{!resourceObjectBean.confirmed}" action="#{resourceObjectBean.confirmPermissions()}" style="float:left"
+						onclick="permissionWizard.next()" />
 				</p:tab>
 
 				<p:tab id="confirmUserPermissions" title="User permissions">
@@ -128,6 +156,11 @@
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
@@ -143,8 +176,17 @@
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode icon="ui-icon-contact" type="object">
-									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+									<h:outputText
+										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+										style="#{permission.marking.style}" id="permission" />
 									<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode icon="ui-icon-contact" type="field">
+									<h:outputText
+										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+										style="#{permission.marking.style}" id="permission1" />
+									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>

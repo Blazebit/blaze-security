@@ -31,7 +31,6 @@ import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
-import com.blazebit.security.impl.service.PermissionHandlingImpl;
 import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling;
 import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling.PermissionFamily;
 

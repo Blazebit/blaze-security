@@ -97,6 +97,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
      * wizard step 1
      */
     public void processSelectedResources() {
+        selectedPermissionNodes = new TreeNode[] {};
         // read selected resources
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
         if (!isEnabled(Company.FIELD_LEVEL)) {

@@ -14,6 +14,7 @@ import java.util.SortedMap;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -21,7 +22,6 @@ import com.blazebit.security.Action;
 import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
@@ -98,23 +98,23 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         SortedMap<String, List<Permission>> entityPermissions = resourceUtils.groupPermissionsByResourceName(currentDataPermissions);
         for (String entity : entityPermissions.keySet()) {
             List<Permission> permissionsByEntity = entityPermissions.get(entity);
-            createEntityNode(root, Collections.EMPTY_SET, Collections.EMPTY_SET, Marking.NONE, Marking.NONE, entity, permissionsByEntity, Collections.EMPTY_LIST, mutable,
+            createEntityNode(root, Collections.<Permission>emptySet(), Collections.<Permission>emptySet(), Marking.NONE, Marking.NONE, entity, permissionsByEntity, Collections.<Permission>emptyList(), mutable,
                              hideFieldLevel);
         }
         // granted
         entityPermissions = resourceUtils.groupPermissionsByResourceName(grantable);
         for (String entity : entityPermissions.keySet()) {
             List<Permission> permissionsByEntity = entityPermissions.get(entity);
-            createEntityNode(root, new HashSet<Permission>(permissionsByEntity), Collections.EMPTY_SET, Marking.NEW, Marking.NONE, entity, permissionsByEntity,
-                             Collections.EMPTY_LIST, mutable, hideFieldLevel);
+            createEntityNode(root, new HashSet<Permission>(permissionsByEntity), Collections.<Permission>emptySet(), Marking.NEW, Marking.NONE, entity, permissionsByEntity,
+                             Collections.<Permission>emptyList(), mutable, hideFieldLevel);
 
         }
         // revoked
         entityPermissions = resourceUtils.groupPermissionsByResourceName(revokable);
         for (String entity : entityPermissions.keySet()) {
             List<Permission> permissionsByEntity = entityPermissions.get(entity);
-            createEntityNode(root, Collections.EMPTY_SET, new HashSet<Permission>(permissionsByEntity), Marking.NONE, Marking.REMOVED, entity, permissionsByEntity,
-                             Collections.EMPTY_LIST, mutable, hideFieldLevel);
+            createEntityNode(root, Collections.<Permission>emptySet(), new HashSet<Permission>(permissionsByEntity), Marking.NONE, Marking.REMOVED, entity, permissionsByEntity,
+                             Collections.<Permission>emptyList(), mutable, hideFieldLevel);
         }
         return root;
     }
@@ -404,9 +404,14 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
             // add entity fields if there are any
             if (!field.equals(EntityField.EMPTY_FIELD)) {
                 if (hideFieldLevel) {
-                    ((TreeNodeModel) actionNode.getData()).setMarking(Marking.OBJECT);
-                    ((TreeNodeModel) actionNode.getData()).setTooltip(Constants.CONTAINS_FIELDS);
-                    actionNode.setType("object");
+                    TreeNodeModel actionNodeModel = (TreeNodeModel) actionNode.getData();
+                    actionNodeModel.setMarking(Marking.OBJECT);
+                    if (!StringUtils.isEmpty(actionNodeModel.getTooltip()) && !StringUtils.equals(actionNodeModel.getTooltip(), Constants.CONTAINS_FIELDS)) {
+                        actionNodeModel.setTooltip(actionNodeModel.getTooltip() + ", " + Constants.CONTAINS_FIELDS);
+                    }else{
+                        actionNodeModel.setTooltip(Constants.CONTAINS_FIELDS);
+                    }
+                    actionNode.setType("field");
                     adjustActionNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permissionsByField, selectable);
                 } else {
                     createFieldNode(selectedPermissions, notSelectedPermissions, selectedMarking, notSelectedMarking, actionNode, permissionsByField, selectable);
@@ -427,11 +432,16 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
             if (permission.getResource() instanceof EntityObjectField) {
                 TreeNodeModel instanceModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD, permission.getResource(),
                     permissionHandling.contains(selectedPermissions, permission));
-                instanceModel
-                    .setTooltip(permissionHandling.contains(selectedPermissions, permission) ? "New!" : (permissionHandling.contains(notSelectedPermissions, permission) ? "Removed!" : "Existing!"));
+                // instanceModel
+                // .setTooltip(permissionHandling.contains(selectedPermissions, permission) ? "New!" :
+                // (permissionHandling.contains(notSelectedPermissions, permission) ? "Removed!" : "Existing!"));
                 actionNodeModel.getInstances().add(instanceModel);
                 actionNodeModel.setMarking(Marking.OBJECT);
-                actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                if (!StringUtils.isEmpty(actionNodeModel.getTooltip()) && !StringUtils.equals(actionNodeModel.getTooltip(), Constants.CONTAINS_OBJECTS)) {
+                    actionNodeModel.setTooltip(actionNodeModel.getTooltip() + ", " + Constants.CONTAINS_OBJECTS);
+                }else{
+                    actionNodeModel.setTooltip(Constants.CONTAINS_OBJECTS);
+                }
                 actionNode.setType("object");
                 // object level permission cannot be optionally granted or revoked.they are just displayed for info and will be
                 // granted or revoked implicitly. TODO find a better solution! at this point there could be 3 object level

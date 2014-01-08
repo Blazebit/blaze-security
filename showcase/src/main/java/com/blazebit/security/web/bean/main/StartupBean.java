@@ -18,7 +18,6 @@ import com.blazebit.security.ActionFactory;
 import com.blazebit.security.EntityResourceFactory;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
-import com.blazebit.security.PermissionService;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.Company;
@@ -44,10 +43,6 @@ import com.blazebit.security.web.service.api.UserService;
 // @ManagedBean(name="startup")
 public class StartupBean {
 
-    // @Inject
-    // private UserSession userSession;
-    @Inject
-    private PermissionService permissionService;
     @Inject
     private UserService userService;
     @Inject

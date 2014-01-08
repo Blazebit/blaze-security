@@ -4,24 +4,13 @@
 package com.blazebit.security.web.bean.main;
 
 import java.io.Serializable;
-import java.security.CodeSource;
-import java.security.PermissionCollection;
-import java.security.Policy;
-import java.security.Principal;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.security.jacc.PolicyContext;
-import javax.security.jacc.PolicyContextException;
-import javax.security.jacc.WebRoleRefPermission;
-import javax.servlet.http.HttpServletRequest;
 
 import com.blazebit.security.Permission;
 import com.blazebit.security.RolePermission;

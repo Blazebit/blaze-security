@@ -4,33 +4,22 @@
 package com.blazebit.security.web.bean.main.user;
 
 import java.io.IOException;
-import java.security.CodeSource;
-import java.security.PermissionCollection;
-import java.security.Policy;
-import java.security.Principal;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIViewRoot;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
-import javax.security.jacc.PolicyContext;
 import javax.security.jacc.PolicyContextException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
-import com.blazebit.security.auth.provider.JaccPermissionProvider;
-import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
@@ -50,10 +39,7 @@ public class UserBean extends GroupHandlingBaseBean {
 
     @Inject
     private UserService userService;
-
-    @Inject
-    private JaccPermissionProvider permissionProvider;
-
+    
     private List<User> users = new ArrayList<User>();
     private User selectedUser;
     private TreeNode permissionRoot;

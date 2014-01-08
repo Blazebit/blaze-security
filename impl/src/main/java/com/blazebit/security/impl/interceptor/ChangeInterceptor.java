@@ -42,9 +42,7 @@ import com.blazebit.security.PermissionService;
 import com.blazebit.security.ResourceNameFactory;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContext;
-import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.ResourceName;
-import com.blazebit.security.service.api.PropertyDataAccess;
 
 /**
  * 
@@ -142,8 +140,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
             ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
             ResourceNameFactory resourceNameFactory = BeanProvider.getContextualReference(ResourceNameFactory.class);
             PermissionService permissionService = BeanProvider.getContextualReference(PermissionService.class);
-            PropertyDataAccess propertyDataAccess = BeanProvider.getContextualReference(PropertyDataAccess.class);
-
+            
             // find all objects that were added
             boolean isGrantedToAdd = true;
             boolean isGrantedToRemove = true;
@@ -255,7 +252,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
                 Collection<?> collection = (Collection<?>) state[i];
                 if (!collection.isEmpty()) {
                     // elements have been added
-                    isGrantedAddEntity = permissionService.isGranted(actionFactory.createAction(ActionConstants.ADD),
+                    isGrantedAddEntity = permissionService.isGranted(actionFactory.createAction(ActionConstants.CREATE),
                                                                      resourceNameFactory.createResource((IdHolder) entity, fieldName));
                     if (!isGrantedAddEntity) {
                         throw new PermissionActionException("Element to Entity " + entity + "'s collection " + fieldName + " cannot be added by " + userContext.getUser());

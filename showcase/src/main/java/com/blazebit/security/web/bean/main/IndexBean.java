@@ -22,7 +22,6 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.jboss.logging.Logger;
@@ -85,9 +84,9 @@ public class IndexBean implements Serializable {
         credentials.setPassword("");
 
         // programatic login
-        FacesContext context = FacesContext.getCurrentInstance();
-        ExternalContext externalContext = context.getExternalContext();
-        HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+        //FacesContext context = FacesContext.getCurrentInstance();
+        //ExternalContext externalContext = context.getExternalContext();
+        //HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
 
         if (getLoggedInPrincipal(loginContext.getSubject()) == null) {
             try {
@@ -168,6 +167,8 @@ public class IndexBean implements Serializable {
         userSession.setUser(null);
         userSession.setAdmin(null);
         FacesContext.getCurrentInstance().getApplication().getNavigationHandler().handleNavigation(FacesContext.getCurrentInstance(), null, "/index.xhtml");
+//        FacesContext.getCurrentInstance().getExternalContext().redirect("../../index.xhtml");
+//        FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
     public void beUser(User user) throws IOException {

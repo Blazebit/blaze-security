@@ -30,7 +30,6 @@ import com.blazebit.security.Permission;
 import com.blazebit.security.PermissionDataAccess;
 import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.PermissionManager;
-import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.service.PermissionHandlingImpl;
 
 /**

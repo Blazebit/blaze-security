@@ -27,6 +27,11 @@ import com.blazebit.security.web.util.WebUtil;
 @Stateless
 public class CommentBean extends SecurityBean {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     @PersistenceContext(unitName = "TestPU")
     EntityManager entityManager;
 

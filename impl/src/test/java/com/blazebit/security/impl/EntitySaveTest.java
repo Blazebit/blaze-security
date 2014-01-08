@@ -52,7 +52,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     public void init() {
         super.initData();
         carrier = new TestCarrier();
-        //carrier.setField("field1");
+        // carrier.setField("field1");
         setUserContext(admin);
         ChangeInterceptor.activate();
     }
@@ -114,10 +114,10 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
         assertNotNull(carrier.getId());
     }
-    
+
     @Test
     public void test_create_entity_with_one_to_one_field_with_only_field_permission() {
-        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class,"party"));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class, "party"));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Party.class));
         setUserContext(user1);
 
@@ -128,7 +128,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
         assertNotNull(carrier.getId());
     }
-
 
     // One2One+Cascade.ALL
     @Test
@@ -202,7 +201,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     public void test_create_entity_with_one_to_many_field_with_cascade() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
-        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "documents"));
         setUserContext(user1);
 
         Document document = new Document();
@@ -212,10 +210,12 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         assertNotNull(carrier.getId());
     }
 
-    @Test(expected = PermissionActionException.class)
-    public void test_create_entity_with_one_to_many_field_not_permitted_add_field_missing() {
+    @Test
+    public void test_create_entity_with_one_to_many_field_field_level_disabled() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Contact.class));
+        user1.getCompany().setFieldLevelEnabled(false);
+        self.get().merge(user1.getCompany());
         setUserContext(user1);
 
         Contact contact = new Contact();
@@ -223,17 +223,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         self.get().persist(contact);
         carrier.getContacts().add(contact);
 
-        self.get().persist(carrier);
-    }
-
-    @Test(expected = PermissionActionException.class)
-    public void test_create_entity_with_one_to_many_field_with_cascade_not_permitted_add_field_missing() {
-        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Document.class));
-        setUserContext(user1);
-
-        Document document = new Document();
-        carrier.getDocuments().add(document);
         self.get().persist(carrier);
     }
 
@@ -252,7 +241,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     @Test(expected = PermissionActionException.class)
     public void test_create_entity_with_one_to_many_field_with_cascade_not_permitted_create_entity_missing() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "documents"));
         setUserContext(user1);
 
         Document document = new Document();
@@ -347,7 +335,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         assertNotNull(carrier.getId());
     }
 
-    @Test(expected = PermissionActionException.class)
+    @Test
     public void test_create_entity_with_many_to_many_field_not_permitted_update_field_missing() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierGroup.class));
@@ -359,8 +347,8 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
         self.get().persist(carrier);
     }
 
-    @Test(expected = PermissionActionException.class)
-    public void test_create_entity_with_many_to_many_field_with_cascade_not_permitted_update_field_missing() {
+    @Test
+    public void test_create_entity_with_many_to_many_field_with_cascade_with_create_entity_permissions() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(CarrierTeam.class));
         setUserContext(user1);
@@ -373,7 +361,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     @Test(expected = PermissionActionException.class)
     public void test_create_entity_with_many_to_many_field_not_permitted_create_entity_missing() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "groups"));
         setUserContext(user1);
 
         CarrierGroup group = new CarrierGroup();
@@ -385,7 +372,6 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     @Test(expected = PermissionActionException.class)
     public void test_create_entity_with_many_to_many_field_with_cascade_not_permitted_create_entity_missing() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        permissionService.grant(admin, user1, getAddAction(), entityFieldFactory.createResource(TestCarrier.class, "teams"));
         setUserContext(user1);
 
         CarrierTeam team = new CarrierTeam();
@@ -398,7 +384,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     public void test_create_entity_with_many_to_one_field() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
-        
+
         setUserContext(user1);
 
         Email email = new Email();
@@ -413,7 +399,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     public void test_create_entity_with_many_to_one_field_with_cascade() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
-        
+
         setUserContext(user1);
 
         Email email = new Email();
@@ -426,7 +412,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     @Test(expected = PermissionActionException.class)
     public void test_create_entity_with_many_to_one_field_not_permitted_entity_create_missing() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        
+
         setUserContext(user1);
 
         Email email = new Email();
@@ -438,7 +424,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
     @Test(expected = PermissionActionException.class)
     public void test_create_entity_with_many_to_one_field_with_cascade_not_permitted_entity_create_missing() {
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class));
-        
+
         setUserContext(user1);
 
         Email email = new Email();
@@ -449,7 +435,7 @@ public class EntitySaveTest extends BaseTest<EntitySaveTest> {
 
     @Test(expected = PermissionActionException.class)
     public void test_create_entity_with_many_to_one_field_not_permitted_field_create_missing() {
-        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class,"field"));
+        permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(TestCarrier.class, "field"));
         permissionService.grant(admin, user1, getCreateAction(), entityFieldFactory.createResource(Email.class));
         setUserContext(user1);
 

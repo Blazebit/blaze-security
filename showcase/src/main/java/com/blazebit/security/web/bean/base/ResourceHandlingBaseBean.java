@@ -115,8 +115,8 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
             } else {
                 Permission found = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
                 if (found == null) {
-                    // remove actionNode is entity cannot be granted
-                    if (!isGranted(ActionConstants.GRANT, entityField) && !isGranted(ActionConstants.REVOKE, entityField)) {
+                    // remove actionNode if entity cannot be granted
+                    if (!isGranted(ActionConstants.GRANT, entityField)) {
                         // actionNode.setParent(null);
                         // actionNode = null;
                         entityNode.getChildren().remove(actionNode);
@@ -162,6 +162,11 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                         fieldNode.setSelectable(isGranted(ActionConstants.REVOKE, entityField));
                     }
 
+                } else {
+                    // if fieldNode is not granted and cannot be granted -> remove
+                    if (!isGranted(ActionConstants.GRANT, entityField)) {
+                        fieldNode.getParent().getChildren().remove(fieldNode);
+                    }
                 }
                 fieldNode.setData(fieldNodeModel);
                 fieldNode.setExpanded(true);

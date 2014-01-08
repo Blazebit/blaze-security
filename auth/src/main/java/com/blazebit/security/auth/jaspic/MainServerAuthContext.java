@@ -17,7 +17,7 @@ import javax.security.auth.message.ServerAuth;
 import javax.security.auth.message.config.ServerAuthContext;
 import javax.security.auth.message.module.ServerAuthModule;
 
-import com.blazebit.security.auth.ShowcaseSimpleServerLoginModule;
+import com.blazebit.security.auth.login.ShowcaseSimpleServerLoginModule;
 
 /**
  * The Server Authentication Context is an extra (required) indirection between the Application Server and the actual Server
@@ -40,6 +40,7 @@ public class MainServerAuthContext implements ServerAuthContext {
         Map<String, String> options = new HashMap<String, String>();
         options.put("login-module-delegate", ShowcaseSimpleServerLoginModule.class.getName());
         serverAuthModule.initialize(policy, policy, handler, Collections.<String, String>emptyMap());
+        //if there are more auth modules
         serverAuthModules.add(serverAuthModule);
     }
 

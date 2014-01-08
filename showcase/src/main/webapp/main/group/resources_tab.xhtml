@@ -60,7 +60,10 @@
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
+									<h:outputText value="#{currentPermission.name} #{currentPermission.nodeInstances.size() gt 0  ? '('.concat(currentPermission.nodeInstances.size()).concat(')') : ''}" style="#{currentPermission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{currentPermission.name} #{currentPermission.nodeInstances.size() gt 0  ? '('.concat(currentPermission.nodeInstances.size()).concat(')') : ''}" style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -79,7 +82,10 @@
 									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+									<h:outputText value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}" style="#{newPermission.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}" style="#{newPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -109,7 +115,10 @@
 									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
+									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
@@ -129,7 +138,10 @@
 									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
+									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>

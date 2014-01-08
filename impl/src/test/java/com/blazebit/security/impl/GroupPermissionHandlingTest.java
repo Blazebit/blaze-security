@@ -310,7 +310,7 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
         Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
-        Set<Permission> notGranted = grant.get(1);
+        //Set<Permission> notGranted = grant.get(1);
         Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 

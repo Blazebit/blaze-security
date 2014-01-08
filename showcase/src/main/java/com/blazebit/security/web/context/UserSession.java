@@ -7,7 +7,6 @@ import java.io.Serializable;
 
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
-import javax.security.auth.Subject;
 
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;

@@ -1,4 +1,4 @@
-package com.blazebit.security.auth.impl;
+package com.blazebit.security.auth.jaspic;
 
 import java.io.Serializable;
 import java.net.URISyntaxException;
@@ -15,6 +15,9 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.jboss.logging.Logger;
+
+import com.blazebit.security.auth.config.LoginConfigFile;
+import com.blazebit.security.auth.config.LoginModuleName;
 
 /**
  * @author blep Date: 16/02/12 Time: 07:28

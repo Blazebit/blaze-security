@@ -377,10 +377,10 @@ public class GroupBean extends GroupHandlingBaseBean {
             case CURRENT:
                 return buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
             case NEW:
-                buildNewPermissionTree(userNode, userPermissions, Collections.EMPTY_LIST, new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(0)),
+                buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(0)),
                                        new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0)), replaced, !isEnabled(Company.FIELD_LEVEL),
                                        isEnabled(Company.USER_LEVEL), true);
-                buildNewDataPermissionTree(userObjectNode, Collections.EMPTY_LIST, userDataPermissions,
+                buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), userDataPermissions,
                                            new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(1)), new HashSet<Permission>(permissionHandling
                                                .getSeparatedPermissions(revoked)
                                                .get(1)), replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));

@@ -1,4 +1,4 @@
-package com.blazebit.security.auth.impl;
+package com.blazebit.security.auth.jaspic;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -25,6 +25,10 @@ public class SimpleCallbackHandler implements CallbackHandler, Serializable {
     // = Attributes =
     // ======================================
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     @Inject
     @RequestScoped
     private Credentials credentials;

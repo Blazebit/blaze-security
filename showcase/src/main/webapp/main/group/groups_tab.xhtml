@@ -96,8 +96,13 @@
 							rendered="#{not empty permissionModel.tooltip}" />
 					</p:treeNode>
 					<p:treeNode type="object" icon="ui-icon-contact">
-						<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm1" />
+						<h:outputText value="#{permissionModel.name} #{permissionModel.nodeInstances.size() gt 0  ? '('.concat(permissionModel.nodeInstances.size()).concat(')') : ''}" style="#{permissionModel.marking.style}" id="perm1" />
 						<p:tooltip for="perm1" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
+							rendered="#{not empty permissionModel.tooltip}" />
+					</p:treeNode>
+					<p:treeNode type="field" icon="ui-icon-document-b">
+						<h:outputText value="#{permissionModel.name} #{permissionModel.nodeInstances.size() gt 0  ? '('.concat(permissionModel.nodeInstances.size()).concat(')') : ''}" style="#{permissionModel.marking.style}" id="perm2" />
+						<p:tooltip for="perm2" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 							rendered="#{not empty permissionModel.tooltip}" />
 					</p:treeNode>
 				</p:tree>
@@ -123,13 +128,18 @@
 						<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
 							listener="#{groupBean.rebuildCurrentPermissionTreeUnselect}" />
 						<p:treeNode type="object" icon="ui-icon-contact">
-							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm" />
+							<h:outputText value="#{permissionModel.name} #{permissionModel.nodeInstances.size() gt 0  ? '('.concat(permissionModel.nodeInstances.size()).concat(')') : ''}" style="#{permissionModel.marking.style}" id="perm" />
 							<p:tooltip for="perm" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 								rendered="#{not empty permissionModel.tooltip}" />
 						</p:treeNode>
-						<p:treeNode>
-							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm1" />
+						<p:treeNode type="field" icon="ui-icon-document-b">
+							<h:outputText value="#{permissionModel.name} #{permissionModel.nodeInstances.size() gt 0  ? '('.concat(permissionModel.nodeInstances.size()).concat(')') : ''}" style="#{permissionModel.marking.style}" id="perm1" />
 							<p:tooltip for="perm1" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
+								rendered="#{not empty permissionModel.tooltip}" />
+						</p:treeNode>
+						<p:treeNode>
+							<h:outputText value="#{permissionModel.name}" style="#{permissionModel.marking.style}" id="perm2" />
+							<p:tooltip for="perm2" value="#{permissionModel.tooltip}" showEffect="fade" hideEffect="fade"
 								rendered="#{not empty permissionModel.tooltip}" />
 						</p:treeNode>
 					</p:tree>

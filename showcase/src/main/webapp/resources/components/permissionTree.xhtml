@@ -15,6 +15,11 @@
 				<p:tooltip for="perm1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>
+			<p:treeNode type="field" icon="ui-icon-document-b">
+				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}" style="#{permission.marking.style}" id="perm2" />
+				<p:tooltip for="perm2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
+					hideEffect="fade" style="#{permission.marking.style}" />
+			</p:treeNode>
 			<p:treeNode>
 				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"  style="#{permission.marking.style}" id="perm" />
 				<p:tooltip for="perm" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"

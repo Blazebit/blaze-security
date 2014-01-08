@@ -76,11 +76,14 @@ public class ActionUtils {
         allFields.addAll(collectionFields);
         List<String> emptyFieldList = new ArrayList<String>();
         ret.put(actionFactory.createAction(ActionConstants.CREATE), allFields);
+        ret.put(actionFactory.createAction(ActionConstants.DELETE), emptyFieldList);
+        
         ret.put(actionFactory.createAction(ActionConstants.READ), allFields);
         ret.put(actionFactory.createAction(ActionConstants.UPDATE), primitiveFields);
+        
         ret.put(actionFactory.createAction(ActionConstants.ADD), collectionFields.isEmpty() ? null : collectionFields);
         ret.put(actionFactory.createAction(ActionConstants.REMOVE), collectionFields.isEmpty() ? null : collectionFields);
-        ret.put(actionFactory.createAction(ActionConstants.DELETE), emptyFieldList);
+        
         ret.put(actionFactory.createAction(ActionConstants.GRANT), emptyFieldList);
         ret.put(actionFactory.createAction(ActionConstants.REVOKE), emptyFieldList);
         return ret;

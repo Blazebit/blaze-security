@@ -5,8 +5,6 @@ package com.blazebit.security.impl.context;
 
 import java.io.Serializable;
 
-import javax.security.auth.Subject;
-
 import com.blazebit.security.impl.model.User;
 
 /**

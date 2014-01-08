@@ -23,7 +23,6 @@ import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
-import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.UserGroupModel;
 
 /**
@@ -130,6 +129,7 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
      * wizard step: process selected groups
      */
     public void processSelectedGroups() {
+        selectedPermissionNodes = new TreeNode[] {};
         currentPermissionTreeRoot = new DefaultTreeNode();
         // store added and removed groups for later processing
         List<Set<UserGroup>> addedAndRemovedGroups = userGroupDataAccess.getAddedAndRemovedUserGroups(getSelectedUser(), getSelectedGroups());

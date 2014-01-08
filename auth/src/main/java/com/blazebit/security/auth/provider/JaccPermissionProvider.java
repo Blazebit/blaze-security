@@ -5,25 +5,17 @@ import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.Principal;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.security.auth.Subject;
 import javax.security.jacc.PolicyContext;
 import javax.security.jacc.PolicyContextException;
 import javax.security.jacc.WebRoleRefPermission;
 import javax.servlet.http.HttpServletRequest;
 
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserModule;
 import com.blazebit.security.impl.service.resource.UserDataAccess;
 
 @Stateless

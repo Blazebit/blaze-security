@@ -1,3 +1,3 @@
 ShowcaseSimpleServerLoginModule{
-    com.blazebit.security.auth.ShowcaseSimpleServerLoginModule required;
+    com.blazebit.security.auth.login.ShowcaseSimpleServerLoginModule required;
 }   ;
