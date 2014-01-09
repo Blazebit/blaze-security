@@ -16,7 +16,7 @@
 		<properties>
 			<property name="hibernate.log" value="trace" />
 			<property name="hibernate.debug" value="true" />
-			<property name="hibernate.show_sql" value="true" />
+			<property name="hibernate.show_sql" value="false" />
 			<property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect" />
 			<property name="hibernate.hbm2ddl.auto" value="update" />
 			<property name="org.hibernate.FlushMode" value="commit" />
@@ -45,7 +45,7 @@
 		<properties>
 			<property name="hibernate.log" value="trace" />
 			<property name="hibernate.debug" value="true" />
-			<property name="hibernate.show_sql" value="true" />
+			<property name="hibernate.show_sql" value="false" />
 			<property name="hibernate.hbm2ddl.auto" value="update" />
 			<property name="hibernate.ejb.interceptor"
 				value="com.blazebit.security.impl.interceptor.ChangeInterceptor" />

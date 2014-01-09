@@ -72,7 +72,7 @@ public class SecurityBean implements Serializable {
     @Inject
     private ActionUtils actionUtils;
     @Inject
-    private UserContext userContext;
+    protected UserContext userContext;
     @Inject
     protected UserSession userSession;
     // WELD-001408 Unsatisfied dependencies for type [ResourceNameFactory] with qualifiers [@Default] at injection point
@@ -339,11 +339,11 @@ public class SecurityBean implements Serializable {
 
     public void initSubjects() {
         subjects.clear();
-        List<User> users = userService.findUsers(userSession.getSelectedCompany());
+        List<User> users = userService.findUsers(userContext.getUser().getCompany());
         for (User user : users) {
             subjects.add(new SubjectModel(user));
         }
-        List<UserGroup> userGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
+        List<UserGroup> userGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
         for (UserGroup ug : userGroups) {
             addToList(ug);
         }

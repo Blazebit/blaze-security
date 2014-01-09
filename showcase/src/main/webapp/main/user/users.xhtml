@@ -19,12 +19,14 @@
 	<h:body>
 		<h:form id="form">
 
-			<h:panelGroup rendered="#{not empty webUserContext.user}">
-				<h3>
-					Logged in as #{userSession.loggedInUser.username} Acting as #{webUserContext.user.username}. Login as a
-					<p:commandLink value="different user..." action="#{indexBean.logout()}" process="@this" />
-				</h3>
-			</h:panelGroup>
+			<h3>
+				<h:outputText value="Logged in as #{webUserContext.prevLoggedInUser}. "
+					rendered="#{webUserContext.prevLoggedInUser ne null}" />
+				<h:outputText value="#{webUserContext.prevLoggedInUser eq null ? 'Logged in' : 'Acting'} as #{webUserContext.user}"
+					rendered="#{webUserContext.loggedInUser ne null}" />
+				<h:link value=" Start" outcome="/index.xhtml" />
+			</h3>
+
 			<h:panelGroup rendered="#{empty webUserContext.user}">
 				<h:outputLink value="../../index.xhtml">Login first!!</h:outputLink>
 			</h:panelGroup>

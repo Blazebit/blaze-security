@@ -391,7 +391,7 @@ public class CarrierBean extends SecurityBean {
 
     public List<Comment> getComments() {
         List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userSession.getSelectedCompany().getId(), Comment.class).getResultList();
+                                                             + userContext.getUser().getCompany().getId(), Comment.class).getResultList();
         return result;
     }
 

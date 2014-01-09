@@ -46,9 +46,9 @@
 					<p:tabView activeIndex="#{resourcesBean.activeTabIndex}">
 						<p:ajax event="tabChange" />
 
-						<p:tab title="Users" id="permissionsUser" disabled="#{!userSession.selectedCompany.userLevelEnabled}">
+						<p:tab title="Users" id="permissionsUser" disabled="#{!securityBaseBean.isEnabled('USER_LEVEL')}">
 							<p:dataTable value="#{resourcesBean.userList}" var="userModel"
-								rendered="#{userSession.selectedCompany.userLevelEnabled}">
+								rendered="#{securityBaseBean.isEnabled('USER_LEVEL')}">
 								<p:column>
 									<p:selectBooleanCheckbox value="#{userModel.selected}" />
 								</p:column>
@@ -90,7 +90,7 @@
 
 					<h:outputText value="No users found" rendered="#{resourcesBean.currentUserRoot.childCount eq 0}" />
 
-					<h:panelGrid columns="2" columnClasses="top,top">
+					<h:panelGrid columns="2" columnClasses="top,top" rendered="#{resourcesBean.currentUserRoot.childCount ne 0}">
 						<h:panelGroup>
 						Current permissions <p:commandButton icon="ui-icon-info" id="infoCurrent" oncomplete="notRevokedDialog.show()"
 								update=":dialogs" />
@@ -219,7 +219,7 @@
 
 					<h:outputText value="No users found" rendered="#{resourcesBean.currentUserRoot.childCount eq 0}" />
 
-					<h:panelGrid columns="2" columnClasses="top,top">
+					<h:panelGrid columns="2" columnClasses="top,top" rendered="#{resourcesBean.currentUserRoot.childCount ne 0}">
 
 						<h:panelGroup>
 					    Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />

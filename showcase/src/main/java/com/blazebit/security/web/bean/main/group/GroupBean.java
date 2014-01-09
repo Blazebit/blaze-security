@@ -79,13 +79,6 @@ public class GroupBean extends GroupHandlingBaseBean {
     private UserGroup groupToMove;
     private UserGroup newParent;
 
-    public void backToIndex() throws IOException {
-        userSession.setUser(null);
-        ((HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false)).invalidate();
-        FacesContext.getCurrentInstance().getExternalContext().redirect("../index.xhtml");
-        FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
-    }
-
     @PostConstruct
     public void init() {
         initUserGroups();
@@ -94,14 +87,14 @@ public class GroupBean extends GroupHandlingBaseBean {
     private void initUserGroups() {
         // init groups tree
         if (isEnabled(Company.GROUP_HIERARCHY)) {
-            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
             this.groupRoot = new DefaultTreeNode("", null);
             groupRoot.setExpanded(true);
             for (UserGroup group : parentGroups) {
                 createNode(group, groupRoot);
             }
         } else {
-            groups = userGroupDataAccess.getAllGroups(userSession.getSelectedCompany());
+            groups = userGroupDataAccess.getAllGroups(userContext.getUser().getCompany());
         }
     }
 
@@ -120,7 +113,7 @@ public class GroupBean extends GroupHandlingBaseBean {
     }
 
     public void saveGroup() {
-        UserGroup newGroup = userGroupService.create(userSession.getSelectedCompany(), this.newGroup.getName());
+        UserGroup newGroup = userGroupService.create(userContext.getUser().getCompany(), this.newGroup.getName());
         if (isEnabled(Company.GROUP_HIERARCHY)) {
             if (isParentGroup()) {
                 newGroup.setParent(getSelectedGroup().getParent());

@@ -12,7 +12,8 @@
 
 	<h:body>
 		<h:form id="form">
-			<h:panelGrid columns="4" columnClasses="top,top,top,top">
+			
+			<h:panelGrid columns="4" columnClasses="top,top,top,top" width="100%">
 
 				<p:menu>
 					<p:submenu label="Menu">
@@ -28,11 +29,13 @@
 
 				<p:dataTable value="#{indexBean.companies}" var="company" style="width:20%">
 					<p:column>
-						<f:facet name="header">Name</f:facet>
+						<f:facet name="header">Company</f:facet>
 						<p:commandLink value="#{company.name}" action="#{indexBean.setSelectedCompany(company)}" update=":form" />
 						<h:outputText value="( selected )" rendered="#{company eq userSession.selectedCompany}" />
 					</p:column>
 				</p:dataTable>
+
+
 
 				<h:panelGroup>
 					Selected company: #{userSession.selectedCompany.name}<br />
@@ -54,27 +57,42 @@
 
 
 				<h:panelGroup id="users">
-					<p:dataTable value="#{indexBean.users}" var="user" style="width:20%">
-						<p:column filterBy="#{user.username}">
+				
+					<h:outputText value="Logged in as #{webUserContext.prevLoggedInUser}. "
+						rendered="#{webUserContext.prevLoggedInUser ne null}" />
+					<h:outputText value="#{webUserContext.prevLoggedInUser eq null ? 'Logged in' : 'Acting'} as #{webUserContext.user}"
+						rendered="#{webUserContext.loggedInUser ne null}" />
+					
+					<p:commandLink action="#{indexBean.resetLoggedInUser}" value=" Restore initially logged in user"
+						rendered="#{webUserContext.prevLoggedInUser ne null and webUserContext.user ne webUserContext.prevLoggedInUser}" update=":form" process="@this"/>
+					
+					<p:dataTable value="#{indexBean.users}" var="user">
+						<p:column>
 							<f:facet name="header">Username</f:facet>
                             #{user.username}
                     </p:column>
 						<p:column>
-							<p:commandLink value="login" action="#{indexBean.logInAs(user)}" rendered="#{userSession.loggedInUser ne user}"
+							<f:facet name="header">Login state</f:facet>
+							<p:commandLink value="login" action="#{indexBean.logInAs(user)}" rendered="#{webUserContext.user eq null}"
 								process="@this" update=":form" />
-							<h:outputText value="logged in" rendered="#{userSession.loggedInUser eq user}" />
+							<h:outputText value=" (currently logged in)" rendered="#{webUserContext.user eq user}" />
+							<h:outputText value=" (initally logged in)"
+								rendered="#{webUserContext.user ne null and user eq webUserContext.prevLoggedInUser}" />
+							<p:commandLink action="#{indexBean.logout}" value="  Logout" rendered="#{webUserContext.user ne null and webUserContext.user eq user}" update=":form"
+								process="@this" />
+							<br />
 						</p:column>
 						<p:column>
-							<p:commandLink value="be user" action="#{indexBean.beUser(user)}" update="@form"
-								rendered="#{not empty userSession.loggedInUser and userSession.user ne user}" process="@this" />
-							<h:outputText value="logged in" rendered="#{userSession.user eq user}" />
+							<f:facet name="header">Act as</f:facet>
+							<p:commandLink value="be user" action="#{indexBean.beUser(user)}" update="@form" process="@this"
+								rendered="#{webUserContext.user ne user and webUserContext.prevLoggedInUser eq null}" />
 						</p:column>
 						<p:column>
-							<p:commandLink value="reset" action="#{indexBean.reset(user)}" process="@this" update="@form" />
+							<f:facet name="header">Reset</f:facet>
+							<p:commandLink value="reset permissions" action="#{indexBean.reset(user)}" process="@this" update="@form" />
 						</p:column>
 					</p:dataTable>
-					<p:commandLink value="logout" action="#{indexBean.logout}" rendered="#{userSession.loggedInUser ne null}"
-						process="@this" update=":form" />
+
 
 				</h:panelGroup>
 			</h:panelGrid>

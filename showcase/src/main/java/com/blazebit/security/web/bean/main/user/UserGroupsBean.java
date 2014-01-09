@@ -100,12 +100,12 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         List<UserGroup> currentUserGroups = userGroupDataAccess.getGroupsForUser(getSelectedUser());
         if (isEnabled(Company.GROUP_HIERARCHY)) {
             selectedGroupNodes = new TreeNode[] {};
-            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
             storeGroupPermissionMap(parentGroups);
             this.groupRoot = getGroupTree(parentGroups, currentUserGroups);
         } else {
             this.groups.clear();
-            List<UserGroup> result = userGroupDataAccess.getAllGroups(userSession.getSelectedCompany());
+            List<UserGroup> result = userGroupDataAccess.getAllGroups(userContext.getUser().getCompany());
             for (UserGroup userGroup : result) {
                 this.groups.add(new UserGroupModel(userGroup, false, currentUserGroups.contains(userGroup)));
             }

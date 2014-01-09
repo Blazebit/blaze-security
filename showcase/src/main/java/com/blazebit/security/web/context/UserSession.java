@@ -6,7 +6,10 @@ package com.blazebit.security.web.context;
 import java.io.Serializable;
 
 import javax.enterprise.context.SessionScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.inject.Named;
+import javax.servlet.http.HttpSession;
 
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
@@ -24,27 +27,11 @@ public class UserSession implements Serializable {
      * 
      */
     private static final long serialVersionUID = 1L;
-    private User user;
     private User selectedUser;
     private UserGroup selectedUserGroup;
-    private User secondLoggedInUser;
+
     private Company company;
     private User admin;
-
-    public User getLoggedInUser() {
-        return user;
-    }
-
-    public User getUser() {
-        if (secondLoggedInUser == null) {
-            return user;
-        }
-        return secondLoggedInUser;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
     public User getSelectedUser() {
         return selectedUser;
@@ -64,25 +51,27 @@ public class UserSession implements Serializable {
         this.selectedUserGroup = selectedUserGroup;
     }
 
-    public void setSecondLoggedInUser(User user) {
-        this.secondLoggedInUser = user;
-
-    }
-
-    public void setSelectedCompany(Company company) {
-        this.company = company;
-    }
-
-    public Company getSelectedCompany() {
-        return company;
-    }
-
     public User getAdmin() {
         return admin;
     }
 
     public void setAdmin(User admin) {
         this.admin = admin;
+    }
+
+    public User getPrevLoggedInUser() {
+        FacesContext context = FacesContext.getCurrentInstance();
+        ExternalContext externalContext = context.getExternalContext();
+        HttpSession session = (HttpSession) externalContext.getSession(false);
+        return (User) session.getAttribute("user");
+    }
+
+    public void setSelectedCompany(Company selectedCompany) {
+        this.company = selectedCompany;
+    }
+
+    public Company getSelectedCompany() {
+        return company;
     }
 
 }

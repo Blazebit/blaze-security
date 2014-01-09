@@ -157,8 +157,8 @@
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
-									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+									<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission2" />
+									<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
@@ -185,8 +185,8 @@
 								<p:treeNode icon="ui-icon-contact" type="field">
 									<h:outputText
 										value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
-										style="#{permission.marking.style}" id="permission1" />
-									<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+										style="#{permission.marking.style}" id="permission2" />
+									<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
 										showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
 								</p:treeNode>
 							</p:tree>

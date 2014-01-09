@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
@@ -39,7 +40,8 @@ public class LoginContextProducer implements Serializable {
     @Inject
     private SimpleCallbackHandler callbackHandler;
 
-    private LoginContext loginContext;
+    private volatile LoginContext loginContext;
+    private final Object LOCK = new Object();
 
     // ======================================
     // = Business methods =
@@ -48,7 +50,11 @@ public class LoginContextProducer implements Serializable {
     @Produces
     public LoginContext produceLoginContext(@LoginConfigFile String loginConfigFileName, @LoginModuleName final String loginModuleName) throws LoginException, URISyntaxException {
         if (loginContext == null) {
-            return createLoginContext(loginConfigFileName, loginModuleName);
+            synchronized (LOCK) {
+                if(loginContext == null) {
+                    loginContext = createLoginContext(loginConfigFileName, loginModuleName);
+                }
+            }
         }
         return loginContext;
     }
@@ -57,7 +63,7 @@ public class LoginContextProducer implements Serializable {
         // System.setProperty("java.security.auth.login.config", new
         // File(LoginContextProducer.class.getResource(loginConfigFileName).getFile()).getPath());
         try {
-            loginContext = new LoginContext(loginModuleName, null, callbackHandler, new Configuration() {
+            return new LoginContext(loginModuleName, new Subject(), callbackHandler, new Configuration() {
 
                 @Override
                 public AppConfigurationEntry[] getAppConfigurationEntry(String name) {

@@ -140,7 +140,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
 
     private void initUsers() {
         userPermissionMap.clear();
-        List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
+        List<User> allUsers = userService.findUsers(userContext.getUser().getCompany());
         userList.clear();
         for (User user : allUsers) {
             userList.add(new UserModel(user, false));
@@ -152,7 +152,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         grantedGroupPermissions.clear();
         groupReplaceables.clear();
         groupPermissionMap.clear();
-        List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
+        List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
         this.groupRoot = new DefaultTreeNode("", null);
         groupRoot.setExpanded(true);
         for (UserGroup group : parentGroups) {
@@ -160,7 +160,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
             createGroupNode(group, groupRoot);
         }
         this.groups.clear();
-        for (UserGroup group : userGroupDataAccess.getAllGroups(userSession.getSelectedCompany())) {
+        for (UserGroup group : userGroupDataAccess.getAllGroups(userContext.getUser().getCompany())) {
             this.groups.add(new UserGroupModel(group, false, false));
         }
     }

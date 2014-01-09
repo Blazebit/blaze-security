@@ -89,7 +89,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
     }
 
     private void initUsers() {
-        List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
+        List<User> allUsers = userService.findUsers(userContext.getUser().getCompany());
         users = userGroupDataAccess.getUsersFor(getSelectedGroup());
         userList.clear();
         for (User user : allUsers) {

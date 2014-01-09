@@ -59,33 +59,34 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
 
         if (requestPolicy.isMandatory()) {
-            // UserContext session bean. Requires additional code to store the current logged in subject
-            // UserContext userContext = BeanProvider.getContextualReference(UserContext.class);
             // LoginContext is produced per session
             LoginContext loginContext = BeanProvider.getContextualReference(LoginContext.class);
 
             // get subject
-            // Subject subject = userContext.getSubject();
             Subject subject = loginContext.getSubject();
 
-            if (subject != null) {
-                CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, getUser(subject));
-                List<String> roles = getUserRoles(subject);
-                GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, roles.toArray(new String[roles.size()]));
-                try {
-                    callbackHandler.handle(new Callback[] { callerPrincipalCallback, groupPrincipalCallback });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (UnsupportedCallbackException ee) {
-                    ee.printStackTrace();
+            User user = getUser(subject);
+            CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, user != null ? user : new Principal() {
+
+                @Override
+                public String getName() {
+                    return "guest";
                 }
-                return AuthStatus.SUCCESS;
+            });
+            List<String> roles = getUserRoles(subject);
+            GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, roles.toArray(new String[roles.size()]));
+            try {
+                callbackHandler.handle(new Callback[] { callerPrincipalCallback, groupPrincipalCallback });
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (UnsupportedCallbackException ee) {
+                ee.printStackTrace();
             }
+            return AuthStatus.SUCCESS;
         } else {
             // if requestPolicy is not mandatory, everything OK
             return AuthStatus.SUCCESS;
         }
-        return AuthStatus.FAILURE;
     }
 
     public User getUser(Subject subject) {

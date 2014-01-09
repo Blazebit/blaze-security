@@ -43,7 +43,7 @@ public class CommentBean extends SecurityBean {
 
     public void init() {
         List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userSession.getSelectedCompany().getId(), Comment.class).getResultList();
+                                                             + userContext.getUser().getCompany().getId(), Comment.class).getResultList();
         comments.clear();
         for (Comment c : result) {
             comments.add(new RowModel(c, "Comment-" + c.getText()));
@@ -64,7 +64,7 @@ public class CommentBean extends SecurityBean {
     }
 
     public void saveNewComment() {
-        User subject = userSession.getUser();
+        User subject = userContext.getUser();
         newComment.setUser(subject);
         entityManager.persist(newComment);
         init();

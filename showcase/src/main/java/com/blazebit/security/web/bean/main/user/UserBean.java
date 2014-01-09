@@ -20,6 +20,7 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
+import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
@@ -39,7 +40,10 @@ public class UserBean extends GroupHandlingBaseBean {
 
     @Inject
     private UserService userService;
-    
+
+    @Inject
+    private UserContext userContext;
+
     private List<User> users = new ArrayList<User>();
     private User selectedUser;
     private TreeNode permissionRoot;
@@ -47,18 +51,11 @@ public class UserBean extends GroupHandlingBaseBean {
     private List<UserGroupModel> groups = new ArrayList<UserGroupModel>();
     private User newUser = new User();
 
-    // redirects to start page
-    public void backToIndex() throws IOException {
-        userSession.setUser(null);
-        ((HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false)).invalidate();
-        FacesContext.getCurrentInstance().getExternalContext().redirect("../../index.xhtml");
-        FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
-    }
 
     // loads all users, excludes logged in user
-    @PostConstruct
     public void init() throws PolicyContextException {
-        users = userService.findUsers(userSession.getSelectedCompany());
+        Company selectedCompany = userContext.getUser().getCompany();
+        users = userService.findUsers(selectedCompany);
         users.remove(userContext.getUser());
         if (getSelectedUser() != null) {
             selectUser(getSelectedUser());
@@ -87,8 +84,8 @@ public class UserBean extends GroupHandlingBaseBean {
 
     // saves new user
     public void saveUser() {
-        userService.createUser(userSession.getSelectedCompany(), newUser.getUsername());
-        users = userService.findUsers(userSession.getSelectedCompany());
+        userService.createUser(userContext.getUser().getCompany(), newUser.getUsername());
+        users = userService.findUsers(userContext.getUser().getCompany());
         users.remove(userContext.getUser());
     }
 
@@ -97,7 +94,7 @@ public class UserBean extends GroupHandlingBaseBean {
             userSession.setSelectedUser(null);
         }
         userService.delete(user);
-        users = userService.findUsers(userSession.getSelectedCompany());
+        users = userService.findUsers(userContext.getUser().getCompany());
         users.remove(userContext.getUser());
     }
 

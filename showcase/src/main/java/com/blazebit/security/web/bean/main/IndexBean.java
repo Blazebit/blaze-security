@@ -11,10 +11,11 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.event.ValueChangeEvent;
 import javax.inject.Inject;
 import javax.security.auth.Subject;
@@ -22,14 +23,17 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.catalina.connector.Request;
 import org.jboss.logging.Logger;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.auth.model.Credentials;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.service.resource.UserDataAccess;
 import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.UserService;
@@ -39,7 +43,7 @@ import com.blazebit.security.web.service.api.UserService;
  * @author cuszk
  */
 @ManagedBean(name = "indexBean")
-@SessionScoped
+@ViewScoped
 public class IndexBean implements Serializable {
 
     protected Logger log = Logger.getLogger(IndexBean.class);
@@ -50,10 +54,15 @@ public class IndexBean implements Serializable {
     private static final long serialVersionUID = 1L;
     @Inject
     private UserService userService;
+
     @Inject
     private UserSession userSession;
+
     @Inject
     private PermissionManager permissionManager;
+
+    @Inject
+    private UserDataAccess userDataAccess;
 
     private List<User> users = new ArrayList<User>();
     private Company selectedCompany;
@@ -63,7 +72,6 @@ public class IndexBean implements Serializable {
     private CompanyService companyService;
 
     @Inject
-    @SessionScoped
     private LoginContext loginContext;
 
     @Inject
@@ -82,57 +90,41 @@ public class IndexBean implements Serializable {
     public void logInAs(User user) {
         credentials.setLogin(String.valueOf(user.getId()));
         credentials.setPassword("");
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 
-        // programatic login
-        //FacesContext context = FacesContext.getCurrentInstance();
-        //ExternalContext externalContext = context.getExternalContext();
-        //HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
-
-        if (getLoggedInPrincipal(loginContext.getSubject()) == null) {
+        HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+        if (request.getUserPrincipal() == null || request.getUserPrincipal().getName().equals("guest")) {
+            // if (getLoggedInPrincipal(loginContext.getSubject()) == null) {
             try {
-                // request.login(credentials.getLogin(), credentials.getPassword());
                 loginContext.login();
                 if (loginContext.getSubject() != null) {
-                    // userSession.setSubject(loginContext.getSubject());
-                    // invoke authenticate, because it sets the request user principal and the roles. not a must, only for test!
-                    // request.authenticate((HttpServletResponse) externalContext.getResponse());
-                    log.info("Logged in  " + getLoggedInPrincipal(loginContext.getSubject()));
+                    request.logout();
+                    request.authenticate((HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse());
+                    if (request.getUserPrincipal() != null) {
+                        log.info("Logged in  " + getLoggedInPrincipal(loginContext.getSubject()));
+                        log.info("Logged in  " + request.getUserPrincipal().getName());
+                    }
 
-                    userSession.setUser(user);
                     userSession.setAdmin(userService.findUser("superAdmin", selectedCompany));
+                    userSession.setSelectedCompany(selectedCompany);
                 } else {
                     throw new LoginException("Failed to get logged in subject");
                 }
             } catch (LoginException e) {
                 log.error("Login " + credentials.getLogin() + " failed", e);
-                // } catch (ServletException e1) {
-                // log.error("Login " + credentials.getLogin() + " failed", e1);
-                // } catch (IOException e2) {
-                // log.error("Login " + credentials.getLogin() + " failed", e2);
+            } catch (IOException e) {
+            } catch (ServletException e) {
             }
         } else {
-            // Logout needs session invalidate before this method call. cannot invoke logout here, or produce new login context!
-            // logout();
-            // logInAs(user);
-            // try {
-            // // LoginModule's logout. Clears subject and roles.
-            // loginContext.logout();
-            // // logout clear the user principal
-            // request.logout();
-            // FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
-            // logInAs(user);
-            // } catch (LoginException e) {
-            // log.error("Logout " + request.getUserPrincipal() + " failed", e);
-            // } catch (ServletException e) {
-            // log.error("Logout " + request.getUserPrincipal() + " failed", e);
-            // }
+            log.warn("Already logged in: " + getLoggedInPrincipal(loginContext.getSubject()));
         }
-        // dont redirect
-
-        // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
-        // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
+    /**
+     * 
+     * @param subject
+     * @return logged in user name
+     */
     private String getLoggedInPrincipal(Subject subject) {
         if (subject != null) {
             Set<Principal> principals = subject.getPrincipals();
@@ -147,34 +139,61 @@ public class IndexBean implements Serializable {
     }
 
     public void logout() {
-        FacesContext context = FacesContext.getCurrentInstance();
-        ExternalContext externalContext = context.getExternalContext();
-        HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
-        try {
-            // LoginModule's logout. Clears subject and roles.
-            loginContext.logout();
-            // logout clear the user principal
-            request.logout();
-        } catch (LoginException e) {
-            log.error("Logout " + request.getUserPrincipal() + " failed", e);
-        } catch (ServletException e) {
-            log.error("Logout " + request.getUserPrincipal() + " failed", e);
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        if (((HttpServletRequest) externalContext.getRequest()).getUserPrincipal() != null) {
+            // if (loginContext.getSubject() != null) {
+            HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+            try {
+                // LoginModule's logout. Clears subject and roles.
+                if (loginContext.getSubject() != null) {
+                    loginContext.logout();
+                }
+                // logout clear the user principal
+                request.logout();
+            } catch (LoginException e) {
+                log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            } catch (ServletException e) {
+                log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            }
+            HttpSession session = (HttpSession) externalContext.getSession(false);
+            if (session != null) {
+                session.invalidate();
+                externalContext.getSession(true);
+            }
+        } else {
+            log.warn("Already logged out.");
         }
-        HttpSession session = (HttpSession) externalContext.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        userSession.setUser(null);
-        userSession.setAdmin(null);
-        FacesContext.getCurrentInstance().getApplication().getNavigationHandler().handleNavigation(FacesContext.getCurrentInstance(), null, "/index.xhtml");
-//        FacesContext.getCurrentInstance().getExternalContext().redirect("../../index.xhtml");
-//        FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
     }
 
-    public void beUser(User user) throws IOException {
-        userSession.setSecondLoggedInUser(user);
-        // FacesContext.getCurrentInstance().getExternalContext().redirect("user/users.xhtml");
-        // FacesContext.getCurrentInstance().setViewRoot(new UIViewRoot());
+    public void beUser(User user) {
+        FacesContext context = FacesContext.getCurrentInstance();
+        ExternalContext externalContext = context.getExternalContext();
+        if (((HttpServletRequest) externalContext.getRequest()).getUserPrincipal() != null && ((HttpServletRequest) externalContext.getRequest()).getUserPrincipal().getName() != null) {
+            // if (loginContext.getSubject() != null) {
+            // String prevLoggedInUser = getLoggedInPrincipal(loginContext.getSubject());
+            String prevLoggedInUser = ((HttpServletRequest) externalContext.getRequest()).getUserPrincipal().getName();
+            logout();
+            logInAs(user);
+            // store previous logged in user in session
+            externalContext.getSessionMap().put("user", Integer.valueOf(prevLoggedInUser));
+        } else {
+            log.warn("No one is logged in.");
+        }
+    }
+
+    public void resetLoggedInUser() {
+        FacesContext context = FacesContext.getCurrentInstance();
+        ExternalContext externalContext = context.getExternalContext();
+        HttpSession session = (HttpSession) externalContext.getSession(false);
+        Integer userId = (Integer) session.getAttribute("user");
+        User user = userDataAccess.findUser(userId);
+
+        if (user != null) {
+            logout();
+            logInAs(user);
+        } else {
+            log.warn("No logged in user to restore.");
+        }
     }
 
     public void reset(User user) {
@@ -209,10 +228,14 @@ public class IndexBean implements Serializable {
         setSelectedCompany(newCompany);
     }
 
+    public void handleCompanyChange(AjaxBehaviorEvent event) {
+        System.out.println("change");
+    }
+
     public void saveCompanyConfiguration() {
-        Company company = companyService.saveCompany(userSession.getSelectedCompany());
-        userSession.setSelectedCompany(company);
-        userSession.getUser().setCompany(company);
+        Company company = companyService.saveCompany(selectedCompany);
+
+        // userSession.setSelectedCompany(company);
     }
 
 }
