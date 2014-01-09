@@ -118,7 +118,7 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         }
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(allPermissions, selectedPermissions);
 
-        List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(allPermissions, concat(userPermissions, selectedPermissions));
+        List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(allPermissions, concat(allPermissions, selectedPermissions));
         revoked.addAll(revoke.get(0));
         dialogBean.setNotRevoked(revoke.get(1));
 

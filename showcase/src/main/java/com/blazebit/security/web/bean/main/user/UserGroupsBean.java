@@ -130,6 +130,7 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
      */
     public void processSelectedGroups() {
         selectedPermissionNodes = new TreeNode[] {};
+        selectedObjectPermissionNodes = new TreeNode[] {};
         currentPermissionTreeRoot = new DefaultTreeNode();
         // store added and removed groups for later processing
         List<Set<UserGroup>> addedAndRemovedGroups = userGroupDataAccess.getAddedAndRemovedUserGroups(getSelectedUser(), getSelectedGroups());

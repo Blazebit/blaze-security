@@ -18,16 +18,7 @@
 	<h:body>
 		<f:event listener="#{resourceObjectBean.init}" type="preRenderView" />
 		<h:form id="form">
-			<h:panelGroup rendered="#{not empty userSession.user}">
-				<h3>
-					Logged in as #{userSession.user.username}. Login as a
-					<p:commandLink value="different user..." action="#{indexBean.logout()}" process="@this" />
-				</h3>
-			</h:panelGroup>
-			<h:panelGroup rendered="#{empty userSession.user}">
-				<h:outputLink value="../index.xhtml">Login first!!</h:outputLink>
-			</h:panelGroup>
-
+			
 
 
 			<h4>Selected subject : #{resourceObjectBean.selectedSubject}</h4>
