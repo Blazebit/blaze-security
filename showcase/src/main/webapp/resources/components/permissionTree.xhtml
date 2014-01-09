@@ -4,28 +4,56 @@
 	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
 
 <cc:interface>
-	<cc:attribute name="bean" required="true"  />
+	<cc:attribute name="bean" required="true" />
 </cc:interface>
 
 <cc:implementation>
+
+	<h:panelGrid columns="2" columnClasses="top,top">
 		<p:tree value="#{cc.attrs.bean.permissionViewRoot}" var="permission"
 			rendered="#{cc.attrs.bean.permissionViewRoot.childCount ne 0}" selectionMode="checkbox">
 			<p:treeNode type="object" icon="ui-icon-contact">
-				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}" style="#{permission.marking.style}" id="perm1" />
+				<h:outputText
+					value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+					style="#{permission.marking.style}" id="perm1" />
 				<p:tooltip for="perm1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>
 			<p:treeNode type="field" icon="ui-icon-document-b">
-				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}" style="#{permission.marking.style}" id="perm2" />
+				<h:outputText
+					value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+					style="#{permission.marking.style}" id="perm2" />
 				<p:tooltip for="perm2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>
 			<p:treeNode>
-				<h:outputText value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"  style="#{permission.marking.style}" id="perm" />
+				<h:outputText
+					value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+					style="#{permission.marking.style}" id="perm" />
 				<p:tooltip for="perm" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}" showEffect="fade"
 					hideEffect="fade" style="#{permission.marking.style}" />
 			</p:treeNode>
 		</p:tree>
-	
+
+		<fieldset>
+			<legend>Icons</legend>
+			<span class="ui-icon ui-icon-document-b"></span>
+			<span class="ui-icon ui-icon-contact"></span>
+			<span class="ui-icon ui-icon-image"></span>
+			<span class="ui-icon ui-icon-cart"></span>
+			<span class="ui-icon ui-icon-document"></span>
+		</fieldset>
+		<fieldset>
+			<legend>Colors</legend>
+			<span   style="display:block;float:left;width:10px; height:20px;background-color:black;"></span> <span  style="float:left;color:black">Black</span>
+			<br/>
+			<span  style="display:block;float:left;width:10px; height:20px;background-color:blue"></span> <span  style="float:left; color:blue">Blue</span>
+			<br/>
+			<span  style="display:block;float:left;width:10px; height:20px;background-color:green"></span> <span  style="float:left; color:green">Green</span>
+			<br/>
+			<span  style="display:block;float:left;width:10px; height:20px;background-color:red"></span> <span  style="float:left; color:red">Red</span>
+		</fieldset>
+	</h:panelGrid>
+
 </cc:implementation>
 </html>
