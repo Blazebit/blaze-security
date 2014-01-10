@@ -98,6 +98,11 @@ public class IndexBean implements Serializable {
             try {
                 loginContext.login();
                 if (loginContext.getSubject() != null) {
+                    
+                    if (request.getUserPrincipal() != null) {
+                        //guest is logged in
+                        request.logout();
+                    }
                     // sets the request user principal and the roles
                     request.authenticate((HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse());
 

@@ -3,25 +3,28 @@
 	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
 	xmlns:my="http://java.sun.com/jsf/composite/components" xmlns:c="http://java.sun.com/jsp/jstl/core">
 <ui:composition>
-	Permissions legend
+	<p:panel toggleable="true" header="Permissions legend" collapsed="true">
+	
 	<fieldset>
 			<legend>Icons</legend>
-			<span class="ui-icon ui-icon-note" style="float:left"/><span style="float:left"> Module</span><br/>
-			<span class="ui-icon ui-icon-document" style="float:left"/><span style="float:left"> Entity</span><br/> 
-			<span class="ui-icon ui-icon-document-b" style="float:left"/><span style="float:left"> Field</span><br/> 
-			<span class="ui-icon ui-icon-play" style="float:left"/> <span style="float:left"> Action</span><br/>
-			<span class="ui-icon ui-icon-contact" style="float:left"/> <span style="float:left"> Object</span><br/>
+			<span class="ui-icon ui-icon-note" style="float: left" /><span style="float: left"> Module</span><br /> <span
+				class="ui-icon ui-icon-document" style="float: left" /><span style="float: left"> Entity</span><br /> <span
+				class="ui-icon ui-icon-document-b" style="float: left" /><span style="float: left"> Field</span><br /> <span
+				class="ui-icon ui-icon-play" style="float: left" /> <span style="float: left"> Action</span><br /> <span
+				class="ui-icon ui-icon-contact" style="float: left" /> <span style="float: left"> Object</span><br />
 		</fieldset>
 		<fieldset>
 			<legend>Colors</legend>
 			<legend>Resources: </legend>
-			<span   style="display:block;float:left;width:10px; height:20px;background-color:black;"></span> <span  style="float:left;color:black">Black</span> <span  style="margin-left:5px;float:left;color:black">Existing</span> 
-			<br/>
-			<span  style="display:block;float:left;width:10px; height:20px;background-color:blue"></span> <span  style="float:left; color:blue">Blue</span> <span  style="margin-left:5px;float:left;color:black">Field or object</span>
-			<br/>
-			<span  style="display:block;float:left;width:10px; height:20px;background-color:green"></span> <span  style="float:left; color:green">Green</span><span  style="margin-left:5px;float:left;color:black">Added</span>
-			<br/>
-			<span  style="display:block;float:left;width:10px; height:20px;background-color:red"></span> <span  style="float:left; color:red">Red</span><span  style="margin-left:5px;float:left;color:black">Removed</span>
+			<span style="display: block; float: left; width: 10px; height: 20px; background-color: black;"></span> <span
+				style="float: left; color: black">Black</span> <span style="margin-left: 5px; float: left; color: black">Existing</span>
+			<br /> <span style="display: block; float: left; width: 10px; height: 20px; background-color: blue"></span> <span
+				style="float: left; color: blue">Blue</span> <span style="margin-left: 5px; float: left; color: black">Field
+				or object</span> <br /> <span style="display: block; float: left; width: 10px; height: 20px; background-color: green"></span>
+			<span style="float: left; color: green">Green</span><span style="margin-left: 5px; float: left; color: black">Added</span>
+			<br /> <span style="display: block; float: left; width: 10px; height: 20px; background-color: red"></span> <span
+				style="float: left; color: red">Red</span><span style="margin-left: 5px; float: left; color: black">Removed</span>
 		</fieldset>
+	</p:panel>
 </ui:composition>
 </html>

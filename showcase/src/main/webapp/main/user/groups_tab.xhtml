@@ -58,7 +58,7 @@
 				</p:tab>
 
 				<p:tab id="groupPermissions" title="Permissions">
-					<h:panelGrid columns="2" columnClasses="top, top">
+					<h:panelGrid columns="3" columnClasses="top, top, top">
 						<h:panelGroup>
 					    Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
 							<br />
@@ -150,7 +150,7 @@
 										#{newPermission.tooltip}</p:tooltip>
 
 									</p:treeNode>
-									
+
 									<p:treeNode type="field" icon="ui-icon-document-b">
 										<h:outputText id="permission2"
 											value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
@@ -160,7 +160,7 @@
 										#{newPermission.tooltip}</p:tooltip>
 
 									</p:treeNode>
-									
+
 
 									<p:treeNode>
 										<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
@@ -169,6 +169,9 @@
 							</h:panelGroup>
 
 						</h:panelGroup>
+
+						<ui:include src="/legend.xhtml" />
+
 
 					</h:panelGrid>
 
