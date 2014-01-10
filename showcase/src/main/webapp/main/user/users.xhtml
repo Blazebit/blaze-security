@@ -13,6 +13,12 @@
 .top {
 	vertical-align: top
 }
+.left {
+	width:10%
+}
+.right {
+	width:100%
+}
 </style>
 	</h:head>
 
@@ -24,31 +30,26 @@
 					rendered="#{webUserContext.prevLoggedInUser ne null}" />
 				<h:outputText value="#{webUserContext.prevLoggedInUser eq null ? 'Logged in' : 'Acting'} as #{webUserContext.user}"
 					rendered="#{webUserContext.loggedInUser ne null}" />
-				<h:link value=" Start" outcome="/index.xhtml" />
 			</h3>
 
-			<h:panelGroup rendered="#{empty webUserContext.user}">
-				<h:outputLink value="../../index.xhtml">Login first!!</h:outputLink>
-			</h:panelGroup>
+			<h:panelGrid columns="2" columnClasses="top left,top right">
+				<p:menu rendered="#{not empty webUserContext.user}">
+					<p:submenu label="Menu">
+						<p:menuitem value="Home" url="../../index.xhtml" />
+						<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
+						<p:menuitem value="Resources" url="/main/resource/resources.xhtml" />
 
+					</p:submenu>
+				</p:menu>
 
-			<p:menu rendered="#{not empty webUserContext.user}">
-				<p:submenu label="Menu">
-					<p:menuitem value="Start" url="../../index.xhtml" />
-					<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
-					<p:menuitem value="Resources" url="/main/resource/resources.xhtml" />
-
-				</p:submenu>
-			</p:menu>
-
-			<p:tabView id="tab" rendered="#{not empty webUserContext.user}" style="width:100%;height:100%;" dynamic="true"
-				cache="false">
-				<c:set var="sessionUser" value="#{userSession.selectedUser}" />
-				<ui:include src="/main/user/users_tab.xhtml" />
-				<ui:include src="/main/user/groups_tab.xhtml" />
-				<ui:include src="/main/user/resources_tab.xhtml" />
-			</p:tabView>
-
+				<p:tabView id="tab" rendered="#{not empty webUserContext.user}" style="width:100%;height:100%;" dynamic="true"
+					cache="false">
+					<c:set var="sessionUser" value="#{userSession.selectedUser}" />
+					<ui:include src="/main/user/users_tab.xhtml" />
+					<ui:include src="/main/user/groups_tab.xhtml" />
+					<ui:include src="/main/user/resources_tab.xhtml" />
+				</p:tabView>
+			</h:panelGrid>
 		</h:form>
 
 		<ui:include src="/dialogs.xhtml" />

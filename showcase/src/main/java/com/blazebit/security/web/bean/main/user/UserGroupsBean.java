@@ -185,7 +185,18 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
     }
 
     private Set<Permission> getPermissionsToGrant() {
-        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(getSelectedGroups(), isEnabled(Company.GROUP_HIERARCHY));
+
+        Set<UserGroup> allGroups = new HashSet<UserGroup>();
+        Set<UserGroup> selectedGroups = getSelectedGroups();
+        allGroups.addAll(selectedGroups);
+        for (UserGroup userGroup : selectedGroups) {
+            UserGroup parent = userGroup.getParent();
+            while (parent != null) {
+                allGroups.add(parent);
+                parent = parent.getParent();
+            }
+        }
+        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(allGroups, isEnabled(Company.GROUP_HIERARCHY));
         if (!isEnabled(Company.FIELD_LEVEL)) {
             granted = permissionHandling.getSeparatedParentAndChildPermissions(granted).get(0);
         }
@@ -200,7 +211,8 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         Set<UserGroup> ret = new HashSet<UserGroup>();
         if (isEnabled(Company.GROUP_HIERARCHY)) {
             for (TreeNode treeNode : selectedGroupNodes) {
-                ret.add(((UserGroupModel) treeNode.getData()).getUserGroup());
+                UserGroup userGroup = ((UserGroupModel) treeNode.getData()).getUserGroup();
+                ret.add(userGroup);
             }
         } else {
             for (UserGroupModel model : groups) {

@@ -40,7 +40,7 @@
 					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users"
 						rendered="#{userBean.isAuthorizedResource('DELETE', user)}" />
 					<f:facet name="footer">
-						<p:commandButton value="Save" action="#{userBean.saveUser}" update=":form:tab:users"
+						<p:commandButton value="Create" action="#{userBean.saveUser}" update=":form:tab:users"
 							rendered="#{userBean.isAuthorizedResource('CREATE', newUser)}" />
 					</f:facet>
 				</p:column>

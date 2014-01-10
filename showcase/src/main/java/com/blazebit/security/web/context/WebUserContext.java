@@ -37,7 +37,7 @@ public class WebUserContext implements UserContext {
     @Override
     public User getUser() {
         HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    
+
         if (request.getUserPrincipal() == null || request.getUserPrincipal().getName() == "guest") {
             return null;
 
@@ -58,5 +58,9 @@ public class WebUserContext implements UserContext {
         } else {
             return null;
         }
+    }
+
+    public boolean isLoggedInUser() {
+        return getUser() != null;
     }
 }

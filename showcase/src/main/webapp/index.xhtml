@@ -61,10 +61,10 @@
 					<h:outputText value="Logged in as #{webUserContext.prevLoggedInUser}. "
 						rendered="#{webUserContext.prevLoggedInUser ne null}" />
 					<h:outputText value="#{webUserContext.prevLoggedInUser eq null ? 'Logged in' : 'Acting'} as #{webUserContext.user}"
-						rendered="#{webUserContext.loggedInUser ne null}" />
+						rendered="#{webUserContext.loggedInUser}" />
 					
 					<p:commandLink action="#{indexBean.resetLoggedInUser}" value=" Restore initially logged in user"
-						rendered="#{webUserContext.prevLoggedInUser ne null and webUserContext.user ne webUserContext.prevLoggedInUser}" update=":form" process="@this"/>
+						rendered="#{webUserContext.prevLoggedInUser ne null and webUserContext.user ne webUserContext.prevLoggedInUser}" update="@form" process="@this"/>
 					
 					<p:dataTable value="#{indexBean.users}" var="user">
 						<p:column>
@@ -78,14 +78,14 @@
 							<h:outputText value=" (currently logged in)" rendered="#{webUserContext.user eq user}" />
 							<h:outputText value=" (initally logged in)"
 								rendered="#{webUserContext.user ne null and user eq webUserContext.prevLoggedInUser}" />
-							<p:commandLink action="#{indexBean.logout}" value="  Logout" rendered="#{webUserContext.user ne null and webUserContext.user eq user}" update=":form"
+							<p:commandLink action="#{indexBean.logout}" value="  Logout" rendered="#{webUserContext.loggedInUser and webUserContext.user eq user}" update=":form"
 								process="@this" />
 							<br />
 						</p:column>
 						<p:column>
 							<f:facet name="header">Act as</f:facet>
 							<p:commandLink value="be user" action="#{indexBean.beUser(user)}" update="@form" process="@this"
-								rendered="#{webUserContext.user ne user and webUserContext.prevLoggedInUser eq null}" />
+								rendered="#{webUserContext.loggedInUser and webUserContext.user ne user and webUserContext.prevLoggedInUser eq null}" />
 						</p:column>
 						<p:column>
 							<f:facet name="header">Reset</f:facet>

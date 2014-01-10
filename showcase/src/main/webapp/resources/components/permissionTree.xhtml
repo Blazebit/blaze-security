@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:cc="http://java.sun.com/jsf/composite"
-	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui"
+	xmlns:ui="http://java.sun.com/jsf/facelets">
 
 <cc:interface>
 	<cc:attribute name="bean" required="true" />
@@ -35,24 +36,7 @@
 			</p:treeNode>
 		</p:tree>
 
-		<fieldset>
-			<legend>Icons</legend>
-			<span class="ui-icon ui-icon-document-b"></span>
-			<span class="ui-icon ui-icon-contact"></span>
-			<span class="ui-icon ui-icon-image"></span>
-			<span class="ui-icon ui-icon-cart"></span>
-			<span class="ui-icon ui-icon-document"></span>
-		</fieldset>
-		<fieldset>
-			<legend>Colors</legend>
-			<span   style="display:block;float:left;width:10px; height:20px;background-color:black;"></span> <span  style="float:left;color:black">Black</span>
-			<br/>
-			<span  style="display:block;float:left;width:10px; height:20px;background-color:blue"></span> <span  style="float:left; color:blue">Blue</span>
-			<br/>
-			<span  style="display:block;float:left;width:10px; height:20px;background-color:green"></span> <span  style="float:left; color:green">Green</span>
-			<br/>
-			<span  style="display:block;float:left;width:10px; height:20px;background-color:red"></span> <span  style="float:left; color:red">Red</span>
-		</fieldset>
+		<ui:include src="/legend.xhtml" />
 	</h:panelGrid>
 
 </cc:implementation>

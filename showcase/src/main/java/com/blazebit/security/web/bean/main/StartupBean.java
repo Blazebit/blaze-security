@@ -144,6 +144,8 @@ public class StartupBean {
             groups.add(userGroupService.create(company, "Empty"));
             groups.add(userGroupService.create(company, "Document"));
             groups.add(userGroupService.create(company, "Comment"));
+            
+            groups.add(userGroupService.create(company, "View Users"));
 
             userGroupService.addGroupToGroup(groups.get(1), groups.get(0));
             userGroupService.addGroupToGroup(groups.get(2), groups.get(1));
@@ -175,12 +177,13 @@ public class StartupBean {
             group = groups.get(3);
             // admin
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(User.class)));
-            for (UserGroup gr : groups) {
-                if (!gr.getName().equals("Admin")) {
-                    permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(gr)));
-                    permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(gr)));
-                }
-            }
+            permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(UserGroup.class)));
+//            for (UserGroup gr : groups) {
+//                //if (!gr.getName().equals("Admin")) {
+//                    permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(gr)));
+//                    permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(gr)));
+//                //}
+//            }
 
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource(Party.class)));
@@ -192,6 +195,7 @@ public class StartupBean {
             // entityFieldFactory.createResource(CarrierGroup.class)));
             permissionManager.save(permissionFactory.create(group, grantAction, entityFieldFactory.createResource("Carrier_Party")));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(User.class)));
+            permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(UserGroup.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Carrier.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Party.class)));
             permissionManager.save(permissionFactory.create(group, revokeAction, entityFieldFactory.createResource(Contact.class)));

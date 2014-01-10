@@ -25,15 +25,15 @@
 						<p:tree value="#{userResourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox" id="resourceTree"
 								selection="#{userResourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
 
-								<p:treeNode type="module" icon="ui-icon-document">
+								<p:treeNode type="module" icon="ui-icon-note">
 									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 
-								<p:treeNode type="entity" icon="ui-icon-image">
+								<p:treeNode type="entity" icon="ui-icon-document">
 									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 
-								<p:treeNode type="action" icon="ui-icon-cart">
+								<p:treeNode type="action" icon="ui-icon-play">
 									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 

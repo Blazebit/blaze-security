@@ -20,21 +20,22 @@
 					<p:tree value="#{resourcesBean.resourceRoot}" var="_resource" selectionMode="checkbox" id="resourceTree"
 						selection="#{resourcesBean.selectedResourceNodes}" propagateSelectionDown="true" propagateSelectionUp="true">
 
-						<p:treeNode type="module" icon="ui-icon-document">
+						<p:treeNode type="module" icon="ui-icon-note">
 							<h:outputText value="#{_resource.name}" />
 						</p:treeNode>
 
-						<p:treeNode type="entity" icon="ui-icon-image">
+						<p:treeNode type="entity" icon="ui-icon-document">
 							<h:outputText value="#{_resource.name}" />
 						</p:treeNode>
 
-						<p:treeNode type="action" icon="ui-icon-cart">
+						<p:treeNode type="action" icon="ui-icon-play">
 							<h:outputText value="#{_resource.name}" />
 						</p:treeNode>
 
 						<p:treeNode type="field" icon="ui-icon-document-b">
 							<h:outputText value="#{_resource.name}" />
 						</p:treeNode>
+
 
 					</p:tree>
 
@@ -103,11 +104,15 @@
 									<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{currentUserRoot.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentUserRoot.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{currentUserRoot.marking.style}" id="permission2" />
+									<h:outputText
+										value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentUserRoot.marking.style}" id="permission2" />
 									<p:tooltip for="permission2" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -131,11 +136,15 @@
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{newUserRoot.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{newUserRoot.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{newUserRoot.marking.style}" id="permission2" />
+									<h:outputText
+										value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{newUserRoot.marking.style}" id="permission2" />
 									<p:tooltip for="permission2" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -165,15 +174,19 @@
 						<p:tree value="#{resourcesBean.currentGroupRoot}" var="currentGroupRoot" selectionMode="checkbox"
 								id="currentGroupPermissionTree">
 								<p:treeNode>
-									<h:outputText value="#{currentGroupRoot.name}" style="#{currentGroupRoot.marking.style}" id="permissions1"/>
+									<h:outputText value="#{currentGroupRoot.name}" style="#{currentGroupRoot.marking.style}" id="permissions1" />
 									<p:tooltip for="permission1" rendered="#{not empty currentGroupRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{currentGroupRoot.name} #{currentGroupRoot.nodeInstances.size() gt 0  ? '('.concat(currentGroupRoot.nodeInstances.size()).concat(')') : ''}" style="#{currentGroupRoot.marking.style}" id="permission1"/> 
+									<h:outputText
+										value="#{currentGroupRoot.name} #{currentGroupRoot.nodeInstances.size() gt 0  ? '('.concat(currentGroupRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentGroupRoot.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{currentGroupRoot.name} #{currentGroupRoot.nodeInstances.size() gt 0  ? '('.concat(currentGroupRoot.nodeInstances.size()).concat(')') : ''}" style="#{currentGroupRoot.marking.style}" id="permission2"/> 
+									<h:outputText
+										value="#{currentGroupRoot.name} #{currentGroupRoot.nodeInstances.size() gt 0  ? '('.concat(currentGroupRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentGroupRoot.marking.style}" id="permission2" />
 									<p:tooltip for="permission2" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -195,11 +208,15 @@
 									<p:tooltip for="permission" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{newGroupRoot.name} #{newGroupRoot.nodeInstances.size() gt 0  ? '('.concat(newGroupRoot.nodeInstances.size()).concat(')') : ''}" style="#{newGroupRoot.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{newGroupRoot.name} #{newGroupRoot.nodeInstances.size() gt 0  ? '('.concat(newGroupRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{newGroupRoot.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{newGroupRoot.name} #{newGroupRoot.nodeInstances.size() gt 0  ? '('.concat(newGroupRoot.nodeInstances.size()).concat(')') : ''}" style="#{newGroupRoot.marking.style}" id="permission2" />
+									<h:outputText
+										value="#{newGroupRoot.name} #{newGroupRoot.nodeInstances.size() gt 0  ? '('.concat(newGroupRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{newGroupRoot.marking.style}" id="permission2" />
 									<p:tooltip for="permission2" rendered="#{not empty newGroupRoot.tooltip}">#{newGroupRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -232,11 +249,15 @@
 									<p:tooltip for="permission" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{currentUserRoot.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentUserRoot.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{currentUserRoot.marking.style}" id="permission2" />
+									<h:outputText
+										value="#{currentUserRoot.name} #{currentUserRoot.nodeInstances.size() gt 0  ? '('.concat(currentUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentUserRoot.marking.style}" id="permission2" />
 									<p:tooltip for="permission2" rendered="#{not empty currentUserRoot.tooltip}">#{currentUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>
@@ -259,11 +280,15 @@
 									<p:tooltip for="permission" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{newUserRoot.marking.style}" id="permission1" />
+									<h:outputText
+										value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{newUserRoot.marking.style}" id="permission1" />
 									<p:tooltip for="permission1" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}" style="#{newUserRoot.marking.style}" id="permission2" />
+									<h:outputText
+										value="#{newUserRoot.name} #{newUserRoot.nodeInstances.size() gt 0  ? '('.concat(newUserRoot.nodeInstances.size()).concat(')') : ''}"
+										style="#{newUserRoot.marking.style}" id="permission2" />
 									<p:tooltip for="permission2" rendered="#{not empty newUserRoot.tooltip}">#{newUserRoot.tooltip}</p:tooltip>
 								</p:treeNode>
 							</p:tree>

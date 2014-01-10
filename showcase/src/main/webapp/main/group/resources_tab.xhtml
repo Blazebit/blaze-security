@@ -20,21 +20,22 @@
 								selection="#{groupResourcesBean.selectedResourceNodes}" propagateSelectionDown="true"
 								propagateSelectionUp="true">
 
-								<p:treeNode type="module" icon="ui-icon-document">
-									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+									<p:treeNode type="module" icon="ui-icon-note">
+									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 
-								<p:treeNode type="entity" icon="ui-icon-image">
-									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+								<p:treeNode type="entity" icon="ui-icon-document">
+									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 
-								<p:treeNode type="action" icon="ui-icon-cart">
-									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+								<p:treeNode type="action" icon="ui-icon-play">
+									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{_resource.name}" style="#{_resource.marking.style}" />
+									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
+
 							</p:tree>
 						</h:panelGroup>
 
