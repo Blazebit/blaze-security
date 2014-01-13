@@ -27,6 +27,9 @@ import com.blazebit.security.impl.service.resource.UserDataAccess;
 /**
  * inspired from Jboss's org.jboss.security.auth.spi.SimpleServerLoginModule
  * 
+ * AD:
+ * http://stackoverflow.com/questions/8551809/how-to-connect-with-java-into-active-directory
+ * 
  * @author cuszk
  *
  */
