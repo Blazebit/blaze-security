@@ -36,7 +36,9 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
     protected DefaultTreeNode getResourceTree(String filter) throws ClassNotFoundException {
         return getResourceTree(new HashSet<Permission>(), filter);
     }
+    
 
+    
     protected DefaultTreeNode getResourceTree(Collection<Permission> selectedPermissions) throws ClassNotFoundException {
         return getResourceTree(selectedPermissions, "");
     }

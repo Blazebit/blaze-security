@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.catalina.connector.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -81,7 +80,7 @@ public class IndexBean implements Serializable {
     @PostConstruct
     public void init() {
         companies = companyService.findCompanies();
-        if (!companies.isEmpty()) {
+        if (!companies.isEmpty() && userSession.getSelectedCompany()==null) {
             setSelectedCompany(companyService.findCompanies().get(0));
             users = userService.findUsers(selectedCompany);
             users.add(0, userService.findUser("superAdmin", selectedCompany));
@@ -98,9 +97,9 @@ public class IndexBean implements Serializable {
             try {
                 loginContext.login();
                 if (loginContext.getSubject() != null) {
-                    
+
                     if (request.getUserPrincipal() != null) {
-                        //guest is logged in
+                        // guest is logged in
                         request.logout();
                     }
                     // sets the request user principal and the roles
@@ -258,10 +257,16 @@ public class IndexBean implements Serializable {
     }
 
     public void setSelectedCompany(Company selectedCompany) {
+        // clearLoginContext();
         this.selectedCompany = selectedCompany;
         userSession.setSelectedCompany(selectedCompany);
         users = userService.findUsers(selectedCompany);
         users.add(0, userService.findUser("superAdmin", selectedCompany));
+    }
+
+    public void changeSelectedCompany(Company selectedCompany) {
+        logout();
+        setSelectedCompany(selectedCompany);
     }
 
     public void changeCompany(ValueChangeEvent event) {

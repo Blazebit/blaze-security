@@ -20,7 +20,7 @@
 								selection="#{groupResourcesBean.selectedResourceNodes}" propagateSelectionDown="true"
 								propagateSelectionUp="true">
 
-									<p:treeNode type="module" icon="ui-icon-note">
+								<p:treeNode type="module" icon="ui-icon-note">
 									<h:outputText value="#{_resource.name}" />
 								</p:treeNode>
 
@@ -41,7 +41,10 @@
 
 						<h:panelGroup>
 							Permissions
-							<my:permissionTree id="resourcesPermissions" bean="#{groupResourcesBean}" />
+							<h:panelGrid columns="2" columnClasses="top,top">
+								<my:permissionTree id="resourcesPermissions" bean="#{groupResourcesBean}" />
+								<ui:include src="/legend.xhtml" />
+							</h:panelGrid>
 						</h:panelGroup>
 					</h:panelGrid>
 
@@ -61,35 +64,49 @@
 									<h:outputText value="#{currentPermission.name}" style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{currentPermission.name} #{currentPermission.nodeInstances.size() gt 0  ? '('.concat(currentPermission.nodeInstances.size()).concat(')') : ''}" style="#{currentPermission.marking.style}" />
+									<h:outputText
+										value="#{currentPermission.name} #{currentPermission.nodeInstances.size() gt 0  ? '('.concat(currentPermission.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{currentPermission.name} #{currentPermission.nodeInstances.size() gt 0  ? '('.concat(currentPermission.nodeInstances.size()).concat(')') : ''}" style="#{currentPermission.marking.style}" />
+									<h:outputText
+										value="#{currentPermission.name} #{currentPermission.nodeInstances.size() gt 0  ? '('.concat(currentPermission.nodeInstances.size()).concat(')') : ''}"
+										style="#{currentPermission.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
-						<h:panelGroup>
+
+						<h:panelGrid columns="2" columnClasses="top,top">
+							<h:panelGroup>
 						New permissions
 							<br />
 							GREEN and SELECTED entries will be granted after confirmation
-							<p:tree value="#{groupResourcesBean.newPermissionTreeRoot}" var="newPermission" 
-								selection="#{groupResourcesBean.selectedGroupPermissionNodes}" selectionMode="checkbox">
-								<p:ajax event="select" update=":form:tab:currentGroupPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeSelect}" />
-								<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeUnselect}" />
-								<p:treeNode>
-									<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
-								</p:treeNode>
-								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}" style="#{newPermission.marking.style}" />
-								</p:treeNode>
-								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}" style="#{newPermission.marking.style}" />
-								</p:treeNode>
-							</p:tree>
-						</h:panelGroup>
+							<p:tree value="#{groupResourcesBean.newPermissionTreeRoot}" var="newPermission"
+									selection="#{groupResourcesBean.selectedGroupPermissionNodes}" selectionMode="checkbox">
+									<p:ajax event="select" update=":form:tab:currentGroupPermissionTree"
+										listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeSelect}" />
+									<p:ajax event="unselect" update=":form:tab:currentGroupPermissionTree"
+										listener="#{groupResourcesBean.rebuildCurrentGroupPermissionTreeUnselect}" />
+									<p:treeNode>
+										<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+									</p:treeNode>
+									<p:treeNode type="object" icon="ui-icon-contact">
+										<h:outputText
+											value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
+											style="#{newPermission.marking.style}" />
+									</p:treeNode>
+									<p:treeNode type="field" icon="ui-icon-document-b">
+										<h:outputText
+											value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
+											style="#{newPermission.marking.style}" />
+									</p:treeNode>
+								</p:tree>
+							</h:panelGroup>
+
+							<ui:include src="/legend.xhtml" />
+						</h:panelGrid>
+
 
 					</h:panelGrid>
 
@@ -116,36 +133,48 @@
 									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
+									<h:outputText
+										value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}"
+										style="#{user.marking.style}" />
 								</p:treeNode>
 								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
+									<h:outputText
+										value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}"
+										style="#{user.marking.style}" />
 								</p:treeNode>
 							</p:tree>
 						</h:panelGroup>
 
-						<h:panelGroup>
+						<h:panelGrid columns="2" columnClasses="top,top">
+							<h:panelGroup>
 						New permissions <p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()" update=":dialogs" />
-							<br />
+								<br />
 							GREEN and SELECTED entries will be granted after confirmation
 						<p:tree value="#{groupResourcesBean.newUserPermissionTreeRoot}" var="user" selectionMode="checkbox"
-								selection="#{groupResourcesBean.selectedUserPermissionNodes}"
-								rendered="#{groupResourcesBean.newUserPermissionTreeRoot.childCount ne 0}">
-								<p:ajax event="select" update=":form:tab:currentResourceUserPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeSelect}" />
-								<p:ajax event="unselect" update=":form:tab:currentResourceUserPermissionTree"
-									listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
-								<p:treeNode>
-									<h:outputText value="#{user.name}" style="#{user.marking.style}" />
-								</p:treeNode>
-								<p:treeNode type="object" icon="ui-icon-contact">
-									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
-								</p:treeNode>
-								<p:treeNode type="field" icon="ui-icon-document-b">
-									<h:outputText value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}" style="#{user.marking.style}" />
-								</p:treeNode>
-							</p:tree>
-						</h:panelGroup>
+									selection="#{groupResourcesBean.selectedUserPermissionNodes}"
+									rendered="#{groupResourcesBean.newUserPermissionTreeRoot.childCount ne 0}">
+									<p:ajax event="select" update=":form:tab:currentResourceUserPermissionTree"
+										listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeSelect}" />
+									<p:ajax event="unselect" update=":form:tab:currentResourceUserPermissionTree"
+										listener="#{groupResourcesBean.rebuildCurrentUserPermissionTreeUnselect}" />
+									<p:treeNode>
+										<h:outputText value="#{user.name}" style="#{user.marking.style}" />
+									</p:treeNode>
+									<p:treeNode type="object" icon="ui-icon-contact">
+										<h:outputText
+											value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}"
+											style="#{user.marking.style}" />
+									</p:treeNode>
+									<p:treeNode type="field" icon="ui-icon-document-b">
+										<h:outputText
+											value="#{user.name} #{user.nodeInstances.size() gt 0  ? '('.concat(user.nodeInstances.size()).concat(')') : ''}"
+											style="#{user.marking.style}" />
+									</p:treeNode>
+								</p:tree>
+							</h:panelGroup>
+
+							<ui:include src="/legend.xhtml" />
+						</h:panelGrid>
 
 					</h:panelGrid>
 

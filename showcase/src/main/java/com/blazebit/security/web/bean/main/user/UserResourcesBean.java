@@ -4,6 +4,7 @@
 package com.blazebit.security.web.bean.main.user;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import java.util.Set;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -50,6 +52,8 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
     private Set<Permission> replaced = new HashSet<Permission>();
     private Set<Permission> revokable = new HashSet<Permission>();
 
+    private TreeNode[] storedSelectedResourceNodes = new TreeNode[] {};
+
     public void init() {
         initPermissions();
         initPermissionTree();
@@ -59,8 +63,10 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
     private String filter;
 
     public void filterTree() {
+        storedSelectedResourceNodes = new TreeNode[selectedResourceNodes.length];
+        storedSelectedResourceNodes = Arrays.copyOf(selectedResourceNodes, selectedResourceNodes.length);
         try {
-            resourceRoot = getResourceTree(filter);
+            resourceRoot = getResourceTree(userPermissions, filter);
         } catch (ClassNotFoundException e) {
             System.err.println("Error in resource name provider!");
         }
@@ -99,6 +105,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
     public void processSelectedResources() {
         selectedPermissionNodes = new TreeNode[] {};
         // read selected resources
+        selectedResourceNodes = ArrayUtils.addAll(storedSelectedResourceNodes, selectedResourceNodes);
         Set<Permission> selectedPermissions = getSelectedPermissions(selectedResourceNodes);
         if (!isEnabled(Company.FIELD_LEVEL)) {
             // if field is level is not enabled but the user has field level permissions, these need to be marked as selected,

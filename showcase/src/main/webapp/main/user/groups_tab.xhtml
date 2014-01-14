@@ -50,15 +50,19 @@
 							<br />
 							<p:commandButton value="Next" onclick="groupWizard.next();" style="float:left" update=":dialogs" />
 						</h:panelGroup>
+
 						<h:panelGroup>
 							Permissions
-							<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
+							<h:panelGrid columns="2" columnClasses="top,top">
+								<my:permissionTree bean="#{userGroupsBean}" id="groupPermissionsTree" />
+								<ui:include src="/legend.xhtml" />
+							</h:panelGrid>
 						</h:panelGroup>
 					</h:panelGrid>
 				</p:tab>
 
 				<p:tab id="groupPermissions" title="Permissions">
-					<h:panelGrid columns="3" columnClasses="top, top, top">
+					<h:panelGrid columns="2" columnClasses="top, top">
 						<h:panelGroup>
 					    Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
 							<br />
@@ -131,46 +135,47 @@
 											rendered="#{not empty newPermission.tooltip}" />
 									</p:treeNode>
 								</p:tree>
+								
+								<h:panelGrid columns="2" columnClasses="top,top">
+									
+									<p:tree value="#{userGroupsBean.newObjectPermissionTreeRoot}" var="newPermission" id="objectPermissionTree"
+										selection="#{userGroupsBean.selectedObjectPermissionNodes}" selectionMode="checkbox"
+										rendered="#{userGroupsBean.newObjectPermissionTreeRoot.childCount gt 0}">
 
-								<p:tree value="#{userGroupsBean.newObjectPermissionTreeRoot}" var="newPermission" id="objectPermissionTree"
-									selection="#{userGroupsBean.selectedObjectPermissionNodes}" selectionMode="checkbox"
-									rendered="#{userGroupsBean.newObjectPermissionTreeRoot.childCount gt 0}">
+										<p:ajax event="select" update=":form:tab:currentPermissionTree"
+											listener="#{userGroupsBean.rebuildCurrentPermissionTreeSelect}" />
+										<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
+											listener="#{userGroupsBean.rebuildCurrentPermissionTreeUnselect}" />
 
-									<p:ajax event="select" update=":form:tab:currentPermissionTree"
-										listener="#{userGroupsBean.rebuildCurrentPermissionTreeSelect}" />
-									<p:ajax event="unselect" update=":form:tab:currentPermissionTree"
-										listener="#{userGroupsBean.rebuildCurrentPermissionTreeUnselect}" />
+										<p:treeNode type="object" icon="ui-icon-contact">
+											<h:outputText id="permission1"
+												value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
+												style="#{newPermission.marking.style}" />
 
-									<p:treeNode type="object" icon="ui-icon-contact">
-										<h:outputText id="permission1"
-											value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
-											style="#{newPermission.marking.style}" />
-
-										<p:tooltip for="permission1" rendered="#{not empty newPermission.tooltip}">
+											<p:tooltip for="permission1" rendered="#{not empty newPermission.tooltip}">
 										#{newPermission.tooltip}</p:tooltip>
 
-									</p:treeNode>
+										</p:treeNode>
 
-									<p:treeNode type="field" icon="ui-icon-document-b">
-										<h:outputText id="permission2"
-											value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
-											style="#{newPermission.marking.style}" />
+										<p:treeNode type="field" icon="ui-icon-document-b">
+											<h:outputText id="permission2"
+												value="#{newPermission.name} #{newPermission.nodeInstances.size() gt 0  ? '('.concat(newPermission.nodeInstances.size()).concat(')') : ''}"
+												style="#{newPermission.marking.style}" />
 
-										<p:tooltip for="permission2" rendered="#{not empty newPermission.tooltip}">
+											<p:tooltip for="permission2" rendered="#{not empty newPermission.tooltip}">
 										#{newPermission.tooltip}</p:tooltip>
+										</p:treeNode>
 
-									</p:treeNode>
+										<p:treeNode>
+											<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
+										</p:treeNode>
+									</p:tree>
 
-
-									<p:treeNode>
-										<h:outputText value="#{newPermission.name}" style="#{newPermission.marking.style}" />
-									</p:treeNode>
-								</p:tree>
+									<ui:include src="/legend.xhtml" />
+								</h:panelGrid>
 							</h:panelGroup>
 
 						</h:panelGroup>
-
-						<ui:include src="/legend.xhtml" />
 
 
 					</h:panelGrid>

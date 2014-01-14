@@ -94,11 +94,12 @@ public class PartyBean extends SecurityBean {
     @Inject
     ResourceObjectBean resourceObjectBean;
 
-    public void goToPermissions() {
+    public void goToPermissions(String action) {
         if (selectedSubject != null && selectedActions != null && isSelected(parties)) {
             resourceObjectBean.setSelectedSubject(selectedSubject);
             resourceObjectBean.setSelectedActions(selectedActions);
             resourceObjectBean.getSelectedFields().clear();
+            resourceObjectBean.setAction(action);
 
             resourceObjectBean.getSelectedObjects().clear();
             for (RowModel rowModel : parties) {
@@ -107,7 +108,7 @@ public class PartyBean extends SecurityBean {
                 }
             }
             resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
-            WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/resource/object_resources.xhtml", false);
+            WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/main/resource/object_resources.xhtml", false);
         } else {
             System.err.println("Must select subject/action/party");
         }

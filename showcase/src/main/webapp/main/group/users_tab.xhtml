@@ -28,7 +28,10 @@
 
 					<h:panelGroup>
 					Permissions
-					<my:permissionTree id="groupPermissionsTree" bean="#{groupUsersBean}" tableId="groups_userPermissions" />
+					<h:panelGrid columns="2" columnClasses="top,top">
+							<my:permissionTree id="groupPermissionsTree" bean="#{groupUsersBean}" tableId="groups_userPermissions" />
+							<ui:include src="/legend.xhtml" />
+						</h:panelGrid>
 					</h:panelGroup>
 				</h:panelGrid>
 
@@ -115,7 +118,10 @@
 					</h:panelGroup>
 					<h:panelGroup>
 						Group permissions
-						<my:permissionTree id="groupPermissionsTree2" bean="#{groupUsersBean}" />
+						<h:panelGrid columns="2" columnClasses="top,top">
+							<my:permissionTree id="groupPermissionsTree2" bean="#{groupUsersBean}" />
+							<ui:include src="/legend.xhtml" />
+						</h:panelGrid>
 					</h:panelGroup>
 				</h:panelGrid>
 
