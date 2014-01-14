@@ -80,11 +80,11 @@ public class IndexBean implements Serializable {
     @PostConstruct
     public void init() {
         companies = companyService.findCompanies();
-        if (!companies.isEmpty() && userSession.getSelectedCompany()==null) {
+        if (!companies.isEmpty() && userSession.getSelectedCompany() == null) {
             setSelectedCompany(companyService.findCompanies().get(0));
-            users = userService.findUsers(selectedCompany);
-            users.add(0, userService.findUser("superAdmin", selectedCompany));
         }
+        users = userService.findUsers(userSession.getSelectedCompany());
+        users.add(0, userService.findUser("superAdmin", userSession.getSelectedCompany()));
     }
 
     public void logInAs(User user) {
