@@ -51,6 +51,9 @@
 					<h:outputLabel value="Group hierarchy" for="groupHierarchyLevel" />
 					<p:selectBooleanCheckbox id="groupHierarchyLevel" value="#{userSession.selectedCompany.groupHierarchyEnabled}" />
 					<br />
+					<h:outputLabel value="Act as user" for="actAsUser" />
+					<p:selectBooleanCheckbox id="actAsUser" value="#{userSession.selectedCompany.actAsUser}" />
+					<br />
 
 					<p:commandButton value="Save configuration" action="#{indexBean.saveCompanyConfiguration()}" update=":form" rendered="#{webUserContext.loggedInUser and securityBaseBean.isAuthorizedResource('UPDATE', webUserContext.user.company)}"/>
 				</h:panelGroup>
@@ -82,10 +85,10 @@
 								process="@this" />
 							<br />
 						</p:column>
-						<p:column>
+						<p:column rendered="#{securityBaseBean.isEnabled('ACT_AS_USER')}">
 							<f:facet name="header">Act as</f:facet>
 							<p:commandLink value="be user" action="#{indexBean.beUser(user)}" update="@form" process="@this"
-								rendered="#{webUserContext.loggedInUser and webUserContext.user ne user and webUserContext.prevLoggedInUser eq null}" />
+								rendered="#{webUserContext.loggedInUser and webUserContext.user ne user and webUserContext.prevLoggedInUser eq null and securityBaseBean.isActAsEnabled(user)}" />
 						</p:column>
 						<p:column>
 							<f:facet name="header">Reset</f:facet>

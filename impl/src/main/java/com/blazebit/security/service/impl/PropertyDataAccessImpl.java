@@ -13,21 +13,27 @@ public class PropertyDataAccessImpl implements PropertyDataAccess {
 
     @Override
     public String getPropertyValue(String propertyId) {
-        if (propertyId.equals(Company.USER_LEVEL)) {
-            return String.valueOf(userContext.getUser().getCompany().isUserLevelEnabled());
+        if (userContext.getUser() != null && userContext.getUser().getCompany() != null) {
+            if (propertyId.equals(Company.USER_LEVEL)) {
+                return String.valueOf(userContext.getUser().getCompany().isUserLevelEnabled());
 
-        }
-        if (propertyId.equals(Company.FIELD_LEVEL)) {
-            return String.valueOf(userContext.getUser().getCompany().isFieldLevelEnabled());
+            }
+            if (propertyId.equals(Company.FIELD_LEVEL)) {
+                return String.valueOf(userContext.getUser().getCompany().isFieldLevelEnabled());
 
-        }
-        if (propertyId.equals(Company.OBJECT_LEVEL)) {
-            return String.valueOf(userContext.getUser().getCompany().isObjectLevelEnabled());
+            }
+            if (propertyId.equals(Company.OBJECT_LEVEL)) {
+                return String.valueOf(userContext.getUser().getCompany().isObjectLevelEnabled());
 
-        }
-        if (propertyId.equals(Company.GROUP_HIERARCHY)) {
-            return String.valueOf(userContext.getUser().getCompany().isGroupHierarchyEnabled());
+            }
+            if (propertyId.equals(Company.GROUP_HIERARCHY)) {
+                return String.valueOf(userContext.getUser().getCompany().isGroupHierarchyEnabled());
 
+            }
+            if (propertyId.equals(Company.ACT_AS_USER)) {
+                return String.valueOf(userContext.getUser().getCompany().isActAsUser());
+
+            }
         }
         return String.valueOf(false);
     }

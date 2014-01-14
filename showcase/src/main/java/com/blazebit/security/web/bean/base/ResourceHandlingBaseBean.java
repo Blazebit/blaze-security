@@ -18,6 +18,8 @@ import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
+import com.blazebit.security.impl.model.ResourceName;
+import com.blazebit.security.impl.model.User;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.util.Constants;
@@ -81,7 +83,10 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                                 createActionNode(action, actionFields.get(action), entityNode, entityField, selectedPermissions);
                             }
                         }
-
+                        //add "special" act as user action to User and UserGroup
+                        if (resourceName.equals("User") || resourceName.equals("UserGroup")){
+                            createActionNode(actionFactory.createAction(ActionConstants.ACT_AS), new ArrayList<String>(), entityNode, entityField, selectedPermissions);
+                        }
                         propagateNodePropertiesTo(entityNode);
                     }
                 }

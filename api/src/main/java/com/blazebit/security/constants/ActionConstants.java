@@ -26,4 +26,5 @@ public enum ActionConstants {
     READ,
     ADD,
     REMOVE,
+    ACT_AS
 }

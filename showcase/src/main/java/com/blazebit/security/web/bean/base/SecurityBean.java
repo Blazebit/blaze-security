@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.faces.bean.ViewScoped;
@@ -75,6 +76,7 @@ public class SecurityBean implements Serializable {
     protected UserContext userContext;
     @Inject
     protected UserSession userSession;
+
     // WELD-001408 Unsatisfied dependencies for type [ResourceNameFactory] with qualifiers [@Default] at injection point
     // [[field] @Inject private com.blazebit.security.web.bean.SecurityBaseBean.resourceNameFactory]
     // TODO why???
@@ -109,6 +111,22 @@ public class SecurityBean implements Serializable {
 
     public boolean isEnabled(String level) {
         return Boolean.valueOf(propertyDataAccess.getPropertyValue(level));
+    }
+
+    public boolean isActAsEnabled(User user) {
+        boolean actAsUserEnabled = permissionService.isGranted(actionFactory.createAction(ActionConstants.ACT_AS), resourceFactory.createResource(user));
+        if (!actAsUserEnabled) {
+            List<UserGroup> groups = userGroupDataAccess.getGroupsForUser(user);
+            for (UserGroup group : groups) {
+                actAsUserEnabled = permissionService.isGranted(actionFactory.createAction(ActionConstants.ACT_AS), resourceFactory.createResource(group));
+                if (actAsUserEnabled) {
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
+        return false;
     }
 
     /**
