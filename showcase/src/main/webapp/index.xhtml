@@ -87,7 +87,7 @@
 						</p:column>
 						<p:column rendered="#{securityBaseBean.isEnabled('ACT_AS_USER')}">
 							<f:facet name="header">Act as</f:facet>
-							<p:commandLink value="be user" action="#{indexBean.beUser(user)}" update="@form" process="@this"
+							<p:commandLink value="act as" action="#{indexBean.beUser(user)}" update="@form" process="@this"
 								rendered="#{webUserContext.loggedInUser and webUserContext.user ne user and webUserContext.prevLoggedInUser eq null and securityBaseBean.isActAsEnabled(user)}" />
 						</p:column>
 						<p:column>

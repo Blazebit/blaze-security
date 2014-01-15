@@ -51,6 +51,7 @@ public class UserGroup implements Role, Serializable, IdHolder {
     private Set<UserGroupPermission> permissions = new HashSet<UserGroupPermission>(0);
     private Set<UserGroupDataPermission> dataPermissions = new HashSet<UserGroupDataPermission>(0);
     private Company company;
+    private boolean selected;
 
     public UserGroup() {
 
@@ -204,6 +205,15 @@ public class UserGroup implements Role, Serializable, IdHolder {
     @Override
     public Enumeration<? extends Principal> members() {
         return new Vector<Subject>(getSubjects()).elements();
+    }
+
+    @Transient
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
 }

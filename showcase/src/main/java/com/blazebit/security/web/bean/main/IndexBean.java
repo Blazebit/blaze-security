@@ -279,9 +279,8 @@ public class IndexBean implements Serializable {
     }
 
     public void saveCompanyConfiguration() {
-        Company company = companyService.saveCompany(selectedCompany);
-
-        // userSession.setSelectedCompany(company);
+        Company company = companyService.saveCompany(userSession.getSelectedCompany());
+        userSession.setSelectedCompany(company);
     }
 
 }

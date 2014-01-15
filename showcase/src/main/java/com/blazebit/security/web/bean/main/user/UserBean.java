@@ -3,30 +3,33 @@
  */
 package com.blazebit.security.web.bean.main.user;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.security.jacc.PolicyContextException;
-import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 import com.blazebit.security.Permission;
+import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
+import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
+import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.UserGroupModel;
 import com.blazebit.security.web.service.api.UserService;
+import com.blazebit.security.web.util.WebUtil;
 
 /**
  * 
@@ -44,13 +47,22 @@ public class UserBean extends GroupHandlingBaseBean {
     @Inject
     private UserContext userContext;
 
+    @Inject
+    private ResourceObjectBean resourceObjectBean;
+
+    @Inject
+    private UserGroupDataAccess userGroupDataAccess;
+
     private List<User> users = new ArrayList<User>();
+    private List<User> actAsUsers = new ArrayList<User>();
     private User selectedUser;
     private TreeNode permissionRoot;
     private TreeNode groupRoot;
+    private DefaultTreeNode actAsGroupRoot;
+    private List<UserGroup> actAsGroups;
     private List<UserGroupModel> groups = new ArrayList<UserGroupModel>();
     private User newUser = new User();
-
+    private TreeNode[] selectedGroups = new TreeNode[] {};
 
     // loads all users, excludes logged in user
     public void init() throws PolicyContextException {
@@ -59,6 +71,36 @@ public class UserBean extends GroupHandlingBaseBean {
         users.remove(userContext.getUser());
         if (getSelectedUser() != null) {
             selectUser(getSelectedUser());
+        }
+        this.actAsUsers = new ArrayList<User>(users);
+        this.actAsUsers.remove(userSession.getSelectedUser());
+        initUserGroups();
+    }
+
+    private void initUserGroups() {
+        // init groups tree
+        if (isEnabled(Company.GROUP_HIERARCHY)) {
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
+            this.actAsGroupRoot = new DefaultTreeNode("", null);
+            actAsGroupRoot.setExpanded(true);
+            for (UserGroup group : parentGroups) {
+                createNode(group, actAsGroupRoot);
+            }
+        }
+        actAsGroups = userGroupDataAccess.getAllGroups(userContext.getUser().getCompany());
+    }
+
+    /**
+     * helper to build tree
+     * 
+     * @param group
+     * @param node
+     */
+    private void createNode(UserGroup group, DefaultTreeNode node) {
+        DefaultTreeNode childNode = new DefaultTreeNode(group, node);
+        childNode.setExpanded(true);
+        for (UserGroup child : userGroupDataAccess.getGroupsForGroup(group)) {
+            createNode(child, childNode);
         }
     }
 
@@ -80,13 +122,17 @@ public class UserBean extends GroupHandlingBaseBean {
         for (UserGroup group : groups) {
             this.groups.add(new UserGroupModel(group, false, false));
         }
+        this.actAsUsers = new ArrayList<User>(users);
+        this.actAsUsers.remove(userSession.getSelectedUser());
     }
 
     // saves new user
     public void saveUser() {
-        userService.createUser(userContext.getUser().getCompany(), newUser.getUsername());
-        users = userService.findUsers(userContext.getUser().getCompany());
-        users.remove(userContext.getUser());
+        if (!StringUtils.isEmpty(newUser.getUsername())) {
+            userService.createUser(userContext.getUser().getCompany(), newUser.getUsername());
+            users = userService.findUsers(userContext.getUser().getCompany());
+            users.remove(userContext.getUser());
+        }
     }
 
     public void deleteUser(User user) {
@@ -132,6 +178,91 @@ public class UserBean extends GroupHandlingBaseBean {
 
     public void setGroups(List<UserGroupModel> groups) {
         this.groups = groups;
+    }
+
+    public List<User> getActAsUsers() {
+        return actAsUsers;
+    }
+
+    public void setActAsUsers(List<User> actAsUsers) {
+        this.actAsUsers = actAsUsers;
+    }
+
+    public void grantActAsForUser() {
+        grantRevokeObjectPermissionActAsForUsers("grant");
+    }
+
+    public void revokeActAsForUser() {
+        grantRevokeObjectPermissionActAsForUsers("revoke");
+    }
+
+    public void grantActAsForGroup() {
+        grantRevokeObjectPermissionActAsForGroups("grant");
+    }
+
+    public void revokeActAsForGroup() {
+        grantRevokeObjectPermissionActAsForGroups("revoke");
+    }
+
+    private void grantRevokeObjectPermissionActAsForUsers(String action) {
+        resourceObjectBean.setAction(action);
+        resourceObjectBean.setSelectedSubject(userSession.getSelectedUser());
+        List<EntityAction> actions = new ArrayList<EntityAction>();
+        actions.add((EntityAction) actionFactory.createAction(ActionConstants.ACT_AS));
+        resourceObjectBean.setSelectedActions(actions);
+        resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
+        for (User user : actAsUsers) {
+            if (user.isSelected()) {
+                resourceObjectBean.getSelectedObjects().add(new RowModel(user, "User:" + user.getUsername()));
+
+            }
+        }
+        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/main/resource/object_resources.xhtml", false);
+    }
+
+    private void grantRevokeObjectPermissionActAsForGroups(String action) {
+        resourceObjectBean.setAction(action);
+        resourceObjectBean.setSelectedSubject(userSession.getSelectedUser());
+        List<EntityAction> actions = new ArrayList<EntityAction>();
+        actions.add((EntityAction) actionFactory.createAction(ActionConstants.ACT_AS));
+        resourceObjectBean.setSelectedActions(actions);
+        resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
+        if (isEnabled(Company.GROUP_HIERARCHY)) {
+            for (TreeNode groupNode : selectedGroups) {
+                resourceObjectBean.getSelectedObjects().add(new RowModel((UserGroup) groupNode.getData(), "UserGroup:" + ((UserGroup) groupNode.getData()).getName()));
+            }
+        } else {
+            for (UserGroup group : actAsGroups) {
+                if (group.isSelected()){
+                    resourceObjectBean.getSelectedObjects().add(new RowModel(group, "UserGroup:" + group.getName()));
+                }
+            }
+        }
+        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/main/resource/object_resources.xhtml", false);
+    }
+
+    public DefaultTreeNode getActAsGroupRoot() {
+        return actAsGroupRoot;
+    }
+
+    public void setActAsGroupRoot(DefaultTreeNode actAsGroupRoot) {
+        this.actAsGroupRoot = actAsGroupRoot;
+    }
+
+    public List<UserGroup> getActAsGroups() {
+        return actAsGroups;
+    }
+
+    public void setActAsGroups(List<UserGroup> actAsGroups) {
+        this.actAsGroups = actAsGroups;
+    }
+
+    public TreeNode[] getSelectedGroups() {
+        return selectedGroups;
+    }
+
+    public void setSelectedGroups(TreeNode[] selectedGroups) {
+        this.selectedGroups = selectedGroups;
     }
 
 }

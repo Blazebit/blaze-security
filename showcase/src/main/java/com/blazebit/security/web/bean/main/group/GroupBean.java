@@ -29,13 +29,17 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
+import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
+import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
+import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.service.api.UserGroupService;
+import com.blazebit.security.web.util.WebUtil;
 
 /**
  * 
@@ -53,6 +57,9 @@ public class GroupBean extends GroupHandlingBaseBean {
 
     @Inject
     private UserGroupService userGroupService;
+
+    @Inject
+    private ResourceObjectBean resourceObjectBean;
 
     private List<UserGroup> groups = new ArrayList<UserGroup>();
     private List<User> users = new ArrayList<User>();
@@ -74,6 +81,7 @@ public class GroupBean extends GroupHandlingBaseBean {
     private Map<User, Set<Permission>> initialReplace = new HashMap<User, Set<Permission>>();
     private TreeNode[] selectedUserNodes = new TreeNode[] {};
     private TreeNode[] selectedObjectUserNodes = new TreeNode[] {};
+    private TreeNode[] selectedGroups = new TreeNode[] {};
 
     private UserGroup groupToDelete;
     private UserGroup groupToMove;
@@ -370,13 +378,16 @@ public class GroupBean extends GroupHandlingBaseBean {
             case CURRENT:
                 return buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Company.FIELD_LEVEL));
             case NEW:
-                buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(0)),
-                                       new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0)), replaced, !isEnabled(Company.FIELD_LEVEL),
+                buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(permissionHandling
+                                           .getSeparatedPermissions(grantable)
+                                           .get(0)), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0)), replaced,
+                                       !isEnabled(Company.FIELD_LEVEL),
                                        isEnabled(Company.USER_LEVEL), true);
-                buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), userDataPermissions,
-                                           new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(1)), new HashSet<Permission>(permissionHandling
-                                               .getSeparatedPermissions(revoked)
-                                               .get(1)), replaced, !isEnabled(Company.FIELD_LEVEL), isEnabled(Company.USER_LEVEL));
+                buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(permissionHandling
+                                               .getSeparatedPermissions(grantable)
+                                               .get(1)), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(1)), replaced,
+                                           !isEnabled(Company.FIELD_LEVEL),
+                                           isEnabled(Company.USER_LEVEL));
                 return null;
         }
         return null;
@@ -532,6 +543,35 @@ public class GroupBean extends GroupHandlingBaseBean {
 
     public void setSelectedObjectUserNodes(TreeNode[] selectedObjectUserNodes) {
         this.selectedObjectUserNodes = selectedObjectUserNodes;
+    }
+
+    public TreeNode[] getSelectedGroups() {
+        return selectedGroups;
+    }
+
+    public void setSelectedGroups(TreeNode[] selectedGroups) {
+        this.selectedGroups = selectedGroups;
+    }
+
+    public void grantActAs() {
+        grantRevokeObjectPermissionActAs("grant");
+    }
+
+    public void revokeActAs() {
+        grantRevokeObjectPermissionActAs("revoke");
+    }
+
+    private void grantRevokeObjectPermissionActAs(String action) {
+        resourceObjectBean.setAction(action);
+        resourceObjectBean.setSelectedSubject(userSession.getSelectedUser());
+        List<EntityAction> actions = new ArrayList<EntityAction>();
+        actions.add((EntityAction) actionFactory.createAction(ActionConstants.ACT_AS));
+        resourceObjectBean.setSelectedActions(actions);
+        resourceObjectBean.setPrevPath(FacesContext.getCurrentInstance().getViewRoot().getViewId());
+        for (TreeNode groupNode : selectedGroups) {
+            resourceObjectBean.getSelectedObjects().add(new RowModel((UserGroup) groupNode.getData(), "UserGroup:" + ((UserGroup) groupNode.getData()).getName()));
+        }
+        WebUtil.redirect(FacesContext.getCurrentInstance(), "/blaze-security-showcase/main/resource/object_resources.xhtml", false);
     }
 
 }

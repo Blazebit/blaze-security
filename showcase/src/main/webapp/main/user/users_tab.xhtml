@@ -31,25 +31,82 @@
 
 		<h:panelGroup id="users">
 			<c:set var="newUser" value="#{userBean.newUser}" />
-			<p:dataTable value="#{userBean.users}" var="user" style="width:50%">
-				<f:facet name="header">Existing users (click on username to select user)</f:facet>
-				<p:column>
-					<f:facet name="header">Username</f:facet>
-					<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
-					<f:facet name="footer">
-						<h:inputText value="#{userBean.newUser.username}" />
-					</f:facet>
-				</p:column>
-				<p:column>
-					<f:facet name="header">Action</f:facet>
-					<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users"
-						rendered="#{userBean.isAuthorizedResource('DELETE', user)}" />
-					<f:facet name="footer">
-						<p:commandButton value="Create" action="#{userBean.saveUser}" update=":form:tab:users"
-							rendered="#{userBean.isAuthorizedResource('CREATE', newUser)}" />
-					</f:facet>
-				</p:column>
-			</p:dataTable>
+			<h:panelGrid columns="3" columnClasses="top,top,top">
+
+				<h:panelGroup>
+					Click on username to select user
+				<p:dataTable value="#{userBean.users}" var="user" style="width:50%">
+						<p:column>
+							<f:facet name="header">Username</f:facet>
+							<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
+							<f:facet name="footer">
+								<h:inputText value="#{userBean.newUser.username}" />
+							</f:facet>
+						</p:column>
+						<p:column>
+							<f:facet name="header">Action</f:facet>
+							<p:commandButton value="Delete" action="#{userBean.deleteUser(user)}" update=":form:tab:users"
+								rendered="#{userBean.isAuthorizedResource('DELETE', user)}" />
+							<f:facet name="footer">
+								<p:commandButton value="Create" action="#{userBean.saveUser}" update=":form:tab:users"
+									rendered="#{userBean.isAuthorizedResource('CREATE', newUser)}" />
+							</f:facet>
+						</p:column>
+					</p:dataTable>
+				</h:panelGroup>
+
+				<h:panelGroup rendered="#{userSession.selectedUser ne null and  securityBaseBean.isAuthorizedResources('GRANT', userBean.actAsUsers) and securityBaseBean.isEnabled('ACT_AS_USER')}">
+					Grant act_as permissions for users
+					<p:dataTable value="#{userBean.actAsUsers}" var="user" style="width:50%">
+						<p:column>
+							<f:facet name="header">Username</f:facet>
+							<p:commandLink value="#{user.username}" action="#{userBean.selectUser(user)}" process="@this" update=":form:tab" />
+						</p:column>
+
+						<p:column>
+							<f:facet name="header">Select</f:facet>
+							<p:selectBooleanCheckbox value="#{user.selected}" />
+						</p:column>
+					</p:dataTable>
+
+					<p:commandButton value="grant" action="#{userBean.grantActAsForUser}"
+						rendered="#{userSession.selectedUser ne null}" />
+					<p:commandButton value="revoke" action="#{userBean.revokeActAsForUser}"
+						rendered="#{userSession.selectedUser ne null}" />
+				</h:panelGroup>
+				
+				<h:panelGroup rendered="#{userSession.selectedUser ne null and securityBaseBean.isAuthorizedResources('GRANT', userBean.actAsGroups) and securityBaseBean.isEnabled('ACT_AS_USER')}">
+					Grant act_as permissions for users of groups
+					<p:tree value="#{userBean.actAsGroupRoot}" var="group" selectionMode="checkbox" style="width:100%"
+						selection="#{userBean.selectedGroups}" rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}" propagateSelectionDown="false" propagateSelectionUp="false">
+
+						<p:treeNode>
+							<f:facet name="header">Group name</f:facet>
+							<h:outputText value="#{group.name}" style="width:120px;display:inline-block" />
+						</p:treeNode>
+					</p:tree>
+
+					<p:dataTable value="#{userBean.actAsGroups}" var="group"
+						rendered="#{not securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
+						<p:column>
+							<f:facet name="header">Select</f:facet>
+							<p:selectBooleanCheckbox value="#{group.selected}"/>
+						</p:column>
+						<p:column>
+							<f:facet name="header">Group name</f:facet>
+							<p:commandLink action="#{groupBean.selectGroup(group)}" update=":form:tab">
+								<h:outputText value="#{group.name}" />
+							</p:commandLink>
+						</p:column>
+
+					</p:dataTable>
+
+					<p:commandButton value="grant" action="#{userBean.grantActAsForGroup}"
+						rendered="#{userSession.selectedUser ne null}" />
+					<p:commandButton value="revoke" action="#{userBean.revokeActAsForGroup}"
+						rendered="#{userSession.selectedUser ne null}" />
+				</h:panelGroup>
+			</h:panelGrid>
 
 		</h:panelGroup>
 	</p:tab>

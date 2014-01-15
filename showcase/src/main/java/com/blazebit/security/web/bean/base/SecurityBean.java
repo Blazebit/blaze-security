@@ -180,6 +180,24 @@ public class SecurityBean implements Serializable {
     }
 
     /**
+     * authorization check for a concrete object. if checking update operation, if one of the fields of the entity object is
+     * updateable the operation should be allowed.
+     * 
+     * @param actionConstant
+     * @param entityObject
+     * @return
+     */
+    public boolean isAuthorizedResources(ActionConstants actionConstant, Collection<Object> entityObjects) {
+        for (Object entityObject : entityObjects) {
+            boolean authorized = isAuthorizedResource(actionConstant, entityObject, EntityField.EMPTY_FIELD);
+            if (authorized) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * authorization check for a field of a concrete object
      * 
      * @param actionConstant

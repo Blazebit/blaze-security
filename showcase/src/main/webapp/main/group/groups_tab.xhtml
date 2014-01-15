@@ -33,7 +33,7 @@
 		</h:panelGrid>
 
 		<h:panelGroup id="groupTree" rendered="#{not groupBean.deletedGroup and not groupBean.movedGroup}">
-			
+
 			<p:tree value="#{groupBean.groupRoot}" var="group" selectionMode="single" draggable="true" droppable="true"
 				style="width:100%" selection="#{groupBean.selectedGroupTreeNode}"
 				rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY')}">
@@ -75,7 +75,7 @@
 
 				</p:column>
 			</p:dataTable>
-			
+
 			<h:outputText value="#{groupBean.parentGroup ? 'Add parent ' : 'Add child '}"
 				rendered="#{securityBaseBean.isEnabled('GROUP_HIERARCHY') and userSession.selectedUserGroup ne null}" />
 			<h:outputText value=" to #{userSession.selectedUserGroup.name}    "
@@ -86,7 +86,7 @@
 			<c:set var="newGroup" value="#{groupBean.newGroup}" />
 			<p:commandButton value="Create" action="#{groupBean.saveGroup}"
 				rendered="#{groupBean.isAuthorizedResource('CREATE', newGroup)}" update=":form:tab:groupTree" />
-			
+
 
 		</h:panelGroup>
 

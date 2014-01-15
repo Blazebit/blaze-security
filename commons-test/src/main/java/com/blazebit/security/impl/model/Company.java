@@ -17,6 +17,7 @@ public class Company implements Serializable, IdHolder {
     public static final String FIELD_LEVEL = "FIELD_LEVEL";
     public static final String OBJECT_LEVEL = "OBJECT_LEVEL";
     public static final String GROUP_HIERARCHY = "GROUP_HIERARCHY";
+    public static final String ACT_AS_USER = "ACT_AS_USER";
 
     /**
      * 
@@ -28,6 +29,7 @@ public class Company implements Serializable, IdHolder {
     private boolean objectLevelEnabled = true;
     private boolean userLevelEnabled = true;
     private boolean groupHierarchyEnabled = true;
+    private boolean actAsUser = true;
 
     public Company(String name) {
         this.name = name;
@@ -111,6 +113,14 @@ public class Company implements Serializable, IdHolder {
         } else if (!id.equals(other.id))
             return false;
         return true;
+    }
+
+    public boolean isActAsUser() {
+        return actAsUser;
+    }
+
+    public void setActAsUser(boolean actAsUser) {
+        this.actAsUser = actAsUser;
     }
     
     

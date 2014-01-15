@@ -48,6 +48,7 @@ public class User implements Subject, Serializable, IdHolder {
     private Set<UserPermission> permissions = new HashSet<UserPermission>(0);
     private Set<UserDataPermission> dataPermissions = new HashSet<UserDataPermission>(0);
     private Company company;
+    private boolean selected;
 
     public User() {
     }
@@ -167,6 +168,15 @@ public class User implements Subject, Serializable, IdHolder {
     @Transient
     public String getName() {
         return String.valueOf(id);
+    }
+
+    @Transient
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
 }
