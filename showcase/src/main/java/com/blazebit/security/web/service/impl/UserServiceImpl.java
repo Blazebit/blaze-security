@@ -9,6 +9,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 
 import com.blazebit.security.PermissionManager;
@@ -74,6 +75,8 @@ public class UserServiceImpl implements UserService {
             return entityManager.createQuery("select u from " + User.class.getCanonicalName() + " u where u.username='" + username + "'"
                                                  + (company != null ? " and u.company.id=" + company.getId() : ""), User.class).getSingleResult();
         } catch (NoResultException nre) {
+            return null;
+        } catch (NonUniqueResultException nure) {
             return null;
         }
     }
