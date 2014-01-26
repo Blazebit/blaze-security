@@ -15,15 +15,12 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
+import javax.xml.registry.infomodel.User;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import org.apache.log4j.Logger;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Subject;
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserModule;
-import com.blazebit.security.impl.service.resource.UserDataAccess;
 /**
  * inspired from Jboss's org.jboss.security.auth.spi.SimpleServerLoginModule
  * 
@@ -35,13 +32,11 @@ import com.blazebit.security.impl.service.resource.UserDataAccess;
  */
 public class ShowcaseSimpleServerLoginModule implements LoginModule {
 
-    protected Logger log = Logger.getLogger(ShowcaseSimpleServerLoginModule.class);
-
     private Subject user;
     private boolean loginOk;
 
     private javax.security.auth.Subject subject;
-    private Map sharedState;
+    private Map<String, Object> sharedState;
     private CallbackHandler callbackHandler;
     // read options
     private boolean useFirstPass;
@@ -49,9 +44,10 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
     private char[] credential;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void initialize(javax.security.auth.Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
-        this.sharedState = sharedState;
+        this.sharedState = (Map<String, Object>) sharedState;
         this.callbackHandler = callbackHandler;
         String passwordStacking = (String) options.get("password-stacking");
         if (passwordStacking != null) {
@@ -191,7 +187,7 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
     }
 
     protected Principal createIdentity(String userId) {
-        UserDataAccess userDataAccess = BeanProvider.getContextualReference(UserDataAccess.class);
+//        BeanManagerProvider.getInstance().getBeanManager().fireEvent(event);
         User user = userDataAccess.findUser(Integer.valueOf(userId));
         return user;
     }

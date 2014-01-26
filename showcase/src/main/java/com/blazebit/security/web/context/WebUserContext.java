@@ -7,7 +7,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.security.auth.login.LoginContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -30,9 +29,6 @@ public class WebUserContext implements UserContext {
 
     @Inject
     private UserDataAccess userDataAccess;
-
-    @Inject
-    private LoginContext loginContext;
 
     @Override
     public User getUser() {

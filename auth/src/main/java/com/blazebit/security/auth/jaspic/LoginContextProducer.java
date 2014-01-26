@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.inject.Produces;
@@ -14,8 +16,6 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-
-import org.jboss.logging.Logger;
 
 import com.blazebit.security.auth.config.LoginConfigFile;
 import com.blazebit.security.auth.config.LoginModuleName;
@@ -35,7 +35,7 @@ public class LoginContextProducer implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
-    protected Logger log = Logger.getLogger(LoginContextProducer.class);
+    protected Logger log = Logger.getLogger(LoginContextProducer.class.getName());
 
     @Inject
     private SimpleCallbackHandler callbackHandler;
@@ -76,7 +76,7 @@ public class LoginContextProducer implements Serializable {
 
             });
         } catch (Exception e) {
-            log.error("Failed to create login context!", e);
+            log.log(Level.SEVERE, "Failed to create login context!", e);
         }
         return loginContext;
     }

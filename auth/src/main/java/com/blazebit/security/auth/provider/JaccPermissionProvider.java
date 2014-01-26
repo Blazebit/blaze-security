@@ -10,19 +10,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.ejb.Stateless;
-import javax.inject.Inject;
 import javax.security.jacc.PolicyContext;
 import javax.security.jacc.PolicyContextException;
 import javax.security.jacc.WebRoleRefPermission;
 import javax.servlet.http.HttpServletRequest;
 
-import com.blazebit.security.impl.service.resource.UserDataAccess;
-
 @Stateless
 public class JaccPermissionProvider {
-
-    @Inject
-    private UserDataAccess userDataAccess;
 
     /**
      * looks at the security constraints and returns a list with the authenticated subject's granted permissions
@@ -40,7 +34,7 @@ public class JaccPermissionProvider {
         ProtectionDomain pd = new ProtectionDomain(cs, null, null, subject.getPrincipals().toArray(new Principal[subject.getPrincipals().size()]));
 
         PermissionCollection pc = policy.getPermissions(pd);
-        Enumeration permissions = pc.elements();
+        Enumeration<java.security.Permission> permissions = pc.elements();
         Set<String> roleSet = new HashSet<String>();
         HttpServletRequest request = (HttpServletRequest) PolicyContext.getContext(HttpServletRequest.class.getName());
         while (permissions.hasMoreElements()) {

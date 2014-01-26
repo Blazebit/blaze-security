@@ -7,6 +7,8 @@ import com.blazebit.security.impl.model.User;
 
 public class UserDataAccessImpl implements UserDataAccess {
 
+    private static final long serialVersionUID = 1L;
+    
     @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
 

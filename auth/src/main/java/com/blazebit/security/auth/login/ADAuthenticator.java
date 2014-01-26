@@ -3,6 +3,7 @@ package com.blazebit.security.auth.login;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;

@@ -26,10 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
-import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.model.UserModule;
-import com.blazebit.security.impl.service.resource.UserDataAccess;
-
 /**
  * The actual Server Authentication Module AKA SAM.
  * http://arjan-tijms.blogspot.co.at/2012/11/implementing-container-authentication.html
@@ -42,7 +38,6 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
     private MessagePolicy requestPolicy;
     private Map options;
 
-    private UserDataAccess userDataAccess;
     private String loginModuleName;
 
     @Override
@@ -50,7 +45,6 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
         this.callbackHandler = handler;
         this.requestPolicy = requestPolicy;
         this.options = options;
-        this.userDataAccess = BeanProvider.getContextualReference(UserDataAccess.class);
         this.loginModuleName = (String) options.get("login-module-delegate");
 
     }
@@ -65,7 +59,7 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
             // get subject
             Subject subject = loginContext.getSubject();
 
-            User user = getUser(subject);
+            Principal user = getUser(subject);
             CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(clientSubject, user != null ? user : new Principal() {
 
                 @Override
@@ -89,9 +83,9 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
         }
     }
 
-    public User getUser(Subject subject) {
+    private Principal getUser(Subject subject) {
         Iterator<Principal> principals = subject.getPrincipals().iterator();
-        User user = null;
+        Principal user = null;
         while (principals.hasNext()) {
             Principal next = principals.next();
             if (next instanceof User) {
