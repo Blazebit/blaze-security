@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
+import com.blazebit.security.Module;
+
 /**
  * The actual Server Authentication Module AKA SAM.
  * http://arjan-tijms.blogspot.co.at/2012/11/implementing-container-authentication.html
@@ -87,10 +89,7 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
         Iterator<Principal> principals = subject.getPrincipals().iterator();
         Principal user = null;
         while (principals.hasNext()) {
-            Principal next = principals.next();
-            if (next instanceof User) {
-                user = userDataAccess.findUser(Integer.valueOf(next.getName()));
-            }
+            return principals.next();
         }
         return user;
     }
@@ -101,9 +100,9 @@ public class ShowcaseServerAuthModule implements ServerAuthModule {
         Iterator<Principal> principals = subject.getPrincipals().iterator();
         while (principals.hasNext()) {
             Principal next = principals.next();
-            if (next instanceof UserModule) {
+            if (next instanceof Module) {
                 if ("Roles".equals(next.getName())) {
-                    Enumeration<? extends Principal> groups = ((UserModule) next).members();
+                    Enumeration<? extends Principal> groups = ((Module) next).members();
                     while (groups.hasMoreElements()) {
                         String resourceName = groups.nextElement().getName();
                         roles.add(resourceName);

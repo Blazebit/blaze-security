@@ -15,20 +15,22 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import javax.xml.registry.infomodel.User;
 
+import org.apache.deltaspike.core.api.provider.BeanManagerProvider;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
 import com.blazebit.security.PermissionManager;
 import com.blazebit.security.Subject;
+import com.blazebit.security.auth.event.GroupRequestEvent;
+import com.blazebit.security.auth.event.PrincipalRequestEvent;
+
 /**
  * inspired from Jboss's org.jboss.security.auth.spi.SimpleServerLoginModule
  * 
- * AD:
- * http://stackoverflow.com/questions/8551809/how-to-connect-with-java-into-active-directory
+ * AD: http://stackoverflow.com/questions/8551809/how-to-connect-with-java-into-active-directory
  * 
  * @author cuszk
- *
+ * 
  */
 public class ShowcaseSimpleServerLoginModule implements LoginModule {
 
@@ -120,16 +122,15 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
 
     }
 
-    protected Principal getIdentity() {
-        return user;
-    }
-
     protected Group[] getRoleSets() throws LoginException {
         PermissionManager permissionManager = BeanProvider.getContextualReference(PermissionManager.class);
-        Group[] roleSets = { new UserModule("Roles") };
+        GroupRequestEvent event = new GroupRequestEvent("Roles");
+        BeanManagerProvider.getInstance().getBeanManager().fireEvent(event);
+        Group[] roleSets = { event.getUserModule() };
         Set<String> modules = permissionManager.getPermissionModules(user);
         for (String module : modules) {
-            roleSets[0].addMember(new UserModule(module));
+            event = new GroupRequestEvent(module);
+            roleSets[0].addMember(event.getUserModule());
         }
         return roleSets;
     }
@@ -187,9 +188,10 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
     }
 
     protected Principal createIdentity(String userId) {
-//        BeanManagerProvider.getInstance().getBeanManager().fireEvent(event);
-        User user = userDataAccess.findUser(Integer.valueOf(userId));
-        return user;
+        PrincipalRequestEvent event = new PrincipalRequestEvent(userId);
+        BeanManagerProvider.getInstance().getBeanManager().fireEvent(event);
+        // User user = userDataAccess.findUser(Integer.valueOf(userId));
+        return event.getPrincipal();
     }
 
     @Override
@@ -198,8 +200,7 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
             return false;
         subject.getPrincipals().clear();
         Set<Principal> principals = subject.getPrincipals();
-        Principal identity = getIdentity();
-        principals.add(identity);
+        principals.add(user);
         // add role groups returned by getRoleSets.
         Group[] roleSets = getRoleSets();
         for (int g = 0; g < roleSets.length; g++) {
@@ -221,8 +222,10 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         // add the CallerPrincipal group if none has been added in getRoleSets
         Group callerGroup = getCallerPrincipalGroup(principals);
         if (callerGroup == null) {
-            callerGroup = new UserModule("CallerPrincipal");
-            callerGroup.addMember(identity);
+            GroupRequestEvent event = new GroupRequestEvent("CallerPrincipal");
+            // callerGroup = new UserModule("CallerPrincipal");
+            callerGroup = event.getUserModule();
+            callerGroup.addMember(user);
             principals.add(callerGroup);
         }
         return true;
@@ -263,7 +266,8 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         }
         // If we did not find a group create one
         if (roles == null) {
-            roles = new UserModule(name);
+            GroupRequestEvent event = new GroupRequestEvent(name);
+            roles = event.getUserModule(); // new UserModule(name);
             principals.add(roles);
         }
         return roles;
@@ -281,7 +285,7 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
         subject.getPrincipals().clear();
         subject.getPublicCredentials().clear();
         subject.getPrivateCredentials().clear();
-        //subject = new javax.security.auth.Subject();
+        // subject = new javax.security.auth.Subject();
         return true;
     }
 
