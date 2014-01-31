@@ -12,8 +12,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.impl.factory.ActionUtils;
 import com.blazebit.security.impl.model.EntityAction;
-import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;

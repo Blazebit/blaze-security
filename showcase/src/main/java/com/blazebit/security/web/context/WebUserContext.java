@@ -12,7 +12,7 @@ import javax.servlet.http.HttpSession;
 
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.service.resource.UserDataAccess;
+import com.blazebit.security.web.integration.service.UserDataAccess;
 
 /**
  * 

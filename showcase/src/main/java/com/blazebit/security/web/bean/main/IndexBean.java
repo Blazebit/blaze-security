@@ -9,6 +9,8 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -27,14 +29,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
-import com.blazebit.security.PermissionManager;
 import com.blazebit.security.auth.model.Credentials;
+import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.impl.service.resource.UserDataAccess;
 import com.blazebit.security.web.context.UserSession;
+import com.blazebit.security.web.integration.service.UserDataAccess;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.UserService;
 
@@ -46,7 +47,7 @@ import com.blazebit.security.web.service.api.UserService;
 @ViewScoped
 public class IndexBean implements Serializable {
 
-    protected Logger log = Logger.getLogger(IndexBean.class);
+    protected Logger log = Logger.getLogger(IndexBean.class.getName());
 
     /**
      * 
@@ -118,14 +119,14 @@ public class IndexBean implements Serializable {
                     throw new LoginException("Failed to get logged in subject for " + credentials.getLogin());
                 }
             } catch (LoginException e) {
-                log.error("Login failed: " + credentials.getLogin(), e);
+            	log.log(Level.SEVERE, "Login failed: " + credentials.getLogin(), e);
             } catch (IOException e) {
-                log.error("Authentication failed: " + credentials.getLogin(), e);
+            	log.log(Level.SEVERE, "Authentication failed: " + credentials.getLogin(), e);
             } catch (ServletException e) {
-                log.error("Authentication failed: " + credentials.getLogin(), e);
+            	log.log(Level.SEVERE, "Authentication failed: " + credentials.getLogin(), e);
             }
         } else {
-            log.warn("Already logged in: " + getLoggedInPrincipal(loginContext.getSubject()));
+        	log.log(Level.WARNING, "Already logged in: " + getLoggedInPrincipal(loginContext.getSubject()));
         }
     }
 
@@ -179,7 +180,7 @@ public class IndexBean implements Serializable {
                 externalContext.getSession(true);
             }
         } else {
-            log.warn("Already logged out.");
+        	log.log(Level.WARNING, "Already logged out.");
         }
     }
 
@@ -191,14 +192,14 @@ public class IndexBean implements Serializable {
             if (loginContext.getSubject() != null) {
                 loginContext.logout();
             } else {
-                log.warn("LoginContext subject was found empty!");
+            	log.log(Level.WARNING, "LoginContext subject was found empty!");
             }
             // logout clear the user principal
             request.logout();
         } catch (LoginException e) {
-            log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            log.log(Level.SEVERE, "Logout " + request.getUserPrincipal() + " failed", e);
         } catch (ServletException e) {
-            log.error("Logout " + request.getUserPrincipal() + " failed", e);
+            log.log(Level.SEVERE, "Logout " + request.getUserPrincipal() + " failed", e);
         }
     }
 
@@ -210,13 +211,13 @@ public class IndexBean implements Serializable {
             if (isLoggedIn()) {
                 clearLoginContext();
             } else {
-                log.warn("Already logged out.");
+                log.log(Level.WARNING, "Already logged out.");
             }
             logInAs(user);
             // store previous logged in user in session
             externalContext.getSessionMap().put("user", Integer.valueOf(prevLoggedInUser));
         } else {
-            log.warn("No one is logged in.");
+            log.log(Level.WARNING, "No one is logged in.");
         }
     }
 
@@ -232,7 +233,7 @@ public class IndexBean implements Serializable {
             clearLoginContext();
             logInAs(user);
         } else {
-            log.warn("No logged in user to restore.");
+            log.log(Level.WARNING, "No logged in user to restore.");
         }
     }
 

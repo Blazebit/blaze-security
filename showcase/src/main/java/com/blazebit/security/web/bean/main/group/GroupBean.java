@@ -23,12 +23,12 @@ import org.primefaces.event.TreeDragDropEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
 import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.RowModel;
@@ -92,14 +92,14 @@ public class GroupBean extends GroupHandlingBaseBean {
     private void initUserGroups() {
         // init groups tree
         if (isEnabled(Company.GROUP_HIERARCHY)) {
-            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
             this.groupRoot = new DefaultTreeNode("", null);
             groupRoot.setExpanded(true);
             for (UserGroup group : parentGroups) {
                 createNode(group, groupRoot);
             }
         } else {
-            groups = userGroupDataAccess.getAllGroups(userContext.getUser().getCompany());
+            groups = userGroupDataAccess.getAllGroups(userSession.getSelectedCompany());
         }
     }
 
@@ -118,7 +118,7 @@ public class GroupBean extends GroupHandlingBaseBean {
     }
 
     public void saveGroup() {
-        UserGroup newGroup = userGroupService.create(userContext.getUser().getCompany(), this.newGroup.getName());
+        UserGroup newGroup = userGroupService.create(userSession.getSelectedCompany(), this.newGroup.getName());
         if (isEnabled(Company.GROUP_HIERARCHY)) {
             if (isParentGroup()) {
                 newGroup.setParent(getSelectedGroup().getParent());

@@ -19,16 +19,16 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
+import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.base.ResourceGroupHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserGroupModel;
 import com.blazebit.security.web.bean.model.UserModel;
+import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserService;
 
 @ViewScoped
@@ -140,7 +140,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
 
     private void initUsers() {
         userPermissionMap.clear();
-        List<User> allUsers = userService.findUsers(userContext.getUser().getCompany());
+        List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
         userList.clear();
         for (User user : allUsers) {
             userList.add(new UserModel(user, false));
@@ -152,7 +152,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
         grantedGroupPermissions.clear();
         groupReplaceables.clear();
         groupPermissionMap.clear();
-        List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
+        List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
         this.groupRoot = new DefaultTreeNode("", null);
         groupRoot.setExpanded(true);
         for (UserGroup group : parentGroups) {
@@ -160,7 +160,7 @@ public class ResourcesBean extends ResourceGroupHandlingBaseBean {
             createGroupNode(group, groupRoot);
         }
         this.groups.clear();
-        for (UserGroup group : userGroupDataAccess.getAllGroups(userContext.getUser().getCompany())) {
+        for (UserGroup group : userGroupDataAccess.getAllGroups(userSession.getSelectedCompany())) {
             this.groups.add(new UserGroupModel(group, false, false));
         }
     }

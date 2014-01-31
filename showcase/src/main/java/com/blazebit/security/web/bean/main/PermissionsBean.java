@@ -12,9 +12,9 @@ import javax.faces.bean.ViewScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.Permission;
-import com.blazebit.security.RolePermission;
-import com.blazebit.security.SubjectPermission;
+import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.RolePermission;
+import com.blazebit.security.model.SubjectPermission;
 import com.blazebit.security.web.bean.model.PermissionModel;
 
 /**

@@ -13,15 +13,15 @@ import javax.persistence.PersistenceContext;
 
 import org.primefaces.event.TabChangeEvent;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Party;
+import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.Role;
+import com.blazebit.security.model.Subject;
 import com.blazebit.security.web.bean.base.SecurityBean;
 import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.EditModel;
@@ -391,7 +391,7 @@ public class CarrierBean extends SecurityBean {
 
     public List<Comment> getComments() {
         List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userContext.getUser().getCompany().getId(), Comment.class).getResultList();
+                                                             + userSession.getSelectedCompany().getId(), Comment.class).getResultList();
         return result;
     }
 

@@ -6,9 +6,9 @@ import java.util.List;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.security.Action;
-import com.blazebit.security.ActionFactory;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.factory.ActionFactory;
+import com.blazebit.security.model.Action;
 import com.blazebit.security.spi.ActionImplicationProvider;
 
 @ServiceProvider(ActionImplicationProvider.class)

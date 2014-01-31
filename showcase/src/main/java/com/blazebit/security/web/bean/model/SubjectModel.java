@@ -1,8 +1,8 @@
 package com.blazebit.security.web.bean.model;
 
-import com.blazebit.security.IdHolder;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.model.IdHolder;
 
 public class SubjectModel {
 

@@ -17,9 +17,11 @@ import javax.enterprise.inject.spi.AfterDeploymentValidation;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.persistence.MappedSuperclass;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.security.impl.model.ResourceName;
+import com.blazebit.security.annotation.ResourceName;
 import com.blazebit.security.spi.EntityResource;
 import com.blazebit.security.spi.ResourceDefinition;
 import com.blazebit.security.spi.ResourceExtensionCallback;
@@ -32,65 +34,77 @@ import com.blazebit.security.spi.ResourceExtensionCallback;
 @ServiceProvider(Extension.class)
 public class ResourceNameExtension implements Extension {
 
-    private final Map<EntityResource, List<ResourceDefinition>> entityResources = new HashMap<EntityResource, List<ResourceDefinition>>();
-    private final Map<ResourceDefinition, EntityResource> resourceDefinitions = new HashMap<ResourceDefinition, EntityResource>();
-    private final Collection<Class<?>> resourceClasses = new HashSet<Class<?>>();
+	private final Map<EntityResource, List<ResourceDefinition>> entityResources = new HashMap<EntityResource, List<ResourceDefinition>>();
+	private final Map<ResourceDefinition, EntityResource> resourceDefinitions = new HashMap<ResourceDefinition, EntityResource>();
+	private final Collection<Class<?>> resourceClasses = new HashSet<Class<?>>();
 
-    @SuppressWarnings("rawtypes")
-    protected void detectInterfaces(@Observes ProcessAnnotatedType processAnnotatedType) {
-        AnnotatedType<?> type = processAnnotatedType.getAnnotatedType();
-        if (type.isAnnotationPresent(ResourceName.class)) {
-            ResourceName annotation = type.getAnnotation(ResourceName.class);
-            // TODO find out why doesnt this work anymore!! ResourceName annotation = (ResourceName)
-            // AnnotationUtils.findAnnotation(type.getClass(), ResourceName.class);
-            if (!annotation.skip()) {
-                Class<?> entityClass = (Class<?>) type.getBaseType();
-                resourceClasses.add(entityClass);
-                EntityResource entityResource = new EntityResource(entityClass.getName());
-                List<ResourceDefinition> resources = new ArrayList<ResourceDefinition>();
-                if (entityResources.containsKey(entityResource)) {
-                    resources = entityResources.get(entityResource);
-                } else {
-                    resources = new ArrayList<ResourceDefinition>();
-                }
-                ResourceDefinition resourceDefinition = new ResourceDefinition(annotation.module(), annotation.name(), annotation.test());
-                resources.add(resourceDefinition);
-                this.resourceDefinitions.put(resourceDefinition, entityResource);
-                entityResources.put(entityResource, resources);
-            }
-        }
-    }
+	@SuppressWarnings("rawtypes")
+	protected void detectInterfaces(
+			@Observes ProcessAnnotatedType processAnnotatedType) {
+		AnnotatedType<?> type = processAnnotatedType.getAnnotatedType();
+		if (type.isAnnotationPresent(ResourceName.class)) {
+			// ResourceName annotation = type.getAnnotation(ResourceName.class);
+			ResourceName annotation = (ResourceName) AnnotationUtils
+					.findAnnotation(type.getClass(), ResourceName.class);
+			ResourceName mappedSuperclassAnnotation = (ResourceName) AnnotationUtils
+					.findAnnotation(type.getClass(), MappedSuperclass.class);
+			if (mappedSuperclassAnnotation == null && (annotation!=null && !annotation.skip())) {
+				Class<?> entityClass = (Class<?>) type.getBaseType();
+				resourceClasses.add(entityClass);
+				EntityResource entityResource = new EntityResource(
+						entityClass.getName());
+				List<ResourceDefinition> resources = new ArrayList<ResourceDefinition>();
+				if (entityResources.containsKey(entityResource)) {
+					resources = entityResources.get(entityResource);
+				} else {
+					resources = new ArrayList<ResourceDefinition>();
+				}
+				ResourceDefinition resourceDefinition = new ResourceDefinition(
+						annotation.module(), annotation.name(),
+						annotation.test());
+				resources.add(resourceDefinition);
+				this.resourceDefinitions
+						.put(resourceDefinition, entityResource);
+				entityResources.put(entityResource, resources);
+			}
+		}
+	}
 
-    protected void cleanup(@Observes AfterDeploymentValidation afterDeploymentValidation) {
-        // resourceNames.clear();
-        Iterator<ResourceExtensionCallback> iter = ServiceLoader.load(ResourceExtensionCallback.class).iterator();
-        while (iter.hasNext()) {
-            ResourceExtensionCallback callback = iter.next();
-            Map<EntityResource, List<ResourceDefinition>> result = callback.handle(resourceClasses);
-            // add to entity resources
-            for (EntityResource entityResource : result.keySet()) {
-                List<ResourceDefinition> resources = entityResources.get(entityResource);
-                resources.addAll(result.get(entityResource));
-                entityResources.put(entityResource, resources);
-                for (ResourceDefinition rd : resources) {
-                    resourceDefinitions.put(rd, entityResource);
-                }
-            }
-        }
-        // Iterator<ActionImplicationProvider> actionImplicationIterator =
-        // ServiceLoader.load(ActionImplicationProvider.class).iterator();
-        // while (actionImplicationIterator.hasNext()) {
-        // ActionImplicationProvider implication = actionImplicationIterator.next();
-        // actions.putAll(implication.getActionImplications());
-        // }
-    }
+	protected void cleanup(
+			@Observes AfterDeploymentValidation afterDeploymentValidation) {
+		// resourceNames.clear();
+		Iterator<ResourceExtensionCallback> iter = ServiceLoader.load(
+				ResourceExtensionCallback.class).iterator();
+		while (iter.hasNext()) {
+			ResourceExtensionCallback callback = iter.next();
+			Map<EntityResource, List<ResourceDefinition>> result = callback
+					.handle(resourceClasses);
+			// add to entity resources
+			for (EntityResource entityResource : result.keySet()) {
+				List<ResourceDefinition> resources = entityResources
+						.get(entityResource);
+				resources.addAll(result.get(entityResource));
+				entityResources.put(entityResource, resources);
+				for (ResourceDefinition rd : resources) {
+					resourceDefinitions.put(rd, entityResource);
+				}
+			}
+		}
+		// Iterator<ActionImplicationProvider> actionImplicationIterator =
+		// ServiceLoader.load(ActionImplicationProvider.class).iterator();
+		// while (actionImplicationIterator.hasNext()) {
+		// ActionImplicationProvider implication =
+		// actionImplicationIterator.next();
+		// actions.putAll(implication.getActionImplications());
+		// }
+	}
 
-    public Map<EntityResource, List<ResourceDefinition>> getEntityResources() {
-        return entityResources;
-    }
+	public Map<EntityResource, List<ResourceDefinition>> getEntityResources() {
+		return entityResources;
+	}
 
-    public Map<ResourceDefinition, EntityResource> getResourceDefinitions() {
-        return resourceDefinitions;
-    }
+	public Map<ResourceDefinition, EntityResource> getResourceDefinitions() {
+		return resourceDefinitions;
+	}
 
 }

@@ -5,7 +5,7 @@ package com.blazebit.security.impl.context;
 
 import java.io.Serializable;
 
-import com.blazebit.security.impl.model.User;
+import com.blazebit.security.impl.model.AbstractUser;
 
 /**
  * This interface defines the user context which can be used by the carrier data access and services without the need to define
@@ -25,6 +25,6 @@ public interface UserContext extends Serializable {
      * 
      * @return the user entity representing the logged user.
      */
-    public User getUser();
+    public AbstractUser getUser();
 
 }

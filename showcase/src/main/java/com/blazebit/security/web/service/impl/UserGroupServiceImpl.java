@@ -11,15 +11,15 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionHandling;
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.PermissionService;
+import com.blazebit.security.data.PermissionHandling;
+import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.service.resource.GroupPermissionHandling;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
+import com.blazebit.security.model.Permission;
+import com.blazebit.security.service.PermissionService;
+import com.blazebit.security.web.integration.service.GroupPermissionHandling;
+import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 /**
@@ -48,7 +48,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void delete(UserGroup userGroup) {
         UserGroup reloadedUserGroup = userGroupDataAccess.loadUserGroup(userGroup);
-        permissionManager.remove(reloadedUserGroup.getAllPermissions());
+        permissionManager.remove(permissionManager.getPermissions(reloadedUserGroup));
         permissionManager.flush();
         for (UserGroup ug : reloadedUserGroup.getUserGroups()) {
             ug.setParent(null);

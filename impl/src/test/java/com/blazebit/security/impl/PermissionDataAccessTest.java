@@ -28,13 +28,8 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.Action;
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionDataAccess;
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.PermissionService;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
+import com.blazebit.security.data.PermissionDataAccess;
+import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
@@ -42,6 +37,11 @@ import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
+import com.blazebit.security.model.Action;
+import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.Role;
+import com.blazebit.security.model.Subject;
+import com.blazebit.security.service.PermissionService;
 
 /**
  * Test if grant and revoke are allowed. Test which permissions can be "merged" when granting or revoking.
@@ -94,7 +94,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @param resource
      * @throws Exception
      */
-    private Permission createPermission(Subject subject, Action action, com.blazebit.security.Resource resource) {
+    private Permission createPermission(Subject subject, Action action, com.blazebit.security.model.Resource resource) {
         Permission permission = permissionManager.save(permissionFactory.create(subject, action, resource));
         permissionManager.flush();
         return permission;
@@ -109,7 +109,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
      * @param resource
      * @throws Exception
      */
-    private Permission createPermission(Role role, Action action, com.blazebit.security.Resource resource) {
+    private Permission createPermission(Role role, Action action, com.blazebit.security.model.Resource resource) {
         Permission permission = permissionManager.save(permissionFactory.create(role, action, resource));
         permissionManager.flush();
         return permission;
@@ -692,7 +692,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
                     }
                     actualToBeRevoked.addAll(permissionDataAccess.getRevokablePermissionsWhenGranting(user, p.getAction(), p.getResource()));
                 }
-                parent = parent.getParent();
+                parent = (UserGroup) parent.getParent();
             }
         }
         assertEquals(expectedToBeRevoked, actualToBeRevoked);

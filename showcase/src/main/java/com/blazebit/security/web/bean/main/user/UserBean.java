@@ -16,18 +16,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
+import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
 import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.UserGroupModel;
+import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserService;
 import com.blazebit.security.web.util.WebUtil;
 
@@ -66,7 +66,7 @@ public class UserBean extends GroupHandlingBaseBean {
 
     // loads all users, excludes logged in user
     public void init() throws PolicyContextException {
-        Company selectedCompany = userContext.getUser().getCompany();
+        Company selectedCompany = userSession.getSelectedCompany();
         users = userService.findUsers(selectedCompany);
         users.remove(userContext.getUser());
         if (getSelectedUser() != null) {
@@ -80,14 +80,14 @@ public class UserBean extends GroupHandlingBaseBean {
     private void initUserGroups() {
         // init groups tree
         if (isEnabled(Company.GROUP_HIERARCHY)) {
-            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
             this.actAsGroupRoot = new DefaultTreeNode("", null);
             actAsGroupRoot.setExpanded(true);
             for (UserGroup group : parentGroups) {
                 createNode(group, actAsGroupRoot);
             }
         }
-        actAsGroups = userGroupDataAccess.getAllGroups(userContext.getUser().getCompany());
+        actAsGroups = userGroupDataAccess.getAllGroups(userSession.getSelectedCompany());
     }
 
     /**
@@ -129,8 +129,8 @@ public class UserBean extends GroupHandlingBaseBean {
     // saves new user
     public void saveUser() {
         if (!StringUtils.isEmpty(newUser.getUsername())) {
-            userService.createUser(userContext.getUser().getCompany(), newUser.getUsername());
-            users = userService.findUsers(userContext.getUser().getCompany());
+            userService.createUser(userSession.getSelectedCompany(), newUser.getUsername());
+            users = userService.findUsers(userSession.getSelectedCompany());
             users.remove(userContext.getUser());
         }
     }
@@ -140,7 +140,7 @@ public class UserBean extends GroupHandlingBaseBean {
             userSession.setSelectedUser(null);
         }
         userService.delete(user);
-        users = userService.findUsers(userContext.getUser().getCompany());
+        users = userService.findUsers(userSession.getSelectedCompany());
         users.remove(userContext.getUser());
     }
 

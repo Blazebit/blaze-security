@@ -26,13 +26,13 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionFactory;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.factory.PermissionFactory;
+import com.blazebit.security.impl.data.EntityFieldResourceHandling;
+import com.blazebit.security.impl.data.EntityFieldResourceHandling.PermissionFamily;
 import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
-import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling;
-import com.blazebit.security.impl.service.resource.EntityFieldResourceHandling.PermissionFamily;
+import com.blazebit.security.model.Permission;
 
 /**
  * 

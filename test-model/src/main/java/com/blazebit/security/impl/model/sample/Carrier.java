@@ -26,8 +26,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.impl.model.ResourceName;
+import com.blazebit.security.annotation.ResourceName;
+import com.blazebit.security.model.IdHolder;
 
 /**
  * 

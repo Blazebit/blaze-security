@@ -19,7 +19,7 @@ import javax.persistence.Embeddable;
  * @author cuszk
  */
 @Embeddable
-public class UserGroupPermissionId extends PermissionId<UserGroup> {
+public class UserGroupPermissionId extends AbstractPermissionId<UserGroup> {
 
     /**
      * 

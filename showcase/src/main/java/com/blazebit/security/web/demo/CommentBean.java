@@ -11,12 +11,12 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.Action;
-import com.blazebit.security.PermissionDataAccess;
-import com.blazebit.security.Resource;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.data.PermissionDataAccess;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.sample.Comment;
+import com.blazebit.security.model.Action;
+import com.blazebit.security.model.Resource;
 import com.blazebit.security.web.bean.base.SecurityBean;
 import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.RowModel;
@@ -43,7 +43,7 @@ public class CommentBean extends SecurityBean {
 
     public void init() {
         List<Comment> result = entityManager.createQuery("select comment from " + Comment.class.getCanonicalName() + " comment where comment.user.company.id="
-                                                             + userContext.getUser().getCompany().getId(), Comment.class).getResultList();
+                                                             + userSession.getSelectedCompany().getId(), Comment.class).getResultList();
         comments.clear();
         for (Comment c : result) {
             comments.add(new RowModel(c, "Comment-" + c.getText()));
@@ -64,7 +64,7 @@ public class CommentBean extends SecurityBean {
     }
 
     public void saveNewComment() {
-        User subject = userContext.getUser();
+        User subject = (User) userContext.getUser();
         newComment.setUser(subject);
         entityManager.persist(newComment);
         init();

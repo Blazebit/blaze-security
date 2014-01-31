@@ -12,171 +12,103 @@
  */
 package com.blazebit.security.impl.model;
 
-import java.io.Serializable;
+import java.beans.Transient;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Basic;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Permission;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
+import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.Role;
 
 /**
  * @author Christian Beikov
  */
 @Entity(name = "User_")
 @Table(name = "User_")
-@ResourceName(name = "User", module = "Core")
-public class User implements Subject, Serializable, IdHolder {
+public class User extends AbstractUser {
 
-    private static final long serialVersionUID = 1L;
-    private Integer id;
-    private String username;
-    private String password;
-    private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
-    private Set<UserPermission> permissions = new HashSet<UserPermission>(0);
-    private Set<UserDataPermission> dataPermissions = new HashSet<UserDataPermission>(0);
-    private Company company;
-    private boolean selected;
+	private static final long serialVersionUID = 1L;
+	private Company company;
 
-    public User() {
-    }
+	private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
+//	private Set<UserPermission> permissions = new HashSet<UserPermission>(0);
+//	private Set<UserDataPermission> dataPermissions = new HashSet<UserDataPermission>(
+//			0);
 
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id;
-    }
+	private boolean selected;
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public User() {
+	}
 
-    public User(String username) {
-        this.username = username;
-    }
+	public User(String username) {
+		super(username);
+	}
 
-    @Basic(optional = false)
-    public String getUsername() {
-        return this.username;
-    }
+	@ManyToMany(mappedBy = "users")
+	public Set<UserGroup> getUserGroups() {
+		return userGroups;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public void setUserGroups(Set<UserGroup> userGroups) {
+		this.userGroups = userGroups;
+	}
 
-    @Basic
-    public String getPassword() {
-        return this.password;
-    }
+//	@OneToMany(mappedBy = "id.subject")
+//	public Set<UserPermission> getPermissions() {
+//		return this.permissions;
+//	}
+//
+//	public void setPermissions(Set<UserPermission> permissions) {
+//		this.permissions = permissions;
+//	}
+//
+//	@OneToMany(mappedBy = "id.subject")
+//	public Set<UserDataPermission> getDataPermissions() {
+//		return this.dataPermissions;
+//	}
+//
+//	@Transient
+//	@Override
+//	public Set<Permission> getAllPermissions() {
+//		Set<Permission> allPermissions = new HashSet<Permission>();
+//		allPermissions.addAll(this.permissions);
+//		allPermissions.addAll(this.dataPermissions);
+//		return allPermissions;
+//	}
+//
+//	public void setDataPermissions(Set<UserDataPermission> dataPermissions) {
+//		this.dataPermissions = dataPermissions;
+//	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	@ManyToOne
+	@JoinColumn(name = "company")
+	public Company getCompany() {
+		return company;
+	}
 
-    @ManyToMany(mappedBy = "users")
-    public Set<UserGroup> getUserGroups() {
-        return userGroups;
-    }
+	public void setCompany(Company company) {
+		this.company = company;
+	}
 
-    public void setUserGroups(Set<UserGroup> userGroups) {
-        this.userGroups = userGroups;
-    }
+	@Transient
+	public boolean isSelected() {
+		return selected;
+	}
 
-    @OneToMany(mappedBy = "id.subject")
-    public Set<UserPermission> getPermissions() {
-        return this.permissions;
-    }
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
 
-    public void setPermissions(Set<UserPermission> permissions) {
-        this.permissions = permissions;
-    }
-
-    @OneToMany(mappedBy = "id.subject")
-    public Set<UserDataPermission> getDataPermissions() {
-        return this.dataPermissions;
-    }
-
-    @Transient
-    @Override
-    public Set<Permission> getAllPermissions() {
-        Set<Permission> allPermissions = new HashSet<Permission>();
-        allPermissions.addAll(this.permissions);
-        allPermissions.addAll(this.dataPermissions);
-        return allPermissions;
-    }
-
-    public void setDataPermissions(Set<UserDataPermission> dataPermissions) {
-        this.dataPermissions = dataPermissions;
-    }
-
-    @Override
-    public String toString() {
-        return "[" + id + ", " + username + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 59 * hash + (this.id != null ? this.id.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final User other = (User) obj;
-        if (this.id != other.id && (this.id == null || !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
-
-    @ManyToOne
-    @JoinColumn(name = "company")
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
-    }
-
-    @Override
-    @Transient
-    public Set<Role> getRoles() {
-        return new HashSet<Role>(userGroups);
-    }
-
-    @Override
-    @Transient
-    public String getName() {
-        return String.valueOf(id);
-    }
-
-    @Transient
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
+//	@Override
+//	public Collection<Role> getRoles() {
+//		return new HashSet<Role>(userGroups);
+//	}
 
 }

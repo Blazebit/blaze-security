@@ -15,24 +15,38 @@ package com.blazebit.security.impl.model;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
-import com.blazebit.security.RolePermission;
+import com.blazebit.security.model.RolePermission;
 
 /**
  * @author Christian Beikov
  */
 @Entity
-public class UserGroupDataPermission extends AbstractDataPermission<UserGroup, UserGroupDataPermissionId> implements RolePermission {
+public class UserGroupDataPermission
+		extends
+		AbstractDataPermission<UserGroup, UserGroupDataPermissionId, EntityAction, EntityObjectField>
+		implements RolePermission {
 
-    /**
+	/**
      * 
      */
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public UserGroupDataPermission() {
-    }
+	public UserGroupDataPermission() {
+	}
 
-    @EmbeddedId
-    public UserGroupDataPermissionId getId() {
-        return id;
-    }
+	@EmbeddedId
+	public UserGroupDataPermissionId getId() {
+		return id;
+	}
+
+	@Override
+	protected EntityAction createEntityAction(UserGroupDataPermissionId id) {
+		return new EntityAction(id);
+	}
+
+	@Override
+	protected EntityObjectField createEntityObjectField(
+			UserGroupDataPermissionId id) {
+		return new EntityObjectField(id);
+	}
 }

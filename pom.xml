@@ -19,10 +19,15 @@
 
 	<modules>
 		<module>api</module>
-		<module>auth</module>
 		<module>impl</module>
-		<module>showcase</module>
+		
+		<module>auth-api</module>
+		<module>auth-impl</module>
+		
+		<module>abstract-model</module>
 		<module>test-model</module>
+		
+		<module>showcase</module>
 	</modules>
 
 	<issueManagement>
@@ -107,7 +112,7 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-security-auth</artifactId>
+				<artifactId>blaze-security-auth-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -117,7 +122,17 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-security-auth-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>blaze-security-showcase</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-security-abstract-model</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

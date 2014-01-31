@@ -30,11 +30,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>blaze-security-test-model</artifactId>
+			<artifactId>blaze-security-auth-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>blaze-security-auth</artifactId>
+			<artifactId>blaze-security-test-model</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -44,7 +44,6 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-security-impl</artifactId>
 		</dependency>
-
 		<!-- commons -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -55,6 +54,12 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-common-utils</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-apt-utils</artifactId>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- Deltaspike -->
@@ -72,6 +77,7 @@
 			<groupId>javax.faces</groupId>
 			<artifactId>jsf-api</artifactId>
 			<version>2.1</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.primefaces</groupId>
@@ -79,5 +85,17 @@
 			<version>4.0</version>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

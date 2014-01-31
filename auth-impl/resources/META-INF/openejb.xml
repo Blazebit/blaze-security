@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openejb>
+	<Resource id="jdbc/DefaultDataSource" type="javax.sql.DataSource">
+		JdbcDriver org.h2.Driver
+		JdbcUrl jdbc:h2:mem:test;INIT=CREATE SCHEMA IF NOT EXISTS USERROLES;
+		UserName test
+		Password test
+		DefaultTransactionIsolation READ_COMMITTED
+	</Resource>
+</openejb>

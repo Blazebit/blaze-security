@@ -20,9 +20,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.impl.model.ResourceName;
+import com.blazebit.security.annotation.ResourceName;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.model.IdHolder;
 
 /**
  * 

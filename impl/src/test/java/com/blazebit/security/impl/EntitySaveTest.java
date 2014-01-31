@@ -22,8 +22,7 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.PermissionActionException;
-import com.blazebit.security.PermissionService;
+import com.blazebit.security.exception.PermissionActionException;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
@@ -33,6 +32,7 @@ import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
 import com.blazebit.security.impl.model.sample.TestCarrier;
+import com.blazebit.security.service.PermissionService;
 
 /**
  * 

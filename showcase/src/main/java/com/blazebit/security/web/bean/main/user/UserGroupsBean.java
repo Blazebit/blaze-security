@@ -18,10 +18,10 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
 import com.blazebit.security.web.bean.model.UserGroupModel;
 
@@ -100,12 +100,12 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         List<UserGroup> currentUserGroups = userGroupDataAccess.getGroupsForUser(getSelectedUser());
         if (isEnabled(Company.GROUP_HIERARCHY)) {
             selectedGroupNodes = new TreeNode[] {};
-            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
+            List<UserGroup> parentGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
             storeGroupPermissionMap(parentGroups);
             this.groupRoot = getGroupTree(parentGroups, currentUserGroups);
         } else {
             this.groups.clear();
-            List<UserGroup> result = userGroupDataAccess.getAllGroups(userContext.getUser().getCompany());
+            List<UserGroup> result = userGroupDataAccess.getAllGroups(userSession.getSelectedCompany());
             for (UserGroup userGroup : result) {
                 this.groups.add(new UserGroupModel(userGroup, false, currentUserGroups.contains(userGroup)));
             }

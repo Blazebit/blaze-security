@@ -34,15 +34,15 @@ import org.hibernate.type.Type;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.reflection.ReflectionUtils;
-import com.blazebit.security.ActionFactory;
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionActionException;
-import com.blazebit.security.PermissionService;
-import com.blazebit.security.ResourceNameFactory;
+import com.blazebit.security.annotation.ResourceName;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.exception.PermissionActionException;
+import com.blazebit.security.factory.ActionFactory;
+import com.blazebit.security.factory.ResourceNameFactory;
 import com.blazebit.security.impl.context.UserContext;
-import com.blazebit.security.impl.model.ResourceName;
+import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.Permission;
+import com.blazebit.security.service.PermissionService;
 
 /**
  * 

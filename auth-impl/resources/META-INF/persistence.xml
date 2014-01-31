@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+  <persistence-unit name="SecurityPU" transaction-type="JTA">
+    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <jta-data-source>jdbc/DefaultDataSource</jta-data-source>
+    
+    <class>com.blazebit.security.impl.model.User</class>
+    <class>com.blazebit.security.impl.model.UserGroup</class>
+    <class>com.blazebit.security.impl.model.UserPermission</class>
+    <class>com.blazebit.security.impl.model.UserDataPermission</class>
+    <class>com.blazebit.security.impl.model.UserGroupPermission</class>
+    <class>com.blazebit.security.impl.model.UserGroupDataPermission</class>
+    <class>com.blazebit.security.impl.model.Company</class>
+    <properties>
+      <property name="hibernate.log" value="trace"/>
+      <property name="hibernate.debug" value="true"/>
+      <property name="hibernate.show_sql" value="true"/>
+      <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
+      <property name="org.hibernate.FlushMode" value="commit" />
+    </properties>
+   </persistence-unit>
+    
+  <persistence-unit name="TestPU" transaction-type="JTA">
+    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <jta-data-source>jdbc/DefaultDataSource</jta-data-source>
+    
+    <class>com.blazebit.security.impl.model.User</class>
+    <class>com.blazebit.security.impl.model.UserGroup</class>
+    <class>com.blazebit.security.impl.model.UserPermission</class>
+    <class>com.blazebit.security.impl.model.UserDataPermission</class>
+    <class>com.blazebit.security.impl.model.UserGroupPermission</class>
+    <class>com.blazebit.security.impl.model.UserGroupDataPermission</class>
+    <class>com.blazebit.security.impl.model.Company</class>
+    
+    <class>com.blazebit.security.impl.model.sample.TestCarrier</class>
+    <class>com.blazebit.security.impl.model.sample.Carrier</class>
+    <class>com.blazebit.security.impl.model.sample.CarrierGroup</class>
+    <class>com.blazebit.security.impl.model.sample.CarrierTeam</class>
+    
+    <class>com.blazebit.security.impl.model.sample.Party</class>
+    <class>com.blazebit.security.impl.model.sample.Contact</class>
+    <class>com.blazebit.security.impl.model.sample.Document</class>
+    <class>com.blazebit.security.impl.model.sample.Email</class>
+    <class>com.blazebit.security.impl.model.sample.Comment</class>
+    
+    <properties>
+      <property name="hibernate.log" value="trace"/>
+      <property name="hibernate.debug" value="true"/>
+      <property name="hibernate.show_sql" value="true"/>
+      <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
+      <property name="hibernate.ejb.interceptor" value="com.blazebit.security.impl.interceptor.ChangeInterceptor"/>
+      <property name="org.hibernate.FlushMode" value="commit" />
+    </properties>
+  </persistence-unit>
+</persistence>

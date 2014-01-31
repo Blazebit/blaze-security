@@ -7,7 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import com.blazebit.security.IdHolder;
+import com.blazebit.security.annotation.ResourceName;
+import com.blazebit.security.model.IdHolder;
 
 @Entity
 @ResourceName(name = "Company", module = "Core")

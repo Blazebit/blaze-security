@@ -24,11 +24,11 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.PermissionActionException;
-import com.blazebit.security.PermissionException;
-import com.blazebit.security.PermissionService;
+import com.blazebit.security.exception.PermissionActionException;
+import com.blazebit.security.exception.PermissionException;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.metamodel.ResourceMetamodel;
+import com.blazebit.security.service.PermissionService;
 
 /**
  * 

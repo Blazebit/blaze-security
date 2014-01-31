@@ -15,33 +15,33 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.blazebit.security.Action;
-import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityResourceFactory;
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.PermissionService;
-import com.blazebit.security.Resource;
-import com.blazebit.security.ResourceFactory;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.factory.ActionFactory;
+import com.blazebit.security.factory.EntityResourceFactory;
+import com.blazebit.security.factory.ResourceFactory;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.el.utils.ELUtils;
+import com.blazebit.security.impl.factory.ActionUtils;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
-import com.blazebit.security.impl.utils.ActionUtils;
 import com.blazebit.security.metamodel.ResourceMetamodel;
-import com.blazebit.security.service.api.PropertyDataAccess;
+import com.blazebit.security.model.Action;
+import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.Resource;
+import com.blazebit.security.model.Role;
+import com.blazebit.security.model.Subject;
+import com.blazebit.security.service.PermissionService;
 import com.blazebit.security.spi.EntityResource;
 import com.blazebit.security.spi.ResourceDefinition;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
 import com.blazebit.security.web.context.UserSession;
+import com.blazebit.security.web.integration.service.PropertyDataAccessImpl;
+import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserService;
 
 @Named(value = "securityBaseBean")
@@ -64,7 +64,7 @@ public class SecurityBean implements Serializable {
     @Inject
     protected ResourceMetamodel resourceMetamodel;
     @Inject
-    protected PropertyDataAccess propertyDataAccess;
+    protected PropertyDataAccessImpl propertyDataAccess;
     @Inject
     private UserService userService;
     @Inject
@@ -374,11 +374,11 @@ public class SecurityBean implements Serializable {
 
     public void initSubjects() {
         subjects.clear();
-        List<User> users = userService.findUsers(userContext.getUser().getCompany());
+        List<User> users = userService.findUsers(userSession.getSelectedCompany());
         for (User user : users) {
             subjects.add(new SubjectModel(user));
         }
-        List<UserGroup> userGroups = userGroupDataAccess.getAllParentGroups(userContext.getUser().getCompany());
+        List<UserGroup> userGroups = userGroupDataAccess.getAllParentGroups(userSession.getSelectedCompany());
         for (UserGroup ug : userGroups) {
             addToList(ug);
         }

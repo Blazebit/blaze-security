@@ -15,13 +15,13 @@ package com.blazebit.security.impl.model;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
-import com.blazebit.security.SubjectPermission;
+import com.blazebit.security.model.SubjectPermission;
 
 /**
  * @author Christian Beikov
  */
 @Entity
-public class UserDataPermission extends AbstractDataPermission<User, UserDataPermissionId> implements SubjectPermission {
+public class UserDataPermission extends AbstractDataPermission<User, UserDataPermissionId, EntityAction, EntityObjectField> implements SubjectPermission {
 
     /**
      * 
@@ -35,4 +35,14 @@ public class UserDataPermission extends AbstractDataPermission<User, UserDataPer
     public UserDataPermissionId getId() {
         return id;
     }
+
+	@Override
+	protected EntityAction createEntityAction(UserDataPermissionId id) {
+		return null;
+	}
+
+	@Override
+	protected EntityObjectField createEntityObjectField(UserDataPermissionId id) {
+		return null;
+	}
 }

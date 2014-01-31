@@ -3,7 +3,7 @@ package com.blazebit.security.web.bean.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.blazebit.security.IdHolder;
+import com.blazebit.security.model.IdHolder;
 import com.blazebit.security.web.bean.model.FieldModel.Type;
 
 public class EditModel {

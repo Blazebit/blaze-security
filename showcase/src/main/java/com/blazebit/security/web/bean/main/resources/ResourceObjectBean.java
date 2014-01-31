@@ -15,22 +15,22 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.IdHolder;
-import com.blazebit.security.Permission;
-import com.blazebit.security.Role;
-import com.blazebit.security.Subject;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.impl.service.resource.UserGroupDataAccess;
+import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.Role;
+import com.blazebit.security.model.Subject;
 import com.blazebit.security.web.bean.base.PermissionHandlingBaseBean;
 import com.blazebit.security.web.bean.model.FieldModel;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
+import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.util.WebUtil;
 
 @Named

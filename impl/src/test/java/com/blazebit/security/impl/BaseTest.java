@@ -25,14 +25,12 @@ import javax.persistence.PersistenceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.blazebit.security.Action;
-import com.blazebit.security.ActionFactory;
-import com.blazebit.security.EntityResourceFactory;
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.ResourceFactory;
 import com.blazebit.security.constants.ActionConstants;
+import com.blazebit.security.data.PermissionManager;
+import com.blazebit.security.factory.ActionFactory;
+import com.blazebit.security.factory.EntityResourceFactory;
+import com.blazebit.security.factory.PermissionFactory;
+import com.blazebit.security.factory.ResourceFactory;
 import com.blazebit.security.impl.context.UserContextMock;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.Company;
@@ -49,6 +47,8 @@ import com.blazebit.security.impl.model.sample.Document;
 import com.blazebit.security.impl.model.sample.Email;
 import com.blazebit.security.impl.model.sample.Party;
 import com.blazebit.security.impl.model.sample.TestCarrier;
+import com.blazebit.security.model.Action;
+import com.blazebit.security.model.Permission;
 
 /**
  * 

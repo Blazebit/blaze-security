@@ -18,8 +18,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
-import com.blazebit.security.Module;
-import com.blazebit.security.Subject;
+import com.blazebit.security.model.Module;
+import com.blazebit.security.model.Subject;
 
 /**
  * @author Christian Beikov

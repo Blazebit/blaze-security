@@ -10,9 +10,9 @@ import java.util.Set;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.EntityObjectField;
+import com.blazebit.security.model.Permission;
 
 @Named
 @SessionScoped

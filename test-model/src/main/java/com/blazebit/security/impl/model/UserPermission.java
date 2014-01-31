@@ -15,18 +15,30 @@ package com.blazebit.security.impl.model;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
-import com.blazebit.security.SubjectPermission;
+import com.blazebit.security.model.SubjectPermission;
 
 @Entity
-public class UserPermission extends AbstractPermission<User, UserPermissionId> implements SubjectPermission {
+public class UserPermission extends
+		AbstractPermission<User, UserPermissionId, EntityAction, EntityField>
+		implements SubjectPermission {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public UserPermission() {
-    }
+	public UserPermission() {
+	}
 
-    @EmbeddedId
-    public UserPermissionId getId() {
-        return id;
-    }
+	@EmbeddedId
+	public UserPermissionId getId() {
+		return id;
+	}
+
+	@Override
+	protected EntityAction createEntityAction(UserPermissionId id) {
+		return new EntityAction(id);
+	}
+
+	@Override
+	protected EntityField createEntityField(UserPermissionId id) {
+		return new EntityField(id);
+	}
 }

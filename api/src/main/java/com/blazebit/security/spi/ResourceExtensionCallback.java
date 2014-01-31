@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface ResourceExtensionCallback {
-
-    public Map<EntityResource, List<ResourceDefinition>> handle(Collection<Class<?>> collection);
+	/**
+	 * 
+	 * @param collection
+	 * @return
+	 */
+	public Map<EntityResource, List<ResourceDefinition>> handle(
+			Collection<Class<?>> collection);
 }

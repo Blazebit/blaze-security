@@ -26,11 +26,11 @@ import javax.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.blazebit.security.Permission;
-import com.blazebit.security.PermissionDataAccess;
-import com.blazebit.security.PermissionFactory;
-import com.blazebit.security.PermissionManager;
-import com.blazebit.security.impl.service.PermissionHandlingImpl;
+import com.blazebit.security.data.PermissionDataAccess;
+import com.blazebit.security.data.PermissionManager;
+import com.blazebit.security.factory.PermissionFactory;
+import com.blazebit.security.impl.data.PermissionHandlingImpl;
+import com.blazebit.security.model.Permission;
 
 /**
  * 

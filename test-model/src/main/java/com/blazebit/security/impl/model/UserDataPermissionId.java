@@ -19,7 +19,7 @@ import javax.persistence.Embeddable;
  * @author cuszk
  */
 @Embeddable
-public class UserDataPermissionId extends DataPermissionId<User> {
+public class UserDataPermissionId extends AbstractDataPermissionId<User> {
 
     /**
      * 

@@ -19,10 +19,10 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
-import com.blazebit.security.Permission;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
@@ -89,7 +89,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
     }
 
     private void initUsers() {
-        List<User> allUsers = userService.findUsers(userContext.getUser().getCompany());
+        List<User> allUsers = userService.findUsers(userSession.getSelectedCompany());
         users = userGroupDataAccess.getUsersFor(getSelectedGroup());
         userList.clear();
         for (User user : allUsers) {
