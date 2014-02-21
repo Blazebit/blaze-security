@@ -1,6 +1,8 @@
 package com.blazebit.security.factory;
 
-import com.blazebit.security.model.IdHolder;
+import java.io.Serializable;
+
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Resource;
 
 /**
@@ -18,7 +20,7 @@ public interface ResourceNameFactory {
 	 * @param field
 	 * @return
 	 */
-	public Resource createResource(IdHolder entityObject, String field);
+	public Resource createResource(BaseEntity<Serializable> entityObject, String field);
 
 	/**
 	 * Resource created from the given object
@@ -26,6 +28,6 @@ public interface ResourceNameFactory {
 	 * @param entity
 	 * @return
 	 */
-	public Resource createResource(IdHolder entity);
+	public Resource createResource(BaseEntity<Serializable> entity);
 
 }

@@ -34,8 +34,8 @@ import com.blazebit.security.auth.model.Credentials;
 import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
+import com.blazebit.security.integration.service.UserDataAccess;
 import com.blazebit.security.web.context.UserSession;
-import com.blazebit.security.web.integration.service.UserDataAccess;
 import com.blazebit.security.web.service.api.CompanyService;
 import com.blazebit.security.web.service.api.UserService;
 

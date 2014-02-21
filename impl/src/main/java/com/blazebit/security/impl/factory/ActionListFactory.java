@@ -11,7 +11,7 @@ import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.factory.ActionFactory;
 import com.blazebit.security.model.Action;
 
-public class ActionUtils {
+public class ActionListFactory {
 
     @Inject
     private ActionFactory actionFactory;

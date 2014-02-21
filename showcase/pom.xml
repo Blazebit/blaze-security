@@ -34,6 +34,10 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-security-auth-impl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-security-test-model</artifactId>
 		</dependency>
 		<dependency>

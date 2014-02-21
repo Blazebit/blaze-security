@@ -26,11 +26,11 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-security-abstract-model</artifactId>
 		</dependency>
-	<dependency>
-		<groupId>${project.groupId}</groupId>
-		<artifactId>blaze-security-test-model</artifactId>
-		<scope>test</scope>
-	</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-security-test-model</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.openejb</groupId>
 			<artifactId>javaee-api</artifactId>
@@ -53,6 +53,11 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>

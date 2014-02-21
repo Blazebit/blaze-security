@@ -1,5 +1,6 @@
 package com.blazebit.security.impl.factory;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,7 @@ import com.blazebit.security.factory.ResourceNameFactory;
 import com.blazebit.security.impl.el.utils.ELUtils;
 import com.blazebit.security.impl.model.AbstractEntityField;
 import com.blazebit.security.metamodel.ResourceMetamodel;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Resource;
 import com.blazebit.security.spi.EntityResource;
 import com.blazebit.security.spi.ResourceDefinition;
@@ -25,7 +26,7 @@ public class ResourceNameFactoryImpl implements ResourceNameFactory {
     private ResourceMetamodel resourceMetamodel;
 
     @Override
-    public Resource createResource(IdHolder entityObject, String field) {
+    public Resource createResource(BaseEntity<Serializable> entityObject, String field) {
         List<ResourceDefinition> resourceDefinitions = resourceMetamodel.getEntityResources().get(new EntityResource(entityObject.getClass().getName()));
         Map<String, Object> variableMap = new HashMap<String, Object>();
 
@@ -49,7 +50,7 @@ public class ResourceNameFactoryImpl implements ResourceNameFactory {
     }
 
     @Override
-    public Resource createResource(IdHolder entity) {
+    public Resource createResource(BaseEntity<Serializable> entity) {
         return createResource(entity, AbstractEntityField.EMPTY_FIELD);
     }
 

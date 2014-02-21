@@ -13,7 +13,6 @@
 package com.blazebit.security.impl.model;
 
 import java.beans.Transient;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,17 +20,16 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import com.blazebit.security.model.Permission;
-import com.blazebit.security.model.Role;
+import com.blazebit.security.annotation.ResourceName;
 
 /**
  * @author Christian Beikov
  */
 @Entity(name = "User_")
 @Table(name = "User_")
+@ResourceName(name = "User", module = "Core")
 public class User extends AbstractUser {
 
 	private static final long serialVersionUID = 1L;

@@ -3,27 +3,27 @@ package com.blazebit.security.web.bean.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.web.bean.model.FieldModel.Type;
 
 public class EditModel {
 
-    private IdHolder entity;
+    private BaseEntity entity;
     private Map<String, FieldModel> fields = new HashMap<String, FieldModel>();
     private boolean selected;
 
-    public EditModel(IdHolder selected) {
+    public EditModel(BaseEntity selected) {
         this.entity = selected;
     }
 
     public EditModel() {
     }
 
-    public IdHolder getEntity() {
+    public BaseEntity getEntity() {
         return entity;
     }
 
-    public void setEntity(IdHolder entity) {
+    public void setEntity(BaseEntity entity) {
         this.entity = entity;
     }
 

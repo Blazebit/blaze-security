@@ -4,12 +4,14 @@ package com.blazebit.security.model;
  * 
  * @author cuszk
  */
-public interface IdHolder {
+public interface BaseEntity<T>{
 
     /**
      * 
      * @return id of an entity
      */
-    public Integer getId();
+    public T getId();
+    
+    
 
 }

@@ -2,21 +2,21 @@ package com.blazebit.security.web.bean.model;
 
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 public class SubjectModel {
 
-    private IdHolder subject;
+    private BaseEntity subject;
 
-    public SubjectModel(IdHolder subject) {
+    public SubjectModel(BaseEntity subject) {
         this.subject = subject;
     }
 
-    public IdHolder getSubject() {
+    public BaseEntity getSubject() {
         return subject;
     }
 
-    public void setSubject(IdHolder subject) {
+    public void setSubject(BaseEntity subject) {
         this.subject = subject;
     }
 

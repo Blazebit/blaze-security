@@ -21,15 +21,16 @@ import com.blazebit.security.factory.EntityResourceFactory;
 import com.blazebit.security.factory.ResourceFactory;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.el.utils.ELUtils;
-import com.blazebit.security.impl.factory.ActionUtils;
+import com.blazebit.security.impl.factory.ActionListFactory;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.EntityField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.integration.service.UserGroupDataAccess;
 import com.blazebit.security.metamodel.ResourceMetamodel;
 import com.blazebit.security.model.Action;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Resource;
 import com.blazebit.security.model.Role;
 import com.blazebit.security.model.Subject;
@@ -41,7 +42,6 @@ import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.SubjectModel;
 import com.blazebit.security.web.context.UserSession;
 import com.blazebit.security.web.integration.service.PropertyDataAccessImpl;
-import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserService;
 
 @Named(value = "securityBaseBean")
@@ -70,7 +70,7 @@ public class SecurityBean implements Serializable {
     @Inject
     private UserGroupDataAccess userGroupDataAccess;
     @Inject
-    private ActionUtils actionUtils;
+    private ActionListFactory actionUtils;
     @Inject
     protected UserContext userContext;
     @Inject
@@ -85,7 +85,7 @@ public class SecurityBean implements Serializable {
     protected List<Object> subjects = new ArrayList<Object>();
     protected List<EntityAction> selectedActions = new ArrayList<EntityAction>();
     protected List<EntityAction> selectedCollectionActions = new ArrayList<EntityAction>();
-    protected IdHolder selectedSubject;
+    protected BaseEntity selectedSubject;
 
     @PersistenceContext(unitName = "TestPU")
     private EntityManager entityManager;
@@ -208,12 +208,12 @@ public class SecurityBean implements Serializable {
     }
 
     // TODO workaround because resourceNameFactory injection didnt work
-    public Resource createResource(IdHolder entityObject) {
+    public Resource createResource(BaseEntity<Serializable> entityObject) {
         return createResource(entityObject, EntityField.EMPTY_FIELD);
     }
 
     // TODO resourceNameFactory injection didnt work
-    public Resource createResource(IdHolder entityObject, String field) {
+    public Resource createResource(BaseEntity<Serializable> entityObject, String field) {
         if (entityObject == null) {
             return null;
         }
@@ -247,10 +247,10 @@ public class SecurityBean implements Serializable {
      * @return
      */
     public boolean isAuthorizedResource(ActionConstants actionConstant, Object entityObject, String fieldName, boolean strict) {
-        if (entityObject == null || !(entityObject instanceof IdHolder)) {
+        if (entityObject == null || !(entityObject instanceof BaseEntity)) {
             return false;
         }
-        Resource resource = createResource((IdHolder) entityObject, fieldName);
+        Resource resource = createResource((BaseEntity) entityObject, fieldName);
         switch (actionConstant) {
         // object permission can only be granted if object level is enabled
             case GRANT:
@@ -314,7 +314,7 @@ public class SecurityBean implements Serializable {
         return selectedSubject;
     }
 
-    public void setSelectedSubject(IdHolder selectedSubject) {
+    public void setSelectedSubject(BaseEntity selectedSubject) {
         this.selectedSubject = selectedSubject;
     }
 
@@ -325,7 +325,7 @@ public class SecurityBean implements Serializable {
         String id = subjectModel.split("-")[1];
         if (subjectModel != null) {
             try {
-                selectedSubject = (IdHolder) entityManager.find(Class.forName(className), Integer.valueOf(id));
+                selectedSubject = (BaseEntity) entityManager.find(Class.forName(className), Integer.valueOf(id));
             } catch (NumberFormatException e) {
             } catch (ClassNotFoundException e) {
             }

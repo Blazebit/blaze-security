@@ -16,13 +16,13 @@ import org.primefaces.model.TreeNode;
 import com.blazebit.security.constants.ActionConstants;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.integration.service.GroupPermissionHandling;
+import com.blazebit.security.integration.service.UserGroupDataAccess;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
 import com.blazebit.security.web.bean.model.TreeNodeModel.Marking;
 import com.blazebit.security.web.bean.model.TreeNodeModel.ResourceType;
 import com.blazebit.security.web.bean.model.UserGroupModel;
-import com.blazebit.security.web.integration.service.GroupPermissionHandling;
-import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 public class GroupHandlingBaseBean extends PermissionHandlingBaseBean {

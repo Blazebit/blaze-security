@@ -12,7 +12,6 @@
  */
 package com.blazebit.security.impl.model.sample;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,7 +26,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
@@ -35,7 +34,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @ResourceName(name = "Carrier", module = "Carrier")
-public class Carrier implements Serializable, IdHolder {
+public class Carrier implements BaseEntity<Integer> {
 
     /**
      * 

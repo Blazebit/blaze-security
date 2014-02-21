@@ -34,6 +34,8 @@
     <class>com.blazebit.security.impl.model.Company</class>
     
     <class>com.blazebit.security.impl.model.sample.TestCarrier</class>
+    <class>com.blazebit.security.impl.model.sample.CarrierContactEntry</class>
+    
     <class>com.blazebit.security.impl.model.sample.Carrier</class>
     <class>com.blazebit.security.impl.model.sample.CarrierGroup</class>
     <class>com.blazebit.security.impl.model.sample.CarrierTeam</class>

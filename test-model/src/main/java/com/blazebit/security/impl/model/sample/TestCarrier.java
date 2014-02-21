@@ -28,143 +28,152 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
  * @author cuszk
  */
 @Entity
-@ResourceName(name="TestCarrier")
-public class TestCarrier implements Serializable, IdHolder {
+@ResourceName(name = "TestCarrier", module="carrier")
+public class TestCarrier implements Serializable, BaseEntity<Integer> {
 
-    /**
+	/**
      * 
      */
-    private static final long serialVersionUID = 1L;
-    private Integer id;
-    // one2many fields
-    private Set<Contact> contacts = new HashSet<Contact>();
-    private Set<Document> documents = new HashSet<Document>();
-    // many2one fields
-    private Email email;
-    private Email emailWithCascade;
-    // primitive
-    private String field;
-    private String anotherField;
-    // many2many
-    private Set<CarrierGroup> groups = new HashSet<CarrierGroup>();
-    private Set<CarrierTeam> teams = new HashSet<CarrierTeam>();
-    // one2one field
-    private Party party;
-    private Party partyWithCascade;
-    
+	private static final long serialVersionUID = 1L;
+	private Integer id;
+	// one2many fields
+	private Set<Contact> contacts = new HashSet<Contact>();
+	private Set<Document> documents = new HashSet<Document>();
+	// many2one fields
+	private Email email;
+	private Email emailWithCascade;
+	// primitive
+	private String field;
+	private String anotherField;
+	// many2many
+	private Set<CarrierGroup> groups = new HashSet<CarrierGroup>();
+	private Set<CarrierTeam> teams = new HashSet<CarrierTeam>();
+	// one2one field
+	private Party party;
+	private Party partyWithCascade;
+	private Set<CarrierContactEntry> contactEntries = new HashSet<CarrierContactEntry>();
 
-    @OneToMany
-    public Set<Contact> getContacts() {
-        return contacts;
-    }
+	@OneToMany
+	public Set<CarrierContactEntry> getContactEntries() {
+		return contactEntries;
+	}
 
-    @OneToMany(cascade = CascadeType.ALL)
-    public Set<Document> getDocuments() {
-        return documents;
-    }
+	public void setContactEntries(Set<CarrierContactEntry> contactEntries) {
+		this.contactEntries = contactEntries;
+	}
 
-    @ManyToOne
-    @JoinColumn(name = "email")
-    public Email getEmail() {
-        return email;
-    }
+	@OneToMany
+	public Set<Contact> getContacts() {
+		return contacts;
+	}
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "emailWithCascade")
-    public Email getEmailWithCascade() {
-        return emailWithCascade;
-    }
+	@OneToMany(cascade = CascadeType.ALL)
+	public Set<Document> getDocuments() {
+		return documents;
+	}
 
-    @Column
-    public String getField() {
-        return field;
-    }
+	@ManyToOne
+	@JoinColumn(name = "email")
+	public Email getEmail() {
+		return email;
+	}
 
-    @ManyToMany
-    public Set<CarrierGroup> getGroups() {
-        return this.groups;
-    }
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "emailWithCascade")
+	public Email getEmailWithCascade() {
+		return emailWithCascade;
+	}
 
-    @Id
-    @GeneratedValue
-    @Override
-    public Integer getId() {
-        return id;
-    }
+	@Column
+	public String getField() {
+		return field;
+	}
 
-    @OneToOne
-    public Party getParty() {
-        return party;
-    }
+	@ManyToMany
+	public Set<CarrierGroup> getGroups() {
+		return this.groups;
+	}
 
-    @OneToOne(cascade = CascadeType.ALL)
-    public Party getPartyWithCascade() {
-        return partyWithCascade;
-    }
+	@Id
+	@GeneratedValue
+	@Override
+	public Integer getId() {
+		return id;
+	}
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    public Set<CarrierTeam> getTeams() {
-        return teams;
-    }
+	@OneToOne
+	public Party getParty() {
+		return party;
+	}
 
-    public void setContacts(Set<Contact> contacts) {
-        this.contacts = contacts;
-    }
+	@OneToOne(cascade = CascadeType.ALL)
+	public Party getPartyWithCascade() {
+		return partyWithCascade;
+	}
 
-    public void setDocuments(Set<Document> contactsWithCascade) {
-        this.documents = contactsWithCascade;
-    }
+	@ManyToMany(cascade = CascadeType.ALL)
+	public Set<CarrierTeam> getTeams() {
+		return teams;
+	}
 
-    public void setEmail(Email email) {
-        this.email = email;
-    }
+	public void setContacts(Set<Contact> contacts) {
+		this.contacts = contacts;
+	}
 
-    public void setEmailWithCascade(Email emailWithCascade) {
-        this.emailWithCascade = emailWithCascade;
-    }
+	public void setDocuments(Set<Document> contactsWithCascade) {
+		this.documents = contactsWithCascade;
+	}
 
-    public void setField(String field) {
-        this.field = field;
-    }
+	public void setEmail(Email email) {
+		this.email = email;
+	}
 
-    public void setGroups(Set<CarrierGroup> groups) {
-        this.groups = groups;
-    }
+	public void setEmailWithCascade(Email emailWithCascade) {
+		this.emailWithCascade = emailWithCascade;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setField(String field) {
+		this.field = field;
+	}
 
-    public void setParty(Party party) {
-        this.party = party;
-    }
+	public void setGroups(Set<CarrierGroup> groups) {
+		this.groups = groups;
+	}
 
-    public void setPartyWithCascade(Party partyWithCascade) {
-        this.partyWithCascade = partyWithCascade;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public void setTeams(Set<CarrierTeam> teams) {
-        this.teams = teams;
-    }
+	public void setParty(Party party) {
+		this.party = party;
+	}
 
-    @Override
-    public String toString() {
-        return "Carrier{" + "id=" + id + '}';
-    }
+	public void setPartyWithCascade(Party partyWithCascade) {
+		this.partyWithCascade = partyWithCascade;
+	}
 
-    @Column
-    public String getAnotherField() {
-        return anotherField;
-    }
+	public void setTeams(Set<CarrierTeam> teams) {
+		this.teams = teams;
+	}
 
-    public void setAnotherField(String anotherField) {
-        this.anotherField = anotherField;
-    }
+	@Override
+	public String toString() {
+		return "Carrier{" + "id=" + id + '}';
+	}
+
+	@Column
+	public String getAnotherField() {
+		return anotherField;
+	}
+
+	public void setAnotherField(String anotherField) {
+		this.anotherField = anotherField;
+	}
 }

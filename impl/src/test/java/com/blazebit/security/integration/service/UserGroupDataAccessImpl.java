@@ -1,4 +1,4 @@
-package com.blazebit.security.web.integration.service;
+package com.blazebit.security.integration.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +13,6 @@ import javax.persistence.PersistenceContext;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
-import com.blazebit.security.integration.service.UserGroupDataAccess;
 
 public class UserGroupDataAccessImpl implements UserGroupDataAccess {
 

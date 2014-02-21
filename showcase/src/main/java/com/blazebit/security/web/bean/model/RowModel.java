@@ -1,56 +1,58 @@
 package com.blazebit.security.web.bean.model;
 
-import com.blazebit.security.model.IdHolder;
+import java.io.Serializable;
 
-public class RowModel {
+import com.blazebit.security.model.BaseEntity;
 
-    private IdHolder entity;
-    private boolean selected;
+public class RowModel<T> {
 
-    private String fieldSummary;
+	private T entity;
+	private boolean selected;
 
-    public RowModel(IdHolder entity) {
-        this.entity = entity;
-    }
+	private String fieldSummary;
 
-    public RowModel(IdHolder entity, boolean selected) {
-        this.entity = entity;
-        this.selected = selected;
-    }
+	public RowModel(T entity) {
+		this.entity = entity;
+	}
 
-    public RowModel(IdHolder entity, boolean selected, String fieldSummary) {
-        this.entity = entity;
-        this.selected = selected;
-        this.fieldSummary = fieldSummary;
-    }
+	public RowModel(T entity, boolean selected) {
+		this.entity = entity;
+		this.selected = selected;
+	}
 
-    public RowModel(IdHolder entity, String fieldSummary) {
-        this.entity = entity;
-        this.fieldSummary = fieldSummary;
-    }
+	public RowModel(T entity, boolean selected, String fieldSummary) {
+		this.entity = entity;
+		this.selected = selected;
+		this.fieldSummary = fieldSummary;
+	}
 
-    public IdHolder getEntity() {
-        return entity;
-    }
+	public RowModel(T entity, String fieldSummary) {
+		this.entity = entity;
+		this.fieldSummary = fieldSummary;
+	}
 
-    public void setEntity(IdHolder entity) {
-        this.entity = entity;
-    }
+	public T getEntity() {
+		return entity;
+	}
 
-    public boolean isSelected() {
-        return selected;
-    }
+	public void setEntity(T entity) {
+		this.entity = entity;
+	}
 
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
+	public boolean isSelected() {
+		return selected;
+	}
 
-    public String getFieldSummary() {
-        return fieldSummary;
-    }
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
 
-    public void setFieldSummary(String fieldSummary) {
-        this.fieldSummary = fieldSummary;
-    }
+	public String getFieldSummary() {
+		return fieldSummary;
+	}
+
+	public void setFieldSummary(String fieldSummary) {
+		this.fieldSummary = fieldSummary;
+	}
 
 }

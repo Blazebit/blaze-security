@@ -20,7 +20,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
@@ -28,7 +28,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @ResourceName(name = "Contact", module = "Carrier")
-public class Contact implements Serializable, IdHolder {
+public class Contact implements Serializable, BaseEntity<Integer> {
 
     /**
      * 

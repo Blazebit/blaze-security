@@ -20,7 +20,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
@@ -28,7 +28,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @ResourceName(name = "Email", module = "DM")
-public class Email implements Serializable, IdHolder {
+public class Email implements Serializable, BaseEntity<Integer> {
 
     /**
      * 

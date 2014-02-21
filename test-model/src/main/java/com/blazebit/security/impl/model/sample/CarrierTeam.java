@@ -20,7 +20,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
@@ -28,7 +28,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @ResourceName(name = "Carrier team", module = "Carrier")
-public class CarrierTeam implements IdHolder, Serializable {
+public class CarrierTeam implements BaseEntity<Integer>, Serializable {
 
     /**
      * 

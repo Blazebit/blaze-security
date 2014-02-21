@@ -16,10 +16,10 @@ import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.integration.service.GroupPermissionHandling;
+import com.blazebit.security.integration.service.UserGroupDataAccess;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.service.PermissionService;
-import com.blazebit.security.web.integration.service.GroupPermissionHandling;
-import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserGroupService;
 
 /**

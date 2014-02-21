@@ -84,16 +84,16 @@ public class ResourceHandlingTest extends BaseTest<ResourceHandlingTest> {
     @Test
     public void test_getSeparatedParentAndChildEntityPermissions() {
         Set<Permission> permissions = new HashSet<Permission>();
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class)));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class)));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
 
         PermissionFamily actual = resourceHandling.getSeparatedParentAndChildEntityPermissions(permissions);
         PermissionFamily expected = resourceHandling.new PermissionFamily();
-        expected.parent = permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class));
+        expected.parent = permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class));
         expected.children = new HashSet<Permission>();
-        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
+        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
 
         assertTrue(actual.equals(expected));
     }
@@ -102,14 +102,14 @@ public class ResourceHandlingTest extends BaseTest<ResourceHandlingTest> {
     public void test_getSeparatedParentAndChildEntityPermissions1() {
         Set<Permission> permissions = new HashSet<Permission>();
 
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
 
         PermissionFamily actual = resourceHandling.getSeparatedParentAndChildEntityPermissions(permissions);
         PermissionFamily expected = resourceHandling.new PermissionFamily();
         expected.children = new HashSet<Permission>();
-        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
+        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        expected.children.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
 
         assertTrue(actual.equals(expected));
     }
@@ -119,14 +119,14 @@ public class ResourceHandlingTest extends BaseTest<ResourceHandlingTest> {
     public void test_getChildPermissions() {
 
         Set<Permission> permissions = new HashSet<Permission>();
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "content")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "size")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "content")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "size")));
 
         assertSetsEquals(permissions,
                          resourceHandling.getChildPermissions(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE),
-                                                                                       entityFieldFactory.createResource(Document.class))));
+                                                                                       entityResourceFactory.createResource(Document.class))));
 
     }
 
@@ -134,20 +134,20 @@ public class ResourceHandlingTest extends BaseTest<ResourceHandlingTest> {
     public void test_getChildPermissions1() {
 
         Set<Permission> permissions = new HashSet<Permission>();
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "size")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "size")));
 
         assertSetsNotEquals(permissions,
                             resourceHandling.getChildPermissions(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE),
-                                                                                          entityFieldFactory.createResource(Document.class))));
+                                                                                          entityResourceFactory.createResource(Document.class))));
 
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_getChildPermissions2() {
         resourceHandling.getChildPermissions(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE),
-                                                                      entityFieldFactory.createResource(Document.class, "title")));
+                                                                      entityResourceFactory.createResource(Document.class, "title")));
     }
 
     // parent permissions
@@ -155,16 +155,16 @@ public class ResourceHandlingTest extends BaseTest<ResourceHandlingTest> {
     public void test_getParentPermissions() {
 
         Set<Permission> permissions = new HashSet<Permission>();
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "id")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "title")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class, "size")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.READ), entityFieldFactory.createResource(Document.class, "size")));
-        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Email.class, "subject")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "id")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "title")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class, "size")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.READ), entityResourceFactory.createResource(Document.class, "size")));
+        permissions.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Email.class, "subject")));
 
         Set<Permission> expected = new HashSet<Permission>();
-        expected.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Document.class)));
-        expected.add(permissionFactory.create(actionFactory.createAction(ActionConstants.READ), entityFieldFactory.createResource(Document.class)));
-        expected.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityFieldFactory.createResource(Email.class)));
+        expected.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Document.class)));
+        expected.add(permissionFactory.create(actionFactory.createAction(ActionConstants.READ), entityResourceFactory.createResource(Document.class)));
+        expected.add(permissionFactory.create(actionFactory.createAction(ActionConstants.UPDATE), entityResourceFactory.createResource(Email.class)));
 
         assertSetsNotEquals(permissions, resourceHandling.getParentPermissions(permissions));
 

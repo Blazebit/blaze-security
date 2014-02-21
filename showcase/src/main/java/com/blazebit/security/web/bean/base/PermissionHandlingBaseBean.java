@@ -25,7 +25,7 @@ import com.blazebit.security.factory.PermissionFactory;
 import com.blazebit.security.factory.ResourceFactory;
 import com.blazebit.security.impl.context.UserContext;
 import com.blazebit.security.impl.data.PermissionHandlingImpl;
-import com.blazebit.security.impl.factory.ActionUtils;
+import com.blazebit.security.impl.factory.ActionListFactory;
 import com.blazebit.security.metamodel.ResourceMetamodel;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.Role;
@@ -67,7 +67,7 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
     @Inject
     protected PermissionService permissionService;
     @Inject
-    protected ActionUtils actionUtils;
+    protected ActionListFactory actionUtils;
     @Inject
     protected ResourceMetamodel resourceMetamodel;
     @Inject

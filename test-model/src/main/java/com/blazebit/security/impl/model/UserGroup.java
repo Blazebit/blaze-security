@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import com.blazebit.security.annotation.ResourceName;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.Role;
 import com.blazebit.security.model.Subject;
@@ -22,6 +23,7 @@ import com.blazebit.security.model.Subject;
  * @author Christian Beikov
  */
 @Entity
+@ResourceName(name = "User Group", module = "Core")
 public class UserGroup extends AbstractUserGroup {
 
 	private static final long serialVersionUID = 1L;

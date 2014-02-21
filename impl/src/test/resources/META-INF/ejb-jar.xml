@@ -20,12 +20,12 @@ limitations under the License.
 	<display-name>Security</display-name>
 	<assembly-descriptor>
 		<application-exception>
-			<exception-class>com.blazebit.security.PermissionException</exception-class>
+			<exception-class>com.blazebit.security.exception.PermissionException</exception-class>
 			<rollback>true</rollback>
 			<inherited>true</inherited>
 		</application-exception>
 		<application-exception>
-			<exception-class>com.blazebit.security.PermissionActionException</exception-class>
+			<exception-class>com.blazebit.security.exception.PermissionActionException</exception-class>
 			<rollback>true</rollback>
 			<inherited>true</inherited>
 		</application-exception>

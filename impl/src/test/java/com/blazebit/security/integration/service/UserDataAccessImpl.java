@@ -1,10 +1,9 @@
-package com.blazebit.security.web.integration.service;
+package com.blazebit.security.integration.service;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.integration.service.UserDataAccess;
 
 public class UserDataAccessImpl implements UserDataAccess {
 

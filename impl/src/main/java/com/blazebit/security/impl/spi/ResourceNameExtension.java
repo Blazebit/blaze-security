@@ -45,10 +45,10 @@ public class ResourceNameExtension implements Extension {
 		if (type.isAnnotationPresent(ResourceName.class)) {
 			// ResourceName annotation = type.getAnnotation(ResourceName.class);
 			ResourceName annotation = (ResourceName) AnnotationUtils
-					.findAnnotation(type.getClass(), ResourceName.class);
-			ResourceName mappedSuperclassAnnotation = (ResourceName) AnnotationUtils
-					.findAnnotation(type.getClass(), MappedSuperclass.class);
-			if (mappedSuperclassAnnotation == null && (annotation!=null && !annotation.skip())) {
+					.findAnnotation(type.getJavaClass(), ResourceName.class);
+//			ResourceName mappedSuperclassAnnotation = (ResourceName) AnnotationUtils
+//					.findAnnotation(type.getClass(), MappedSuperclass.class);
+			if ((annotation!=null && !annotation.skip())) {
 				Class<?> entityClass = (Class<?>) type.getBaseType();
 				resourceClasses.add(entityClass);
 				EntityResource entityResource = new EntityResource(

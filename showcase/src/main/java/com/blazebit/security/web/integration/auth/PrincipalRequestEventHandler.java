@@ -7,7 +7,7 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import com.blazebit.security.auth.event.PrincipalRequestEvent;
-import com.blazebit.security.web.integration.service.UserDataAccess;
+import com.blazebit.security.integration.service.UserDataAccess;
 
 public class PrincipalRequestEventHandler implements Serializable {
 

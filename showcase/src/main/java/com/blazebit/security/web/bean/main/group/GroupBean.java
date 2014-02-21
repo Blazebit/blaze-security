@@ -133,8 +133,8 @@ public class GroupBean extends GroupHandlingBaseBean {
         // add permission to grant/revoke
         if (!isAuthorizedResource(ActionConstants.GRANT, newGroup)) {
             Set<Permission> grant = new HashSet<Permission>();
-            grant.add(permissionFactory.create(actionFactory.createAction(ActionConstants.GRANT), createResource(newGroup)));
-            grant.add(permissionFactory.create(actionFactory.createAction(ActionConstants.REVOKE), createResource(newGroup)));
+            grant.add(permissionFactory.create(actionFactory.createAction(ActionConstants.GRANT), resourceFactory.createResource(newGroup)));
+            grant.add(permissionFactory.create(actionFactory.createAction(ActionConstants.REVOKE), resourceFactory.createResource(newGroup)));
             revokeAndGrant(userSession.getAdmin(), userContext.getUser(), new HashSet<Permission>(), grant, false);
         }
         // reset

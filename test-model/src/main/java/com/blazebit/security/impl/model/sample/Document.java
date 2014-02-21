@@ -18,9 +18,11 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
+import com.blazebit.security.annotation.Parent;
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
@@ -28,7 +30,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @ResourceName(name = "Document", module = "DM")
-public class Document implements Serializable, IdHolder {
+public class Document implements Serializable, BaseEntity<Integer> {
 
     /**
      * 
@@ -38,6 +40,7 @@ public class Document implements Serializable, IdHolder {
     private String content;
     private String title;
     private Integer size;
+    private TestCarrier carrier;
 
     @Id
     @GeneratedValue
@@ -76,5 +79,15 @@ public class Document implements Serializable, IdHolder {
     public void setSize(Integer size) {
         this.size = size;
     }
+
+    @ManyToOne
+    @Parent
+	public TestCarrier getCarrier() {
+		return carrier;
+	}
+
+	public void setCarrier(TestCarrier carrier) {
+		this.carrier = carrier;
+	}
 
 }

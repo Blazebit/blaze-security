@@ -21,17 +21,9 @@ import java.lang.annotation.Target;
  * 
  * @author cuszk
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ResourceName {
+public @interface Parent {
 
-    String name() default "";
-
-    String module() default "";
-    
-    String test() default "";
-    
-    boolean skip() default false;
-    
-    boolean authorize() default true;
+	String[] actions() default "DELETE";
 }

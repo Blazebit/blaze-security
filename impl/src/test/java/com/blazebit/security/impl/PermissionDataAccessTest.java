@@ -67,10 +67,10 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void init() throws Exception {
         super.initData();
-        email1Entity = (EntityObjectField) entityFieldFactory.createResource(Email.class, EntityField.EMPTY_FIELD, 1);
-        emailEntityWithSubject = (EntityField) entityFieldFactory.createResource(Email.class, Subject_Field);
-        document2EntityTitleField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Title_Field, 2);
-        email1EntityTitleField = (EntityObjectField) entityFieldFactory.createResource(Email.class, Subject_Field, 1);
+        email1Entity = (EntityObjectField) entityResourceFactory.createResource(Email.class, EntityField.EMPTY_FIELD, 1);
+        emailEntityWithSubject = (EntityField) entityResourceFactory.createResource(Email.class, Subject_Field);
+        document2EntityTitleField = (EntityObjectField) entityResourceFactory.createResource(Document.class, Title_Field, 2);
+        email1EntityTitleField = (EntityObjectField) entityResourceFactory.createResource(Email.class, Subject_Field, 1);
         setUserContext(admin);
     }
 
@@ -664,7 +664,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         UserGroup userGroup2 = new UserGroup("Usergroup 2");
         userGroup2.setParent(userGroup1);
         self.get().persist(userGroup2);
-        expectedToBeGranted.add(createPermission(userGroup2, readAction, entityFieldFactory.createResource(Comment.class)));
+        expectedToBeGranted.add(createPermission(userGroup2, readAction, entityResourceFactory.createResource(Comment.class)));
 
         UserGroup userGroup3 = new UserGroup("Usergroup 3");
         userGroup3.setParent(userGroup2);
@@ -675,7 +675,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         User user = new User("user");
         self.get().persist(user);
 
-        Permission ret = createPermission(user, readAction, entityFieldFactory.createResource(Comment.class, "text"));
+        Permission ret = createPermission(user, readAction, entityResourceFactory.createResource(Comment.class, "text"));
         Set<Permission> expectedToBeRevoked = new HashSet<Permission>();
         expectedToBeRevoked.add(ret);
         Set<Permission> actualToBeRevoked = new HashSet<Permission>();

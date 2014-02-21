@@ -19,7 +19,7 @@ import com.blazebit.security.impl.model.sample.Carrier;
 import com.blazebit.security.impl.model.sample.Comment;
 import com.blazebit.security.impl.model.sample.Contact;
 import com.blazebit.security.impl.model.sample.Party;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Role;
 import com.blazebit.security.model.Subject;
 import com.blazebit.security.web.bean.base.SecurityBean;
@@ -285,7 +285,7 @@ public class CarrierBean extends SecurityBean {
             && (!selectedActions.isEmpty() || (!selectedCollectionActions.isEmpty() && isSelectedFields(selectedCarrierModel.getCollectionFields().values())))) {
 
             if (getTabEntity() instanceof Carrier) {
-                goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedCarrierModel, carriers);
+                goToObjectResourceManagement(action, (BaseEntity) selectedSubject, selectedActions, selectedCollectionActions, selectedCarrierModel, carriers);
             } else {
                 if (getTabEntity() instanceof Party) {
                     if (partyModel.getEntity().getId() != null) {
@@ -293,7 +293,7 @@ public class CarrierBean extends SecurityBean {
                         ret.add(new RowModel(partyModel.getEntity(), partyModel.isSelected(), "Party-" + ((Party) partyModel.getEntity()).getPartyField1() + ", "
                             + ((Party) partyModel.getEntity()).getPartyField2()));
                         if (isSelected(ret)) {
-                            goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, partyModel, ret);
+                            goToObjectResourceManagement(action, (BaseEntity) selectedSubject, selectedActions, selectedCollectionActions, partyModel, ret);
                         } else {
                             System.err.println("Select party");
                         }
@@ -301,7 +301,7 @@ public class CarrierBean extends SecurityBean {
                 } else {
                     if (getTabEntity() instanceof Contact) {
                         if (isSelected(contacts)) {
-                            goToObjectResourceManagement(action, (IdHolder) selectedSubject, selectedActions, selectedCollectionActions, selectedContactModel, contacts);
+                            goToObjectResourceManagement(action, (BaseEntity) selectedSubject, selectedActions, selectedCollectionActions, selectedContactModel, contacts);
                         } else {
                             System.err.println("Select contact");
                         }
@@ -312,7 +312,7 @@ public class CarrierBean extends SecurityBean {
 
     }
 
-    public void goToObjectResourceManagement(String action, IdHolder selectedSubject, List<EntityAction> selectedActions, List<EntityAction> selectedCollectionActions, EditModel selectedEditModel, List<RowModel> rowModelList) {
+    public void goToObjectResourceManagement(String action, BaseEntity selectedSubject, List<EntityAction> selectedActions, List<EntityAction> selectedCollectionActions, EditModel selectedEditModel, List<RowModel> rowModelList) {
         resourceObjectBean.setAction(action);
         resourceObjectBean.setSelectedSubject(selectedSubject);
         resourceObjectBean.setSelectedActions(selectedActions);

@@ -8,11 +8,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 @Entity
 @ResourceName(name = "Company", module = "Core")
-public class Company implements Serializable, IdHolder {
+public class Company implements Serializable, BaseEntity<Integer> {
 
     public static final String USER_LEVEL = "USER_LEVEL";
     public static final String FIELD_LEVEL = "FIELD_LEVEL";

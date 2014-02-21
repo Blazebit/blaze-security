@@ -1,4 +1,4 @@
-package com.blazebit.security.web.integration.service;
+package com.blazebit.security.integration.service;
 
 
 import javax.enterprise.inject.Default;

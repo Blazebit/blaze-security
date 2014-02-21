@@ -18,16 +18,14 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Subject;
 
 /**
  * @author Christian Beikov
  */
 @MappedSuperclass
-@ResourceName(name = "User", module = "Core")
-public abstract class AbstractUser implements Subject, IdHolder {
+public abstract class AbstractUser implements Subject, BaseEntity<Integer> {
 
 	private static final long serialVersionUID = 1L;
 

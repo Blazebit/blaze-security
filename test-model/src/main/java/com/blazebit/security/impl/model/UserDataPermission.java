@@ -21,28 +21,31 @@ import com.blazebit.security.model.SubjectPermission;
  * @author Christian Beikov
  */
 @Entity
-public class UserDataPermission extends AbstractDataPermission<User, UserDataPermissionId, EntityAction, EntityObjectField> implements SubjectPermission {
+public class UserDataPermission
+		extends
+		AbstractDataPermission<User, UserDataPermissionId, EntityAction, EntityObjectField>
+		implements SubjectPermission {
 
-    /**
+	/**
      * 
      */
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public UserDataPermission() {
-    }
+	public UserDataPermission() {
+	}
 
-    @EmbeddedId
-    public UserDataPermissionId getId() {
-        return id;
-    }
+	@EmbeddedId
+	public UserDataPermissionId getId() {
+		return id;
+	}
 
 	@Override
 	protected EntityAction createEntityAction(UserDataPermissionId id) {
-		return null;
+		return new EntityAction(id);
 	}
 
 	@Override
 	protected EntityObjectField createEntityObjectField(UserDataPermissionId id) {
-		return null;
+		return new EntityObjectField(id);
 	}
 }

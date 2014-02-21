@@ -39,6 +39,7 @@ import com.blazebit.security.impl.model.EntityObjectField;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
 import com.blazebit.security.impl.model.sample.Carrier;
+import com.blazebit.security.impl.model.sample.CarrierContactEntry;
 import com.blazebit.security.impl.model.sample.CarrierGroup;
 import com.blazebit.security.impl.model.sample.CarrierTeam;
 import com.blazebit.security.impl.model.sample.Comment;
@@ -70,7 +71,7 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
     @Inject
     protected ActionFactory actionFactory;
     @Inject
-    protected EntityResourceFactory entityFieldFactory;
+    protected EntityResourceFactory entityResourceFactory;
     @Inject
     protected ResourceFactory resourceFactory;
     @Inject
@@ -151,19 +152,19 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         revokeAction = actionFactory.createAction(ActionConstants.REVOKE);
         readAction = actionFactory.createAction(ActionConstants.READ);
         // create some resources
-        userEntity = (EntityField) entityFieldFactory.createResource(User.class);
-        groupEntity = (EntityField) entityFieldFactory.createResource(UserGroup.class);
-        documentEntity = (EntityField) entityFieldFactory.createResource(Document.class);
+        userEntity = (EntityField) entityResourceFactory.createResource(User.class);
+        groupEntity = (EntityField) entityResourceFactory.createResource(UserGroup.class);
+        documentEntity = (EntityField) entityResourceFactory.createResource(Document.class);
 
-        documentEntityTitleField = (EntityField) entityFieldFactory.createResource(Document.class, Title_Field);
-        documentEntityContentField = (EntityField) entityFieldFactory.createResource(Document.class, Content_Field);
-        emailEntity = (EntityField) entityFieldFactory.createResource(Email.class);
-        user1Entity = (EntityObjectField) entityFieldFactory.createResource(user1.getClass(), user1.getId());
-        user2Entity = (EntityObjectField) entityFieldFactory.createResource(user2.getClass(), user2.getId());
-        document1Entity = (EntityObjectField) entityFieldFactory.createResource(Document.class, 1);
-        document2Entity = (EntityObjectField) entityFieldFactory.createResource(Document.class, 2);
-        document1EntityTitleField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Title_Field, 1);
-        document1EntityContentField = (EntityObjectField) entityFieldFactory.createResource(Document.class, Content_Field, 1);
+        documentEntityTitleField = (EntityField) entityResourceFactory.createResource(Document.class, Title_Field);
+        documentEntityContentField = (EntityField) entityResourceFactory.createResource(Document.class, Content_Field);
+        emailEntity = (EntityField) entityResourceFactory.createResource(Email.class);
+        user1Entity = (EntityObjectField) entityResourceFactory.createResource(user1.getClass(), user1.getId());
+        user2Entity = (EntityObjectField) entityResourceFactory.createResource(user2.getClass(), user2.getId());
+        document1Entity = (EntityObjectField) entityResourceFactory.createResource(Document.class, 1);
+        document2Entity = (EntityObjectField) entityResourceFactory.createResource(Document.class, 2);
+        document1EntityTitleField = (EntityObjectField) entityResourceFactory.createResource(Document.class, Title_Field, 1);
+        document1EntityContentField = (EntityObjectField) entityResourceFactory.createResource(Document.class, Content_Field, 1);
         // create admin
         admin = new User("Admin");
         admin.setCompany(company);
@@ -197,26 +198,27 @@ public abstract class BaseTest<T extends BaseTest<T>> implements Serializable {
         // permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(readAction)));
 
         //admin change user_level, field_level, etc
-        permissionManager.save(permissionFactory.create(admin, updateAction, entityFieldFactory.createResource(Company.class)));
+        permissionManager.save(permissionFactory.create(admin, updateAction, entityResourceFactory.createResource(Company.class)));
         // admin can grant the sample entities
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(TestCarrier.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Carrier.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Party.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Contact.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierGroup.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(CarrierTeam.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Document.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Email.class)));
-        permissionManager.save(permissionFactory.create(admin, grantAction, entityFieldFactory.createResource(Comment.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(TestCarrier.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(Party.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(Contact.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(CarrierGroup.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(CarrierTeam.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(CarrierContactEntry.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(Document.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(Email.class)));
+        permissionManager.save(permissionFactory.create(admin, grantAction, entityResourceFactory.createResource(Comment.class)));
         // admin can revoke the sample entities
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Carrier.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Party.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Contact.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierGroup.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(CarrierTeam.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Document.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Email.class)));
-        permissionManager.save(permissionFactory.create(admin, revokeAction, entityFieldFactory.createResource(Comment.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(Carrier.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(Party.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(Contact.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(CarrierGroup.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(CarrierTeam.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(Document.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(Email.class)));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, entityResourceFactory.createResource(Comment.class)));
 
         entityManager.flush();
     }

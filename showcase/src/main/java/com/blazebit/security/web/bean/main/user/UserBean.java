@@ -22,12 +22,12 @@ import com.blazebit.security.impl.model.Company;
 import com.blazebit.security.impl.model.EntityAction;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.UserGroup;
+import com.blazebit.security.integration.service.UserGroupDataAccess;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
 import com.blazebit.security.web.bean.main.resources.ResourceObjectBean;
 import com.blazebit.security.web.bean.model.RowModel;
 import com.blazebit.security.web.bean.model.UserGroupModel;
-import com.blazebit.security.web.integration.service.UserGroupDataAccess;
 import com.blazebit.security.web.service.api.UserService;
 import com.blazebit.security.web.util.WebUtil;
 

@@ -16,19 +16,15 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
-import com.blazebit.security.annotation.ResourceName;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Role;
 
 /**
  * @author Christian Beikov
  */
 @Entity
-@ResourceName(name = "User group", module = "Core")
-public abstract class AbstractUserGroup implements Role, IdHolder {
+public abstract class AbstractUserGroup implements Role, BaseEntity<Integer> {
 
 	private static final long serialVersionUID = 1L;
 	private Integer id;

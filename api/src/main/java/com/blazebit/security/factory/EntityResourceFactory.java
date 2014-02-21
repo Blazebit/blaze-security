@@ -1,6 +1,8 @@
 package com.blazebit.security.factory;
 
-import com.blazebit.security.model.IdHolder;
+import java.io.Serializable;
+
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.Resource;
 
 /**
@@ -32,7 +34,7 @@ public interface EntityResourceFactory {
 	 * @param id
 	 * @return resource created for the given class with the given id
 	 */
-	public Resource createResource(Class<?> clazz, Integer id);
+	public Resource createResource(Class<?> clazz, Serializable id);
 
 	/**
 	 * 
@@ -41,7 +43,7 @@ public interface EntityResourceFactory {
 	 * @param id
 	 * @return resource created for the given class with the given field and id
 	 */
-	public Resource createResource(Class<?> clazz, String field, Integer id);
+	public Resource createResource(Class<?> clazz, String field, Serializable id);
 
 	/**
 	 * 
@@ -64,7 +66,7 @@ public interface EntityResourceFactory {
 	 * @param id
 	 * @return resource created from the given entity name and id
 	 */
-	public Resource createResource(String entity, Integer id);
+	public Resource createResource(String entity, Serializable id);
 
 	/**
 	 * 
@@ -73,14 +75,14 @@ public interface EntityResourceFactory {
 	 * @param id
 	 * @return resource from the given entity name field and id
 	 */
-	public Resource createResource(String entity, String field, Integer id);
+	public Resource createResource(String entity, String field, Serializable id);
 
 	/**
 	 * 
 	 * @param entityObject
 	 * @return resource of an instance of an entity
 	 */
-	public Resource createResource(IdHolder entityObject);
+	public Resource createResource(BaseEntity<? extends Serializable> entityObject);
 
 	/**
 	 * 
@@ -88,6 +90,6 @@ public interface EntityResourceFactory {
 	 * @param field
 	 * @return resource of an instance of an entity with a field
 	 */
-	public Resource createResource(IdHolder entityObject, String field);
+	public Resource createResource(BaseEntity<? extends Serializable> entityObject, String field);
 
 }

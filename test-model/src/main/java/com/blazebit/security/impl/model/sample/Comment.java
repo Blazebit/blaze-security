@@ -22,7 +22,7 @@ import javax.persistence.ManyToOne;
 
 import com.blazebit.security.annotation.ResourceName;
 import com.blazebit.security.impl.model.User;
-import com.blazebit.security.model.IdHolder;
+import com.blazebit.security.model.BaseEntity;
 
 /**
  * 
@@ -30,7 +30,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @ResourceName(name = "Comment", module = "DM")
-public class Comment implements IdHolder, Serializable {
+public class Comment implements BaseEntity<Integer>, Serializable {
 
     /**
      * 

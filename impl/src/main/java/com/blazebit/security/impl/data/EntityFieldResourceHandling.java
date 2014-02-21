@@ -13,7 +13,7 @@ import java.util.TreeMap;
 import javax.inject.Inject;
 
 import com.blazebit.security.factory.PermissionFactory;
-import com.blazebit.security.impl.factory.ActionUtils;
+import com.blazebit.security.impl.factory.ActionListFactory;
 import com.blazebit.security.impl.model.AbstractEntityAction;
 import com.blazebit.security.impl.model.AbstractEntityField;
 import com.blazebit.security.impl.model.AbstractEntityObjectField;
@@ -30,7 +30,7 @@ public class EntityFieldResourceHandling {
 	private PermissionFactory permissionFactory;
 
 	@Inject
-	private ActionUtils actionUtils;
+	private ActionListFactory actionUtils;
 
 	/**
 	 * Groups permissions by resource name.
