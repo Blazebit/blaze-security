@@ -14,6 +14,8 @@ package com.blazebit.security.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.Serializable;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -23,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.security.exception.PermissionActionException;
+import com.blazebit.security.exception.PermissionException;
 import com.blazebit.security.impl.interceptor.ChangeInterceptor;
 import com.blazebit.security.impl.model.User;
 import com.blazebit.security.impl.model.sample.CarrierContactEntry;
@@ -131,6 +134,11 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 	public void remove(Object object) {
 		entityManager.remove(object);
 		entityManager.flush();
+	}
+
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public Object find(Class<?> clazz, Serializable id) {
+		return entityManager.find(clazz, id);
 	}
 
 	@Test
@@ -428,11 +436,34 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 
 	// onetomany_embeddedid
 	@Test
-	public void test_change_one_to_many_field_embeddedid_with_entity_permission() {
+	public void test_change_one_to_many_field_embeddedid_with_update_field_permissions() {
 		permissionService.grant(admin, user1, getCreateAction(),
 				entityResourceFactory.createResource(Contact.class));
 		permissionService.grant(admin, user1, getUpdateAction(),
-				entityResourceFactory.createResource(TestCarrier.class));
+				entityResourceFactory.createResource(CarrierContactEntry.class,
+						"contact"));
+		setUserContext(user1);
+
+		Contact newContact = new Contact();
+		self.get().persist(newContact);
+
+		int sizeBefore = carrier.getContactEntries().size();
+		CarrierContactEntry contactEntry = carrier.getContactEntries()
+				.iterator().next();
+		contactEntry.setContact(newContact);
+		contactEntry = (CarrierContactEntry) self.get().merge(contactEntry);
+		CarrierContactEntry reloadedCarrierContactEntry = entityManager.find(
+				CarrierContactEntry.class, contactEntry.getId());
+
+		assertEquals(sizeBefore, carrier.getContactEntries().size());
+		assertEquals(newContact.getId(), reloadedCarrierContactEntry
+				.getContact().getId());
+	}
+
+	@Test
+	public void test_change_one_to_many_field_embeddedid_with_update_permission() {
+		permissionService.grant(admin, user1, getCreateAction(),
+				entityResourceFactory.createResource(Contact.class));
 		permissionService
 				.grant(admin, user1, getUpdateAction(), entityResourceFactory
 						.createResource(CarrierContactEntry.class));
@@ -441,15 +472,42 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 		Contact newContact = new Contact();
 		self.get().persist(newContact);
 
+		int sizeBefore = carrier.getContactEntries().size();
 		CarrierContactEntry contactEntry = carrier.getContactEntries()
 				.iterator().next();
 		contactEntry.setContact(newContact);
-		carrier = (TestCarrier) self.get().merge(contactEntry);
+		contactEntry = (CarrierContactEntry) self.get().merge(contactEntry);
+		CarrierContactEntry reloadedCarrierContactEntry = entityManager.find(
+				CarrierContactEntry.class, contactEntry.getId());
 
-		assertEquals("field_1", carrier.getContacts().iterator().next()
-				.getContactField());
+		assertEquals(sizeBefore, carrier.getContactEntries().size());
+		assertEquals(newContact.getId(), reloadedCarrierContactEntry
+				.getContact().getId());
 	}
 
+	@Test(expected = PermissionActionException.class)
+	public void test_change_one_to_many_field_embeddedid_with_missing_update_permission() {
+		permissionService.grant(admin, user1, getCreateAction(),
+				entityResourceFactory.createResource(Contact.class));
+		setUserContext(user1);
+
+		Contact newContact = new Contact();
+		self.get().persist(newContact);
+
+		int sizeBefore = carrier.getContactEntries().size();
+		CarrierContactEntry contactEntry = carrier.getContactEntries()
+				.iterator().next();
+		contactEntry.setContact(newContact);
+		contactEntry = (CarrierContactEntry) self.get().merge(contactEntry);
+		CarrierContactEntry reloadedCarrierContactEntry = entityManager.find(
+				CarrierContactEntry.class, contactEntry.getId());
+
+		assertEquals(sizeBefore, carrier.getContactEntries().size());
+		assertEquals(newContact.getId(), reloadedCarrierContactEntry
+				.getContact().getId());
+	}
+
+	// one to many cascade
 	@Test
 	public void test_change_one_to_many_field_cascade_with_entity_permission() {
 		permissionService.grant(admin, user1, getUpdateAction(),
