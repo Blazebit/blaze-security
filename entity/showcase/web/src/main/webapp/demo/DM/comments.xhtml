@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+<f:view contentType="text/html">
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>Comments</title>
+		</f:facet>
+		<style>
+.top {
+	vertical-align: top
+}
+</style>
+	</h:head>
+
+	<h:body>
+		<f:event listener="#{commentBean.init}" type="preRenderView" />
+		<h:form id="form">
+			
+			<h:panelGroup id="subjects">
+				Current entity: #{securityBaseBean.createResource(commentBean.tabEntity).entity}<br />
+				
+				<p:selectOneMenu effect="fade" var="p" style="width:160px" filter="true" filterMatchMode="startsWith"
+					valueChangeListener="#{commentBean.selectSubject}"
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and (securityBaseBean.isAuthorizedResource('GRANT', commentBean.tabEntity) or securityBaseBean.isAuthorizedResource('REVOKE', commentBean.tabEntity))}">
+					<f:event listener="#{commentBean.initSubjects}" type="preRenderComponent"/>
+					<f:selectItem itemLabel="Select subject" itemValue="" />
+					<f:selectItems value="#{commentBean.subjects}" var="subject" itemLabel="#{subject.name}" itemValue="#{subject.id}"
+						itemDescription="#{subject.name}" />
+					<p:column>#{p.name}</p:column>
+				</p:selectOneMenu>
+			
+			</h:panelGroup>
+
+			<h:panelGroup id="comments">
+				<h:panelGroup rendered="#{commentBean.comments.size() gt 0}">
+					<ui:repeat value="#{commentBean.comments}" var="comment">
+						<br />
+						<h:outputText value="#{comment.entity.text}"
+							rendered="#{commentBean.isAuthorizedResource('READ', comment.entity) and !commentBean.isAuthorizedResource('UPDATE', comment.entity)}" />
+						<h:outputText value="  Comment by #{comment.entity.user.username} "
+							rendered="#{!commentBean.isAuthorizedResource('READ', comment.entity) and !commentBean.isAuthorizedResource('UPDATE', comment.entity)}" />
+						
+						<p:selectBooleanCheckbox value="#{comment.selected}" rendered="#{commentBean.isAuthorizedResource('GRANT', comment.entity) or commentBean.isAuthorizedResource('REVOKE', comment.entity)}"/>
+
+						<h:inputTextarea value="#{comment.entity.text}" rendered="#{commentBean.isAuthorizedResource('UPDATE',comment.entity)}" />
+						<br />
+						<h:panelGrid columns="2">
+							<p:commandButton value="Delete" action="#{commentBean.deleteComment(comment.entity)}"
+								rendered="#{commentBean.isAuthorizedResource('DELETE', comment.entity)}" update=":form:comments" />
+							<p:commandButton value="Update" action="#{commentBean.saveComment(comment.entity)}"
+								rendered="#{commentBean.isAuthorizedResource('UPDATE', comment.entity)}" update=":form:comments" />
+						</h:panelGrid>
+						<h:outputText value="-------------------------------------------------------------" />
+						<br />
+					</ui:repeat>
+				</h:panelGroup>
+			</h:panelGroup>
+			
+			<h:panelGroup id="new">
+				<c:set var="newComment" value="#{commentBean.newComment}" />
+				<h:inputTextarea value="#{commentBean.newComment.text}"
+					rendered="#{commentBean.isAuthorizedResource('CREATE',newComment)}" />
+				<br />
+				<p:commandButton value="Create" action="#{commentBean.saveNewComment()}"
+					rendered="#{commentBean.isAuthorizedResource('CREATE', newComment)}" update=":form:comments, :form:new" />
+				<br />
+				<h:outputText value="-------------------------------------------------------------" />
+			</h:panelGroup>
+			<br />
+			
+			<h:panelGroup id="actions">
+				<p:selectCheckboxMenu label="Select actions" filter="true" filterText="Filter" filterMatchMode="startsWith"
+					panelStyle="width:220px" valueChangeListener="#{commentBean.selectAction}"
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and (securityBaseBean.isAuthorizedResource('GRANT', commentBean.tabEntity) or commentBean.isAuthorizedResource('REVOKE', commentBean.tabEntity))}">
+					<f:selectItems value="#{commentBean.entityActions}" var="action" itemLabel="#{action.actionName}"
+						itemValue="#{action.actionName}" />
+				</p:selectCheckboxMenu>
+
+				<br />
+
+				<p:commandButton value="grant" action="#{commentBean.goToPermissions('grant')}"
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and securityBaseBean.isAuthorizedResource('GRANT', commentBean.tabEntity)}" />
+				<p:commandButton value="revoke" action="#{commentBean.goToPermissions('revoke')}"
+					rendered="#{securityBaseBean.isEnabled('OBJECT_LEVEL') and securityBaseBean.isAuthorizedResource('REVOKE', commentBean.tabEntity)}" />
+			</h:panelGroup>
+
+		</h:form>
+	</h:body>
+</f:view>
+</html>

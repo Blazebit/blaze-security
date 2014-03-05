@@ -18,16 +18,14 @@
 	<description>Security Framework for Blazebit Projects</description>
 
 	<modules>
-		<module>api</module>
-		<module>impl</module>
+		<module>core-api</module>
 		
 		<module>auth-api</module>
 		<module>auth-impl</module>
 		
-		<module>abstract-model</module>
-		<module>test-model</module>
+		<module>entity</module>
 		
-		<module>showcase</module>
+		<module>testsuite</module>
 	</modules>
 
 	<issueManagement>
@@ -95,19 +93,19 @@
 		<version.processor.plugin>2.2.1</version.processor.plugin>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>apache-m2-snapshot</id>
-			<name>Apache Snapshot Repository</name>
-			<url>http://repository.apache.org/snapshots</url>
-		</repository>
-	</repositories>
+<!-- 	<repositories> -->
+<!-- 		<repository> -->
+<!-- 			<id>apache-m2-snapshot</id> -->
+<!-- 			<name>Apache Snapshot Repository</name> -->
+<!-- 			<url>http://repository.apache.org/snapshots</url> -->
+<!-- 		</repository> -->
+<!-- 	</repositories> -->
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-security-api</artifactId>
+				<artifactId>blaze-security-core-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -117,27 +115,12 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-security-impl</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
 				<artifactId>blaze-security-auth-impl</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-security-showcase</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-security-abstract-model</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-security-test-model</artifactId>
+				<artifactId>blaze-security-testsuite</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -174,6 +157,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.deltaspike.cdictrl</groupId>
+				<artifactId>deltaspike-cdictrl-api</artifactId>
+				<version>0.5</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.deltaspike.cdictrl</groupId>
 				<artifactId>deltaspike-cdictrl-openejb</artifactId>
 				<version>0.5</version>
 				<scope>test</scope>
@@ -189,7 +178,7 @@
 			<dependency>
 				<groupId>org.apache.openejb</groupId>
 				<artifactId>openejb-core</artifactId>
-				<version>4.6.0-SNAPSHOT</version>
+				<version>4.6.0</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>

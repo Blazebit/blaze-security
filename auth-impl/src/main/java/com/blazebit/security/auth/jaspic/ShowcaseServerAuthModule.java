@@ -27,8 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 
-import com.blazebit.security.model.Module;
-
 /**
  * The actual Server Authentication Module AKA SAM.
  * http://arjan-tijms.blogspot.co.at/2012/11/implementing-container-authentication.html

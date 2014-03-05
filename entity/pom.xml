@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-security</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>blaze-security-entity</artifactId>
+	<packaging>pom</packaging>
+
+	<name>Blazebit Security Entity Refinement</name>
+	<url>http://blazebit.com/security</url>
+	<description>The refinement of the Blazebit Security API for entity level security.</description>
+
+	<modules>
+		<module>api</module>
+		<module>impl</module>
+		<module>showcase</module>
+	</modules>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-security-entity-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-security-entity-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+</project>

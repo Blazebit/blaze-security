@@ -20,7 +20,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>blaze-security-api</artifactId>
+			<artifactId>blaze-security-core-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.deltaspike.core</groupId>

@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+<f:view contentType="text/html">
+	<h:head>
+		<f:facet name="first">
+			<meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+			<title>Users</title>
+		</f:facet>
+		<style>
+.top {
+	vertical-align: top
+}
+</style>
+	</h:head>
+
+	<h:body>
+		<f:event listener="#{resourceObjectBean.init}" type="preRenderView" />
+		<h:form id="form">
+
+			<h:panelGrid columns="2" columnClasses="top left,top right">
+
+				<p:menu rendered="#{not empty webUserContext.user}">
+					<p:submenu label="Menu">
+						<p:menuitem value="Home" url="../../index.xhtml" />
+						<p:menuitem value="Groups" url="/main/group/groups.xhtml" />
+						<p:menuitem value="Resources" url="/main/resource/resources.xhtml" />
+
+					</p:submenu>
+				</p:menu>
+
+				<h:panelGroup>
+					<h4>Selected subject : #{resourceObjectBean.selectedSubject}</h4>
+					<h4>Selected action : #{resourceObjectBean.action}</h4>
+
+					<p:wizard widgetVar="permissionWizard" showNavBar="false"
+						flowListener="#{resourceObjectBean.permissionWizardListener}" id="objectResources">
+
+						<p:tab id="selectPermissions" title="Selected resources">
+							<h:outputText value="GREEN and/or SELECTED resources will be granted"
+								rendered="#{resourceObjectBean.action eq 'grant'}" />
+							<h:outputText value="RED and/or SELECTED resources will be revoked"
+								rendered="#{resourceObjectBean.action eq 'revoke'}" />
+							<p:tree value="#{resourceObjectBean.resourceRoot}" var="resourceEntry"
+								rendered="#{resourceObjectBean.resourceRoot.childCount ne 0}" selectionMode="checkbox"
+								selection="#{resourceObjectBean.selectedResourceNodes}">
+								<p:treeNode>
+									<h:outputText value="#{resourceEntry.name}" style="#{resourceEntry.marking.style}" id="resourceEntry" />
+									<p:tooltip for="resourceEntry" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="object" icon="ui-icon-contact">
+									<h:outputText
+										value="#{resourceEntry.name} #{resourceEntry.nodeInstances.size() gt 0  ? '('.concat(resourceEntry.nodeInstances.size()).concat(')') : ''}"
+										style="#{resourceEntry.marking.style}" id="resourceEntry1" />
+									<p:tooltip for="resourceEntry1" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
+								</p:treeNode>
+								<p:treeNode type="field" icon="ui-icon-document-b">
+									<h:outputText
+										value="#{resourceEntry.name} #{resourceEntry.nodeInstances.size() gt 0  ? '('.concat(resourceEntry.nodeInstances.size()).concat(')') : ''}"
+										style="#{resourceEntry.marking.style}" id="resourceEntry2" />
+									<p:tooltip for="resourceEntry2" value="#{resourceEntry.tooltip}" rendered="#{not empty resourceEntry.tooltip}"
+										showEffect="fade" hideEffect="fade" style="#{resourceEntry.marking.style}" />
+								</p:treeNode>
+							</p:tree>
+
+							<p:commandButton value="Next" onclick="permissionWizard.next()"
+								rendered="#{resourceObjectBean.resourceRoot.childCount ne 0}" />
+						</p:tab>
+
+						<p:tab id="confirmPermissions" title="Permissions">
+							<h:panelGrid columns="2" columnClasses="top,top">
+
+								<h:panelGroup>
+						Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
+									<br />
+									<p:tree value="#{resourceObjectBean.currentPermissionRoot}" var="permission"
+										rendered="#{resourceObjectBean.currentPermissionRoot.childCount ne 0}" id="currentPermissionTree"
+										selectionMode="checkbox">
+										<p:treeNode>
+											<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+											<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode type="object" icon="ui-icon-contact">
+											<h:outputText
+												value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+												style="#{permission.marking.style}" id="permission1" />
+											<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode type="field" icon="ui-icon-document-b">
+											<h:outputText
+												value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+												style="#{permission.marking.style}" id="permission2" />
+											<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+									</p:tree>
+									<h:outputText value="No permissions available"
+										rendered="#{resourceObjectBean.currentPermissionRoot.childCount eq 0}" />
+								</h:panelGroup>
+
+								<h:panelGroup rendered="#{!resourceObjectBean.confirmed}">
+						New permissions<p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()" update=":dialogs" />
+									<br />
+									<p:tree value="#{resourceObjectBean.newPermissionRoot}" var="permission"
+										rendered="#{resourceObjectBean.newPermissionRoot.childCount ne 0}" selectionMode="checkbox">
+
+										<p:treeNode>
+											<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+											<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode type="object" icon="ui-icon-contact">
+											<h:outputText
+												value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+												style="#{permission.marking.style}" id="permission1" />
+											<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode type="field" icon="ui-icon-document-b">
+											<h:outputText
+												value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+												style="#{permission.marking.style}" id="permission2" />
+											<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+									</p:tree>
+									<h:outputText value="No permissions available"
+										rendered="#{resourceObjectBean.newPermissionRoot.childCount eq 0}" />
+								</h:panelGroup>
+							</h:panelGrid>
+
+							<p:commandButton value="#{resourceObjectBean.group ? 'Next' : 'Confirm'}" update=":form:objectResources"
+								rendered="#{!resourceObjectBean.confirmed}" action="#{resourceObjectBean.confirmPermissions()}"
+								style="float:left" onclick="permissionWizard.next()" />
+						</p:tab>
+
+						<p:tab id="confirmUserPermissions" title="User permissions">
+							<h:panelGrid columns="2" columnClasses="top,top">
+
+								<h:panelGroup>
+						Current permissions<p:commandButton icon="ui-icon-info" oncomplete="notRevokedDialog.show()" update=":dialogs" />
+									<br />
+									<p:tree value="#{resourceObjectBean.currentUserPermissionRoot}" var="permission"
+										rendered="#{resourceObjectBean.currentUserPermissionRoot.childCount ne 0}" id="currentUserPermissionTree"
+										selectionMode="checkbox">
+										<p:treeNode>
+											<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+											<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode type="object" icon="ui-icon-contact">
+											<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission" />
+											<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode type="field" icon="ui-icon-document-b">
+											<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission2" />
+											<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+									</p:tree>
+								</h:panelGroup>
+
+								<h:panelGroup rendered="#{!resourceObjectBean.usersConfirmed}">
+						New permissions<p:commandButton icon="ui-icon-info" oncomplete="notGrantedDialog.show()" update=":dialogs" />
+									<br />
+									<p:tree value="#{resourceObjectBean.newUserPermissionRoot}" var="permission"
+										selection="#{resourceObjectBean.selectedUserPermissionNodes}"
+										rendered="#{resourceObjectBean.newUserPermissionRoot.childCount ne 0}" selectionMode="checkbox">
+										<p:treeNode>
+											<h:outputText value="#{permission.name}" style="#{permission.marking.style}" id="permission1" />
+											<p:tooltip for="permission1" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode icon="ui-icon-contact" type="object">
+											<h:outputText
+												value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+												style="#{permission.marking.style}" id="permission" />
+											<p:tooltip for="permission" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+										<p:treeNode icon="ui-icon-contact" type="field">
+											<h:outputText
+												value="#{permission.name} #{permission.nodeInstances.size() gt 0  ? '('.concat(permission.nodeInstances.size()).concat(')') : ''}"
+												style="#{permission.marking.style}" id="permission2" />
+											<p:tooltip for="permission2" value="#{permission.tooltip}" rendered="#{not empty permission.tooltip}"
+												showEffect="fade" hideEffect="fade" style="#{permission.marking.style}" />
+										</p:treeNode>
+									</p:tree>
+								</h:panelGroup>
+							</h:panelGrid>
+
+							<p:commandButton value="Back" onclick="permissionWizard.back()" rendered="#{!resourceObjectBean.usersConfirmed}" />
+							<p:commandButton value="Confirm" action="#{resourceObjectBean.confirmUserPermissions}"
+								update=":form:objectResources" rendered="#{!resourceObjectBean.usersConfirmed}"
+								oncomplete="successfulDialog.show()" />
+						</p:tab>
+					</p:wizard>
+					<br />
+					<br />
+					<p:commandLink value="back..." action="#{resourceObjectBean.returnToPreviousPage}" />
+				</h:panelGroup>
+			</h:panelGrid>
+		</h:form>
+
+		<ui:include src="/dialogs.xhtml" />
+
+	</h:body>
+</f:view>
+</html>
