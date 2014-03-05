@@ -14,6 +14,7 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
@@ -99,14 +100,14 @@ public class GroupResourcesBean extends ResourceGroupHandlingBaseBean {
         if (!isEnabled(Features.FIELD_LEVEL)) {
             // if field is level is not enabled but the user has field level permissions, these need to be marked as selected,
             // otherwise it would be taken as revoked
-            selectedPermissions.addAll(permissionHandling.getSeparatedParentAndChildPermissions(groupPermissions).get(1));
+            selectedPermissions.addAll(PermissionUtils.getSeparatedParentAndChildPermissions(groupPermissions).get(1));
         }
         // get revoked permissions
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(groupPermissions, selectedPermissions);
         revokable = revoke.get(0);
         dialogBean.setNotRevoked(revoke.get(1));
         // get granted permissions
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(groupPermissions, revokable), selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(groupPermissions, revokable), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 

@@ -20,6 +20,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 /**
@@ -28,7 +29,7 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @EntityResourceType(name = "Party", module = "Core", test = "object.type eq 'Core'")
-public class Party implements IdHolder<Integer> {
+public class Party  extends BaseEntity<Integer> {
 
     @Override
     public String toString() {
@@ -47,7 +48,6 @@ public class Party implements IdHolder<Integer> {
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String partyField1;
     private String partyField2;
     private String type;

@@ -10,7 +10,7 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package com.blazebit.security.showcase.impl.data;
+package com.blazebit.security.impl;
 
 import static org.junit.Assert.assertTrue;
 
@@ -22,7 +22,9 @@ import javax.inject.Inject;
 
 import org.junit.Test;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.data.PermissionHandling;
+import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.entity.EntityResourceFactory;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.UserGroup;
@@ -30,7 +32,6 @@ import com.blazebit.security.model.sample.Carrier;
 import com.blazebit.security.model.sample.CarrierGroup;
 import com.blazebit.security.model.sample.Comment;
 import com.blazebit.security.model.sample.Document;
-import com.blazebit.security.showcase.data.GroupPermissionDataAccess;
 import com.blazebit.security.showcase.data.UserGroupDataAccess;
 import com.blazebit.security.spi.PermissionFactory;
 import com.blazebit.security.test.BeforeDatabaseAware;
@@ -41,13 +42,13 @@ import com.blazebit.security.test.DatabaseAware;
  * @author cuszk
  */
 @DatabaseAware
-public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlingTest> {
+public class PermissionManagerTest extends BaseTest<PermissionManagerTest> {
 
     private static final long serialVersionUID = 1L;
     @Inject
     private PermissionHandling permissionHandlingUtils;
     @Inject
-    private GroupPermissionDataAccess groupPermissionHandling;
+    private PermissionManager groupPermissionHandling;
     @Inject
     private PermissionFactory permissionFactory;
     @Inject
@@ -215,11 +216,11 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
         Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
         Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
+        Set<Permission> granted = groupPermissionHandling.getPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         Set<Permission> notGranted = grant.get(1);
-        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
+        Set<Permission> revoked = groupPermissionHandling.getPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -246,6 +247,7 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
 
         persist(permissionFactory.create(userGroupA, updateAction, documentEntityContentField));
         persist(permissionFactory.create(userGroupA, updateAction, documentEntity.withField("size")));
+        persist(permissionFactory.create(userGroupA, updateAction, documentEntity.withField("carrier")));
         persist(permissionFactory.create(userGroupB, updateAction, documentEntityTitleField));
         persist(permissionFactory.create(userGroupB, updateAction, documentEntity.withField("id")));
 
@@ -259,11 +261,11 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
         Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
         Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
+        Set<Permission> granted = groupPermissionHandling.getPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
 
-        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
+        Set<Permission> revoked = groupPermissionHandling.getPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -282,6 +284,7 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
 
         persist(permissionFactory.create(userGroupA, updateAction, documentEntityContentField));
         persist(permissionFactory.create(userGroupA, updateAction, documentEntity.withField("size")));
+        persist(permissionFactory.create(userGroupA, updateAction, documentEntity.withField("carrier")));
         persist(permissionFactory.create(userGroupB, updateAction, documentEntityTitleField));
         persist(permissionFactory.create(userGroupB, updateAction, documentEntity.withField("id")));
 
@@ -299,11 +302,11 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
         Set<UserGroup> added = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(0);
         Set<UserGroup> removed = userGroupDataAcces.getAddedAndRemovedUserGroups(user1, selectedGroups).get(1);
 
-        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(added);
+        Set<Permission> granted = groupPermissionHandling.getPermissions(added);
         List<Set<Permission>> grant = permissionHandlingUtils.getGrantable(currentPermissions, granted);
         Set<Permission> actualGranted = grant.get(0);
         // Set<Permission> notGranted = grant.get(1);
-        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removed);
+        Set<Permission> revoked = groupPermissionHandling.getPermissions(removed);
         revoked = permissionHandlingUtils.eliminateRevokeConflicts(granted, revoked);
 
         Set<Permission> expectedGranted = new HashSet<Permission>();
@@ -323,7 +326,7 @@ public class GroupPermissionHandlingTest extends BaseTest<GroupPermissionHandlin
 
     private void assertSetsContains(Set<Permission> expected, Set<Permission> actual) {
         assertTrue(expected.size() == actual.size());
-        assertTrue(permissionHandlingUtils.containsAll(expected, actual));
+        assertTrue(PermissionUtils.containsAll(expected, actual));
     }
 
 }

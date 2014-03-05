@@ -20,6 +20,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 /**
@@ -28,13 +29,12 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @EntityResourceType(name = "Email", module = "DM")
-public class Email implements IdHolder<Integer> {
+public class Email extends BaseEntity<Integer> {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String subject;
     private String body;
 

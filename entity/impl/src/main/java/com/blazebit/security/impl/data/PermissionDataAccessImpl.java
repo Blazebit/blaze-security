@@ -22,9 +22,9 @@ import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.data.PermissionDataAccess;
 import com.blazebit.security.data.PermissionManager;
-import com.blazebit.security.impl.util.PermissionUtils;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.Resource;
@@ -94,7 +94,7 @@ public class PermissionDataAccessImpl implements
 				permissionManager.getPermissions(subject), action, resource);
 	}
 
-	private Set<Permission> getReplaceablePermissions(
+	private static Set<Permission> getReplaceablePermissions(
 			List<Permission> permissions, Action action, Resource resource) {
 		Set<Permission> ret = new HashSet<Permission>();
 		for (Permission permission : permissions) {
@@ -156,7 +156,7 @@ public class PermissionDataAccessImpl implements
 					+ resource);
 			return false;
 		}
-		return getImpliedBy(permissions, action, resource).isEmpty();
+		return PermissionUtils.getImpliedBy(permissions, action, resource).isEmpty();
 		// Collection<Resource> connectedResources =
 		// resource.connectedResources();
 		// for (Resource connectedResource : connectedResources) {
@@ -171,16 +171,7 @@ public class PermissionDataAccessImpl implements
 	@Override
 	public Set<Permission> getImpliedBy(List<Permission> permissions,
 			Action action, Resource resource) {
-		Set<Permission> ret = new HashSet<Permission>();
-		Collection<Resource> connectedResources = resource.connectedResources();
-		for (Resource connectedResource : connectedResources) {
-			Permission connectedPermission = findPermission(permissions,
-					action, connectedResource);
-			if (connectedPermission != null) {
-				ret.add(connectedPermission);
-			}
-		}
-		return ret;
+		return PermissionUtils.getImpliedBy(permissions, action, resource);
 	}
 
 	@Override
@@ -236,14 +227,7 @@ public class PermissionDataAccessImpl implements
 	@Override
 	public Permission findPermission(List<Permission> permissions,
 			Action action, Resource resource) {
-		PermissionUtils.checkParameters(action, resource);
-		for (Permission permission : permissions) {
-			if (permission.getResource().equals(resource)
-					&& permission.getAction().equals(action)) {
-				return permission;
-			}
-		}
-		return null;
+		return PermissionUtils.findPermission(permissions, action, resource);
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
@@ -111,7 +112,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
         if (!isEnabled(Features.FIELD_LEVEL)) {
             // if field is level is not enabled but the user has field level permissions, these need to be marked as selected,
             // otherwise it would be taken as revoked
-            selectedPermissions.addAll(permissionHandling.getSeparatedParentAndChildPermissions(userPermissions).get(1));
+            selectedPermissions.addAll(PermissionUtils.getSeparatedParentAndChildPermissions(userPermissions).get(1));
         }
         // check what has been revoked
         List<Set<Permission>> revoke = permissionHandling.getRevokableFromSelected(userPermissions, selectedPermissions);
@@ -120,7 +121,7 @@ public class UserResourcesBean extends ResourceHandlingBaseBean {
 
         // remove revoked permissions from current permission list so we can check what can be granted after revoking
         // check what has been granted
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revokable), selectedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(userPermissions, revokable), selectedPermissions);
         Set<Permission> granted = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 

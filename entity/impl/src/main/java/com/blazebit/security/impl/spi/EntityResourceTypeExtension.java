@@ -36,6 +36,7 @@ public class EntityResourceTypeExtension implements Extension {
 	private final Map<EntityResourceDefinition, String> resourceDefinitions = new HashMap<EntityResourceDefinition, String>();
 	private final Collection<Class<?>> resourceClasses = new HashSet<Class<?>>();
 
+	// TODO: Check that a class has not more than one parent
 	@SuppressWarnings("rawtypes")
 	protected void detectInterfaces(
 			@Observes ProcessAnnotatedType processAnnotatedType) {

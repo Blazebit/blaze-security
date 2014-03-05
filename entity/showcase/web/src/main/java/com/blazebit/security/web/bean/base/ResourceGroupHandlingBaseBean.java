@@ -13,12 +13,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.User;
 import com.blazebit.security.model.UserGroup;
-import com.blazebit.security.showcase.data.GroupPermissionDataAccess;
 import com.blazebit.security.showcase.data.UserGroupDataAccess;
 import com.blazebit.security.showcase.service.UserGroupService;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
@@ -37,9 +37,6 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
 
     @Inject
     protected UserGroupDataAccess userGroupDataAccess;
-
-    @Inject
-    protected GroupPermissionDataAccess groupPermissionHandling;
 
     protected Map<User, Set<Permission>> revokables = new HashMap<User, Set<Permission>>();
     protected Map<User, Set<Permission>> replacables = new HashMap<User, Set<Permission>>();
@@ -155,7 +152,7 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
         dialogBean.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(userPermissions, revoked), grantedPermissions);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(userPermissions, revoked), grantedPermissions);
         Set<Permission> grantable = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 

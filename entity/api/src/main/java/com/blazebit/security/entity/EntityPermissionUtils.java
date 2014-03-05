@@ -166,8 +166,10 @@ public final class EntityPermissionUtils {
         return ret;
     }
 
+
     /**
-     * separates permissions
+     * Separates the parent and the child permissions of permission collection. Requirement: all permissions belong to the same
+     * resource name.
      * 
      * @param permissions
      * @return

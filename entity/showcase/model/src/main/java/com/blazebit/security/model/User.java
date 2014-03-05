@@ -109,4 +109,9 @@ public class User extends AbstractUser {
 //		return new HashSet<Role>(userGroups);
 //	}
 
+    @Override
+    public String toString() {
+        return "User [id=" + getId() + ", username=" + getUsername() + "]";
+    }
+
 }

@@ -14,28 +14,6 @@ import com.blazebit.security.model.Subject;
 public interface PermissionHandling {
 
 	/**
-	 * Special contains method for permissions. Subject check eliminated,
-	 * concentrates on action and resource comparison.
-	 * 
-	 * @param permissions
-	 * @param permission
-	 * @return
-	 */
-	public boolean contains(Collection<Permission> permissions,
-			Permission permission);
-
-	/**
-	 * special 'containsAll' method for permissions. subject check eliminated,
-	 * concentrates on action and resource comparison.
-	 * 
-	 * @param permissions
-	 * @param permission
-	 * @return
-	 */
-	public boolean containsAll(Collection<Permission> permissions,
-			Collection<Permission> selectedPermissions);
-
-	/**
 	 * 
 	 * @param granted
 	 * @param revoked
@@ -43,9 +21,6 @@ public interface PermissionHandling {
 	 */
 	public Set<Permission> eliminateRevokeConflicts(Set<Permission> granted,
 			Set<Permission> revoked);
-
-	public Permission findPermission(Collection<Permission> permissions,
-			Permission givenPermission);
 
 	/**
 	 * Separates the grantable and the not grantable permissions of a collection
@@ -153,45 +128,6 @@ public interface PermissionHandling {
 	public List<Set<Permission>> getRevokedAndGrantedAfterMerge(
 			Collection<Permission> current, Set<Permission> revoked,
 			Set<Permission> granted);
-
-	List<Set<Permission>> getSeparatedParentAndChildPermissions(
-			Collection<Permission> permissions);
-
-	List<List<Permission>> getSeparatedPermissions(
-			Collection<Permission> permissions);
-
-	/**
-	 * decides whether any permission in the given collection implies given
-	 * permission
-	 * 
-	 * @param permissions
-	 * @param givenPermission
-	 * @return
-	 */
-	public boolean implies(Collection<Permission> permissions,
-			Permission givenPermission);
-
-	/**
-	 * removes given permission from a permission collection (collection can
-	 * contain user and usergroup permissions as well)
-	 * 
-	 * @param permissions
-	 * @param permission
-	 * @return
-	 */
-	public Collection<Permission> remove(Collection<Permission> permissions,
-			Permission permission);
-
-	/**
-	 * returns a new collection without the permissions which have matching
-	 * action and resource of the given collection
-	 * 
-	 * @param permissions
-	 * @param permissionsToRemove
-	 * @return
-	 */
-	public Collection<Permission> removeAll(Collection<Permission> permissions,
-			Collection<Permission> permissionsToRemove);
 
 	/**
 	 * decides whether any permission in the given collection will be revoked

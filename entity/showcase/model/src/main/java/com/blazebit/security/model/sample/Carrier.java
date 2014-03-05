@@ -27,6 +27,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 /**
@@ -35,13 +36,12 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @EntityResourceType(name = "Carrier", module = "Carrier")
-public class Carrier implements IdHolder<Integer> {
+public class Carrier extends BaseEntity<Integer> {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String field1;
     private String field2;
     private String field3;

@@ -71,29 +71,53 @@ public abstract class AbstractPermissionId<S> implements Serializable {
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        return hash;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((actionName == null) ? 0 : actionName.hashCode());
+        result = prime * result + ((entity == null) ? 0 : entity.hashCode());
+        result = prime * result + ((field == null) ? 0 : field.hashCode());
+        result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (!(obj instanceof AbstractPermissionId)) {
             return false;
         }
-        final AbstractPermissionId<?> other = (AbstractPermissionId<?>) obj;
-        if ((this.actionName == null) ? (other.actionName != null) : !this.actionName.equals(other.actionName)) {
+        AbstractPermissionId<?> other = (AbstractPermissionId<?>) obj;
+        if (actionName == null) {
+            if (other.actionName != null) {
+                return false;
+            }
+        } else if (!actionName.equals(other.actionName)) {
             return false;
         }
-        if ((this.entity == null) ? (other.entity != null) : !this.entity.equals(other.entity)) {
+        if (entity == null) {
+            if (other.entity != null) {
+                return false;
+            }
+        } else if (!entity.equals(other.entity)) {
             return false;
         }
-        if ((this.field == null) ? (other.field != null) : !this.field.equals(other.field)) {
+        if (field == null) {
+            if (other.field != null) {
+                return false;
+            }
+        } else if (!field.equals(other.field)) {
             return false;
         }
-        if (this.subject != other.subject && (this.subject == null || !this.subject.equals(other.subject))) {
+        if (subject == null) {
+            if (other.subject != null) {
+                return false;
+            }
+        } else if (!subject.equals(other.subject)) {
             return false;
         }
         return true;

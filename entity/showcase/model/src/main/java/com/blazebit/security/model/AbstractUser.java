@@ -22,11 +22,10 @@ import javax.persistence.Transient;
  * @author Christian Beikov
  */
 @MappedSuperclass
-public abstract class AbstractUser implements Subject, IdHolder<Integer> {
+public abstract class AbstractUser extends BaseEntity<Integer> implements Subject {
 
 	private static final long serialVersionUID = 1L;
 
-	private Integer id;
 	private String username;
 	private String password;
 

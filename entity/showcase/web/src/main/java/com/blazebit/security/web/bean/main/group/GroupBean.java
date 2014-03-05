@@ -23,6 +23,7 @@ import org.primefaces.event.TreeDragDropEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.EntityAction;
@@ -235,11 +236,11 @@ public class GroupBean extends GroupHandlingBaseBean {
         Set<Permission> revoked = new HashSet<Permission>(permissionManager.getPermissions(selectedGroup));
         // if field level is not enabled dont revoke field permissions
         if (!isEnabled(Features.FIELD_LEVEL)) {
-            revoked = permissionHandling.getSeparatedParentAndChildPermissions(revoked).get(0);
+            revoked = PermissionUtils.getSeparatedParentAndChildPermissions(revoked).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Features.OBJECT_LEVEL)) {
-            revoked = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0));
+            revoked = new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(revoked).get(0));
         }
         return revoked;
     }
@@ -311,26 +312,26 @@ public class GroupBean extends GroupHandlingBaseBean {
     }
 
     private Set<Permission> getPermissionsToRevoke(Set<UserGroup> oldGroups, Set<Permission> granted) {
-        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(oldGroups);
+        Set<Permission> revoked = permissionManager.getPermissions(oldGroups);
         if (!isEnabled(Features.FIELD_LEVEL)) {
-            revoked = permissionHandling.getSeparatedParentAndChildPermissions(revoked).get(0);
+            revoked = PermissionUtils.getSeparatedParentAndChildPermissions(revoked).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Features.OBJECT_LEVEL)) {
-            revoked = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0));
+            revoked = new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(revoked).get(0));
         }
         revoked = permissionHandling.eliminateRevokeConflicts(granted, revoked);
         return revoked;
     }
 
     private Set<Permission> getPermissionsToGrant(Set<UserGroup> newGroups) {
-        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(newGroups);
+        Set<Permission> granted = permissionManager.getPermissions(newGroups);
         if (!isEnabled(Features.FIELD_LEVEL)) {
-            granted = permissionHandling.getSeparatedParentAndChildPermissions(granted).get(0);
+            granted = PermissionUtils.getSeparatedParentAndChildPermissions(granted).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Features.OBJECT_LEVEL)) {
-            granted = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(granted).get(0));
+            granted = new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(granted).get(0));
         }
         return granted;
     }
@@ -361,7 +362,7 @@ public class GroupBean extends GroupHandlingBaseBean {
         dialogBean.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(allPermissions, revoked), groupGranted);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(allPermissions, revoked), groupGranted);
         Set<Permission> grantable = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 
@@ -376,14 +377,12 @@ public class GroupBean extends GroupHandlingBaseBean {
             case CURRENT:
                 return buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, replaced, !isEnabled(Features.FIELD_LEVEL));
             case NEW:
-                buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(permissionHandling
-                                           .getSeparatedPermissions(grantable)
-                                           .get(0)), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0)), replaced,
+                buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(grantable)
+                                           .get(0)), new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(revoked).get(0)), replaced,
                                        !isEnabled(Features.FIELD_LEVEL),
                                        isEnabled(Features.USER_LEVEL), true);
-                buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(permissionHandling
-                                               .getSeparatedPermissions(grantable)
-                                               .get(1)), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(1)), replaced,
+                buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(grantable)
+                                               .get(1)), new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(revoked).get(1)), replaced,
                                            !isEnabled(Features.FIELD_LEVEL),
                                            isEnabled(Features.USER_LEVEL));
                 return null;

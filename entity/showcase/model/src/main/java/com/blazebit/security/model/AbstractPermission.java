@@ -16,13 +16,11 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 @MappedSuperclass
-public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A extends AbstractEntityAction, F extends AbstractEntityField> implements Permission, IdHolder<P> {
+public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A extends AbstractEntityAction, F extends AbstractEntityField> extends BaseEntity<P> implements Permission {
 
     private static final long serialVersionUID = 1L;
-    protected P id;
     private A entityAction;
     private F entityField;
-    private S subject;
     
 	protected abstract A createEntityAction(P id);
 	
@@ -34,9 +32,6 @@ public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A
 		this.entityField = createEntityField(id);
 
         if (id != null) {
-            if (subject != null) {
-                id.setSubject(subject);
-            }
             if (entityAction != null) {
                 id.setActionName(entityAction.getName());
             }
@@ -45,11 +40,6 @@ public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A
                 id.setField(entityField.getField());
             }
         }
-    }
-
-    public void setEntityAction(A entityAction) {
-        entityAction.attachToPermissionId(id);
-        this.entityAction = entityAction;
     }
 
     @Transient
@@ -64,69 +54,10 @@ public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A
         return entityField;
     }
 
-    public void setEntityField(F entityField) {
-        entityField.attachToPermissionId(id);
-        this.entityField = entityField;
-
-    }
-
-    public void setSubject(S subject) {
-        if (id == null) {
-            this.subject = subject;
-        } else {
-            id.setSubject(subject);
-
-        }
-    }
-
     @Transient
     public S getSubject() {
-        return id == null ? null : id.getSubject();
-    }
-
-  
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((entityAction == null) ? 0 : entityAction.hashCode());
-        result = prime * result + ((entityField == null) ? 0 : entityField.hashCode());
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((subject == null) ? 0 : subject.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        AbstractPermission<?, ?, ?, ?> other = (AbstractPermission<?, ?, ?, ?>) obj;
-        if (entityAction == null) {
-            if (other.entityAction != null)
-                return false;
-        } else if (!entityAction.equals(other.entityAction))
-            return false;
-        if (entityField == null) {
-            if (other.entityField != null)
-                return false;
-        } else if (!entityField.equals(other.entityField))
-            return false;
-        if (id == null) {
-            if (other.id != null)
-                return false;
-        } else if (!id.equals(other.id))
-            return false;
-        if (subject == null) {
-            if (other.subject != null)
-                return false;
-        } else if (!subject.equals(other.subject))
-            return false;
-        return true;
+        P thisId = getId();
+        return thisId == null ? null : thisId.getSubject();
     }
 
     @Override

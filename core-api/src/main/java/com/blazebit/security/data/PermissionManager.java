@@ -89,4 +89,8 @@ public interface PermissionManager {
 	 */
 	public Set<String> getPermissionModules(Subject subject);
 
+    public Set<Permission> getPermissions(Collection<? extends Role> roles);
+
+    public Set<Permission> getPermissions(Collection<? extends Role> roles, boolean includeInherited);
+
 }

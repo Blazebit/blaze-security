@@ -28,6 +28,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 /**
@@ -36,13 +37,12 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @EntityResourceType(name = "TestCarrier", module="carrier")
-public class TestCarrier implements IdHolder<Integer> {
+public class TestCarrier extends BaseEntity<Integer> {
 
 	/**
      * 
      */
 	private static final long serialVersionUID = 1L;
-	private Integer id;
 	// one2many fields
 	private Set<Contact> contacts = new HashSet<Contact>();
 	private Set<Document> documents = new HashSet<Document>();

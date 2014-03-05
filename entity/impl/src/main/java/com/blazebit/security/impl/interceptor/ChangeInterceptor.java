@@ -450,6 +450,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
 		for (Map.Entry<Class<?>, Tuple> entry : toBeChecked.entrySet()) {
 			Class<?> c = entry.getKey();
 
+			// TODO: We do this complicated stuff to retrieve the inverse mapping, this can be simplified
 			for (Field f : ReflectionUtils.getInstanceFields(c)) {
 				OneToMany oneToMany;
 				if ((oneToMany = ReflectionUtils.getGetter(c, f.getName())
@@ -491,16 +492,13 @@ public class ChangeInterceptor extends EmptyInterceptor {
 		}
 
 		if (parent != null) {
-			Object val = null;
-
 			try {
-				val = ReflectionUtils
+				return ReflectionUtils
 						.getGetter(entity.getClass(), propertyName).invoke(
 								entity);
 			} catch (Exception ex) {
 				throw new RuntimeException(ex);
 			}
-			return val;
 		}
 		return null;
 	}
@@ -557,8 +555,7 @@ public class ChangeInterceptor extends EmptyInterceptor {
 								.createAction(Action.DELETE),
 								resourceFactory
 										.createResource(parent));
-						super.onDelete(entity, id, state, propertyNames, types);
-						return;
+						break;
 					}
 				}
 			}
@@ -572,9 +569,23 @@ public class ChangeInterceptor extends EmptyInterceptor {
 			String propertyName = propertyNames[i];
 			// it can only be on collection types
 			if (types[i].isAssociationType()) {
-				checkAssociation(entity, propertyName, types[i],
+                Object parent = getParent(entity, propertyName);
+                boolean isParentGranted = false;
+                
+                // We skip associations that are annotated as our parents and provide us inherited permissions
+                if (parent != null) {
+                    isParentGranted = permissionService.isGranted(userContext
+                                                            .getUser(), actionFactory
+                                                            .createAction(Action.DELETE),
+                                                            resourceFactory
+                                                                    .createResource(parent));
+                }
+                
+                if (!isParentGranted) {
+                    checkAssociation(entity, propertyName, types[i],
 						Action.REMOVE, userContext, permissionService,
 						resourceFactory, actionFactory);
+                }
 			}
 		}
 

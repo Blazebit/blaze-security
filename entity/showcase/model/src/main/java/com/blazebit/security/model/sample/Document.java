@@ -22,6 +22,7 @@ import javax.persistence.ManyToOne;
 
 import com.blazebit.security.entity.Parent;
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 /**
@@ -30,13 +31,12 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @EntityResourceType(name = "Document", module = "DM")
-public class Document implements IdHolder<Integer> {
+public class Document extends BaseEntity<Integer> {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String content;
     private String title;
     private Integer size;

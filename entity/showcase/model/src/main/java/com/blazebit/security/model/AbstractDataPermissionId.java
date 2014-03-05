@@ -34,36 +34,31 @@ public abstract class AbstractDataPermissionId<S> extends AbstractPermissionId<S
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 41 * hash + (this.entityId != null ? this.entityId.hashCode() : 0);
-        return hash;
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((entityId == null) ? 0 : entityId.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (!(obj instanceof AbstractDataPermissionId)) {
             return false;
         }
-        final AbstractDataPermissionId<?> other = (AbstractDataPermissionId<?>) obj;
-        if ((this.entityId == null) ? (other.entityId != null) : !this.entityId.equals(other.entityId)) {
+        AbstractDataPermissionId<?> other = (AbstractDataPermissionId<?>) obj;
+        if (entityId == null) {
+            if (other.entityId != null) {
+                return false;
+            }
+        } else if (!entityId.equals(other.entityId)) {
             return false;
         }
-        if ((this.getActionName() == null) ? (other.getActionName() != null) : !this.getActionName().equals(other.getActionName())) {
-            return false;
-        }
-        if ((this.getEntity() == null) ? (other.getEntity() != null) : !this.getEntity().equals(other.getEntity())) {
-            return false;
-        }
-        if ((this.getField() == null) ? (other.getField() != null) : !this.getField().equals(other.getField())) {
-            return false;
-        }
-        if (this.getSubject() != other.getSubject() && (this.getSubject() == null || !this.getSubject().equals(other.getSubject()))) {
-            return false;
-        }
-
         return true;
     }
 

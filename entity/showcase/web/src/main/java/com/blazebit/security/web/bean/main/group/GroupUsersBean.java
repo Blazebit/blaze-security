@@ -19,6 +19,7 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
@@ -75,13 +76,13 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         Set<UserGroup> addedGroups = new HashSet<UserGroup>();
         addedGroups.add(getSelectedGroup());
         // normalized merge of all the permissions of the group hierarchy
-        selectedGroupPermissions = groupPermissionHandling.getGroupPermissions(addedGroups, isEnabled(Features.GROUP_HIERARCHY));
+        selectedGroupPermissions = permissionManager.getPermissions(addedGroups, isEnabled(Features.GROUP_HIERARCHY));
         if (!isEnabled(Features.FIELD_LEVEL)) {
-            selectedGroupPermissions = permissionHandling.getSeparatedParentAndChildPermissions(selectedGroupPermissions).get(0);
+            selectedGroupPermissions = PermissionUtils.getSeparatedParentAndChildPermissions(selectedGroupPermissions).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Features.OBJECT_LEVEL)) {
-            selectedGroupPermissions = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(selectedGroupPermissions).get(0));
+            selectedGroupPermissions = new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(selectedGroupPermissions).get(0));
         }
     }
 
@@ -203,11 +204,11 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         Set<Permission> granted = permissionHandling.getGrantable(concat(userPermissions, userDataPermissions), selectedGroupPermissions).get(0);
         Set<Permission> replaced = permissionHandling.getReplacedByGranting(userPermissions, granted);
 
-        buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(granted).get(0)),
+        buildNewPermissionTree(userNode, userPermissions, Collections.<Permission>emptyList(), new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(granted).get(0)),
                          new HashSet<Permission>(), replaced, !isEnabled(Features.FIELD_LEVEL), isEnabled(Features.USER_LEVEL), false);
 
         buildNewDataPermissionTree(userObjectNode, Collections.<Permission>emptyList(), userDataPermissions,
-                                   new HashSet<Permission>(permissionHandling.getSeparatedPermissions(granted).get(1)), Collections.<Permission>emptySet(), replaced,
+                                   new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(granted).get(1)), Collections.<Permission>emptySet(), replaced,
                                    !isEnabled(Features.FIELD_LEVEL), isEnabled(Features.USER_LEVEL));
     }
 
@@ -221,26 +222,26 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         Set<Permission> toRevoke = new HashSet<Permission>();
         if (!granted.isEmpty()) {
             for (Permission permission : selectedGroupPermissions) {
-                if (!permissionHandling.contains(revoked, permission) && permissionHandling.implies(revoked, permission)) {
+                if (!PermissionUtils.contains(revoked, permission) && PermissionUtils.implies(revoked, permission)) {
                     impliedBy.addAll(permissionDataAccess.getImpliedBy(new ArrayList<Permission>(revoked), permission.getAction(), permission.getResource()));
                     toRevoke.add(permission);
                 }
             }
         }
-        revoked = new HashSet<Permission>(permissionHandling.removeAll(revoked, impliedBy));
+        revoked = new HashSet<Permission>(PermissionUtils.removeAll(revoked, impliedBy));
         revoked.addAll(toRevoke);
         revokables.put(user, revoked);
 
         Set<Permission> currentPermissions = new HashSet<Permission>(userPermissions);
-        currentPermissions.addAll(permissionHandling.getSeparatedPermissions(granted).get(0));
-        currentPermissions.addAll(permissionHandling.getSeparatedPermissions(toRevoke).get(0));
+        currentPermissions.addAll(EntityPermissionUtils.getSeparatedPermissionsByResource(granted).get(0));
+        currentPermissions.addAll(EntityPermissionUtils.getSeparatedPermissionsByResource(toRevoke).get(0));
 
         Set<Permission> currentDataPermissions = new HashSet<Permission>(userDataPermissions);
-        currentDataPermissions.addAll(permissionHandling.getSeparatedPermissions(granted).get(1));
-        currentDataPermissions.addAll(permissionHandling.getSeparatedPermissions(toRevoke).get(1));
+        currentDataPermissions.addAll(EntityPermissionUtils.getSeparatedPermissionsByResource(granted).get(1));
+        currentDataPermissions.addAll(EntityPermissionUtils.getSeparatedPermissionsByResource(toRevoke).get(1));
 
-        currentPermissions = new HashSet<Permission>(permissionHandling.removeAll(currentPermissions, impliedBy));
-        currentDataPermissions = new HashSet<Permission>(permissionHandling.removeAll(currentDataPermissions, impliedBy));
+        currentPermissions = new HashSet<Permission>(PermissionUtils.removeAll(currentPermissions, impliedBy));
+        currentDataPermissions = new HashSet<Permission>(PermissionUtils.removeAll(currentDataPermissions, impliedBy));
 
         if (isEnabled(Features.USER_LEVEL)) {
             getMutablePermissionTree(userNode, new ArrayList<Permission>(currentPermissions), Collections.<Permission>emptyList(), granted, revoked, Marking.NEW, Marking.REMOVED,
@@ -249,7 +250,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
                                        !isEnabled(Features.FIELD_LEVEL), true);
         } else {
             Set<Permission> currentUserPermissions = new HashSet<Permission>(userPermissions);
-            currentUserPermissions = new HashSet<Permission>(permissionHandling.removeAll(currentUserPermissions, revoked));
+            currentUserPermissions = new HashSet<Permission>(PermissionUtils.removeAll(currentUserPermissions, revoked));
             currentUserPermissions.addAll(granted);
             getImmutablePermissionTree(userNode, new ArrayList<Permission>(currentUserPermissions), new ArrayList<Permission>(), currentUserPermissions, Marking.NONE);
         }

@@ -9,13 +9,12 @@ import com.blazebit.security.entity.EntityResourceType;
 
 @Entity
 @EntityResourceType(name = "Company", module = "Core")
-public class Company implements IdHolder<Integer> {
+public class Company extends BaseEntity<Integer> {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String name;
     private boolean fieldLevelEnabled = true;
     private boolean objectLevelEnabled = true;

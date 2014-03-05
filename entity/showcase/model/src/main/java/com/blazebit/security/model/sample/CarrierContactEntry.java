@@ -7,13 +7,13 @@ import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 @Entity
 @EntityResourceType(name="carrier contact entry", module ="carrier")
-public class CarrierContactEntry implements IdHolder<CarrierContactEntryId> {
+public class CarrierContactEntry extends BaseEntity<CarrierContactEntryId> {
 
-	private CarrierContactEntryId id;
 	private TestCarrier carrier;
 	private Contact contact;
 

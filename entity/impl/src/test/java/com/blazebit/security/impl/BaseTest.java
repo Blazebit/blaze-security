@@ -12,10 +12,7 @@
  */
 package com.blazebit.security.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Set;
 
@@ -235,13 +232,14 @@ public abstract class BaseTest<T extends BaseTest<T>> extends AbstractContainerT
     }
 
     protected static void assertSetsEquals(Set<Permission> expected, Set<Permission> actual) {
-        assertTrue(expected.size() == actual.size());
+        assertEquals("Size is not equal", expected.size(), actual.size());
         assertTrue(expected.containsAll(actual));
     }
 
     protected static void assertSetsNotEquals(Set<Permission> expected, Set<Permission> actual) {
-        assertFalse(expected.size() == actual.size());
-        assertFalse(expected.containsAll(actual));
+        if (expected.containsAll(actual)) {
+            assertFalse(actual.containsAll(expected));
+        }
     }
 
     public Action getUpdateAction() {

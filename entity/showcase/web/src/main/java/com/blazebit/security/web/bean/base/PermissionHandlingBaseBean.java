@@ -17,6 +17,7 @@ import javax.inject.Named;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.data.PermissionDataAccess;
 import com.blazebit.security.data.PermissionHandling;
 import com.blazebit.security.data.PermissionManager;
@@ -106,14 +107,14 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
 
         // add back previously replaced
         for (Permission replacedPermission : prevReplaced) {
-            if (!permissionHandling.implies(selectedPermissions, replacedPermission)) {
+            if (!PermissionUtils.implies(selectedPermissions, replacedPermission)) {
                 selectedPermissions.add(replacedPermission);
             }
         }
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previously revoked
         for (Permission revokedPermission : prevRevoked) {
-            if (!permissionHandling.implies(selectedPermissions, revokedPermission)) {
+            if (!PermissionUtils.implies(selectedPermissions, revokedPermission)) {
                 revoked.add(revokedPermission);
             }
         }
@@ -147,19 +148,19 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
-            if (!permissionHandling.implies(selected, permission)) {
+            if (!PermissionUtils.implies(selected, permission)) {
                 revoked.add(permission);
             }
         }
         // add back previous replaced permisssion if no overriding permission exists in the current selected ones
         for (Permission permission : prevReplaced) {
-            if (!permissionHandling.implies(selected, permission)) {
+            if (!PermissionUtils.implies(selected, permission)) {
                 selected.add(permission);
             }
         }
 
         revoked.addAll(permissionHandling.getRevokableFromSelected(current, concat(current, selected)).get(0));
-        Set<Permission> granted = permissionHandling.getGrantable(permissionHandling.removeAll(current, revoked), selected).get(0);
+        Set<Permission> granted = permissionHandling.getGrantable(PermissionUtils.removeAll(current, revoked), selected).get(0);
         return performOperations(role, current, revoked, granted, simulate);
 
     }
@@ -172,19 +173,19 @@ public class PermissionHandlingBaseBean extends PermissionTreeHandlingBaseBean {
         Set<Permission> revoked = new HashSet<Permission>();
         // add back previous revoked permisions
         for (Permission permission : prevRevoked) {
-            if (!permissionHandling.implies(selected, permission)) {
+            if (!PermissionUtils.implies(selected, permission)) {
                 revoked.add(permission);
             }
         }
         // add back previous replaced permisssion if no overriding permission exists in the current selected ones
         for (Permission permission : prevReplaced) {
-            if (!permissionHandling.implies(selected, permission)) {
+            if (!PermissionUtils.implies(selected, permission)) {
                 selected.add(permission);
             }
         }
 
         revoked.addAll(permissionHandling.getRevokableFromSelected(current, concat(current, selected)).get(0));
-        Set<Permission> granted = permissionHandling.getGrantable(permissionHandling.removeAll(current, revoked), selected).get(0);
+        Set<Permission> granted = permissionHandling.getGrantable(PermissionUtils.removeAll(current, revoked), selected).get(0);
         return performOperations(subject, current, revoked, granted, simulate);
 
     }

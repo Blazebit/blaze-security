@@ -297,7 +297,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1Entity));
         expected.add(permissionDataAccess.findPermission(user1, readAction, document2Entity));
         Set<Permission> actual = permissionDataAccess.getRevokeImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     @Test
@@ -308,7 +308,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityContentField));
         expected.add(permissionDataAccess.findPermission(user1, readAction, document2EntityTitleField));
         Set<Permission> actual = permissionDataAccess.getRevokeImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     @Test
@@ -321,7 +321,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityContentField));
         expected.add(permissionDataAccess.findPermission(user1, readAction, document2EntityTitleField));
         Set<Permission> actual = permissionDataAccess.getRevokeImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // same for roles
@@ -514,7 +514,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         Set<Permission> expected = new HashSet<Permission>();
         expected.add(permissionDataAccess.findPermission(user1, readAction, documentEntityTitleField));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // add permission for entity with id when existing permission for entity with field and id -> merge into permission for
@@ -525,7 +525,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         Set<Permission> expected = new HashSet<Permission>();
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityTitleField));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, document1Entity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // add permission for entity when existing permission for entity with id -> merge into permission for entity (for all ids,
@@ -536,7 +536,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         Set<Permission> expected = new HashSet<Permission>();
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1Entity));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // add permission for entity when existing permission for entity with field and id -> merge into permission for entity
@@ -546,7 +546,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         Set<Permission> expected = new HashSet<Permission>();
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityTitleField));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // grant combinations
@@ -560,7 +560,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         Set<Permission> expected = new HashSet<Permission>();
         expected.add(permissionDataAccess.findPermission(user1, readAction, documentEntityTitleField));
         expected.add(permissionDataAccess.findPermission(user1, readAction, documentEntityContentField));
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // permissions exists for entity and different fields with ids, granting permission for entity, wil remove the existing
@@ -575,7 +575,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityTitleField));
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityContentField));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, document1Entity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // permissions for different ids and field exist, granting permission for the whole entity will remove existing permissions
@@ -590,7 +590,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         expected.add(permissionDataAccess.findPermission(user1, readAction, document2Entity));
         expected.add(permissionDataAccess.findPermission(user1, readAction, documentEntityTitleField));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     // add permission for entity when existing permission for entity with field and id -> merge into permission for entity
@@ -603,7 +603,7 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
         expected.add(permissionDataAccess.findPermission(user1, readAction, document1EntityTitleField));
         expected.add(permissionDataAccess.findPermission(user1, readAction, documentEntityContentField));
         Set<Permission> actual = permissionDataAccess.getGrantImpliedPermissions(user1, readAction, documentEntity);
-        assertEquals(expected, actual);
+        assertSetsEquals(expected, actual);
     }
 
     @Inject
@@ -676,8 +676,8 @@ public class PermissionDataAccessTest extends BaseTest<PermissionDataAccessTest>
                 parent = (UserGroup) parent.getParent();
             }
         }
-        assertEquals(expectedToBeRevoked, actualToBeRevoked);
-        assertEquals(expectedToBeGranted, actualToBeGranted);
+        assertSetsEquals(expectedToBeRevoked, actualToBeRevoked);
+        assertSetsEquals(expectedToBeGranted, actualToBeGranted);
     }
 
 }

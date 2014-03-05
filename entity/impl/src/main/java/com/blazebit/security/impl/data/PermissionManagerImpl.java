@@ -22,6 +22,7 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
+import com.blazebit.security.data.PermissionHandling;
 import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.entity.EntityResourceMetamodel;
 import com.blazebit.security.entity.Security;
@@ -30,6 +31,7 @@ import com.blazebit.security.model.Role;
 import com.blazebit.security.model.RolePermission;
 import com.blazebit.security.model.Subject;
 import com.blazebit.security.model.SubjectPermission;
+import com.blazebit.security.model.UserGroup;
 
 /**
  * 
@@ -44,6 +46,9 @@ public class PermissionManagerImpl implements PermissionManager {
 
     @Inject
     private EntityResourceMetamodel resourceMetaModel;
+    
+    @Inject
+    private PermissionHandling permissionHandling;
 
     @Override
     public <P extends Permission> P save(P permission) {
@@ -110,6 +115,28 @@ public class PermissionManagerImpl implements PermissionManager {
                              + " permission WHERE permission.id.subject= :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
             .setParameter("subject", role)
             .getResultList();
+    }
+
+    @Override
+    public Set<Permission> getPermissions(Collection<? extends Role> roles) {
+        return getPermissions(roles, true);
+    }
+
+    @Override
+    public Set<Permission> getPermissions(Collection<? extends Role> roles, boolean includeInherited) {
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Role role : roles) {
+            ret.addAll(getPermissions(role));
+            
+            if (includeInherited) {
+                Role parent = role.getParent();
+                while (parent != null) {
+                    ret.addAll(getPermissions(parent));
+                    parent = parent.getParent();
+                }
+            }
+        }
+        return permissionHandling.getNormalizedPermissions(ret);
     }
 
     @Override

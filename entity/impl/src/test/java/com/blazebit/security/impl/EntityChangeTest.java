@@ -110,6 +110,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 				.getId()));
 		persist(contactEntry);
         carrier.getContactEntries().add(contactEntry);
+        carrier = merge(carrier);
 
         EntityFeatures.activateInterceptor();
 		setUserContext(admin);
@@ -419,7 +420,7 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 		setUserContext(user1);
 
 		Contact newContact = new Contact();
-		self.get().persist(newContact);
+		persist(newContact);
 
 		int sizeBefore = carrier.getContactEntries().size();
 		CarrierContactEntry contactEntry = carrier.getContactEntries()
@@ -444,13 +445,13 @@ public class EntityChangeTest extends BaseTest<EntityChangeTest> {
 		setUserContext(user1);
 
 		Contact newContact = new Contact();
-		self.get().persist(newContact);
+		persist(newContact);
 
 		int sizeBefore = carrier.getContactEntries().size();
 		CarrierContactEntry contactEntry = carrier.getContactEntries()
 				.iterator().next();
 		contactEntry.setContact(newContact);
-		contactEntry = (CarrierContactEntry) self.get().merge(contactEntry);
+		contactEntry = (CarrierContactEntry) merge(contactEntry);
 		CarrierContactEntry reloadedCarrierContactEntry = entityManager.find(
 				CarrierContactEntry.class, contactEntry.getId());
 

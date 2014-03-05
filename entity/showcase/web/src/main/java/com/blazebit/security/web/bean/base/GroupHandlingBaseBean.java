@@ -18,7 +18,6 @@ import com.blazebit.security.model.Action;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.UserGroup;
-import com.blazebit.security.showcase.data.GroupPermissionDataAccess;
 import com.blazebit.security.showcase.data.UserGroupDataAccess;
 import com.blazebit.security.showcase.service.UserGroupService;
 import com.blazebit.security.web.bean.model.TreeNodeModel;
@@ -38,9 +37,6 @@ public class GroupHandlingBaseBean extends PermissionHandlingBaseBean {
 
     @Inject
     protected UserGroupDataAccess userGroupDataAccess;
-
-    @Inject
-    protected GroupPermissionDataAccess groupPermissionHandling;
 
     // TODO duplicate method. confused with class inheritance. See #ResourceGroupHandlingBase
     protected DefaultTreeNode initGroupPermissions(UserGroup selectedUserGroup, boolean hideFieldLevel) {

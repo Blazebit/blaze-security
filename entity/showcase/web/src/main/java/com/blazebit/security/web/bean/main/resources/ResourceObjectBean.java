@@ -16,6 +16,7 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.EntityAction;
 import com.blazebit.security.model.EntityObjectField;
@@ -165,13 +166,13 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 	private void setActionNodeProperties(EntityAction action,
 			DefaultTreeNode actionNode, Permission permission) {
 		if (this.action.equals("grant")) {
-			if (permissionHandling.implies(currentDataPermissions, permission)) {
+			if (PermissionUtils.implies(currentDataPermissions, permission)) {
 				// already existing permission -> when granting dont allow user
 				// to revoke
 				actionNode.setSelectable(false);
 			} else {
 				// hide if implied by entity field permissions
-				if (permissionHandling.implies(currentPermissions, permission)) {
+				if (PermissionUtils.implies(currentPermissions, permission)) {
 					actionNode.getParent().getChildren().remove(actionNode);
 					// actionNode.setParent(null);
 				}
@@ -206,12 +207,12 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 			DefaultTreeNode fieldNode, Permission permission) {
 		if (this.action.equals("grant")) {
 			// hide if implied by entity field permissions. why? TODO
-			if (permissionHandling.implies(currentPermissions, permission)) {
+			if (PermissionUtils.implies(currentPermissions, permission)) {
 				// fieldNode.setParent(null);
 				fieldNode.getParent().getChildren().remove(fieldNode);
 				// fieldNode.setSelectable(false);
 			} else {
-				if (permissionHandling.implies(currentDataPermissions,
+				if (PermissionUtils.implies(currentDataPermissions,
 						permission)) {
 					fieldNode.setSelectable(false);
 				} else {
@@ -277,8 +278,8 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 				Set<Permission> toRevoke = new HashSet<Permission>();
 				if (!granted.isEmpty()) {
 					for (Permission permission : selectedPermissions) {
-						if (!permissionHandling.contains(revoked, permission)
-								&& permissionHandling.implies(revoked,
+						if (!PermissionUtils.contains(revoked, permission)
+								&& PermissionUtils.implies(revoked,
 										permission)) {
 							impliedBy.addAll(permissionDataAccess.getImpliedBy(
 									new ArrayList<Permission>(revoked),
@@ -288,7 +289,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 						}
 					}
 				}
-				revoked = new HashSet<Permission>(permissionHandling.removeAll(
+				revoked = new HashSet<Permission>(PermissionUtils.removeAll(
 						revoked, impliedBy));
 				revoked.addAll(toRevoke);
 
@@ -462,8 +463,8 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 				Set<Permission> toRevoke = new HashSet<Permission>();
 				if (!granted.isEmpty()) {
 					for (Permission permission : selectedPermissions) {
-						if (!permissionHandling.contains(revoked, permission)
-								&& permissionHandling.implies(revoked,
+						if (!PermissionUtils.contains(revoked, permission)
+								&& PermissionUtils.implies(revoked,
 										permission)) {
 							impliedBy.addAll(permissionDataAccess.getImpliedBy(
 									new ArrayList<Permission>(revoked),
@@ -473,7 +474,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 						}
 					}
 				}
-				revoked = new HashSet<Permission>(permissionHandling.removeAll(
+				revoked = new HashSet<Permission>(PermissionUtils.removeAll(
 						revoked, impliedBy));
 				revoked.addAll(toRevoke);
 

@@ -20,6 +20,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 
 /**
@@ -28,13 +29,12 @@ import com.blazebit.security.model.IdHolder;
  */
 @Entity
 @EntityResourceType(name = "Contact", module = "Carrier")
-public class Contact implements IdHolder<Integer> {
+public class Contact extends BaseEntity<Integer> {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String contactField;
     private Carrier carrier;
     private Carrier carrier2;
@@ -60,37 +60,6 @@ public class Contact implements IdHolder<Integer> {
     @Override
     public String toString() {
         return "Contact [id=" + id + ", contactField=" + contactField + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((contactField == null) ? 0 : contactField.hashCode());
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        Contact other = (Contact) obj;
-        if (contactField == null) {
-            if (other.contactField != null)
-                return false;
-        } else if (!contactField.equals(other.contactField))
-            return false;
-        if (id == null) {
-            if (other.id != null)
-                return false;
-        } else if (!id.equals(other.id))
-            return false;
-        return true;
     }
 
     @ManyToOne

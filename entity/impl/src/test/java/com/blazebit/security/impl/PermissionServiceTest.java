@@ -22,6 +22,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.blazebit.security.entity.EntityResourceMetamodel;
@@ -499,6 +500,7 @@ public class PermissionServiceTest extends BaseTest<PermissionServiceTest> {
         permissionService.grant(admin, user1, readAction, documentEntity.withField("content"));
         permissionService.grant(admin, user1, readAction, documentEntity.withField("title"));
         permissionService.grant(admin, user1, readAction, documentEntity.withField("size"));
+        permissionService.grant(admin, user1, readAction, documentEntity.withField("carrier"));
 
         permissionService.grant(admin, userGroupA, readAction, documentEntity.withField("id"), true);
         assertTrue(permissionService.isGranted(user1, readAction, documentEntity));

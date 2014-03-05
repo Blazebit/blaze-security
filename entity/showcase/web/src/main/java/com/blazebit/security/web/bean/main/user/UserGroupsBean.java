@@ -18,6 +18,7 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
@@ -148,7 +149,7 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         dialogBean.setNotRevoked(revoke.get(1));
 
         // get permissions which can be granted to the user
-        List<Set<Permission>> grant = permissionHandling.getGrantable(permissionHandling.removeAll(allPermissions, revokable), granted);
+        List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(allPermissions, revokable), granted);
         Set<Permission> grantable = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 
@@ -162,24 +163,23 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         currentPermissionTreeRoot = buildCurrentPermissionTree(userPermissions, userDataPermissions, grantable, revokable, replaced, !isEnabled(Features.FIELD_LEVEL));
 
         newPermissionTreeRoot = buildNewPermissionTree(userPermissions, Collections.<Permission>emptyList(),
-                                                       new HashSet<Permission>(permissionHandling.getSeparatedPermissions(grantable).get(0)), revokable, replaced,
+                                                       new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(grantable).get(0)), revokable, replaced,
                                                        !isEnabled(Features.FIELD_LEVEL), isEnabled(Features.USER_LEVEL), false);
-        newObjectPermissionTreeRoot = buildNewDataPermissionTree(Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(permissionHandling
-                                                                     .getSeparatedPermissions(grantable)
-                                                                     .get(1)), new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revokable).get(1)), replaced,
+        newObjectPermissionTreeRoot = buildNewDataPermissionTree(Collections.<Permission>emptyList(), userDataPermissions, new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(grantable)
+                                                                     .get(1)), new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(revokable).get(1)), replaced,
                                                                  !isEnabled(Features.FIELD_LEVEL),
                                                                  isEnabled(Features.USER_LEVEL));
     }
 
     private Set<Permission> getPermissionsToRevoke(Set<Permission> granted) {
-        Set<Permission> revoked = groupPermissionHandling.getGroupPermissions(removedGroups, isEnabled(Features.GROUP_HIERARCHY));
+        Set<Permission> revoked = permissionManager.getPermissions(removedGroups, isEnabled(Features.GROUP_HIERARCHY));
         // if field level is not enabled dont revoke field permissions
         if (!isEnabled(Features.FIELD_LEVEL)) {
-            revoked = permissionHandling.getSeparatedParentAndChildPermissions(revoked).get(0);
+            revoked = PermissionUtils.getSeparatedParentAndChildPermissions(revoked).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Features.OBJECT_LEVEL)) {
-            revoked = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(revoked).get(0));
+            revoked = new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(revoked).get(0));
         }
         revoked = permissionHandling.eliminateRevokeConflicts(granted, revoked);
         return revoked;
@@ -197,13 +197,13 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
                 parent = parent.getParent();
             }
         }
-        Set<Permission> granted = groupPermissionHandling.getGroupPermissions(allGroups, isEnabled(Features.GROUP_HIERARCHY));
+        Set<Permission> granted = permissionManager.getPermissions(allGroups, isEnabled(Features.GROUP_HIERARCHY));
         if (!isEnabled(Features.FIELD_LEVEL)) {
-            granted = permissionHandling.getSeparatedParentAndChildPermissions(granted).get(0);
+            granted = PermissionUtils.getSeparatedParentAndChildPermissions(granted).get(0);
         }
         // if object level is not enabled, just ignore object level permissions
         if (!isEnabled(Features.OBJECT_LEVEL)) {
-            granted = new HashSet<Permission>(permissionHandling.getSeparatedPermissions(granted).get(0));
+            granted = new HashSet<Permission>(EntityPermissionUtils.getSeparatedPermissionsByResource(granted).get(0));
         }
         return granted;
     }

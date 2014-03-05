@@ -21,6 +21,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import com.blazebit.security.entity.EntityResourceType;
+import com.blazebit.security.model.BaseEntity;
 import com.blazebit.security.model.IdHolder;
 import com.blazebit.security.model.User;
 
@@ -30,13 +31,12 @@ import com.blazebit.security.model.User;
  */
 @Entity
 @EntityResourceType(name = "Comment", module = "DM")
-public class Comment implements IdHolder<Integer> {
+public class Comment extends BaseEntity<Integer> {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    private Integer id;
     private String text;
     private User user;
 

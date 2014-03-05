@@ -21,10 +21,9 @@ import javax.persistence.Id;
  * @author Christian Beikov
  */
 @Entity
-public abstract class AbstractUserGroup implements Role, IdHolder<Integer> {
+public abstract class AbstractUserGroup extends BaseEntity<Integer> implements Role {
 
 	private static final long serialVersionUID = 1L;
-	private Integer id;
 	private String name;
 
 	public AbstractUserGroup() {

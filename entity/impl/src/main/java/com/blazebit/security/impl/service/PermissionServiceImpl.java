@@ -23,13 +23,13 @@ import javax.inject.Inject;
 
 import org.apache.deltaspike.core.util.ServiceUtils;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.data.PermissionDataAccess;
 import com.blazebit.security.data.PermissionHandling;
 import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.entity.UserContext;
 import com.blazebit.security.exception.PermissionActionException;
 import com.blazebit.security.exception.PermissionException;
-import com.blazebit.security.impl.util.PermissionUtils;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.Resource;

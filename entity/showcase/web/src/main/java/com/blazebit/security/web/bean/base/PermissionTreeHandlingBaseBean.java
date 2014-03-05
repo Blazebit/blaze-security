@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.data.PermissionHandling;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.entity.EntityResourceFactory;
@@ -89,7 +90,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
     protected TreeNode buildNewDataPermissionTree(TreeNode root, List<Permission> permissions, List<Permission> dataPermissions, Set<Permission> grantable, Set<Permission> revokable, Set<Permission> replaced, boolean hideFieldLevel, boolean mutable) {
         // new permission tree
         List<Permission> currentDataPermissions = new ArrayList<Permission>(dataPermissions);
-        currentDataPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentDataPermissions, concat(replaced, revokable)));
+        currentDataPermissions = new ArrayList<Permission>(PermissionUtils.removeAll(currentDataPermissions, concat(replaced, revokable)));
 
         // existing
         SortedMap<String, List<Permission>> entityPermissions = EntityPermissionUtils.groupPermissionsByResourceName(currentDataPermissions);
@@ -120,18 +121,18 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         // new permission tree
         List<Permission> currentPermissions = new ArrayList<Permission>(permissions);
         // the mutable permission tree shows the removed permissions too, therefore remove only the replaced ones
-        currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, replaced));
+        currentPermissions = new ArrayList<Permission>(PermissionUtils.removeAll(currentPermissions, replaced));
         // always separate permissions and data permissions
-        currentPermissions.addAll(permissionHandling.getSeparatedPermissions(grantable).get(0));
+        currentPermissions.addAll(EntityPermissionUtils.getSeparatedPermissionsByResource(grantable).get(0));
 
         List<Permission> currentDataPermissions = new ArrayList<Permission>(dataPermissions);
-        currentDataPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentDataPermissions, replaced));
-        currentDataPermissions.addAll(permissionHandling.getSeparatedPermissions(grantable).get(1));
+        currentDataPermissions = new ArrayList<Permission>(PermissionUtils.removeAll(currentDataPermissions, replaced));
+        currentDataPermissions.addAll(EntityPermissionUtils.getSeparatedPermissionsByResource(grantable).get(1));
 
         if (userLevelEnabled) {
             return getMutablePermissionTree(root, currentPermissions, currentDataPermissions, grantable, revokable, Marking.NEW, Marking.REMOVED, hideFieldLevel, addEmptyMessage);
         } else {
-            currentPermissions = new ArrayList<Permission>(permissionHandling.removeAll(currentPermissions, concat(replaced, revokable)));
+            currentPermissions = new ArrayList<Permission>(PermissionUtils.removeAll(currentPermissions, concat(replaced, revokable)));
             return getImmutablePermissionTree(root, currentPermissions, currentDataPermissions, grantable, Marking.NEW, hideFieldLevel, addEmptyMessage);
         }
     }
@@ -428,7 +429,7 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
 
             if (permission.getResource() instanceof EntityObjectField) {
                 TreeNodeModel instanceModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD, permission.getResource(),
-                    permissionHandling.contains(selectedPermissions, permission));
+                                                                PermissionUtils.contains(selectedPermissions, permission));
                 // instanceModel
                 // .setTooltip(permissionHandling.contains(selectedPermissions, permission) ? "New!" :
                 // (permissionHandling.contains(notSelectedPermissions, permission) ? "Removed!" : "Existing!"));
@@ -448,13 +449,13 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
                 // mark it selected so that it will be processed
                 actionNode.setSelected(true);
             }
-            if (permissionHandling.contains(selectedPermissions, permission)) {
+            if (PermissionUtils.contains(selectedPermissions, permission)) {
                 actionNodeModel.setMarking(selectedMarking);
                 actionNode.setSelected(true);
                 actionNode.setSelectable(selectable);
 
             } else {
-                if (permissionHandling.contains(notSelectedPermissions, permission)) {
+                if (PermissionUtils.contains(notSelectedPermissions, permission)) {
                     actionNode.setSelected(false);
                     actionNodeModel.setMarking(notSelectedMarking);
                     actionNode.setSelectable(selectable);
@@ -477,8 +478,8 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         // field resource: entity field or entity object field -> paint it blue, add tooltip, color might be overwritten
         for (Permission fieldPermission : permissions) {
 
-            boolean isNewPermission = permissionHandling.contains(selectedPermissions, fieldPermission);
-            boolean isRemovedPermission = permissionHandling.contains(notSelectedPermissions, fieldPermission);
+            boolean isNewPermission = PermissionUtils.contains(selectedPermissions, fieldPermission);
+            boolean isRemovedPermission = PermissionUtils.contains(notSelectedPermissions, fieldPermission);
             if (permission.getResource() instanceof EntityObjectField) {
                 TreeNodeModel instanceModel = new TreeNodeModel(((EntityField) permission.getResource()).getField(), TreeNodeModel.ResourceType.FIELD,
                     fieldPermission.getResource(), isNewPermission);
@@ -527,11 +528,11 @@ public class PermissionTreeHandlingBaseBean extends TreeHandlingBaseBean {
         Collection<Permission> familyChildren = families.get(parent);
         
 //        PermissionFamily family = resourceUtils.getSeparatedParentAndChildEntityPermissions(permissionsByAction);
-        if (parent != null && permissionHandling.contains(notSelectedPermissions, parent) && familyChildren != null && !familyChildren.isEmpty()) {
+        if (parent != null && PermissionUtils.contains(notSelectedPermissions, parent) && familyChildren != null && !familyChildren.isEmpty()) {
             // entity permission is revoked, but separate field permissions are granted
             Set<Permission> children = permissionHandling.getAvailableChildPermissions(parent);
             for (Permission child : children) {
-                if (!permissionHandling.contains(familyChildren, child)) {
+                if (!PermissionUtils.contains(familyChildren, child)) {
                     EntityField resource = (EntityField) child.getResource();
                     TreeNodeModel fieldNodeModel = new TreeNodeModel(resource.getField(), TreeNodeModel.ResourceType.FIELD, resource, Marking.REMOVED);
                     new DefaultTreeNode(fieldNodeModel, actionNode);

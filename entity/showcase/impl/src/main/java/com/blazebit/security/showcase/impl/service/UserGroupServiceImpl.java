@@ -18,7 +18,6 @@ import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.User;
 import com.blazebit.security.model.UserGroup;
 import com.blazebit.security.service.PermissionService;
-import com.blazebit.security.showcase.data.GroupPermissionDataAccess;
 import com.blazebit.security.showcase.data.UserGroupDataAccess;
 import com.blazebit.security.showcase.service.UserGroupService;
 
@@ -36,9 +35,6 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     @Inject
     private UserGroupDataAccess userGroupDataAccess;
-
-    @Inject
-    private GroupPermissionDataAccess groupPermissionHandlingUtils;
 
     @Inject
     private PermissionService permissionService;
@@ -130,7 +126,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         }
         Set<UserGroup> groups = new HashSet<UserGroup>();
         groups.add(userGroup);
-        Set<Permission> permissions = groupPermissionHandlingUtils.getGroupPermissions(groups, true);
+        Set<Permission> permissions = permissionManager.getPermissions(groups, true);
         Set<Permission> grant = permissionHandling.getGrantable(authorizer, permissionManager.getPermissions(selectedUser), permissions).get(0);
         permissionService.grant(authorizer, selectedUser, grant);
         return propagate;
