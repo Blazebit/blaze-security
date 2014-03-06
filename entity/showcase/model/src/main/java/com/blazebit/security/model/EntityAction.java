@@ -12,29 +12,88 @@
  */
 package com.blazebit.security.model;
 
-
-
 /**
  * 
  * @author Christian
  */
-public class EntityAction extends AbstractEntityAction {
+public class EntityAction implements Action, Comparable<Action> {
 
-	public EntityAction(String action) {
-		super(action);
-	}
+    private String actionName;
+    private AbstractPermissionId<?> permissionId;
 
-	public <P extends AbstractPermissionId<?>> EntityAction(P id) {
-		super(id);
-	}
+    public EntityAction() {
+    }
 
-	public EntityAction() {
-		super();
-	}
+    public EntityAction(String action) {
+        this.actionName = action;
+    }
 
-	@Override
-	public <P extends AbstractPermissionId<?>> void attachToPermissionId(
-			P permissionId) {
-		super.attachToPermissionId(permissionId);
-	}
+    @Override
+    public String getName() {
+        return permissionId == null ? this.actionName : permissionId.getActionName();
+    }
+
+    public void setName(String actionName) {
+        if (permissionId == null) {
+            this.actionName = actionName;
+        } else {
+            permissionId.setActionName(actionName);
+        }
+    }
+
+    public AbstractPermissionId<?> getPermissionId() {
+        return permissionId;
+    }
+
+    public void setPermissionId(AbstractPermissionId<?> permissionId) {
+        this.permissionId = permissionId;
+    }
+
+    public <P extends AbstractPermissionId<?>> EntityAction(P id) {
+        this.permissionId = id;
+        this.actionName = permissionId.getActionName();
+    }
+
+    <P extends AbstractPermissionId<?>> void attachToPermissionId(P permissionId) {
+        this.permissionId = permissionId;
+
+        if (actionName != null) {
+            permissionId.setActionName(actionName);
+            actionName = null;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "EntityAction{" + "actionName=" + getName() + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 29 * hash + (this.actionName != null ? this.actionName.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Action)) {
+            return false;
+        }
+        final Action other = (Action) obj;
+        final String name = getName();
+        if ((name == null) ? (other.getName() != null) : !name.equals(other.getName())) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int compareTo(Action o) {
+        return o.getName().compareToIgnoreCase(getName());
+    }
+
 }

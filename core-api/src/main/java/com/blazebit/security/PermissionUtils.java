@@ -2,9 +2,11 @@ package com.blazebit.security;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.Permission;
@@ -13,14 +15,14 @@ import com.blazebit.security.model.Role;
 import com.blazebit.security.model.Subject;
 
 public final class PermissionUtils {
+    private static final Logger LOG = Logger.getLogger(PermissionUtils.class.getName());
 
     private PermissionUtils() {
 
     }
 
     /**
-     * Special contains method for permissions. Subject check eliminated,
-     * concentrates on action and resource comparison.
+     * Special contains method for permissions. Subject check eliminated, concentrates on action and resource comparison.
      * 
      * @param permissions
      * @param permission
@@ -31,8 +33,7 @@ public final class PermissionUtils {
     }
 
     /**
-     * special 'containsAll' method for permissions. subject check eliminated,
-     * concentrates on action and resource comparison.
+     * special 'containsAll' method for permissions. subject check eliminated, concentrates on action and resource comparison.
      * 
      * @param permissions
      * @param permission
@@ -44,10 +45,10 @@ public final class PermissionUtils {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * removes given permission from a permission collection (collection can contain user and usergroup permissions as well)
      * 
@@ -63,8 +64,7 @@ public final class PermissionUtils {
     }
 
     /**
-     * returns a new collection without the permissions which have matching
-     * action and resource of the given collection
+     * returns a new collection without the permissions which have matching action and resource of the given collection
      * 
      * @param permissions
      * @param permissionsToRemove
@@ -102,8 +102,38 @@ public final class PermissionUtils {
         }
         return null;
     }
-    public static Set<Permission> getImpliedBy(List<Permission> permissions,
-                                        Action action, Resource resource) {
+
+    public static boolean impliedByAny(List<Permission> permissions, Action action, Resource resource) {
+        if (PermissionUtils.checkParameters(permissions, action, resource)) {
+            return false;
+        }
+        
+        for (Permission permission : permissions) {
+            if (permission.getAction().equals(action) && permission.getResource().implies(resource)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean impliedByAny(Collection<Permission> permissions, Collection<Action> actions, Resource resource) {
+        if (checkParameters(permissions, actions, resource)) {
+            return false;
+        }
+        for (Permission permission : permissions) {
+            for (Action action : actions) {
+                if (permission.getAction().equals(action) && permission.getResource().implies(resource)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static Set<Permission> getImpliedBy(List<Permission> permissions, Action action, Resource resource) {
+        PermissionUtils.checkParameters(action, resource);
         Set<Permission> ret = new HashSet<Permission>();
         Collection<Resource> connectedResources = resource.connectedResources();
         for (Resource connectedResource : connectedResources) {
@@ -115,9 +145,68 @@ public final class PermissionUtils {
         return ret;
     }
 
+    public static Set<Permission> getReplaceablePermissions(List<Permission> permissions, Action action, Resource resource) {
+        PermissionUtils.checkParameters(action, resource);
+        Set<Permission> ret = new HashSet<Permission>();
+        for (Permission permission : permissions) {
+            if (permission.getResource().isReplaceableBy(resource) && permission.getAction().equals(action)) {
+                ret.add(permission);
+            }
+        }
+        return ret;
+    }
+    
     /**
-     * decides whether any permission in the given collection implies given
-     * permission
+     * 
+     * @param permissions
+     * @param action
+     * @param resource
+     * @return true if permission to be revoked for the given action and resource can be revoked ( it exists or its "subset"
+     *         exists)
+     */
+    public static boolean isRevokable(List<Permission> permissions, Action action, Resource resource) {
+        return !PermissionUtils.getRevokeImpliedPermissions(permissions, action, resource).isEmpty();
+    }
+
+    /**
+     * 
+     * @param permissions given permissions
+     * @param subject
+     * @param action
+     * @param resource
+     * @return true if permission to be created from the given action and resource can be granted to the subject with the given
+     *         permissions
+     */
+    public static boolean isGrantable(List<Permission> permissions, Action action, Resource resource) {
+        PermissionUtils.checkParameters(action, resource);
+        if (!resource.isApplicable(action)) {
+            LOG.warning("Action " + action + " cannot be applied to " + resource);
+            return false;
+        }
+        return PermissionUtils.getImpliedBy(permissions, action, resource).isEmpty();
+    }
+
+    /**
+     * 
+     * @param permissions
+     * @param action
+     * @param resource
+     * @return permission to be removed when revoking given permission parameters (removing itself if found or its "subset")
+     */
+    public static Set<Permission> getRevokeImpliedPermissions(List<Permission> permissions, Action action, Resource resource) {
+        PermissionUtils.checkParameters(action, resource);
+        Permission permission = PermissionUtils.findPermission(permissions, action, resource);
+        
+        if (permission != null) {
+            // if exact permission found -> revoke that
+            return Collections.singleton(permission);
+        } else {
+            return PermissionUtils.getReplaceablePermissions(permissions, action, resource);
+        }
+    }
+
+    /**
+     * decides whether any permission in the given collection implies given permission
      * 
      * @param permissions
      * @param givenPermission
@@ -132,7 +221,6 @@ public final class PermissionUtils {
         }
         return !PermissionUtils.getImpliedBy(new ArrayList<Permission>(permissions), action, resource).isEmpty();
     }
-    
 
     /**
      * Separates the parent and the child permissions of permission collection.
@@ -155,27 +243,80 @@ public final class PermissionUtils {
         ret.add(children);
         return ret;
     }
+    
+    /*
+     * Parameter checker methods
+     */
 
-    public static void checkParameters(Role role, Action action, Resource resource) {
-        if (role == null) {
-            throw new IllegalArgumentException("Role cannot be null!");
+    public static boolean checkParameters(Collection<Permission> permissions) {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permissions cannot be null!");
         }
-        checkParameters(action, resource);
+        return permissions.isEmpty();
     }
 
-    public static void checkParameters(Action action, Resource resource) {
+    public static boolean checkParameters(Collection<Permission> permissions, Collection<Action> actions) {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permissions cannot be null!");
+        }
+        if (actions == null) {
+            throw new IllegalArgumentException("Actions cannot be null!");
+        }
+        return permissions.isEmpty() || actions.isEmpty();
+    }
+
+    public static void checkParameters(Permission permission) {
+        if (permission == null) {
+            throw new IllegalArgumentException("Permission cannot be null!");
+        }
+    }
+
+    public static void checkParameters(Action action) {
         if (action == null) {
             throw new IllegalArgumentException("Action cannot be null!");
         }
+    }
+
+    public static void checkParameters(Resource resource) {
         if (resource == null) {
             throw new IllegalArgumentException("Resource cannot be null!");
         }
     }
 
-    public static void checkParameters(Subject subject, Action action, Resource resource) {
+    public static void checkParameters(Subject subject) {
         if (subject == null) {
             throw new IllegalArgumentException("Subject cannot be null!");
         }
+    }
+
+    public static void checkParameters(Role role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null!");
+        }
+    }
+
+    public static void checkParameters(Action action, Resource resource) {
+        checkParameters(action);
+        checkParameters(resource);
+    }
+
+    public static void checkParameters(Subject subject, Action action, Resource resource) {
+        checkParameters(subject);
         checkParameters(action, resource);
+    }
+
+    public static void checkParameters(Role role, Action action, Resource resource) {
+        checkParameters(role);
+        checkParameters(action, resource);
+    }
+
+    public static boolean checkParameters(Collection<Permission> permissions, Action action, Resource resource) {
+        checkParameters(action, resource);
+        return checkParameters(permissions);
+    }
+
+    public static boolean checkParameters(Collection<Permission> permissions, Collection<Action> actions, Resource resource) {
+        checkParameters(resource);
+        return checkParameters(permissions, actions);
     }
 }

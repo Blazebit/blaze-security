@@ -1,6 +1,6 @@
 package com.blazebit.security.spi;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.blazebit.security.model.Action;
 
@@ -15,23 +15,12 @@ public interface ActionImplicationProvider {
 	 * @param action
 	 * @return
 	 */
-	public List<Action> getActionsWhichImply(Action action);
+	public Collection<Action> getActionsWhichImply(Action action);
 
 	/**
 	 * 
 	 * @param action
 	 * @return
 	 */
-	public List<Action> getActionsImpledBy(Action action);
-
-	/**
-	 * Returns actions which imply the given action based on the field level
-	 * option
-	 * 
-	 * @param action
-	 * @param fieldLevelEnabled
-	 * @return
-	 */
-	public List<Action> getActionsWhichImply(Action action,
-			boolean fieldLevelEnabled);
+	public Collection<Action> getActionsImpledBy(Action action);
 }

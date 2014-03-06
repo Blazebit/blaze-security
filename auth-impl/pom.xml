@@ -27,18 +27,16 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-security-core-api</artifactId>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>${project.groupId}</groupId> -->
-<!-- 			<artifactId>blaze-security-impl</artifactId> -->
-<!-- 		</dependency> -->
+		<!-- TODO: This should be removed -->
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-security-entity-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-security-auth-api</artifactId>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>${project.groupId}</groupId> -->
-<!-- 			<artifactId>blaze-security-abstract-model</artifactId> -->
-<!-- 		</dependency> -->
 		<dependency>
 			<groupId>org.apache.deltaspike.core</groupId>
 			<artifactId>deltaspike-core-api</artifactId>

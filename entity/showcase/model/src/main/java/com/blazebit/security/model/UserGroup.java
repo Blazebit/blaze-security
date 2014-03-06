@@ -4,7 +4,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -18,9 +21,10 @@ import com.blazebit.security.entity.EntityResourceType;
  */
 @Entity
 @EntityResourceType(name = "User Group", module = "Core")
-public class UserGroup extends AbstractUserGroup {
+public class UserGroup extends BaseEntity<Integer> implements Role {
 
 	private static final long serialVersionUID = 1L;
+    private String name;
 	private Company company;
 	private boolean selected;
 
@@ -49,8 +53,27 @@ public class UserGroup extends AbstractUserGroup {
 	}
 
 	public UserGroup(String name) {
-		super(name);
+        this.name = name;
 	}
+
+    @Id
+    @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    @Basic(optional = false)
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
 	@ManyToMany
 	public Set<User> getUsers() {

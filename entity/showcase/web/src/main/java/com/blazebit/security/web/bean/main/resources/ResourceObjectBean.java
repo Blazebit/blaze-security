@@ -281,7 +281,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 						if (!PermissionUtils.contains(revoked, permission)
 								&& PermissionUtils.implies(revoked,
 										permission)) {
-							impliedBy.addAll(permissionDataAccess.getImpliedBy(
+							impliedBy.addAll(PermissionUtils.getImpliedBy(
 									new ArrayList<Permission>(revoked),
 									permission.getAction(),
 									permission.getResource()));
@@ -466,7 +466,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 						if (!PermissionUtils.contains(revoked, permission)
 								&& PermissionUtils.implies(revoked,
 										permission)) {
-							impliedBy.addAll(permissionDataAccess.getImpliedBy(
+							impliedBy.addAll(PermissionUtils.getImpliedBy(
 									new ArrayList<Permission>(revoked),
 									permission.getAction(),
 									permission.getResource()));

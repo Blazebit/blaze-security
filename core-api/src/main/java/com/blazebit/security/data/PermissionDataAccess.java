@@ -12,7 +12,6 @@
  */
 package com.blazebit.security.data;
 
-import java.util.List;
 import java.util.Set;
 
 import com.blazebit.security.model.Action;
@@ -48,16 +47,6 @@ public interface PermissionDataAccess {
 
     /**
      * 
-     * @param permissions
-     * @param action
-     * @param resource
-     * @return true if permission to be revoked for the given action and resource can be revoked ( it exists or its "subset"
-     *         exists)
-     */
-    public boolean isRevokable(List<Permission> permissions, Action action, Resource resource);
-
-    /**
-     * 
      * @param subject
      * @param action
      * @param resource
@@ -76,32 +65,12 @@ public interface PermissionDataAccess {
 
     /**
      * 
-     * @param permissions
-     * @param action
-     * @param resource
-     * @return permission to be removed when revoking given permission parameters (removing itself if found or its "subset")
-     */
-    public Set<Permission> getRevokeImpliedPermissions(List<Permission> permissions, Action action, Resource resource);
-
-    /**
-     * 
      * @param subject
      * @param action
      * @param resource
      * @return true if permission to be created from the given action and resource can be granted to the subject
      */
     public boolean isGrantable(Subject subject, Action action, Resource resource);
-
-    /**
-     * 
-     * @param permissions given permissions
-     * @param subject
-     * @param action
-     * @param resource
-     * @return true if permission to be created from the given action and resource can be granted to the subject with the given
-     *         permissions
-     */
-    public boolean isGrantable(List<Permission> permissions, Action action, Resource resource);
 
     /**
      * 
@@ -132,15 +101,6 @@ public interface PermissionDataAccess {
 
     /**
      * 
-     * @param permissions
-     * @param action
-     * @param resource
-     * @return set of permissions to be revoked when granting the given action and resource
-     */
-    public Set<Permission> getGrantImpliedPermissions(List<Permission> permissions, Action action, Resource resource);
-
-    /**
-     * 
      * @param subject
      * @param action
      * @param resource
@@ -156,25 +116,6 @@ public interface PermissionDataAccess {
      * @return permission object for the given action and resource
      */
     public Permission findPermission(Role role, Action action, Resource resource);
-
-    /**
-     * 
-     * @param permissions
-     * @param subject
-     * @param action
-     * @param resource
-     * @return
-     */
-    public Permission findPermission(List<Permission> permissions, Action action, Resource resource);
-
-    /**
-     * 
-     * @param permissions
-     * @param action
-     * @param resource
-     * @return
-     */
-    public Set<Permission> getImpliedBy(List<Permission> permissions, Action action, Resource resource);
 
     /**
      * 

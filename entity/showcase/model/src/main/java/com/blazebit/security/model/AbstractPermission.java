@@ -15,8 +15,10 @@ package com.blazebit.security.model;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.blazebit.security.entity.EntityResource;
+
 @MappedSuperclass
-public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A extends AbstractEntityAction, F extends AbstractEntityField> extends BaseEntity<P> implements Permission {
+public abstract class AbstractPermission<S, P extends AbstractPermissionId<S>, A extends EntityAction, F extends EntityResource> extends BaseEntity<P> implements Permission {
 
     private static final long serialVersionUID = 1L;
     private A entityAction;

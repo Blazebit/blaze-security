@@ -1,49 +1,50 @@
 package com.blazebit.security.impl.spi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.deltaspike.core.api.provider.BeanProvider;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.spi.ActionFactory;
 import com.blazebit.security.spi.ActionImplicationProvider;
 
-@ServiceProvider(ActionImplicationProvider.class)
+@ApplicationScoped
 public class EntityActionImplicationProvider implements ActionImplicationProvider {
-
-    @Override
-    public List<Action> getActionsWhichImply(Action action) {
-        List<Action> ret = new ArrayList<Action>();
-        if (action == null) {
-            return ret;
-        }
-        ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
-
-        if (actionFactory.createAction(Action.READ).equals(action)) {
-            ret.add(actionFactory.createAction(Action.UPDATE));
-        }
-        return ret;
+    
+    @Inject
+    private ActionFactory actionFactory;
+    
+    // Immutable state
+    private Action readAction;
+    private Action addAction;
+    private Action removeAction;
+    private Action createAction;
+    
+    @PostConstruct
+    private void init() {
+        readAction = actionFactory.createAction(Action.READ);
+        addAction = actionFactory.createAction(Action.ADD);
+        removeAction = actionFactory.createAction(Action.REMOVE);
+        createAction = actionFactory.createAction(Action.CREATE);
     }
 
     @Override
-    public List<Action> getActionsWhichImply(Action action, boolean fieldLevelEnabled) {
-        if (fieldLevelEnabled) {
-            return getActionsWhichImply(action);
+    public List<Action> getActionsWhichImply(Action action) {
+        if (action == null) {
+            return Collections.emptyList();
         }
-        List<Action> ret = new ArrayList<Action>();
-        ret.addAll(getActionsWhichImply(action));
 
-        ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
+        List<Action> result = new ArrayList<Action>();
 
-        if (actionFactory.createAction(Action.ADD).equals(action)) {
-            ret.add(actionFactory.createAction(Action.UPDATE));
+        if (readAction.equals(action) || addAction.equals(action) || removeAction.equals(action)) {
+            result.add(actionFactory.createAction(Action.UPDATE));
         }
-        if (actionFactory.createAction(Action.REMOVE).equals(action)) {
-            ret.add(actionFactory.createAction(Action.UPDATE));
-        }
-        return ret;
+
+        return result;
     }
 
     @Override
@@ -52,9 +53,8 @@ public class EntityActionImplicationProvider implements ActionImplicationProvide
         if (action == null) {
             return ret;
         }
-        ActionFactory actionFactory = BeanProvider.getContextualReference(ActionFactory.class);
 
-        if (actionFactory.createAction(Action.CREATE).equals(action)) {
+        if (createAction.equals(action)) {
             ret.add(actionFactory.createAction(Action.UPDATE));
             ret.add(actionFactory.createAction(Action.DELETE));
         }

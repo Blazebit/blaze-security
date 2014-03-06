@@ -10,7 +10,6 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import com.blazebit.security.PermissionUtils;
-import com.blazebit.security.data.PermissionDataAccess;
 import com.blazebit.security.data.PermissionHandling;
 import com.blazebit.security.data.PermissionManager;
 import com.blazebit.security.entity.EntityActionFactory;
@@ -26,9 +25,6 @@ import com.blazebit.security.spi.ActionFactory;
 import com.blazebit.security.spi.PermissionFactory;
 
 public class PermissionHandlingImpl implements PermissionHandling {
-
-    @Inject
-    private PermissionDataAccess permissionDataAccess;
 
     @Inject
     private PermissionFactory permissionFactory;
@@ -95,7 +91,8 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
         for (Permission selectedPermission : toBeGranted) {
             if (isGranted(authorizer, getGrantAction(), selectedPermission.getResource())
-                && permissionDataAccess.isGrantable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+                && PermissionUtils.isGrantable(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
+                                               selectedPermission.getResource())) {
                 granted.add(selectedPermission);
             } else {
                 notGranted.add(selectedPermission);
@@ -106,7 +103,7 @@ public class PermissionHandlingImpl implements PermissionHandling {
         return ret;
 
     }
-    
+
     /**
      * Removes permissions from the given collection of permissions which imply each other.
      * 
@@ -161,10 +158,8 @@ public class PermissionHandlingImpl implements PermissionHandling {
     public Set<Permission> getParentPermissions(Collection<Permission> permissions) {
         Set<Permission> ret = new HashSet<Permission>();
         for (Permission permission : permissions) {
-            if (!actionUtils.getUpdateActionsForCollectionField().contains(
-                    permission.getAction())) {
-                ret.add(permissionFactory.create(permission.getAction(),
-                        permission.getResource().getParent()));
+            if (!actionUtils.getUpdateActionsForCollectionField().contains(permission.getAction())) {
+                ret.add(permissionFactory.create(permission.getAction(), permission.getResource().getParent()));
             }
         }
         return getNormalizedPermissions(ret);
@@ -183,8 +178,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
         Set<Permission> revoked = new HashSet<Permission>();
 
         for (Permission selectedPermission : granted) {
-            Set<Permission> toRevoke = permissionDataAccess.getGrantImpliedPermissions(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
-                                                                                                selectedPermission.getResource());
+            Set<Permission> toRevoke = PermissionUtils.getReplaceablePermissions(new ArrayList<Permission>(permissions),
+                                                                                 selectedPermission.getAction(),
+                                                                                 selectedPermission.getResource());
             revoked.addAll(toRevoke);
         }
         return revoked;
@@ -194,8 +190,9 @@ public class PermissionHandlingImpl implements PermissionHandling {
     public Set<Permission> getReplacedByRevoking(Collection<Permission> permissions, Collection<Permission> revoked) {
         Set<Permission> replaceable = new HashSet<Permission>();
         for (Permission grantedPermission : revoked) {
-            replaceable.addAll(permissionDataAccess.getRevokeImpliedPermissions(new ArrayList<Permission>(permissions), grantedPermission.getAction(),
-                                                                                        grantedPermission.getResource()));
+            replaceable.addAll(PermissionUtils.getRevokeImpliedPermissions(new ArrayList<Permission>(permissions),
+                                                                           grantedPermission.getAction(),
+                                                                           grantedPermission.getResource()));
         }
         return replaceable;
     }
@@ -217,7 +214,8 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
         for (Permission selectedPermission : toBeRevoked) {
             if (isGranted(authorizer, getRevokeAction(), selectedPermission.getResource())
-                && permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
+                && PermissionUtils.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
+                                               selectedPermission.getResource())) {
                 revoked.add(selectedPermission);
             } else {
                 notRevoked.add(selectedPermission);
@@ -249,9 +247,11 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
             for (Permission selectedPermission : toBeRevoked) {
                 if (isGranted(authorizer, getRevokeAction(), selectedPermission.getResource())
-                    && permissionDataAccess.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(), selectedPermission.getResource())) {
-                    revoked.addAll(permissionDataAccess.getRevokeImpliedPermissions(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
-                                                                                            selectedPermission.getResource()));
+                    && PermissionUtils.isRevokable(new ArrayList<Permission>(permissions), selectedPermission.getAction(),
+                                                   selectedPermission.getResource())) {
+                    revoked.addAll(PermissionUtils.getRevokeImpliedPermissions(new ArrayList<Permission>(permissions),
+                                                                               selectedPermission.getAction(),
+                                                                               selectedPermission.getResource()));
                 } else {
                     if (isGranted(authorizer, getRevokeAction(), selectedPermission.getResource())) {
                         if (PermissionUtils.findPermission(granted, selectedPermission) != null) {
@@ -260,12 +260,14 @@ public class PermissionHandlingImpl implements PermissionHandling {
                             Resource resource = selectedPermission.getResource();
                             if (!resource.getParent().equals(resource)) {
                                 // if parent permission present
-                                Permission parentPermission = PermissionUtils.findPermission(new ArrayList<Permission>(permissions), selectedPermission.getAction(), resource.getParent());
+                                Permission parentPermission = PermissionUtils.findPermission(new ArrayList<Permission>(
+                                    permissions), selectedPermission.getAction(), resource.getParent());
                                 if (parentPermission != null) {
                                     // revoke parent entity
 
                                     Set<Permission> childPermissions = getAvailableChildPermissions(parentPermission);
-                                    childPermissions = new HashSet<Permission>(PermissionUtils.remove(childPermissions, selectedPermission));
+                                    childPermissions = new HashSet<Permission>(PermissionUtils.remove(childPermissions,
+                                                                                                      selectedPermission));
 
                                     boolean notAllowed = false;
                                     for (Permission childPermission : childPermissions) {
@@ -331,16 +333,16 @@ public class PermissionHandlingImpl implements PermissionHandling {
         Set<Permission> finalRevoked = new HashSet<Permission>(revoked);
         // simulate revoke
         for (Permission revoke : revoked) {
-            Set<Permission> removablePermissions = permissionDataAccess.getRevokeImpliedPermissions(new ArrayList<Permission>(current), revoke.getAction(),
-                                                                                                            revoke.getResource());
+            Set<Permission> removablePermissions = PermissionUtils.getRevokeImpliedPermissions(new ArrayList<Permission>(
+                current), revoke.getAction(), revoke.getResource());
             for (Permission permission : removablePermissions) {
                 currentPermissions.remove(permission);
             }
         }
         // simulate grant
         for (Permission grant : granted) {
-            Set<Permission> removablePermissions = permissionDataAccess.getGrantImpliedPermissions(new ArrayList<Permission>(current), grant.getAction(),
-                                                                                                            grant.getResource());
+            Set<Permission> removablePermissions = PermissionUtils
+                .getReplaceablePermissions(new ArrayList<Permission>(current), grant.getAction(), grant.getResource());
 
             for (Permission existingPermission : removablePermissions) {
                 currentPermissions.remove(existingPermission);
@@ -393,10 +395,8 @@ public class PermissionHandlingImpl implements PermissionHandling {
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result
-                    + ((children == null) ? 0 : children.hashCode());
-            result = prime * result
-                    + ((parent == null) ? 0 : parent.hashCode());
+            result = prime * result + ((children == null) ? 0 : children.hashCode());
+            result = prime * result + ((parent == null) ? 0 : parent.hashCode());
             return result;
         }
 
@@ -425,31 +425,26 @@ public class PermissionHandlingImpl implements PermissionHandling {
     }
 
     /**
-     * Separates the parent and the child permissions of permission collection.
-     * Requirement: all permissions belong to the same resource name.
+     * Separates the parent and the child permissions of permission collection. Requirement: all permissions belong to the same
+     * resource name.
      * 
      * @deprecated This implementation leaked out to api users, we will have to reevaluate how we can model this
      * @param permissions
      * @return
      */
-    private static PermissionFamily getSeparatedParentAndChildEntityPermissions(
-            Collection<Permission> permissions) {
+    private static PermissionFamily getSeparatedParentAndChildEntityPermissions(Collection<Permission> permissions) {
         PermissionFamily family = new PermissionFamily();
         Set<Permission> children = new HashSet<Permission>();
 
         if (!permissions.isEmpty()) {
-            String firstResourceName = ((EntityResource) permissions
-                    .iterator().next().getResource()).getEntity();
+            String firstResourceName = ((EntityResource) permissions.iterator().next().getResource()).getEntity();
 
             for (Permission permission : permissions) {
-                String currentResourceName = ((EntityResource) permission
-                        .getResource()).getEntity();
+                String currentResourceName = ((EntityResource) permission.getResource()).getEntity();
                 if (!currentResourceName.equals(firstResourceName)) {
-                    throw new IllegalArgumentException(
-                            "Resourcenames must match");
+                    throw new IllegalArgumentException("Resourcenames must match");
                 }
-                if (permission.getResource().getParent()
-                        .equals(permission.getResource())) {
+                if (permission.getResource().getParent().equals(permission.getResource())) {
                     family.parent = permission;
                 } else {
                     children.add(permission);
@@ -459,7 +454,6 @@ public class PermissionHandlingImpl implements PermissionHandling {
         family.children = children;
         return family;
     }
-    
 
     /**
      * 
@@ -470,35 +464,29 @@ public class PermissionHandlingImpl implements PermissionHandling {
     @Override
     public Set<Permission> getAvailableChildPermissions(Permission parentPermission) {
         Set<Permission> grant = new HashSet<Permission>();
-        EntityResource EntityField = (EntityResource) parentPermission
-                .getResource();
+        EntityResource EntityField = (EntityResource) parentPermission.getResource();
         Action action = parentPermission.getAction();
         if (!EntityField.getParent().equals(EntityField)) {
-            throw new IllegalArgumentException(
-                    "Permission must be a parent resource permission");
+            throw new IllegalArgumentException("Permission must be a parent resource permission");
         }
         try {
             List<String> fields = new ArrayList<String>();
-            if (actionUtils.getUpdateActionsForCollectionField().contains(
-                    action)) {
-                fields = resourceMetamodel
-                        .getCollectionFields(EntityField.getEntity());
+            if (actionUtils.getUpdateActionsForCollectionField().contains(action)) {
+                fields = resourceMetamodel.getCollectionFields(EntityField.getEntity());
             } else {
                 if (actionUtils.getActionsForPrimitiveField().contains(action)) {
-                    fields = resourceMetamodel
-                            .getPrimitiveFields(EntityField.getEntity());
+                    fields = resourceMetamodel.getPrimitiveFields(EntityField.getEntity());
                 }
             }
             // add rest of the fields
             for (String field : fields) {
-                grant.add(permissionFactory.create(action,
-                        EntityField.withField(field)));
+                grant.add(permissionFactory.create(action, EntityField.withField(field)));
             }
         } catch (ClassNotFoundException e) {
         }
         return grant;
     }
-    
+
     /**
      * if all fields present->merges permissions into entity permission
      * 
@@ -514,16 +502,22 @@ public class PermissionHandlingImpl implements PermissionHandling {
         Map<String, List<Permission>> permissionsByEntity = EntityPermissionUtils.groupPermissionsByResourceName(permissions);
 
         for (String entity : permissionsByEntity.keySet()) {
-            Map<Action, List<Permission>> entityPermissionsByAction = EntityPermissionUtils.groupResourcePermissionsByAction(permissionsByEntity.get(entity));
+            Map<Action, List<Permission>> entityPermissionsByAction = EntityPermissionUtils
+                .groupResourcePermissionsByAction(permissionsByEntity.get(entity));
 
             for (Action action : entityPermissionsByAction.keySet()) {
-                PermissionFamily permissionFamily = getSeparatedParentAndChildEntityPermissions(entityPermissionsByAction.get(action));
+                PermissionFamily permissionFamily = getSeparatedParentAndChildEntityPermissions(entityPermissionsByAction
+                    .get(action));
                 if (permissionFamily.parent != null) {
                     // both entity resource and some or all entity fields exist -> merge into entity resource permission
                     remove.addAll(permissionFamily.children);
                 } else {
                     if (!permissionFamily.children.isEmpty()) {
-                        Permission parentPermission = permissionFactory.create(action, permissionFamily.children.iterator().next().getResource().getParent());
+                        Permission parentPermission = permissionFactory.create(action, permissionFamily.children
+                            .iterator()
+                            .next()
+                            .getResource()
+                            .getParent());
                         // all PRIMITIVE entity fields are listed -> merge into entity resource permission
                         Set<Permission> childPermissions = getAvailableChildPermissions(parentPermission);
                         boolean foundMissingField = !PermissionUtils.containsAll(permissionFamily.children, childPermissions);
@@ -543,9 +537,8 @@ public class PermissionHandlingImpl implements PermissionHandling {
 
     @Override
     public boolean replaces(Collection<Permission> permissions, Permission givenPermission) {
-        return !permissionDataAccess
-            .getGrantImpliedPermissions(new ArrayList<Permission>(permissions), givenPermission.getAction(), givenPermission.getResource())
-            .isEmpty();
+        return !PermissionUtils.getReplaceablePermissions(new ArrayList<Permission>(permissions), givenPermission.getAction(),
+                                                          givenPermission.getResource()).isEmpty();
     }
 
 }

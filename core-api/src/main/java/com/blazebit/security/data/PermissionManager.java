@@ -80,15 +80,6 @@ public interface PermissionManager {
 	 */
 	public List<String> getPermissionResources(Subject subject);
 
-	/**
-	 * list of modules where the given subject has at least one permission to any
-	 * of the resources of the module
-	 * 
-	 * @param subject
-	 * @return
-	 */
-	public Set<String> getPermissionModules(Subject subject);
-
     public Set<Permission> getPermissions(Collection<? extends Role> roles);
 
     public Set<Permission> getPermissions(Collection<? extends Role> roles, boolean includeInherited);

@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
@@ -22,6 +25,7 @@ import org.apache.deltaspike.core.api.provider.BeanProvider;
 import com.blazebit.security.auth.event.GroupRequestEvent;
 import com.blazebit.security.auth.event.PrincipalRequestEvent;
 import com.blazebit.security.data.PermissionManager;
+import com.blazebit.security.entity.EntityResourceMetamodel;
 import com.blazebit.security.model.Subject;
 
 /**
@@ -124,17 +128,36 @@ public class ShowcaseSimpleServerLoginModule implements LoginModule {
     }
 
     protected Group[] getRoleSets() throws LoginException {
-        PermissionManager permissionManager = BeanProvider.getContextualReference(PermissionManager.class);
+        // TODO: Consider collecting roles by just firing one event
         GroupRequestEvent event = new GroupRequestEvent("Roles");
         BeanManagerProvider.getInstance().getBeanManager().fireEvent(event);
         Group[] roleSets = { event.getUserModule() };
-        Set<String> modules = permissionManager.getPermissionModules(user);
+        Set<String> modules = getPermissionModules(user);
         for (String module : modules) {
             event = new GroupRequestEvent(module);
             BeanManagerProvider.getInstance().getBeanManager().fireEvent(event);
             roleSets[0].addMember(event.getUserModule());
         }
         return roleSets;
+    }
+    
+
+    /**
+     * list of modules where the given subject has at least one permission to any
+     * of the resources of the module
+     * 
+     * @param subject
+     * @return
+     */
+    private Set<String> getPermissionModules(Subject subject) {
+        PermissionManager permissionManager = BeanProvider.getContextualReference(PermissionManager.class);
+        EntityResourceMetamodel resourceMetaModel = BeanProvider.getContextualReference(EntityResourceMetamodel.class);
+        Set<String> ret = new HashSet<String>();
+        List<String> resources = permissionManager.getPermissionResources(subject);
+        for (String resource : resources) {
+            ret.add(resourceMetaModel.getModuleForResource(resource));
+        }
+        return ret;
     }
 
     protected boolean validatePassword(String inputPassword, String expectedPassword) {

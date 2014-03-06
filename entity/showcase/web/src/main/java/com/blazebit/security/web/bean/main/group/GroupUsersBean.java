@@ -223,7 +223,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
         if (!granted.isEmpty()) {
             for (Permission permission : selectedGroupPermissions) {
                 if (!PermissionUtils.contains(revoked, permission) && PermissionUtils.implies(revoked, permission)) {
-                    impliedBy.addAll(permissionDataAccess.getImpliedBy(new ArrayList<Permission>(revoked), permission.getAction(), permission.getResource()));
+                    impliedBy.addAll(PermissionUtils.getImpliedBy(new ArrayList<Permission>(revoked), permission.getAction(), permission.getResource()));
                     toRevoke.add(permission);
                 }
             }

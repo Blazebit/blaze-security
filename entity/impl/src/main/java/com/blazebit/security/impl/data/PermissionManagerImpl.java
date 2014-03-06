@@ -24,14 +24,12 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.security.data.PermissionHandling;
 import com.blazebit.security.data.PermissionManager;
-import com.blazebit.security.entity.EntityResourceMetamodel;
 import com.blazebit.security.entity.Security;
 import com.blazebit.security.model.Permission;
 import com.blazebit.security.model.Role;
 import com.blazebit.security.model.RolePermission;
 import com.blazebit.security.model.Subject;
 import com.blazebit.security.model.SubjectPermission;
-import com.blazebit.security.model.UserGroup;
 
 /**
  * 
@@ -44,9 +42,6 @@ public class PermissionManagerImpl implements PermissionManager {
     @Security
     private EntityManager entityManager;
 
-    @Inject
-    private EntityResourceMetamodel resourceMetaModel;
-    
     @Inject
     private PermissionHandling permissionHandling;
 
@@ -75,7 +70,8 @@ public class PermissionManagerImpl implements PermissionManager {
             throw new IllegalArgumentException("Subject cannot be null");
         }
         return entityManager
-            .createQuery("SELECT permission FROM " + SubjectPermission.class.getName()
+            .createQuery("SELECT permission FROM "
+                             + SubjectPermission.class.getName()
                              + " permission WHERE permission.id.subject = :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
             .setParameter("subject", subject)
             .getResultList();
@@ -94,16 +90,6 @@ public class PermissionManagerImpl implements PermissionManager {
             .getResultList();
     }
 
-    @Override
-    public Set<String> getPermissionModules(Subject subject) {
-        Set<String> ret = new HashSet<String>();
-        List<String> resources = getPermissionResources(subject);
-        for (String resource : resources) {
-            ret.add(resourceMetaModel.getModuleForResource(resource));
-        }
-        return ret;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public List<Permission> getPermissions(Role role) {
@@ -111,7 +97,8 @@ public class PermissionManagerImpl implements PermissionManager {
             throw new IllegalArgumentException("Role cannot be null");
         }
         return entityManager
-            .createQuery("SELECT permission FROM " + RolePermission.class.getName()
+            .createQuery("SELECT permission FROM "
+                             + RolePermission.class.getName()
                              + " permission WHERE permission.id.subject= :subject ORDER BY permission.id.entity, permission.id.field, permission.id.actionName")
             .setParameter("subject", role)
             .getResultList();
@@ -127,7 +114,7 @@ public class PermissionManagerImpl implements PermissionManager {
         Set<Permission> ret = new HashSet<Permission>();
         for (Role role : roles) {
             ret.addAll(getPermissions(role));
-            
+
             if (includeInherited) {
                 Role parent = role.getParent();
                 while (parent != null) {
@@ -145,7 +132,8 @@ public class PermissionManagerImpl implements PermissionManager {
             throw new IllegalArgumentException("Subject cannot be null");
         }
         entityManager
-            .createQuery("DELETE FROM " + SubjectPermission.class.getName() + " permission WHERE permission.id.subject=:subject")
+            .createQuery("DELETE FROM " + SubjectPermission.class.getName()
+                             + " permission WHERE permission.id.subject=:subject")
             .setParameter("subject", subject)
             .executeUpdate();
 

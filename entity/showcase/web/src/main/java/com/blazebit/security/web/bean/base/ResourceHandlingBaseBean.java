@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
+import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.EntityAction;
 import com.blazebit.security.model.EntityField;
@@ -121,7 +122,7 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                     actionNode.getParent().getChildren().remove(actionNode);// setParent(null);
                 }
             } else {
-                Permission found = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
+                Permission found = PermissionUtils.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
                 if (found == null) {
                     // remove actionNode if entity cannot be granted
                     if (!isGranted(Action.GRANT, entityField)) {
@@ -155,8 +156,8 @@ public class ResourceHandlingBaseBean extends PermissionHandlingBaseBean {
                 DefaultTreeNode fieldNode = new DefaultTreeNode("field", null, actionNode);
                 TreeNodeModel fieldNodeModel = new TreeNodeModel(field, TreeNodeModel.ResourceType.FIELD, entityFieldWithField);
                 // decide how field node should be marked (red/blue/green)
-                Permission foundWithField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityFieldWithField);
-                Permission foundWithoutField = permissionDataAccess.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
+                Permission foundWithField = PermissionUtils.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityFieldWithField);
+                Permission foundWithoutField = PermissionUtils.findPermission(new ArrayList<Permission>(selectedPermissions), entityAction, entityField);
 
                 if (foundWithField != null || foundWithoutField != null) {
                     // entity object resources are blue

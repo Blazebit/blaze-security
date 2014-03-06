@@ -12,15 +12,18 @@
  */
 package com.blazebit.security.model;
 
-import java.beans.Transient;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.blazebit.security.entity.EntityResourceType;
 
@@ -30,9 +33,11 @@ import com.blazebit.security.entity.EntityResourceType;
 @Entity(name = "User_")
 @Table(name = "User_")
 @EntityResourceType(name = "User", module = "Core")
-public class User extends AbstractUser {
+public class User extends BaseEntity<Integer> implements Subject {
 
 	private static final long serialVersionUID = 1L;
+	private String username;
+    private String password;
 	private Company company;
 
 	private Set<UserGroup> userGroups = new HashSet<UserGroup>(0);
@@ -46,9 +51,42 @@ public class User extends AbstractUser {
 	}
 
 	public User(String username) {
-		super(username);
+        this.username = username;
 	}
 
+    @Id
+    @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    @Basic(optional = false)
+    public String getUsername() {
+        return this.username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    @Basic
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    @Transient
+    public String getName() {
+        return String.valueOf(id);
+    }
 	@ManyToMany(mappedBy = "users")
 	public Set<UserGroup> getUserGroups() {
 		return userGroups;
