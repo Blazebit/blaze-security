@@ -160,6 +160,26 @@ public abstract class BaseTest<T extends BaseTest<T>> extends AbstractContainerT
         admin.setCompany(company);
         persist(admin);
         // add permissions to admin
+
+        // admin can grant and revoke any action
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getAddAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getCreateAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getDeleteAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getGrantAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getReadAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getRemoveAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getRevokeAction())));
+        permissionManager.save(permissionFactory.create(admin, grantAction, resourceFactory.createResource(getUpdateAction())));
+
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getAddAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getCreateAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getDeleteAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getGrantAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getReadAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getRemoveAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getRevokeAction())));
+        permissionManager.save(permissionFactory.create(admin, revokeAction, resourceFactory.createResource(getUpdateAction())));
+        
         // admin can grant to users and usergroups
         permissionManager.save(permissionFactory.create(admin, grantAction, userEntity));
         permissionManager.save(permissionFactory.create(admin, revokeAction, userEntity));

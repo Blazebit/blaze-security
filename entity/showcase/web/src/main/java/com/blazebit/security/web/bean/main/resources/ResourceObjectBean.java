@@ -23,6 +23,7 @@ import com.blazebit.security.model.EntityObjectField;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.IdHolder;
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.Role;
 import com.blazebit.security.model.Subject;
 import com.blazebit.security.model.User;
@@ -185,7 +186,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 				selectedPermissions.add(permission);
 				if (permissionHandling
 						.getRevokableFromRevoked(currentDataPermissions,
-								selectedPermissions, true).get(0).isEmpty()) {
+								selectedPermissions, true).getRevokes().isEmpty()) {
 					actionNode.getParent().getChildren().remove(actionNode);
 					// actionNode.setParent(null);
 				} else {
@@ -229,7 +230,7 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 				selectedPermissions.add(permission);
 				if (permissionHandling
 						.getRevokableFromRevoked(currentDataPermissions,
-								selectedPermissions, true).get(0).isEmpty()) {
+								selectedPermissions, true).getRevokes().isEmpty()) {
 					// fieldNode.setParent(null);
 					fieldNode.getParent().getChildren().remove(fieldNode);
 				} else {
@@ -268,11 +269,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 		} else {
 			if ("revoke".equals(action)) {
 
-				List<Set<Permission>> revoke = permissionHandling
+				PermissionChangeSet revokeChangeSet = permissionHandling
 						.getRevokableFromRevoked(allPermissions,
 								selectedPermissions, true);
-				Set<Permission> revoked = revoke.get(0);
-				Set<Permission> granted = revoke.get(2);
+				Set<Permission> revoked = revokeChangeSet.getRevokes();
+				Set<Permission> granted = revokeChangeSet.getGrants();
 
 				Set<Permission> impliedBy = new HashSet<Permission>();
 				Set<Permission> toRevoke = new HashSet<Permission>();
@@ -335,11 +336,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 			}
 		} else {
 			if (action.equals("revoke")) {
-				List<Set<Permission>> revoke = permissionHandling
+				PermissionChangeSet revokeChangeSet = permissionHandling
 						.getRevokableFromRevoked(allPermissions,
 								selectedPermissions, true);
-				Set<Permission> revoked = revoke.get(0);
-				Set<Permission> granted = revoke.get(2);
+				Set<Permission> revoked = revokeChangeSet.getRevokes();
+				Set<Permission> granted = revokeChangeSet.getGrants();
 
 				if (selectedSubject instanceof Subject) {
 					Subject subject = (Subject) selectedSubject;
@@ -453,11 +454,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 					new ArrayList<Permission>(granted), granted, Marking.NEW);
 		} else {
 			if (action.equals("revoke")) {
-				List<Set<Permission>> revoke = permissionHandling
+				PermissionChangeSet revokeChangeSet = permissionHandling
 						.getRevokableFromRevoked(userDataPermissions,
 								selectedPermissions, true);
-				Set<Permission> revoked = revoke.get(0);
-				Set<Permission> granted = revoke.get(2);
+				Set<Permission> revoked = revokeChangeSet.getRevokes();
+				Set<Permission> granted = revokeChangeSet.getGrants();
 
 				Set<Permission> impliedBy = new HashSet<Permission>();
 				Set<Permission> toRevoke = new HashSet<Permission>();
@@ -509,11 +510,11 @@ public class ResourceObjectBean extends PermissionHandlingBaseBean {
 			} else {
 				if ("revoke".equals(action)) {
 
-					List<Set<Permission>> revoke = permissionHandling
+					PermissionChangeSet revokeChangeSet = permissionHandling
 							.getRevokableFromRevoked(userDataPermissions,
 									selectedPermissions, true);
-					Set<Permission> revoked = revoke.get(0);
-					Set<Permission> granted = revoke.get(2);
+					Set<Permission> revoked = revokeChangeSet.getRevokes();
+					Set<Permission> granted = revokeChangeSet.getGrants();
 					// confirm group permissions
 					revokeAndGrant((UserGroup) selectedSubject,
 							groupRevokedPermissions, groupGrantedPermissions,

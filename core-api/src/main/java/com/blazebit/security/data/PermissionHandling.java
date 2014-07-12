@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.Subject;
 
 /**
@@ -94,11 +95,11 @@ public interface PermissionHandling {
 	public Set<Permission> getReplacedByRevoking(
 			Collection<Permission> permissions, Collection<Permission> revoked);
 
-	public List<Set<Permission>> getRevokableFromRevoked(
+	public PermissionChangeSet getRevokableFromRevoked(
 			Collection<Permission> permissions,
 			Collection<Permission> toBeRevoked);
 
-	public List<Set<Permission>> getRevokableFromRevoked(
+	public PermissionChangeSet getRevokableFromRevoked(
 			Collection<Permission> permissions,
 			Collection<Permission> toBeRevoked, boolean force);
 
@@ -112,7 +113,7 @@ public interface PermissionHandling {
 	 * @param selectedPermissions
 	 * @return
 	 */
-	public List<Set<Permission>> getRevokableFromSelected(
+	public PermissionChangeSet getRevokableFromSelected(
 			Collection<Permission> permissions,
 			Collection<Permission> selectedPermissions);
 
@@ -153,7 +154,7 @@ public interface PermissionHandling {
 	 * @param force
 	 * @return
 	 */
-	public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer,
+	public PermissionChangeSet getRevokableFromRevoked(Subject authorizer,
 			Collection<Permission> permissions,
 			Collection<Permission> toBeRevoked, boolean force);
 
@@ -169,7 +170,7 @@ public interface PermissionHandling {
 	 * @param toBeRevoked
 	 * @return
 	 */
-	public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer,
+	public PermissionChangeSet getRevokableFromRevoked(Subject authorizer,
 			Collection<Permission> permissions,
 			Collection<Permission> toBeRevoked);
 

@@ -17,6 +17,7 @@ import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.User;
 import com.blazebit.security.model.UserGroup;
 import com.blazebit.security.showcase.data.UserGroupDataAccess;
@@ -146,17 +147,17 @@ public abstract class ResourceGroupHandlingBaseBean extends ResourceHandlingBase
 
     private void createPermissionTree(TreeType type, User user, DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions, Set<Permission> grantedPermissions, Set<Permission> revokedPermissions) {
         // get permissions which can be revoked from the user
-        List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
-        Set<Permission> revoked = revoke.get(0);
+        PermissionChangeSet revokeChangeSet = permissionHandling.getRevokableFromRevoked(userPermissions, revokedPermissions, true);
+        Set<Permission> revoked = revokeChangeSet.getRevokes();
         revokables.put(user, revoked);
-        dialogBean.setNotRevoked(revoke.get(1));
+        dialogBean.setNotRevoked(revokeChangeSet.getUnaffected());
 
         // get permissions which can be granted to the user
         List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(userPermissions, revoked), grantedPermissions);
         Set<Permission> grantable = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 
-        Set<Permission> additionalGranted = revoke.get(2);
+        Set<Permission> additionalGranted = revokeChangeSet.getGrants();
         grantable.addAll(additionalGranted);
         grantable = permissionHandling.getNormalizedPermissions(grantable);
 

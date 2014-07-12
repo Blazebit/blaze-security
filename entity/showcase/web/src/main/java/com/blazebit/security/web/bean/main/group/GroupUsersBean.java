@@ -23,6 +23,7 @@ import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.User;
 import com.blazebit.security.model.UserGroup;
 import com.blazebit.security.showcase.service.UserService;
@@ -175,7 +176,7 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
 
     private void createCurrentPermissionTreeForRemovedUser(DefaultTreeNode userNode, List<Permission> userPermissions, List<Permission> userDataPermissions) {
         // group permissions will be revoked from user-> mark only revokables
-        Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(userPermissions, selectedGroupPermissions, true).get(0);
+        Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(userPermissions, selectedGroupPermissions, true).getRevokes();
         buildCurrentPermissionTree(userNode, userPermissions, userDataPermissions, revoked, new HashSet<Permission>(), !isEnabled(Features.FIELD_LEVEL));
     }
 
@@ -214,8 +215,9 @@ public class GroupUsersBean extends GroupHandlingBaseBean {
 
     // TODO simplify? how?
     private void createNewPermissionTreeForRemovedUser(User user, DefaultTreeNode userNode, List<Permission> userPermissions, DefaultTreeNode userObjectNode, List<Permission> userDataPermissions) {
-        Set<Permission> revoked = permissionHandling.getRevokableFromRevoked(concat(userPermissions, userDataPermissions), selectedGroupPermissions, true).get(0);
-        Set<Permission> granted = permissionHandling.getRevokableFromRevoked(concat(userPermissions, userDataPermissions), selectedGroupPermissions, true).get(2);
+        PermissionChangeSet revokeChangeSet = permissionHandling.getRevokableFromRevoked(concat(userPermissions, userDataPermissions), selectedGroupPermissions, true);
+        Set<Permission> revoked = revokeChangeSet.getRevokes();
+        Set<Permission> granted = revokeChangeSet.getGrants();
         // when user has entity permission and group has field permission, we have to build the tree in a way that the group
         // entity field permissions can be revoked and the rest of the fields can be kept.
         Set<Permission> impliedBy = new HashSet<Permission>();

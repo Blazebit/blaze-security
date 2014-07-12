@@ -2,6 +2,7 @@ package com.blazebit.security.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import com.blazebit.security.entity.EntityResourceMetamodel;
 import com.blazebit.security.entity.UserContext;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.Resource;
 import com.blazebit.security.model.Subject;
 import com.blazebit.security.spi.ActionFactory;
@@ -198,17 +200,15 @@ public class PermissionHandlingImpl implements PermissionHandling {
     }
 
     @Override
-    public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
+    public PermissionChangeSet getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
         return getRevokableFromRevoked(userContext.getUser(), permissions, toBeRevoked);
     }
 
     @Override
-    public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
+    public PermissionChangeSet getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked) {
         if (authorizer == null) {
             throw new IllegalArgumentException("Authorizer cannot be null");
         }
-        List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
-
         Set<Permission> revoked = new HashSet<Permission>();
         Set<Permission> notRevoked = new HashSet<Permission>();
 
@@ -221,26 +221,22 @@ public class PermissionHandlingImpl implements PermissionHandling {
                 notRevoked.add(selectedPermission);
             }
         }
-        ret.add(revoked);
-        ret.add(notRevoked);
-        return ret;
+        return new DefaultPermissionChangeSet(revoked, notRevoked, (Set<Permission>) Collections.EMPTY_SET);
     }
 
     @Override
-    public List<Set<Permission>> getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
+    public PermissionChangeSet getRevokableFromRevoked(Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
         return getRevokableFromRevoked(userContext.getUser(), permissions, toBeRevoked, force);
     }
 
     @Override
-    public List<Set<Permission>> getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
+    public PermissionChangeSet getRevokableFromRevoked(Subject authorizer, Collection<Permission> permissions, Collection<Permission> toBeRevoked, boolean force) {
         if (authorizer == null) {
             throw new IllegalArgumentException("Authorizer cannot be null");
         }
         if (!force) {
             return getRevokableFromRevoked(permissions, toBeRevoked);
         } else {
-            List<Set<Permission>> ret = new ArrayList<Set<Permission>>();
-
             Set<Permission> revoked = new HashSet<Permission>();
             Set<Permission> notRevoked = new HashSet<Permission>();
             Set<Permission> granted = new HashSet<Permission>();
@@ -293,16 +289,12 @@ public class PermissionHandlingImpl implements PermissionHandling {
                 }
             }
 
-            ret.add(revoked);
-            ret.add(notRevoked);
-            ret.add(granted);
-
-            return ret;
+            return new DefaultPermissionChangeSet(revoked, notRevoked, granted);
         }
     }
 
     @Override
-    public List<Set<Permission>> getRevokableFromSelected(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
+    public PermissionChangeSet getRevokableFromSelected(Collection<Permission> permissions, Collection<Permission> selectedPermissions) {
         Set<Permission> toBeRevoked = getRevoked(permissions, selectedPermissions);
         return getRevokableFromRevoked(permissions, toBeRevoked);
     }

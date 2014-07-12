@@ -8,4 +8,6 @@ public interface PermissionChangeSet {
     public Set<Permission> getRevokes();
     
     public Set<Permission> getGrants();
+    
+    public Set<Permission> getUnaffected();
 }

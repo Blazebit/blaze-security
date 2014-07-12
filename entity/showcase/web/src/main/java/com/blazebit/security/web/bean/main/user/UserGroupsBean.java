@@ -22,6 +22,7 @@ import com.blazebit.security.PermissionUtils;
 import com.blazebit.security.entity.EntityPermissionUtils;
 import com.blazebit.security.model.Features;
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.User;
 import com.blazebit.security.model.UserGroup;
 import com.blazebit.security.web.bean.base.GroupHandlingBaseBean;
@@ -144,16 +145,16 @@ public class UserGroupsBean extends GroupHandlingBaseBean {
         Set<Permission> revoked = getPermissionsToRevoke(granted);
 
         // get permissions which can be revoked from the user
-        List<Set<Permission>> revoke = permissionHandling.getRevokableFromRevoked(allPermissions, revoked, true);
-        revokable = revoke.get(0);
-        dialogBean.setNotRevoked(revoke.get(1));
+        PermissionChangeSet revokeChangeSet = permissionHandling.getRevokableFromRevoked(allPermissions, revoked, true);
+        revokable = revokeChangeSet.getRevokes();
+        dialogBean.setNotRevoked(revokeChangeSet.getUnaffected());
 
         // get permissions which can be granted to the user
         List<Set<Permission>> grant = permissionHandling.getGrantable(PermissionUtils.removeAll(allPermissions, revokable), granted);
         Set<Permission> grantable = grant.get(0);
         dialogBean.setNotGranted(grant.get(1));
 
-        Set<Permission> additionalGranted = revoke.get(2);
+        Set<Permission> additionalGranted = revokeChangeSet.getGrants();
         grantable.addAll(additionalGranted);
         grantable = permissionHandling.getNormalizedPermissions(grantable);
 

@@ -30,6 +30,7 @@ import com.blazebit.security.exception.PermissionActionException;
 import com.blazebit.security.exception.PermissionException;
 import com.blazebit.security.model.Action;
 import com.blazebit.security.model.Permission;
+import com.blazebit.security.model.PermissionChangeSet;
 import com.blazebit.security.model.Resource;
 import com.blazebit.security.model.Role;
 import com.blazebit.security.model.Subject;
@@ -313,18 +314,12 @@ public class PermissionServiceImpl implements PermissionService {
             Set<Permission> toBeRevoked = new HashSet<Permission>();
             toBeRevoked.add(permissionFactory.create(subject, action, resource));
             List<Permission> currentPermissions = permissionManager.getPermissions(subject);
+            PermissionChangeSet changeSet = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true);
 
-            Set<Permission> revoke = permissionHandling
-                .getRevokableFromRevoked(currentPermissions, toBeRevoked, true)
-                .get(0);
-            Set<Permission> grant = permissionHandling
-                .getRevokableFromRevoked(currentPermissions, toBeRevoked, true)
-                .get(2);
-
-            if (revoke.isEmpty()) {
+            if (changeSet.getRevokes().isEmpty()) {
                 throw new PermissionActionException("Permission : " + subject + ", " + action + ", " + resource + " cannot be revoked");
             } else {
-                revokeAndGrant(authorizer, subject, revoke, grant);
+                revokeAndGrant(authorizer, subject, changeSet.getRevokes(), changeSet.getGrants());
             }
         } else {
             // Remove redundant becoming permissions along with the intended permission
@@ -376,14 +371,10 @@ public class PermissionServiceImpl implements PermissionService {
             Set<Permission> toBeRevoked = new HashSet<Permission>();
             toBeRevoked.add(permissionFactory.create(role, action, resource));
             List<Permission> currentPermissions = permissionManager.getPermissions(role);
-            Set<Permission> revoke = permissionHandling
-                .getRevokableFromRevoked(currentPermissions, toBeRevoked, true)
-                .get(0);
-            Set<Permission> grant = permissionHandling
-                .getRevokableFromRevoked(currentPermissions, toBeRevoked, true)
-                .get(2);
-            if (!revoke.isEmpty()) {
-                revokeAndGrant(authorizer, role, revoke, grant);
+            PermissionChangeSet changeSet = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true);
+
+            if (!changeSet.getRevokes().isEmpty()) {
+                revokeAndGrant(authorizer, role, changeSet.getRevokes(), changeSet.getGrants());
             } else {
                 throw new PermissionActionException("Permission : " + role + ", " + action + ", " + resource
                     + " cannot be revoked");
@@ -415,6 +406,7 @@ public class PermissionServiceImpl implements PermissionService {
             toBeGranted.add(permissionFactory.create(subject, action, resource));
             List<Permission> currentPermissions = permissionManager.getPermissions(subject);
             // second: check if permission can be merged with existing ones
+            // TODO: Use permission change set
             Set<Permission> grant = permissionHandling.getGrantable(currentPermissions, toBeGranted).get(0);
             List<Set<Permission>> revokeAndGrant = permissionHandling.getRevokedAndGrantedAfterMerge(currentPermissions,
                                                                                                      new HashSet<Permission>(),
@@ -443,10 +435,9 @@ public class PermissionServiceImpl implements PermissionService {
             toBeRevoked.add(permissionFactory.create(subject, action, resource));
             List<Permission> currentPermissions = permissionManager.getPermissions(subject);
             // second: check if permission can be merged with existing ones
-            Set<Permission> revoke = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(0);
-            Set<Permission> grant = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true).get(2);
+            PermissionChangeSet changeSet = permissionHandling.getRevokableFromRevoked(currentPermissions, toBeRevoked, true);
             // merging might need revoke and grant operations
-            revokeAndGrant(authorizer, subject, revoke, grant);
+            revokeAndGrant(authorizer, subject, changeSet.getRevokes(), changeSet.getGrants());
         }
         Collection<Role> children = root.getRoles();
         if (!children.isEmpty()) {
@@ -472,45 +463,22 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant) {
-        if (revoke == null || grant == null) {
-            throw new IllegalArgumentException("Permissions cannot be null");
-        }
-        for (Permission permission : revoke) {
-            revoke(authorizer, role, permission);
-        }
-
-        for (Permission permission : grant) {
-            grant(authorizer, role, permission);
-        }
+        revokeAndGrant(authorizer, role, revoke, grant, DEFAULT_PROPAGATE_TO_SUBJECTS);
     }
 
     @Override
-    public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant, boolean propagate) {
+    public void revokeAndGrant(Subject authorizer, Role role, Set<Permission> revoke, Set<Permission> grant, boolean propagateToSubjects) {
         if (revoke == null || grant == null) {
             throw new IllegalArgumentException("Permissions cannot be null");
         }
         for (Permission permission : revoke) {
-            revoke(authorizer, role, permission, propagate);
+            revoke(authorizer, role, permission, propagateToSubjects);
         }
 
         for (Permission permission : grant) {
-            grant(authorizer, role, permission, propagate);
+            grant(authorizer, role, permission, propagateToSubjects);
         }
     }
-
-    // @Override
-    // public Collection<Action> getAllowedActions(Subject subject, Resource
-    // resource) throws PermissionException,
-    // PermissionActionException {
-    // Set<Action> actions = new HashSet<Action>();
-    //
-    // for (Permission permission : permissionManager.getPermissions(subject)) {
-    // if (permission.getResource().implies(resource)) {
-    // actions.add(permission.getAction());
-    // }
-    // }
-    // return actions;
-    // }
 
     private Action getGrantAction() {
         return actionFactory.createAction(Action.GRANT);
